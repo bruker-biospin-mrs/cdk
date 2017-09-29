@@ -32,13 +32,12 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
 import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.config.IsotopeFactory;
+import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -401,11 +400,10 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
             } else {
                 logger.debug("Parsing bond from: " + command);
                 StringTokenizer tokenizer = new StringTokenizer(command);
-                IBond bond = readData.getBuilder().newBond();
                 // parse the index
+                String indexString;
                 try {
-                    String indexString = tokenizer.nextToken();
-                    bond.setID(indexString);
+                    indexString = tokenizer.nextToken();
                 } catch (Exception exception) {
                     String error = "Error while parsing bond index";
                     logger.error(error);
@@ -413,13 +411,25 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
                     throw new CDKException(error, exception);
                 }
                 // parse the order
+                final IBond bond = readData.getBuilder().newBond();
                 try {
                     String orderString = tokenizer.nextToken();
                     int order = Integer.parseInt(orderString);
-                    if (order >= 4) {
+                    if (order < 4){
+
+                        bond.setOrder(BondManipulator.createBondOrder((double) order));
+                    } else if(order == 4) {
+
+                        bond.setFlag(CDKConstants.SINGLE_OR_DOUBLE, true);
+                        bond.setFlag(CDKConstants.ISAROMATIC, true);
+                        bond.setOrder(IBond.Order.UNSET);
+                    } else if (order <= 8) {
+
+                        bond.setOrder(BondManipulator.createBondOrder((double) order));
                         logger.warn("Query order types are not supported (yet). File a bug if you need it");
                     } else {
-                        bond.setOrder(BondManipulator.createBondOrder((double) order));
+
+                        throw new CDKException("unrecognised bond order: " + order + ", " + command);
                     }
                 } catch (Exception exception) {
                     String error = "Error while parsing bond index";
@@ -427,11 +437,14 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
                     logger.debug(exception);
                     throw new CDKException(error, exception);
                 }
+                bond.setID(indexString);
+
                 // parse index atom 1
                 try {
                     String indexAtom1String = tokenizer.nextToken();
                     int indexAtom1 = Integer.parseInt(indexAtom1String);
                     IAtom atom1 = readData.getAtom(indexAtom1 - 1);
+                    if(bond.isAromatic()) atom1.setFlag(CDKConstants.ISAROMATIC, true);
                     bond.setAtom(atom1, 0);
                 } catch (Exception exception) {
                     String error = "Error while parsing index atom 1 in bond";
@@ -444,6 +457,7 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
                     String indexAtom2String = tokenizer.nextToken();
                     int indexAtom2 = Integer.parseInt(indexAtom2String);
                     IAtom atom2 = readData.getAtom(indexAtom2 - 1);
+                    if(bond.isAromatic()) atom2.setFlag(CDKConstants.ISAROMATIC, true);
                     bond.setAtom(atom2, 1);
                 } catch (Exception exception) {
                     String error = "Error while parsing index atom 2 in bond";

@@ -22,6 +22,14 @@
  *  */
 package org.openscience.cdk.io;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,20 +38,13 @@ import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.sgroup.Sgroup;
 import org.openscience.cdk.sgroup.SgroupType;
 import org.openscience.cdk.silent.AtomContainer;
-import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
-
-import java.io.InputStream;
-import java.io.StringReader;
-import java.util.List;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 /**
  * TestCase for the reading MDL V3000 mol files using one test file.
@@ -142,6 +143,56 @@ public class MDLV3000ReaderTest extends SimpleChemObjectReaderTest {
             IAtomContainer container = reader.read(new org.openscience.cdk.AtomContainer(0, 0, 0, 0));
             assertThat(container.getSingleElectronCount(), is(1));
             assertThat(container.getAtom(0).getImplicitHydrogenCount(), is(3));
+        }
+    }
+
+
+
+    @Test
+    public void bondOrder4() throws Exception {
+
+        final String v3000 = "\n" +
+                "  TEST     \n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 6 6 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C 0 0 0 0\n" +
+                "M  V30 2 C 0 0 0 0\n" +
+                "M  V30 3 C 0 0 0 0\n" +
+                "M  V30 4 C 0 0 0 0\n" +
+                "M  V30 5 C 0 0 0 0\n" +
+                "M  V30 6 C 0 0 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 4 1 2\n" +
+                "M  V30 2 4 2 3\n" +
+                "M  V30 3 4 3 4\n" +
+                "M  V30 4 4 4 5\n" +
+                "M  V30 5 4 5 6\n" +
+                "M  V30 6 4 1 6\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END";
+
+        try(final MDLV3000Reader reader = new MDLV3000Reader(new StringReader(v3000))){
+
+            final AtomContainer container = reader.read(new AtomContainer(0, 0, 0, 0));
+            Assert.assertEquals(6, container.getAtomCount());
+            for(IAtom atom : container.atoms()){
+
+                Assert.assertEquals(true, atom.isAromatic());
+            }
+
+            Assert.assertEquals(6, container.getBondCount());
+            for(IBond bond : container.bonds()){
+
+                Assert.assertEquals(true, bond.isAromatic());
+                Assert.assertEquals(true, bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+                Assert.assertEquals(0, bond.getOrder().numeric().intValue());
+                Assert.assertEquals(0, bond.getElectronCount().intValue());
+            }
         }
     }
 }
