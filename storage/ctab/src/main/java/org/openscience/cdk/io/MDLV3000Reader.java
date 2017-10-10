@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +37,7 @@ import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
 import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.config.IsotopeFactory;
 import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.exception.CDKException;
@@ -46,11 +48,16 @@ import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.ISingleElectron;
+import org.openscience.cdk.interfaces.ITetrahedralChirality;
 import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.io.formats.MDLV3000Format;
+import org.openscience.cdk.io.setting.BooleanIOSetting;
+import org.openscience.cdk.io.setting.IOSetting;
 import org.openscience.cdk.isomorphism.matchers.IQueryBond;
 import org.openscience.cdk.sgroup.Sgroup;
 import org.openscience.cdk.sgroup.SgroupType;
+import org.openscience.cdk.stereo.StereoElementFactory;
+import org.openscience.cdk.stereo.TetrahedralChirality;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
@@ -74,6 +81,10 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
 
     BufferedReader              input  = null;
     private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(MDLV3000Reader.class);
+
+    private BooleanIOSetting    forceReadAs3DCoords;
+    private BooleanIOSetting    interpretHydrogenIsotopes;
+    private BooleanIOSetting    addStereoElements;
 
     private Pattern             keyValueTuple;
     private Pattern             keyValueTuple2;
@@ -178,12 +189,16 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
             lastLine = readLine();
         }
 
+        boolean hasX = false, hasY = false, hasZ = false;
+
+        boolean hasQueryBonds = false;
         for (IAtom atom : readData.atoms()) {
             // XXX: slow method is slow
             int valence = 0;
             for (IBond bond : readData.getConnectedBondsList(atom)) {
                 if (bond instanceof IQueryBond || bond.getOrder() == IBond.Order.UNSET) {
                     valence = -1;
+                    hasQueryBonds = true;
                     break;
                 }
                 else {
@@ -195,6 +210,90 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
             } else {
                 final int unpaired = readData.getConnectedSingleElectronsCount(atom);
                 applyMDLValenceModel(atom, valence + unpaired, unpaired);
+            }
+
+            final Point3d p = atom.getPoint3d();
+            hasX = hasX || p.x != 0d;
+            hasY = hasY || p.y != 0d;
+            hasZ = hasZ || p.z != 0d;
+        }
+
+        // convert to 2D, if totalZ == 0
+        if (!hasX && !hasY && !hasZ) {
+            if (readData.getAtomCount() == 1) {
+                readData.getAtom(0).setPoint2d(new Point2d(0, 0));
+            } else {
+                for (IAtom atomToUpdate : readData.atoms()) {
+                    atomToUpdate.setPoint3d(null);
+                }
+            }
+        } else if (!hasZ) {
+
+            if (!forceReadAs3DCoords.isSet()) {
+                for (IAtom atomToUpdate : readData.atoms()) {
+                    Point3d p3d = atomToUpdate.getPoint3d();
+                    if (p3d != null) {
+                        atomToUpdate.setPoint2d(new Point2d(p3d.x, p3d.y));
+                        atomToUpdate.setPoint3d(null);
+                    }
+                }
+            }
+        }
+
+        Map<IAtom, Integer> parities = new HashMap<>();
+        for(IAtom atom : readData.atoms()) {
+
+            final Integer stereoParity = atom.getStereoParity();
+            if(stereoParity != null){
+
+                parities.put(atom, stereoParity);
+            }
+        }
+        // create 0D stereochemistry
+        if (addStereoElements.isSet()) {
+            Parities:
+            for (Map.Entry<IAtom, Integer> e : parities.entrySet()) {
+                int parity = e.getValue();
+                if (parity != 1 && parity != 2)
+                    continue; // 3=unspec
+                int idx = 0;
+                IAtom focus = e.getKey();
+                IAtom[] carriers = new IAtom[4];
+                int hidx = -1;
+                for (IAtom nbr : readData.getConnectedAtomsList(focus)) {
+                    if (idx == 4)
+                        continue Parities; // too many neighbors
+                    if (nbr.getAtomicNumber() == 1) {
+                        if (hidx >= 0)
+                            continue Parities;
+                        hidx = idx;
+                    }
+                    carriers[idx++] = nbr;
+                }
+                // to few neighbors, or already have a hydrogen defined
+                if (idx < 3 || idx < 4 && hidx >= 0)
+                    continue;
+                if (idx == 3)
+                    carriers[idx++] = focus;
+
+                if (idx == 4) {
+                    ITetrahedralChirality.Stereo winding = parity == 1 ? ITetrahedralChirality.Stereo.CLOCKWISE : ITetrahedralChirality.Stereo.ANTI_CLOCKWISE;
+                    // H is always at back, even if explicit! At least this seems to be the case.
+                    // we adjust the winding as needed
+                    if (hidx == 0 || hidx == 2)
+                        winding = winding.invert();
+                    readData.addStereoElement(new TetrahedralChirality(focus, carriers, winding));
+                }
+            }
+        }
+
+        if (!hasQueryBonds && addStereoElements.isSet() && hasX && hasY) {
+            if (hasZ) { // has 3D coordinates
+                readData.setStereoElements(StereoElementFactory.using3DCoordinates(readData)
+                        .createAll());
+            } else if (!forceReadAs3DCoords.isSet()) { // has 2D coordinates (set as 2D coordinates)
+                readData.setStereoElements(StereoElementFactory.using2DCoordinates(readData)
+                        .createAll());
             }
         }
 
@@ -266,24 +365,32 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
                     throw new CDKException(error, exception);
                 }
                 // parse the element
-                String element = tokenizer.nextToken();
-                if (isotopeFactory.isElement(element)) {
-                    atom.setSymbol(element);
-                    isotopeFactory.configure(atom); // ?
-                } else if ("A".equals(element)) {
-                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, element);
-                } else if ("Q".equals(element)) {
-                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, element);
-                } else if ("*".equals(element)) {
-                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, element);
-                } else if ("LP".equals(element)) {
-                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, element);
-                } else if ("L".equals(element)) {
-                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, element);
-                } else if (element.length() > 0 && element.charAt(0) == 'R') {
-                    logger.debug("Atom ", element, " is not an regular element. Creating a PseudoAtom.");
+                String symbol = tokenizer.nextToken();
+                if (isotopeFactory.isElement(symbol)) {
+                    final Elements elem = Elements.ofString(symbol);
+                    atom.setSymbol(symbol);
+                    atom.setAtomicNumber(elem.number());
+                    isotopeFactory.configure(atom);
+                }  else if ("D".equals(symbol) && interpretHydrogenIsotopes.isSet()) {
+                    atom = readData.getBuilder().newInstance(IAtom.class, "H");
+                    atom.setMassNumber(2);
+                }else if ("T".equals(symbol) && interpretHydrogenIsotopes.isSet()) {
+                    atom = readData.getBuilder().newInstance(IAtom.class, "H");
+                    atom.setMassNumber(3);
+                } else if ("A".equals(symbol)) {
+                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, symbol);
+                } else if ("Q".equals(symbol)) {
+                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, symbol);
+                } else if ("*".equals(symbol)) {
+                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, symbol);
+                } else if ("LP".equals(symbol)) {
+                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, symbol);
+                } else if ("L".equals(symbol)) {
+                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, symbol);
+                } else if (symbol.length() > 0 && symbol.charAt(0) == 'R') {
+                    logger.debug("Atom ", symbol, " is not an regular element. Creating a PseudoAtom.");
                     //check if the element is R
-                    rGroup = element.split("^R");
+                    rGroup = symbol.split("^R");
                     if (rGroup.length > 1) {
                         try {
                             Rnumber = Integer.valueOf(rGroup[(rGroup.length - 1)]).intValue();
@@ -292,16 +399,16 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
                             Rnumber = RGroupCounter;
                             RGroupCounter++;
                         }
-                        element = "R" + Rnumber;
+                        symbol = "R" + Rnumber;
                     }
-                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, element);
+                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, symbol);
                 } else {
                     if (mode == ISimpleChemObjectReader.Mode.STRICT) {
                         throw new CDKException(
                                 "Invalid element type. Must be an existing element, or one in: A, Q, L, LP, *.");
                     }
-                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, element);
-                    atom.setSymbol(element);
+                    atom = readData.getBuilder().newInstance(IPseudoAtom.class, symbol);
+                    atom.setSymbol(symbol);
                 }
 
                 // parse atom coordinates (in Angstrom)
@@ -365,6 +472,10 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
                                     } else {
                                         logger.error("Cannot set valence information for a non-element!");
                                     }
+                                    break;
+                                case "CFG":
+                                    int stereoConfiguration = Integer.parseInt(value);
+                                    atom.setStereoParity(stereoConfiguration);
                                     break;
                                 default:
                                     logger.warn("Not parsing key: " + key);
@@ -696,7 +807,21 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
         input.close();
     }
 
-    private void initIOSettings() {}
+    private void initIOSettings() {
+
+        forceReadAs3DCoords = addSetting(new BooleanIOSetting("ForceReadAs3DCoordinates", IOSetting.Importance.LOW,
+                "Should coordinates always be read as 3D?", "false"));
+        interpretHydrogenIsotopes = addSetting(new BooleanIOSetting("InterpretHydrogenIsotopes",
+                IOSetting.Importance.LOW, "Should D and T be interpreted as hydrogen isotopes?", "true"));
+        addStereoElements = addSetting(new BooleanIOSetting("AddStereoElements", IOSetting.Importance.LOW,
+                "Detect and create IStereoElements for the input.", "true"));
+    }
+
+    public void customizeJob() {
+        for (IOSetting setting : getSettings()) {
+            fireIOSettingQuestion(setting);
+        }
+    }
 
     /**
      * Applies the MDL valence model to atoms using the explicit valence (bond

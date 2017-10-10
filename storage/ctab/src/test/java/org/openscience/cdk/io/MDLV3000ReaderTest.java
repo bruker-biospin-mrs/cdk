@@ -22,13 +22,18 @@
  *  */
 package org.openscience.cdk.io;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -36,10 +41,14 @@ import org.junit.Test;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.interfaces.IStereoElement;
+import org.openscience.cdk.interfaces.ITetrahedralChirality;
+import org.openscience.cdk.io.listener.PropertiesListener;
 import org.openscience.cdk.sgroup.Sgroup;
 import org.openscience.cdk.sgroup.SgroupType;
 import org.openscience.cdk.silent.AtomContainer;
@@ -194,5 +203,292 @@ public class MDLV3000ReaderTest extends SimpleChemObjectReaderTest {
                 Assert.assertEquals(0, bond.getElectronCount().intValue());
             }
         }
+    }
+
+
+
+    @Test
+    public void deuteriumAsH() throws Exception {
+
+        final String v3000 = "dmsodd_usingDsymbol.mol\n" +
+                "  ChemDraw08091713462D\n" +
+                "\n" +
+                "  0  0  0     0  0              0 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 10 9 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 S -0.095319 -0.218453 0.000000 0\n" +
+                "M  V30 2 O -0.060671 -1.014918 0.000000 0\n" +
+                "M  V30 3 C 0.685512 0.112746 0.000000 0\n" +
+                "M  V30 4 C -0.785090 0.234140 0.000000 0\n" +
+                "M  V30 5 D 1.112184 -0.570948 0.000000 0\n" +
+                "M  V30 6 T -1.585919 0.233828 0.000000 0\n" +
+                "M  V30 7 H 1.585919 0.380208 0.000000 0\n" +
+                "M  V30 8 H 1.208334 0.941209 0.000000 0\n" +
+                "M  V30 9 H -0.380598 1.014918 0.000000 0\n" +
+                "M  V30 10 H -0.800881 -0.562326 0.000000 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 2 1 2\n" +
+                "M  V30 2 1 1 3\n" +
+                "M  V30 3 1 1 4\n" +
+                "M  V30 4 1 3 5\n" +
+                "M  V30 5 1 4 6\n" +
+                "M  V30 6 1 3 7\n" +
+                "M  V30 7 1 3 8\n" +
+                "M  V30 8 1 4 9\n" +
+                "M  V30 9 1 4 10\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n" +
+                "\n";
+
+        try(final MDLV3000Reader reader = new MDLV3000Reader(new StringReader(v3000))){
+
+            final AtomContainer container = reader.read(new AtomContainer(0, 0, 0, 0));
+
+            Assert.assertEquals("H", container.getAtom(4).getSymbol());
+            Assert.assertEquals(2, container.getAtom(4).getMassNumber().intValue());
+
+            Assert.assertEquals("H", container.getAtom(5).getSymbol());
+            Assert.assertEquals(3, container.getAtom(5).getMassNumber().intValue());
+        }
+    }
+
+    @Test
+    public void testReading0DStereochemistry() throws Exception {
+
+        final String v3000 = "\n" +
+                " tetrahedral-parity-withImplH\n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 5 4 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C 0 0 0 0 CFG=1\n" +
+                "M  V30 2 C 0 0 0 0\n" +
+                "M  V30 3 C 0 0 0 0\n" +
+                "M  V30 4 O 0 0 0 0\n" +
+                "M  V30 5 C 0 0 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 1 1 2\n" +
+                "M  V30 2 1 2 3\n" +
+                "M  V30 3 1 1 4\n" +
+                "M  V30 4 1 1 5\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n" +
+                "\n";
+
+        try (MDLV3000Reader mdlr = new MDLV3000Reader(new StringReader(v3000))) {
+            IAtomContainer container = mdlr.read(new org.openscience.cdk.AtomContainer());
+            Iterable<IStereoElement> selements = container.stereoElements();
+            Iterator<IStereoElement> siter = selements.iterator();
+            assertTrue(siter.hasNext());
+            IStereoElement se = siter.next();
+            assertThat(se, is(instanceOf(ITetrahedralChirality.class)));
+            assertThat(((ITetrahedralChirality) se).getStereo(), is(ITetrahedralChirality.Stereo.CLOCKWISE));
+            assertThat(((ITetrahedralChirality) se).getLigands(), is(new IAtom[]{container.getAtom(1), container.getAtom(3), container.getAtom(4), container.getAtom(0)}));
+            assertFalse(siter.hasNext());
+        }
+    }
+
+    // explicit Hydrogen can reverse winding
+    @Test
+    public void testReading0DStereochemistryWithHydrogen() throws Exception {
+
+        final String v3000 = "\n" +
+                "  tetrahedral-parity-withExpH\n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 5 4 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 H 0 0 0 0\n" +
+                "M  V30 2 C 0 0 0 0 CFG=1\n" +
+                "M  V30 3 Cl 0 0 0 0\n" +
+                "M  V30 4 Br 0 0 0 0\n" +
+                "M  V30 5 F 0 0 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 1 2 1\n" +
+                "M  V30 2 1 2 3\n" +
+                "M  V30 3 1 2 4\n" +
+                "M  V30 4 1 2 5\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n" +
+                "\n";
+
+        try (MDLV3000Reader mdlr = new MDLV3000Reader(new StringReader(v3000))) {
+            IAtomContainer container = mdlr.read(new org.openscience.cdk.AtomContainer());
+            Iterable<IStereoElement> selements = container.stereoElements();
+            Iterator<IStereoElement> siter = selements.iterator();
+            assertTrue(siter.hasNext());
+            IStereoElement se = siter.next();
+            assertThat(se, is(instanceOf(ITetrahedralChirality.class)));
+            assertThat(((ITetrahedralChirality) se).getStereo(), is(ITetrahedralChirality.Stereo.ANTI_CLOCKWISE));
+            assertThat(((ITetrahedralChirality) se).getLigands(), is(new IAtom[]{container.getAtom(0), container.getAtom(2), container.getAtom(3), container.getAtom(4)}));
+            assertFalse(siter.hasNext());
+        }
+    }
+
+    @Test
+    public void testZeroZCoordinates() throws Exception {
+
+        final String v3000 = "dan002.sdf\n" +
+                "  data/mdl/nozcoord\n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 5 4 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 Cl -1.7 .0 0 0\n" +
+                "M  V30 2 C .05 .0 0 0\n" +
+                "M  V30 3 F .55 .458 0 0\n" +
+                "M  V30 4 F .55 -1.245 0 0\n" +
+                "M  V30 5 F .55 .788 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 1 1 2\n" +
+                "M  V30 2 1 2 3\n" +
+                "M  V30 3 1 2 4\n" +
+                "M  V30 4 1 2 5\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n";
+
+        MDLV3000Reader reader = new MDLV3000Reader(new StringReader(v3000));
+        Properties prop = new Properties();
+        prop.setProperty("ForceReadAs3DCoordinates", "true");
+        PropertiesListener listener = new PropertiesListener(prop);
+        reader.addChemObjectIOListener(listener);
+        reader.customizeJob();
+
+        IAtomContainer mol = reader.read(DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class));
+        reader.close();
+        Assert.assertNotNull(mol);
+        Assert.assertEquals(5, mol.getAtomCount());
+        Assert.assertEquals(true, GeometryUtil.has3DCoordinates(mol));
+    }
+
+    @Test
+    public void e_butene_2D_force3D() throws Exception {
+
+        final String v3000 = "\n" +
+                "  /data/mdl/e_butene_2d.mol\n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 4 3 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C -1.6795 .1768 0 0\n" +
+                "M  V30 2 C -2.5045 .1768 0 0\n" +
+                "M  V30 3 C -1.267 .8913 0 0\n" +
+                "M  V30 4 C -2.917 -.5377 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 2 1 2\n" +
+                "M  V30 2 1 1 3\n" +
+                "M  V30 3 1 2 4\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n" +
+                "\n";
+
+        MDLV3000Reader reader = new MDLV3000Reader(new StringReader(v3000));
+
+        Properties prop = new Properties();
+        prop.setProperty("ForceReadAs3DCoordinates", "true");
+        PropertiesListener listener = new PropertiesListener(prop);
+        reader.addChemObjectIOListener(listener);
+        reader.customizeJob();
+
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
+        molecule = reader.read(molecule);
+        reader.close();
+        assertNotNull(molecule);
+        assertFalse(molecule.stereoElements().iterator().hasNext());
+    }
+
+    @Test
+    public void e_butene_3D() throws Exception {
+
+        final String  v3000 = "\n" +
+                "  /data/mdl/e_butene_3d.mol\n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 4 3 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C -.2987 -.321 -.6678 0\n" +
+                "M  V30 2 C .335 -.7375 .4401 0\n" +
+                "M  V30 3 C -1.6271 -.7748 -1.0227 0\n" +
+                "M  V30 4 C 1.6638 -.2947 .8057 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 2 1 2\n" +
+                "M  V30 2 1 1 3\n" +
+                "M  V30 3 1 2 4\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n" +
+                "\n";
+
+        MDLV3000Reader reader = new MDLV3000Reader(new StringReader(v3000));
+
+        Properties prop = new Properties();
+        prop.setProperty("ForceReadAs3DCoordinates", "true");
+        PropertiesListener listener = new PropertiesListener(prop);
+        reader.addChemObjectIOListener(listener);
+        reader.customizeJob();
+
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
+        molecule = reader.read(molecule);
+        reader.close();
+        assertNotNull(molecule);
+        assertTrue(molecule.stereoElements().iterator().hasNext());
+    }
+
+    // turn off adding stereoelements
+    @Test
+    public void e_butene_2D_optOff() throws Exception {
+
+        final String v3000 = "\n" +
+                "  /data/mdl/e_butene_2d.mol\n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 4 3 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C -1.6795 .1768 0 0\n" +
+                "M  V30 2 C -2.5045 .1768 0 0\n" +
+                "M  V30 3 C -1.267 .8913 0 0\n" +
+                "M  V30 4 C -2.917 -.5377 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 2 1 2\n" +
+                "M  V30 2 1 1 3\n" +
+                "M  V30 3 1 2 4\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n" +
+                "\n";
+
+        MDLV3000Reader reader = new MDLV3000Reader(new StringReader(v3000));
+
+
+        Properties prop = new Properties();
+        prop.setProperty("AddStereoElements", "false");
+        PropertiesListener listener = new PropertiesListener(prop);
+        reader.addChemObjectIOListener(listener);
+        reader.customizeJob();
+
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
+        molecule = reader.read(molecule);
+        reader.close();
+        assertNotNull(molecule);
+        assertFalse(molecule.stereoElements().iterator().hasNext());
     }
 }
