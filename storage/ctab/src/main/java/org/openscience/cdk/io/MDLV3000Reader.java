@@ -529,6 +529,8 @@ public class MDLV3000Reader extends DefaultChemObjectReader {
                     if (order < 4){
 
                         bond.setOrder(BondManipulator.createBondOrder((double) order));
+                        if(order == 2)
+                            bond.setStereo(IBond.Stereo.E_Z_BY_COORDINATES);
                     } else if(order == 4) {
 
                         bond.setFlag(CDKConstants.SINGLE_OR_DOUBLE, true);
