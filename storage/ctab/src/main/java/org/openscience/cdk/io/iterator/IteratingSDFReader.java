@@ -38,9 +38,6 @@ import java.util.regex.Pattern;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.io.ISimpleChemObjectReader;
-import org.openscience.cdk.io.MDLReader;
-import org.openscience.cdk.io.MDLV2000Reader;
-import org.openscience.cdk.io.MDLV3000Reader;
 import org.openscience.cdk.io.formats.IChemFormat;
 import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.io.formats.MDLFormat;
@@ -55,9 +52,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Iterating MDL SDF reader. It allows to iterate over all molecules
  * in the SD file, without reading them into memory first. Suitable
  * for (very) large SDF files. For parsing the molecules in the
- * SD file, it uses the <code>MDLV2000Reader</code> or
+ * SD file, by default it uses the <code>MDLV2000Reader</code> or
  * <code>MDLV3000Reader</code> reader; it does <b>not</b> work
  * for SDF files with MDL formats prior to the V2000 format.
+ * However, the parsers that is used to parse individual molecules
+ * can be customised by providing a {@link SDFChemObjectReaderFactory}
+ * that is appropriately configured.
  *
  * <p>Example use:
  * <pre>
@@ -115,6 +115,7 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
     // map of MDL formats to their readers
     private final Map<IChemFormat, ISimpleChemObjectReader> readerMap            = new HashMap<IChemFormat, ISimpleChemObjectReader>(
                                                                                          5);
+    private final SDFChemObjectReaderFactory readerFactory;
 
     /**
      * Constructs a new IteratingMDLReader that can read Molecule from a given Reader.
@@ -165,10 +166,15 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
      * @param skip     whether to skip null molecules
      */
     public IteratingSDFReader(Reader in, IChemObjectBuilder builder, boolean skip) {
+        this(in, builder, skip, new SDFChemObjectReaderFactory());
+    }
+
+    public IteratingSDFReader(Reader in, IChemObjectBuilder builder, boolean skip, SDFChemObjectReaderFactory readerFactory) {
         this.builder = builder;
         setReader(in);
         initIOSettings();
         setSkip(skip);
+        this.readerFactory = readerFactory;
     }
 
     @Override
@@ -178,8 +184,8 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
 
     /**
      *                Method will return an appropriate reader for the provided format. Each reader is stored
-     *                in a map, if no reader is available for the specified format a new reader is created. The
-     *                {@see ISimpleChemObjectReadr#setErrorHandler(IChemObjectReaderErrorHandler)} and
+     *                in a map, if no reader is available for the specified format the factory is used to create a
+     *                new reader. The {@see ISimpleChemObjectReadr#setErrorHandler(IChemObjectReaderErrorHandler)} and
      *                {@see ISimpleChemObjectReadr#setReaderMode(DefaultIteratingChemObjectReader)}
      *                methods are set.
      *
@@ -188,30 +194,23 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
      */
     private ISimpleChemObjectReader getReader(IChemFormat format) {
 
+        final ISimpleChemObjectReader reader;
         // create a new reader if not mapped
         if (!readerMap.containsKey(format)) {
 
-            ISimpleChemObjectReader reader;
-            if (format instanceof MDLV2000Format)
-                reader = new MDLV2000Reader();
-            else if (format instanceof MDLV3000Format)
-                reader = new MDLV3000Reader();
-            else if (format instanceof MDLFormat)
-                reader = new MDLReader();
-            else
-                throw new IllegalArgumentException("Unexpected format: " + format);
-            reader.setErrorHandler(this.errorHandler);
-            reader.setReaderMode(this.mode);
-            if (currentFormat instanceof MDLV2000Format) {
+            reader = readerFactory.createReader(format);
+            reader.setErrorHandler(errorHandler);
+            reader.setReaderMode(mode);
+            if (format instanceof MDLV2000Format) {
                 reader.addSettings(getSettings());
             }
-
             readerMap.put(format, reader);
+        } else {
 
+            reader = readerMap.get(format);
         }
 
-        return readerMap.get(format);
-
+        return reader;
     }
 
     /**
