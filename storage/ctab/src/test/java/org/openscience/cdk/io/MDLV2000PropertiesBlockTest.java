@@ -31,10 +31,8 @@ import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.silent.AtomContainer;
-import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -50,9 +48,6 @@ import static org.mockito.Mockito.verify;
  * @cdk.module test-io
  */
 public class MDLV2000PropertiesBlockTest {
-
-    private final MDLV2000Reader     reader  = new MDLV2000Reader();
-    private final IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
 
     @Test
     public void m_end() throws Exception {
@@ -174,7 +169,8 @@ public class MDLV2000PropertiesBlockTest {
     }
 
     void read(String input, IAtomContainer container) throws IOException, CDKException {
-        reader.readPropertiesFast(new BufferedReader(new StringReader(input)), container, container.getAtomCount());
+
+        new V2000PropertiesBlockHandler(new MDLV2000Reader(), IChemObjectReader.Mode.RELAXED).readProperties(new BufferedReader(new StringReader(input)), container, container.getAtomCount(), 0);
     }
 
 }
