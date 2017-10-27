@@ -24,51 +24,15 @@
  *  */
 package org.openscience.cdk.io;
 
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.ChemFile;
-import org.openscience.cdk.ChemModel;
-import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.mockito.Mockito;
+import org.openscience.cdk.*;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.geometry.GeometryUtil;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IAtomContainerSet;
-import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.interfaces.IBond.Order;
-import org.openscience.cdk.interfaces.IChemFile;
-import org.openscience.cdk.interfaces.IPseudoAtom;
-import org.openscience.cdk.interfaces.IStereoElement;
-import org.openscience.cdk.interfaces.ITetrahedralChirality;
 import org.openscience.cdk.io.IChemObjectReader.Mode;
 import org.openscience.cdk.io.listener.PropertiesListener;
 import org.openscience.cdk.isomorphism.matchers.CTFileQueryBond;
@@ -80,6 +44,19 @@ import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.*;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * TestCase for the reading MDL mol files using one test file.
@@ -1280,7 +1257,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         BufferedReader input = new BufferedReader(new StringReader(sb.toString()));
         IAtomContainer mock = mock(IAtomContainer.class);
 
-        MDLV2000Reader.readNonStructuralData(input, mock);
+        new V2000NonStructuralDataBlockHandler(Mockito.mock(MDLV2000Reader.class),"$$$$").readNonStructuralData(input, mock);
 
         verify(mock).setProperty("DENSITY", "0.9132 - 20.0");
         verify(mock).setProperty("BOILING.POINT", "63.0 (737 MM)\n79.0 (42 MM)");
@@ -1306,7 +1283,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         BufferedReader input = new BufferedReader(new StringReader(sb.toString()));
         IAtomContainer mock = mock(IAtomContainer.class);
 
-        MDLV2000Reader.readNonStructuralData(input, mock);
+        new V2000NonStructuralDataBlockHandler(Mockito.mock(MDLV2000Reader.class),"$$$$").readNonStructuralData(input, mock);
 
         verify(mock).setProperty("ONE_SPACE", " ");
         verify(mock).setProperty("EMTPY_LINES", "");
@@ -1324,7 +1301,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         BufferedReader input = new BufferedReader(new StringReader(sb.toString()));
         IAtomContainer mock = mock(IAtomContainer.class);
 
-        MDLV2000Reader.readNonStructuralData(input, mock);
+        new V2000NonStructuralDataBlockHandler(Mockito.mock(MDLV2000Reader.class),"$$$$").readNonStructuralData(input, mock);
 
         verify(mock).setProperty("LONG_PROPERTY",
                 "This is a long property which should be wrapped when stored as field in an SDF Data entry");
