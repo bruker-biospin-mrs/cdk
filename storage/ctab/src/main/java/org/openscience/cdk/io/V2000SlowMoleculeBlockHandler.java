@@ -71,7 +71,7 @@ public class V2000SlowMoleculeBlockHandler extends V2000MoleculeBlockHandler {
      * @throws IOException  the isotopes file could not be read
      */
     @Override
-    IAtom readAtom(String line, IChemObjectBuilder builder, Map<IAtom, Integer> parities, int linecount) throws CDKException, IOException {
+    protected IAtom readAtom(String line, IChemObjectBuilder builder, Map<IAtom, Integer> parities, int linecount) throws CDKException, IOException {
         IAtom atom;
         Matcher trailingSpaceMatcher = TRAILING_SPACE.matcher(line);
         if (trailingSpaceMatcher.find()) {
@@ -243,7 +243,7 @@ public class V2000SlowMoleculeBlockHandler extends V2000MoleculeBlockHandler {
      * @throws CDKException the bond line could not be parsed
      */
     @Override
-    IBond readBond(final String line, final IChemObjectBuilder builder, final IAtom[] atoms, final int[] explicitValence, final int linecount) throws CDKException {
+    protected IBond readBond(final String line, final IChemObjectBuilder builder, final IAtom[] atoms, final int[] explicitValence, final int linecount) throws CDKException {
         int atom1 = Integer.parseInt(line.substring(0, 3).trim());
         int atom2 = Integer.parseInt(line.substring(3, 6).trim());
         int order = Integer.parseInt(line.substring(6, 9).trim());
