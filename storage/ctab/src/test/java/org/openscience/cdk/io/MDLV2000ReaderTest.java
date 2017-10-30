@@ -45,10 +45,8 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.*;

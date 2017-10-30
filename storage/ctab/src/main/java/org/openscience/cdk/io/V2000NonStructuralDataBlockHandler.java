@@ -73,7 +73,7 @@ public class V2000NonStructuralDataBlockHandler extends V2000BlockHandler {
      * @param container the container
      * @throws IOException an error occur whilst reading the input
      */
-    void readNonStructuralData(final BufferedReader input, final IAtomContainer container) throws IOException {
+    protected void readNonStructuralData(final BufferedReader input, final IAtomContainer container) throws IOException {
 
         String line, header = null;
         boolean wrap = false;

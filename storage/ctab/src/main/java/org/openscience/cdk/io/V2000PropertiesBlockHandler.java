@@ -81,7 +81,7 @@ public class V2000PropertiesBlockHandler extends V2000BlockHandler {
                 //
                 // atom alias is stored as label on a pseudo atom
                 case ATOM_ALIAS:
-                    if (handleAtomAlias(container, line, offset, input.readLine())) return;
+                    if (!handleAtomAlias(container, line, offset, input.readLine())) return;
                     break;
 
                 // V  aaa v...
@@ -341,14 +341,17 @@ public class V2000PropertiesBlockHandler extends V2000BlockHandler {
      *
      * atom alias is stored as label on a pseudo atom
      *
-     * @return true
+     * @return true if the alias was handled, false otherwise
      */
     protected boolean handleAtomAlias(IAtomContainer container, String line, int offset, String line2) throws IOException {
 
-        int index = readMolfileInt(line, 3) - 1;
-        if (line2 == null) return true;
-        label(container, offset + index, line2);
-        return false;
+        if (line2 != null) {
+            int index = readMolfileInt(line, 3) - 1;
+            label(container, offset + index, line2);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

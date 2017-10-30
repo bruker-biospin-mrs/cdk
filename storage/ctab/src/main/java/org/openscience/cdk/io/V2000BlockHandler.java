@@ -66,7 +66,7 @@ public class V2000BlockHandler {
      * @param symbol a symbol from the input
      * @return the symbol is a valid pseudo element
      */
-    static boolean isPseudoElement(final String symbol) {
+    protected static boolean isPseudoElement(final String symbol) {
         return PSEUDO_LABELS.contains(symbol);
     }
 
@@ -76,7 +76,7 @@ public class V2000BlockHandler {
      * @param str a string
      * @return the length when trailing white space is removed
      */
-    static int length(final String str) {
+    protected static int length(final String str) {
         int i = str.length() - 1;
         while (i >= 0 && str.charAt(i) == ' ') {
             i--;
@@ -94,7 +94,7 @@ public class V2000BlockHandler {
      * @param index start index
      * @return the value specified in the string
      */
-    static int readMolfileInt(final String line, final int index) {
+    protected static int readMolfileInt(final String line, final int index) {
         int sign = 1;
         int result = 0;
         char c;
@@ -175,7 +175,7 @@ public class V2000BlockHandler {
      * @param c a character
      * @return the numerical value
      */
-    static int toInt(final char c) {
+    protected static int toInt(final char c) {
         // Character.getNumericalValue allows all of unicode which we don't want
         // or need it - imagine an MDL file with roman numerals!
         return c >= '0' && c <= '9' ? c - '0' : 0;
@@ -188,7 +188,7 @@ public class V2000BlockHandler {
      * @param c a character
      * @return formal charge
      */
-    static int toCharge(final char c) {
+    protected static int toCharge(final char c) {
         switch (c) {
             case '1':
                 return +3;
@@ -215,7 +215,7 @@ public class V2000BlockHandler {
      * @param c a character
      * @return the sign
      */
-    static int sign(final char c) {
+    protected static int sign(final char c) {
         return c == '-' ? -1 : +1;
     }
 
@@ -228,7 +228,7 @@ public class V2000BlockHandler {
      * @param digits number of digits (max)
      * @return an unsigned int
      */
-    static int readUInt(final String line, int index, int digits) {
+    protected static int readUInt(final String line, int index, int digits) {
         int result = 0;
         while (digits-- > 0)
             result = (result * 10) + toInt(line.charAt(index++));
@@ -246,7 +246,7 @@ public class V2000BlockHandler {
      * @return the specified value
      * @throws CDKException the coordinates specification was not valid
      */
-    double readMDLCoordinate(final String line, int offset) throws CDKException {
+    protected double readMDLCoordinate(final String line, int offset) throws CDKException {
 
         // to be valid the decimal should be at the fifth index (4 sig fig)
         if (line.charAt(offset + 5) != '.') {
@@ -290,17 +290,17 @@ public class V2000BlockHandler {
         }
     }
 
-    void handleError(String message) throws CDKException {
+    protected void handleError(String message) throws CDKException {
 
         reader.handleError(message);
     }
 
-    void handleError(String message, int row, int colStart, int colEnd) throws CDKException {
+    protected void handleError(String message, int row, int colStart, int colEnd) throws CDKException {
 
         reader.handleError(message, row, colStart, colEnd);
     }
 
-    void handleError(String message, int row, int colStart, int colEnd, Exception exception) throws CDKException {
+    protected void handleError(String message, int row, int colStart, int colEnd, Exception exception) throws CDKException {
 
         reader.handleError(message, row, colStart, colEnd, exception);
     }
@@ -315,7 +315,7 @@ public class V2000BlockHandler {
      * @return bond stereo
      * @throws CDKException the stereo value was invalid (strict mode).
      */
-    IBond.Stereo toStereo(final int stereo, final int type) throws CDKException {
+    protected IBond.Stereo toStereo(final int stereo, final int type) throws CDKException {
         switch (stereo) {
             case 0:
                 return type == 2 ? IBond.Stereo.E_Z_BY_COORDINATES : IBond.Stereo.NONE;
