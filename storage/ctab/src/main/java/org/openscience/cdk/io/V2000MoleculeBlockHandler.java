@@ -107,7 +107,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
         return hasZ;
     }
 
-    IAtomContainer readAtomBlock(final BufferedReader input, final IAtomContainer molecule, final Map<IAtom, Integer> parities) throws IOException, CDKException {
+    protected IAtomContainer readAtomBlock(final BufferedReader input, final IAtomContainer molecule, final Map<IAtom, Integer> parities) throws IOException, CDKException {
 
         IAtomContainer outputContainer;
         String title = null;
@@ -283,7 +283,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
         return outputContainer;
     }
 
-    IAtom readAtom(String line, IChemObjectBuilder builder, int lineNum) throws CDKException, IOException {
+    protected IAtom readAtom(String line, IChemObjectBuilder builder, int lineNum) throws CDKException, IOException {
         return readAtom(line, builder, Collections.<IAtom, Integer>emptyMap(), lineNum);
     }
 
@@ -307,7 +307,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
      * @param lineNum  the line number - for printing error messages
      * @return a new atom instance
      */
-    IAtom readAtom(String line, IChemObjectBuilder builder, Map<IAtom, Integer> parities, int lineNum) throws CDKException, IOException {
+    protected IAtom readAtom(String line, IChemObjectBuilder builder, Map<IAtom, Integer> parities, int lineNum) throws CDKException, IOException {
 
         // The line may be truncated and it's checked in reverse at the specified
         // lengths:
@@ -451,7 +451,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
      * @throws CDKException thrown if the input was malformed or didn't make
      *                      sense
      */
-    IBond readBond(String line, IChemObjectBuilder builder, IAtom[] atoms, int[] explicitValence, int lineNum)
+    protected IBond readBond(String line, IChemObjectBuilder builder, IAtom[] atoms, int[] explicitValence, int lineNum)
             throws CDKException {
 
         // The line may be truncated and it's checked in reverse at the specified
