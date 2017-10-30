@@ -43,7 +43,7 @@ import java.util.*;
 /**
  * @author OLH
  */
-class V2000PropertiesBlockHandler extends V2000BlockHandler {
+public class V2000PropertiesBlockHandler extends V2000BlockHandler {
 
     public V2000PropertiesBlockHandler(final MDLV2000Reader reader, final IChemObjectReader.Mode mode) {
 

@@ -46,7 +46,7 @@ import java.util.Map;
 /**
  * @author OLH
  */
-class V2000MoleculeBlockHandler extends V2000BlockHandler {
+public class V2000MoleculeBlockHandler extends V2000BlockHandler {
 
     private final BooleanIOSetting forceReadAs3DCoords;
     private final BooleanIOSetting interpretHydrogenIsotopes;

@@ -33,7 +33,7 @@ import java.io.IOException;
 /**
  * @author OLH
  */
-class V2000NonStructuralDataBlockHandler extends V2000BlockHandler {
+public class V2000NonStructuralDataBlockHandler extends V2000BlockHandler {
 
     private final String recordDelimiter;
 
