@@ -22,13 +22,10 @@
  *  */
 package org.openscience.cdk.io.iterator;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Properties;
-
+import com.google.common.base.Supplier;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
@@ -36,12 +33,25 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.io.*;
+import org.openscience.cdk.io.formats.IChemFormat;
+import org.openscience.cdk.io.formats.MDLFormat;
 import org.openscience.cdk.io.formats.MDLV2000Format;
+import org.openscience.cdk.io.formats.MDLV3000Format;
 import org.openscience.cdk.io.listener.IChemObjectIOListener;
 import org.openscience.cdk.io.listener.PropertiesListener;
 import org.openscience.cdk.io.setting.IOSetting;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Properties;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * TestCase for the reading MDL mol files using one test file.
@@ -349,4 +359,97 @@ public class IteratingSDFReaderTest extends CDKTestCase {
 
     }
 
+    @Test
+    public void testDefaultBuilder() throws Exception {
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .build();
+
+        Assert.assertEquals(MDLV2000Reader.class, reader.createReader(new MDLV2000Format()).getClass());
+        Assert.assertEquals(MDLV3000Reader.class, reader.createReader(new MDLV3000Format()).getClass());
+        Assert.assertEquals(MDLReader.class, reader.createReader(new MDLFormat()).getClass());
+
+        Assert.assertEquals(false, reader.isSkip());
+        Assert.assertEquals(IChemObjectReader.Mode.RELAXED, reader.getReaderMode());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testUnsuportedFormat() throws Exception {
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .build();
+
+        reader.createReader(Mockito.mock(IChemFormat.class));
+    }
+
+    @Test
+    public void testBuilderWithCustomV2000Reader() throws Exception {
+
+        final ISimpleChemObjectReader v2000Reader = mock(ISimpleChemObjectReader.class);
+        //noinspection unchecked
+        final Supplier<ISimpleChemObjectReader> v2000Factory = mock(Supplier.class);
+        when(v2000Factory.get()).thenReturn(v2000Reader);
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setV2000ReaderSupplier(v2000Factory)
+                .build();
+
+        Assert.assertEquals(v2000Reader, reader.createReader(new MDLV2000Format()));
+        Mockito.verify(v2000Factory, Mockito.times(1)).get();
+        Mockito.verifyNoMoreInteractions(v2000Factory);
+    }
+
+    @Test
+    public void testBuilderWithCustomV3000Reader() throws Exception {
+
+        final ISimpleChemObjectReader v3000Reader = mock(ISimpleChemObjectReader.class);
+        //noinspection unchecked
+        final Supplier<ISimpleChemObjectReader> v3000Factory = mock(Supplier.class);
+        when(v3000Factory.get()).thenReturn(v3000Reader);
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setV3000ReaderSupplier(v3000Factory)
+                .build();
+
+        Assert.assertEquals(v3000Reader, reader.createReader(new MDLV3000Format()));
+        Mockito.verify(v3000Factory, Mockito.times(1)).get();
+        Mockito.verifyNoMoreInteractions(v3000Factory);
+    }
+
+    @Test
+    public void testBuilderWithCustomMdlReader() throws Exception {
+
+        final ISimpleChemObjectReader mdlReader = mock(ISimpleChemObjectReader.class);
+        //noinspection unchecked
+        final Supplier<ISimpleChemObjectReader> mdlFactory = mock(Supplier.class);
+        when(mdlFactory.get()).thenReturn(mdlReader);
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setMdlReaderSupplier(mdlFactory)
+                .build();
+
+        Assert.assertEquals(mdlReader, reader.createReader(new MDLFormat()));
+        Mockito.verify(mdlFactory, Mockito.times(1)).get();
+        Mockito.verifyNoMoreInteractions(mdlFactory);
+    }
+
+    @Test
+    public void testBuilderSetSkip() throws Exception {
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setSkip(true)
+                .build();
+
+        Assert.assertEquals(true, reader.isSkip());
+    }
+
+    @Test
+    public void testBuilderSetReadingMode() throws Exception {
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setReadingMode(IChemObjectReader.Mode.STRICT)
+                .build();
+
+        Assert.assertEquals(IChemObjectReader.Mode.STRICT, reader.getReaderMode());
+    }
 }

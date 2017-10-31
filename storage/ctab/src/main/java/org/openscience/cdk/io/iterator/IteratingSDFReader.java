@@ -23,30 +23,25 @@
  */
 package org.openscience.cdk.io.iterator;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
+import com.google.common.base.Supplier;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.io.ISimpleChemObjectReader;
+import org.openscience.cdk.io.MDLReader;
+import org.openscience.cdk.io.MDLV2000Reader;
+import org.openscience.cdk.io.MDLV3000Reader;
+import org.openscience.cdk.io.formats.*;
+import org.openscience.cdk.io.setting.BooleanIOSetting;
+import org.openscience.cdk.io.setting.IOSetting;
+import org.openscience.cdk.tools.ILoggingTool;
+import org.openscience.cdk.tools.LoggingToolFactory;
+
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
-import org.openscience.cdk.io.ISimpleChemObjectReader;
-import org.openscience.cdk.io.formats.IChemFormat;
-import org.openscience.cdk.io.formats.IResourceFormat;
-import org.openscience.cdk.io.formats.MDLFormat;
-import org.openscience.cdk.io.formats.MDLV2000Format;
-import org.openscience.cdk.io.formats.MDLV3000Format;
-import org.openscience.cdk.io.setting.BooleanIOSetting;
-import org.openscience.cdk.io.setting.IOSetting;
-import org.openscience.cdk.tools.ILoggingTool;
-import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
  * Iterating MDL SDF reader. It allows to iterate over all molecules
@@ -56,8 +51,7 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * <code>MDLV3000Reader</code> reader; it does <b>not</b> work
  * for SDF files with MDL formats prior to the V2000 format.
  * However, the parsers that is used to parse individual molecules
- * can be customised by providing a {@link SDFChemObjectReaderFactory}
- * that is appropriately configured.
+ * can be customised by
  *
  * <p>Example use:
  * <pre>
@@ -115,7 +109,9 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
     // map of MDL formats to their readers
     private final Map<IChemFormat, ISimpleChemObjectReader> readerMap            = new HashMap<IChemFormat, ISimpleChemObjectReader>(
                                                                                          5);
-    private final SDFChemObjectReaderFactory readerFactory;
+    private final Supplier<ISimpleChemObjectReader> v2000ReaderSupplier;
+    private final Supplier<ISimpleChemObjectReader> v3000ReaderSupplier;
+    private final Supplier<ISimpleChemObjectReader> mdlReaderSupplier;
 
     /**
      * Constructs a new IteratingMDLReader that can read Molecule from a given Reader.
@@ -166,15 +162,45 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
      * @param skip     whether to skip null molecules
      */
     public IteratingSDFReader(Reader in, IChemObjectBuilder builder, boolean skip) {
-        this(in, builder, skip, new SDFChemObjectReaderFactory());
+        this(in, builder, skip,
+                new Supplier<ISimpleChemObjectReader>() {
+
+                    @Override
+                    public ISimpleChemObjectReader get() {
+
+                        return new MDLV2000Reader();
+                    }
+                },
+                new Supplier<ISimpleChemObjectReader>() {
+
+                    @Override
+                    public ISimpleChemObjectReader get() {
+
+                        return new MDLV3000Reader();
+                    }
+                },
+                new Supplier<ISimpleChemObjectReader>() {
+
+                    @Override
+                    public ISimpleChemObjectReader get() {
+
+                        return new MDLReader();
+                    }
+                }
+        );
     }
 
-    public IteratingSDFReader(Reader in, IChemObjectBuilder builder, boolean skip, SDFChemObjectReaderFactory readerFactory) {
+    private IteratingSDFReader(Reader in, IChemObjectBuilder builder, boolean skip,
+                               final Supplier<ISimpleChemObjectReader> v2000ReaderSupplier,
+                               final Supplier<ISimpleChemObjectReader> v3000ReaderSupplier,
+                               final Supplier<ISimpleChemObjectReader> mdlReaderSupplier) {
         this.builder = builder;
+        this.v2000ReaderSupplier = v2000ReaderSupplier;
+        this.v3000ReaderSupplier = v3000ReaderSupplier;
+        this.mdlReaderSupplier = mdlReaderSupplier;
         setReader(in);
         initIOSettings();
         setSkip(skip);
-        this.readerFactory = readerFactory;
     }
 
     @Override
@@ -198,7 +224,7 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
         // create a new reader if not mapped
         if (!readerMap.containsKey(format)) {
 
-            reader = readerFactory.createReader(format);
+            reader = createReader(format);
             reader.setErrorHandler(errorHandler);
             reader.setReaderMode(mode);
             if (format instanceof MDLV2000Format) {
@@ -209,6 +235,27 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
 
             reader = readerMap.get(format);
         }
+
+        return reader;
+    }
+
+    /**
+     * Method will return an appropriate reader for the provided format.
+     *
+     * @param format the format to obtain a reader for
+     * @return instance of a reader appropriate for the provided format
+     */
+    ISimpleChemObjectReader createReader(final IChemFormat format) {
+
+        ISimpleChemObjectReader reader;
+        if (format instanceof MDLV2000Format)
+            reader = v2000ReaderSupplier.get();
+        else if (format instanceof MDLV3000Format)
+            reader = v3000ReaderSupplier.get();
+        else if (format instanceof MDLFormat)
+            reader = mdlReaderSupplier.get();
+        else
+            throw new IllegalArgumentException("Unexpected format: " + format);
 
         return reader;
     }
@@ -335,6 +382,15 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
         this.skip = skip;
     }
 
+    public boolean isSkip() {
+        return skip;
+    }
+
+    public Mode getReaderMode(){
+
+        return mode;
+    }
+
     private String extractFieldData(StringBuilder data) throws IOException {
         data.setLength(0);
         while (currentLine != null && !currentLine.startsWith(SDF_RECORD_SEPARATOR)) {
@@ -423,5 +479,95 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
 
     public void customizeJob() {
         fireIOSettingQuestion(forceReadAs3DCoords);
+    }
+
+    public static class Builder {
+
+        private final BufferedReader reader;
+        private final IChemObjectBuilder chemObjectBuilder;
+
+        private boolean skip = false;
+        private Mode mode = Mode.RELAXED;
+
+        private Supplier<ISimpleChemObjectReader> v2000ReaderSupplier;
+        private Supplier<ISimpleChemObjectReader> v3000ReaderSupplier;
+        private Supplier<ISimpleChemObjectReader> mdlReaderSupplier;
+
+        public Builder(final Reader reader, final IChemObjectBuilder chemObjectBuilder) {
+
+            if (reader instanceof BufferedReader) {
+                this.reader = (BufferedReader) reader;
+            } else {
+                this.reader = new BufferedReader(reader);
+            }
+            this.chemObjectBuilder = chemObjectBuilder;
+        }
+
+        public Builder(final InputStream inputStream, final IChemObjectBuilder chemObjectBuilder) {
+
+            this(new InputStreamReader(inputStream), chemObjectBuilder);
+        }
+
+        public Builder setV2000ReaderSupplier(final Supplier<ISimpleChemObjectReader> v2000ReaderSupplier) {
+
+            this.v2000ReaderSupplier = v2000ReaderSupplier;
+            return this;
+        }
+
+        public Builder setV3000ReaderSupplier(final Supplier<ISimpleChemObjectReader> v3000ReaderSupplier) {
+
+            this.v3000ReaderSupplier = v3000ReaderSupplier;
+            return this;
+        }
+
+        public Builder setMdlReaderSupplier(final Supplier<ISimpleChemObjectReader> mdlREaderSupplier) {
+
+            this.mdlReaderSupplier = mdlREaderSupplier;
+            return this;
+        }
+
+        public Builder setSkip(final boolean skip) {
+
+            this.skip = skip;
+            return this;
+        }
+
+        public Builder setReadingMode(final Mode mode) {
+
+            this.mode = mode;
+            return this;
+        }
+
+        public IteratingSDFReader build(){
+
+            final IteratingSDFReader reader = new IteratingSDFReader(this.reader, chemObjectBuilder, skip,
+                    v2000ReaderSupplier != null ? v2000ReaderSupplier : new Supplier<ISimpleChemObjectReader>() {
+
+                        @Override
+                        public ISimpleChemObjectReader get() {
+
+                            return new MDLV2000Reader();
+                        }
+                    },
+                    v3000ReaderSupplier != null ? v3000ReaderSupplier : new Supplier<ISimpleChemObjectReader>() {
+
+                        @Override
+                        public ISimpleChemObjectReader get() {
+
+                            return new MDLV3000Reader();
+                        }
+                    },
+                    mdlReaderSupplier != null ? mdlReaderSupplier : new Supplier<ISimpleChemObjectReader>() {
+
+                        @Override
+                        public ISimpleChemObjectReader get() {
+
+                            return new MDLReader();
+                        }
+                    });
+
+            reader.setReaderMode(mode);
+            return reader;
+        }
     }
 }
