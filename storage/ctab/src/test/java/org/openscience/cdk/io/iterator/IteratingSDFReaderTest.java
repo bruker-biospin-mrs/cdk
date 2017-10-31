@@ -22,6 +22,7 @@
  *  */
 package org.openscience.cdk.io.iterator;
 
+import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,13 +42,11 @@ import org.openscience.cdk.io.formats.MDLV3000Format;
 import org.openscience.cdk.io.listener.IChemObjectIOListener;
 import org.openscience.cdk.io.listener.PropertiesListener;
 import org.openscience.cdk.io.setting.IOSetting;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Properties;
 
 import static org.mockito.Mockito.mock;
@@ -451,5 +450,87 @@ public class IteratingSDFReaderTest extends CDKTestCase {
                 .build();
 
         Assert.assertEquals(IChemObjectReader.Mode.STRICT, reader.getReaderMode());
+    }
+
+    @Test
+    public void testEndTagWithExtraSpaces() throws Exception {
+
+        final String v2000 = "\n" +
+                "  CDK     1031171559\n" +
+                "\n" +
+                "  7  7  0  0  0  0  0  0  0  0999 V2000\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "  1  2  2  0  0  0  0 \n" +
+                "  2  3  1  0  0  0  0 \n" +
+                "  3  4  2  0  0  0  0 \n" +
+                "  4  5  1  0  0  0  0 \n" +
+                "  5  6  2  0  0  0  0 \n" +
+                "  1  6  1  0  0  0  0 \n" +
+                "  6  7  1  0  0  0  0 \n" +
+                "M  END\n" +
+                "$$$$\n" +
+                "\n" +
+                "  CDK     1031171559\n" +
+                "\n" +
+                "  7  7  0  0  0  0  0  0  0  0999 V2000\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "  1  2  2  0  0  0  0 \n" +
+                "  2  3  1  0  0  0  0 \n" +
+                "  3  4  2  0  0  0  0 \n" +
+                "  4  5  1  0  0  0  0 \n" +
+                "  5  6  2  0  0  0  0 \n" +
+                "  1  6  1  0  0  0  0 \n" +
+                "  6  7  1  0  0  0  0 \n" +
+                "M  END\n" +
+                "$$$$\n" +
+                "";
+
+        final Function<String, Boolean> eomFunction = new Function<String, Boolean>() {
+            @Override
+            public Boolean apply(final String line) {
+                return line.startsWith("M  END");
+            }
+        };
+
+        try (IteratingSDFReader reader = new IteratingSDFReader.Builder(new StringReader(v2000), SilentChemObjectBuilder.getInstance())
+                .setEndOfMoleculeFunction(eomFunction)
+                .build()) {
+
+            final IAtomContainer molecule1 = reader.next();
+            Assert.assertNotNull(molecule1);
+            Assert.assertEquals(7, molecule1.getAtomCount());
+            Assert.assertEquals("C", molecule1.getAtom(0).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(1).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(2).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(3).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(4).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(5).getSymbol());
+            Assert.assertEquals("O", molecule1.getAtom(6).getSymbol());
+
+            final IAtomContainer molecule2 = reader.next();
+            Assert.assertNotNull(molecule2);
+            Assert.assertEquals(7, molecule2.getAtomCount());
+            Assert.assertEquals("C", molecule2.getAtom(0).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(1).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(2).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(3).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(4).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(5).getSymbol());
+            Assert.assertEquals("O", molecule2.getAtom(6).getSymbol());
+
+            Assert.assertEquals(false, reader.hasNext());
+        }
     }
 }
