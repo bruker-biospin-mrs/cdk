@@ -23,6 +23,7 @@
  */
 package org.openscience.cdk.io.iterator;
 
+import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -113,6 +114,8 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
     private final Supplier<ISimpleChemObjectReader> v3000ReaderSupplier;
     private final Supplier<ISimpleChemObjectReader> mdlReaderSupplier;
 
+    private final Function<String, Boolean> endOfMoleculeFunction;
+
     /**
      * Constructs a new IteratingMDLReader that can read Molecule from a given Reader.
      *
@@ -186,6 +189,13 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
 
                         return new MDLReader();
                     }
+                },
+                new Function<String, Boolean>() {
+                    @Override
+                    public Boolean apply(final String line) {
+
+                        return line.startsWith(M_END);
+                    }
                 }
         );
     }
@@ -193,11 +203,13 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
     private IteratingSDFReader(Reader in, IChemObjectBuilder builder, boolean skip,
                                final Supplier<ISimpleChemObjectReader> v2000ReaderSupplier,
                                final Supplier<ISimpleChemObjectReader> v3000ReaderSupplier,
-                               final Supplier<ISimpleChemObjectReader> mdlReaderSupplier) {
+                               final Supplier<ISimpleChemObjectReader> mdlReaderSupplier,
+                               final Function<String, Boolean> endOfMoleculeFunction) {
         this.builder = builder;
         this.v2000ReaderSupplier = v2000ReaderSupplier;
         this.v3000ReaderSupplier = v3000ReaderSupplier;
         this.mdlReaderSupplier = mdlReaderSupplier;
+        this.endOfMoleculeFunction = endOfMoleculeFunction;
         setReader(in);
         initIOSettings();
         setSkip(skip);
@@ -294,7 +306,7 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
                     }
                 }
 
-                if (currentLine.startsWith(M_END)) {
+                if (Boolean.TRUE.equals(endOfMoleculeFunction.apply(currentLine))) {
 
                     logger.debug("MDL file part read: ", buffer);
 
@@ -492,6 +504,7 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
         private Supplier<ISimpleChemObjectReader> v2000ReaderSupplier;
         private Supplier<ISimpleChemObjectReader> v3000ReaderSupplier;
         private Supplier<ISimpleChemObjectReader> mdlReaderSupplier;
+        private Function<String, Boolean> endOfMoleculeFunction;
 
         public Builder(final Reader reader, final IChemObjectBuilder chemObjectBuilder) {
 
@@ -523,6 +536,12 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
         public Builder setMdlReaderSupplier(final Supplier<ISimpleChemObjectReader> mdlREaderSupplier) {
 
             this.mdlReaderSupplier = mdlREaderSupplier;
+            return this;
+        }
+
+        public Builder setEndOfMoleculeFunction(final Function<String, Boolean> endOfMoleculeFunction) {
+
+            this.endOfMoleculeFunction = endOfMoleculeFunction;
             return this;
         }
 
@@ -564,7 +583,15 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
 
                             return new MDLReader();
                         }
-                    });
+                    },
+                    endOfMoleculeFunction != null ? endOfMoleculeFunction : new Function<String, Boolean>() {
+                        @Override
+                        public Boolean apply(final String line) {
+
+                            return line.startsWith(M_END);
+                        }
+                    }
+                    );
 
             reader.setReaderMode(mode);
             return reader;
