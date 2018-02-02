@@ -47,6 +47,7 @@ import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 import java.io.*;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.mockito.Mockito.mock;
@@ -473,7 +474,7 @@ public class IteratingSDFReaderTest extends CDKTestCase {
                 "  5  6  2  0  0  0  0 \n" +
                 "  1  6  1  0  0  0  0 \n" +
                 "  6  7  1  0  0  0  0 \n" +
-                "M  END\n" +
+                "M END\n" + //Has one space between M and END instead of two
                 "$$$$\n" +
                 "\n" +
                 "  CDK     1031171559\n" +
@@ -493,14 +494,14 @@ public class IteratingSDFReaderTest extends CDKTestCase {
                 "  5  6  2  0  0  0  0 \n" +
                 "  1  6  1  0  0  0  0 \n" +
                 "  6  7  1  0  0  0  0 \n" +
-                "M  END\n" +
+                "M END\n" + //Has one space between M and END instead of two
                 "$$$$\n" +
                 "";
 
         final Function<String, Boolean> eomFunction = new Function<String, Boolean>() {
             @Override
             public Boolean apply(final String line) {
-                return line.startsWith("M  END");
+                return line.startsWith("M END");
             }
         };
 
@@ -531,6 +532,71 @@ public class IteratingSDFReaderTest extends CDKTestCase {
             Assert.assertEquals("O", molecule2.getAtom(6).getSymbol());
 
             Assert.assertEquals(false, reader.hasNext());
+        }
+    }
+
+    @Test
+    public void testNewLineBeforeDataBlock() throws Exception {
+
+        final String v2000 = "\n" +
+                "\n" +
+                "\n" +
+                "  5  4  0  0000  0  0  0  0  0999 V2000\n" +
+                "    4.5981    0.2500    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    3.7321    0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    2.0000    0.7500    0.0000 O   0  5  0  0  0  0  0  0  0  0  0\n" +
+                "    2.8660   -0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    2.8660    0.2500    0.0000 N   0  3  0  0  0  0  0  0  0  0  0\n" +
+                "  1  2  1  0\n" +
+                "  2  5  1  0\n" +
+                "  3  5  1  0\n" +
+                "  4  5  2  0\n" +
+                "M  CHG  2   3  -1   5   1\n" +
+                "M  END\n" +
+                "\n" +
+                "> <CSID>\n" +
+                "\n" +
+                "\n" +
+                "$$$$\n";
+
+        try (IteratingSDFReader reader = new IteratingSDFReader.Builder(new StringReader(v2000), SilentChemObjectBuilder.getInstance()).build()) {
+
+            final IAtomContainer molecule1 = reader.next();
+
+            final Map<Object, Object> properties = molecule1.getProperties();
+            Assert.assertEquals("", properties.get("CSID"));
+        }
+    }
+
+    @Test
+    public void testNoNewLineBeforeDataBlock() throws Exception {
+
+        final String v2000 = "\n" +
+                "\n" +
+                "\n" +
+                "  5  4  0  0000  0  0  0  0  0999 V2000\n" +
+                "    4.5981    0.2500    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    3.7321    0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    2.0000    0.7500    0.0000 O   0  5  0  0  0  0  0  0  0  0  0\n" +
+                "    2.8660   -0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    2.8660    0.2500    0.0000 N   0  3  0  0  0  0  0  0  0  0  0\n" +
+                "  1  2  1  0\n" +
+                "  2  5  1  0\n" +
+                "  3  5  1  0\n" +
+                "  4  5  2  0\n" +
+                "M  CHG  2   3  -1   5   1\n" +
+                "M  END\n" +
+                "> <CSID>\n" +
+                "\n" +
+                "\n" +
+                "$$$$\n";
+
+        try (IteratingSDFReader reader = new IteratingSDFReader.Builder(new StringReader(v2000), SilentChemObjectBuilder.getInstance()).build()) {
+
+            final IAtomContainer molecule1 = reader.next();
+
+            final Map<Object, Object> properties = molecule1.getProperties();
+            Assert.assertEquals("", properties.get("CSID"));
         }
     }
 }
