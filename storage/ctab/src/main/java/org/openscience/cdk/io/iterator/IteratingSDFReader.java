@@ -370,7 +370,7 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
                 break;
             logger.debug("looking for data header: ", currentLine);
             String str = currentLine;
-            if (str.startsWith(SDF_DATA_HEADER)) {
+            if (str.startsWith(SDF_DATA_HEADER) || (getReaderMode() == Mode.RELAXED && "".equals(str.trim()))) {
                 dataHeader = extractFieldName(str);
                 skipOtherFieldHeaderLines(str);
                 String data = extractFieldData(sb);
