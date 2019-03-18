@@ -19,6 +19,8 @@
 package org.openscience.cdk.pharmacophore;
 
 import org.openscience.cdk.Atom;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.AtomRef;
 
 import javax.vecmath.Point3d;
 import java.util.Arrays;
@@ -45,6 +47,7 @@ public class PharmacophoreAtom extends Atom {
 
     private String smarts;
     private int[]  matchingAtoms;
+    private String symbol;
 
     /**
      * Create a pharmacophore group.
@@ -78,6 +81,14 @@ public class PharmacophoreAtom extends Atom {
         }
     }
 
+    public static PharmacophoreAtom get(IAtom atom) {
+        if (atom instanceof PharmacophoreAtom)
+            return (PharmacophoreAtom) atom;
+        if (atom instanceof AtomRef)
+            return get(((AtomRef) atom).deref());
+        return null;
+    }
+
     /**
      * Set the SMARTS for the group.
      *
@@ -95,6 +106,16 @@ public class PharmacophoreAtom extends Atom {
      */
     public String getSmarts() {
         return smarts;
+    }
+
+    @Override
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
+    @Override
+    public String getSymbol() {
+        return symbol;
     }
 
     /**

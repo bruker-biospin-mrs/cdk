@@ -89,6 +89,13 @@ public class CxSmilesParserTest {
     }
 
     @Test
+    public void removeUnderscore() {
+        CxSmilesState state = new CxSmilesState();
+        CxSmilesParser.processCx("|$;;;_R1;$|", state);
+        assertThat(state.atomLabels.get(3), is("R1"));
+    }
+
+    @Test
     public void skipCis() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|c:1,4,5|", state), is(not(-1)));
@@ -110,6 +117,12 @@ public class CxSmilesParserTest {
     public void skipCisTransUnspec() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|c:2,6,8,ctu:10,t:1,4,5|", state), is(not(-1)));
+    }
+
+    @Test
+    public void skipLonePairDefinitions() {
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx("|c:6,8,t:4,lp:2:2,4:1,11:1,m:1:8.9|", state), is(not(-1)));
     }
 
     @Test
@@ -191,6 +204,19 @@ public class CxSmilesParserTest {
         assertThat(CxSmilesParser.unescape("&#36;"), is("$"));
         assertThat(CxSmilesParser.unescape("&#127;"), is("\u007F")); // DEL
         assertThat(CxSmilesParser.unescape("&#9;"), is("\t")); // TAB
+    }
+
+    @Test public void relativeStereoMolecule() {
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx("|r|", state), is(not(-1)));
+        assertThat(CxSmilesParser.processCx("|r,$_R1$|", state), is(not(-1)));
+        assertThat(CxSmilesParser.processCx("|$_R1$,r|", state), is(not(-1)));
+    }
+
+
+    @Test public void relativeStereoReaction() {
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx("|r:2,4,5|", state), is(not(-1)));
     }
 
     /**

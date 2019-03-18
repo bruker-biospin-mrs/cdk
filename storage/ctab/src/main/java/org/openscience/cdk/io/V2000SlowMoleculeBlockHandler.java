@@ -31,7 +31,8 @@ import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.io.setting.BooleanIOSetting;
-import org.openscience.cdk.isomorphism.matchers.CTFileQueryBond;
+import org.openscience.cdk.isomorphism.matchers.Expr;
+import org.openscience.cdk.isomorphism.matchers.QueryBond;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
@@ -307,26 +308,27 @@ public class V2000SlowMoleculeBlockHandler extends V2000MoleculeBlockHandler {
             a2.setFlag(CDKConstants.ISAROMATIC, true);
             explicitValence[atom1 - 1] = explicitValence[atom2 - 1] = Integer.MIN_VALUE;
         } else {
-            newBond = new CTFileQueryBond(builder);
+            newBond = new QueryBond(builder);
             IAtom[] bondAtoms = {a1, a2};
             newBond.setAtoms(bondAtoms);
-            newBond.setOrder(IBond.Order.UNSET);
-            CTFileQueryBond.Type queryBondType = null;
             switch (order) {
                 case 5:
-                    queryBondType = CTFileQueryBond.Type.SINGLE_OR_DOUBLE;
+                    ((QueryBond) newBond).getExpression()
+                            .setPrimitive(Expr.Type.SINGLE_OR_DOUBLE);
                     break;
                 case 6:
-                    queryBondType = CTFileQueryBond.Type.SINGLE_OR_AROMATIC;
+                    ((QueryBond) newBond).getExpression()
+                            .setPrimitive(Expr.Type.SINGLE_OR_AROMATIC);
                     break;
                 case 7:
-                    queryBondType = CTFileQueryBond.Type.DOUBLE_OR_AROMATIC;
+                    ((QueryBond) newBond).getExpression()
+                            .setPrimitive(Expr.Type.DOUBLE_OR_AROMATIC);
                     break;
                 case 8:
-                    queryBondType = CTFileQueryBond.Type.ANY;
+                    ((QueryBond) newBond).getExpression()
+                            .setPrimitive(Expr.Type.TRUE);
                     break;
             }
-            ((CTFileQueryBond) newBond).setType(queryBondType);
             newBond.setStereo(stereo);
             explicitValence[atom1 - 1] = explicitValence[atom2 - 1] = Integer.MIN_VALUE;
         }

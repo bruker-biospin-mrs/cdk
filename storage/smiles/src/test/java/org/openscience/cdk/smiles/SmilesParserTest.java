@@ -53,12 +53,18 @@ import org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo;
 import org.openscience.cdk.isomorphism.IsomorphismTester;
 import org.openscience.cdk.isomorphism.UniversalIsomorphismTester;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.stereo.ExtendedCisTrans;
+import org.openscience.cdk.stereo.ExtendedTetrahedral;
+import org.openscience.cdk.stereo.Octahedral;
+import org.openscience.cdk.stereo.SquarePlanar;
+import org.openscience.cdk.stereo.TrigonalBipyramidal;
 import org.openscience.cdk.templates.TestMoleculeFactory;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 import org.openscience.cdk.tools.manipulator.BondManipulator;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -2525,6 +2531,175 @@ public class SmilesParserTest extends CDKTestCase {
         for (IBond bond : mol.bonds()) {
             if (bond.getOrder() == null || bond.getOrder() == IBond.Order.UNSET)
                 fail("Unset bond order");
+        }
+    }
+
+    @Test
+    public void cisplatin() throws Exception {
+        IAtomContainer mol = load("[NH3][Pt@SP1]([NH3])(Cl)Cl");
+        Iterator<IStereoElement> ses =mol.stereoElements().iterator();
+        assertTrue(ses.hasNext());
+        IStereoElement se = ses.next();
+        assertThat(se, instanceOf(SquarePlanar.class));
+        assertThat(((SquarePlanar) se).getConfigOrder(), is(1));
+    }
+
+    @Test
+    public void cisplatin_Z() throws Exception {
+        IAtomContainer mol = load("[NH3][Pt@SP3]([NH3])(Cl)Cl");
+        Iterator<IStereoElement> ses =mol.stereoElements().iterator();
+        assertTrue(ses.hasNext());
+        IStereoElement se = ses.next();
+        assertThat(se, instanceOf(SquarePlanar.class));
+        assertThat(((SquarePlanar) se).getConfigOrder(), is(3));
+    }
+
+    @Test
+    public void transplatin() throws Exception {
+        IAtomContainer mol = load("[NH3][Pt@SP2]([NH3])(Cl)Cl");
+        Iterator<IStereoElement> ses =mol.stereoElements().iterator();
+        assertTrue(ses.hasNext());
+        IStereoElement se = ses.next();
+        assertThat(se, instanceOf(SquarePlanar.class));
+        assertThat(((SquarePlanar) se).getConfigOrder(), is(2));
+    }
+
+    @Test
+    public void tbpy1() throws Exception {
+        IAtomContainer mol = load("S[As@TB1](F)(Cl)(Br)N");
+        Iterator<IStereoElement> ses =mol.stereoElements().iterator();
+        assertTrue(ses.hasNext());
+        IStereoElement se = ses.next();
+        assertThat(se, instanceOf(TrigonalBipyramidal.class));
+        assertThat(((TrigonalBipyramidal) se).getConfigOrder(), is(1));
+    }
+
+    @Test
+    public void tbpy2() throws Exception {
+        IAtomContainer mol = load("S[As@TB2](F)(Cl)(Br)N");
+        Iterator<IStereoElement> ses =mol.stereoElements().iterator();
+        assertTrue(ses.hasNext());
+        IStereoElement se = ses.next();
+        assertThat(se, instanceOf(TrigonalBipyramidal.class));
+        assertThat(((TrigonalBipyramidal) se).getConfigOrder(), is(2));
+    }
+
+    @Test
+    public void oh1() throws Exception {
+        IAtomContainer mol = load("C[Co@](F)(Cl)(Br)(I)S");
+        Iterator<IStereoElement> ses =mol.stereoElements().iterator();
+        assertTrue(ses.hasNext());
+        IStereoElement se = ses.next();
+        assertThat(se, instanceOf(Octahedral.class));
+        assertThat(se.getConfigOrder(), is(1));
+    }
+
+    @Test
+    public void oh8() throws Exception {
+        IAtomContainer mol = load("C[Co@OH8](F)(Br)(Cl)(I)S");
+        Iterator<IStereoElement> ses =mol.stereoElements().iterator();
+        assertTrue(ses.hasNext());
+        IStereoElement se = ses.next();
+        assertThat(se, instanceOf(Octahedral.class));
+        assertThat(se.getConfigOrder(), is(8));
+    }
+
+    @Test
+    public void extendedExtendedTrans3() throws Exception {
+        IAtomContainer mol = load("C/C=C=C=C/C");
+        for (IStereoElement se : mol.stereoElements()) {
+            if (se instanceof ExtendedCisTrans) {
+                ExtendedCisTrans ect = (ExtendedCisTrans) se;
+                assertThat(ect.getConfigOrder(),
+                           is(IStereoElement.OPPOSITE));
+                assertThat(ect.getFocus(), is(mol.getBond(2)));
+                assertThat(ect.getCarriers().get(0),
+                           is(mol.getBond(0)));
+                assertThat(ect.getCarriers().get(1),
+                           is(mol.getBond(4)));
+            }
+        }
+    }
+
+    @Test
+    public void extendedExtendedCis3() throws Exception {
+        IAtomContainer mol = load("C/C=C=C=C\\C");
+        for (IStereoElement se : mol.stereoElements()) {
+            if (se instanceof ExtendedCisTrans) {
+                ExtendedCisTrans ect = (ExtendedCisTrans) se;
+                assertThat(ect.getConfigOrder(),
+                           is(IStereoElement.TOGETHER));
+                assertThat(ect.getFocus(), is(mol.getBond(2)));
+                assertThat(ect.getCarriers().get(0),
+                           is(mol.getBond(0)));
+                assertThat(ect.getCarriers().get(1),
+                           is(mol.getBond(4)));
+            }
+        }
+    }
+
+    @Test
+    public void extendedExtendedCis5() throws Exception {
+        IAtomContainer mol = load("C/C=C=C=C=C=C\\C");
+        for (IStereoElement se : mol.stereoElements()) {
+            if (se instanceof ExtendedCisTrans) {
+                ExtendedCisTrans ect = (ExtendedCisTrans) se;
+                assertThat(ect.getConfigOrder(),
+                           is(IStereoElement.TOGETHER));
+                assertThat(ect.getFocus(), is(mol.getBond(3)));
+                assertThat(ect.getCarriers().get(0),
+                           is(mol.getBond(0)));
+                assertThat(ect.getCarriers().get(1),
+                           is(mol.getBond(6)));
+            }
+        }
+    }
+
+    // an even number of double bonds is extended tetrahedral not
+    // extended Cis/Trans
+    @Test
+    public void notExtendedCis() throws Exception {
+        IAtomContainer mol = load("C/C=C=C=C=C\\C");
+        assertFalse(mol.stereoElements().iterator().hasNext());
+    }
+
+    @Test
+    public void warnOnDirectionalBonds() throws InvalidSmilesException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles("C/C=C/1.C/1");
+    }
+
+    @Test(expected = InvalidSmilesException.class)
+    public void failOnDirectionalBondsWhenStrict() throws InvalidSmilesException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        smipar.setStrict(true);
+        IAtomContainer mol = smipar.parseSmiles("C/C=C/1.C/1");
+    }
+
+    @Test
+    public void ignoreDoubleBond() throws InvalidSmilesException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles("C/C=C(/F)/C");
+        assertThat(mol.stereoElements().iterator().hasNext(),
+                   is(false));
+    }
+
+    @Test public void extendedTetrahedral7() throws InvalidSmilesException {
+        IAtomContainer mol = load("CC=C=C=[C@]=C=C=CC");
+        for (IStereoElement se : mol.stereoElements()) {
+            if (se instanceof ExtendedTetrahedral) {
+                ExtendedTetrahedral et = (ExtendedTetrahedral) se;
+                assertThat(et.getConfigOrder(),
+                           is(IStereoElement.LEFT));
+                assertThat(et.getFocus(), is(mol.getAtom(4)));
+                assertThat(et.getCarriers().toArray(new IAtom[4]),
+                           is(new IAtom[]{
+                               mol.getAtom(0),
+                               mol.getAtom(1),
+                               mol.getAtom(7),
+                               mol.getAtom(8)
+                           }));
+            }
         }
     }
 

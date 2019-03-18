@@ -1107,7 +1107,7 @@ public class MolecularFormulaManipulatorTest extends CDKTestCase {
         IMolecularFormula ff = MolecularFormulaManipulator.getMolecularFormula(formula, builder);
         Assert.assertTrue(MolecularFormulaManipulator.compare(formula1,
                 MolecularFormulaManipulator.getMolecularFormula(formula, builder)));
-        Assert.assertEquals("O3S", MolecularFormulaManipulator.getString(ff));
+        Assert.assertEquals("[O3S]2-", MolecularFormulaManipulator.getString(ff));
         Assert.assertEquals(-2, ff.getCharge(), 0.00001);
     }
 
@@ -1257,7 +1257,7 @@ public class MolecularFormulaManipulatorTest extends CDKTestCase {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         IMolecularFormula mf = MolecularFormulaManipulator.getMolecularFormula("C6H6O", bldr);
         assertTrue(MolecularFormulaManipulator.adjustProtonation(mf, -1));
-        assertThat(MolecularFormulaManipulator.getString(mf), is("C6H5O"));
+        assertThat(MolecularFormulaManipulator.getString(mf), is("[C6H5O]-"));
         assertThat(mf.getCharge(), is(-1));
     }
 
@@ -1283,7 +1283,7 @@ public class MolecularFormulaManipulatorTest extends CDKTestCase {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         IMolecularFormula mf = MolecularFormulaManipulator.getMolecularFormula("HCl", bldr);
         assertTrue(MolecularFormulaManipulator.adjustProtonation(mf, -1));
-        assertThat(MolecularFormulaManipulator.getString(mf), is("Cl"));
+        assertThat(MolecularFormulaManipulator.getString(mf), is("[Cl]-"));
         assertThat(mf.getCharge(), is(-1));
         assertThat(mf.getIsotopeCount(), is(1));
     }
@@ -1320,5 +1320,56 @@ public class MolecularFormulaManipulatorTest extends CDKTestCase {
         assertThat(mf.getIsotopeCount(), is(4));
         assertThat(mf.getIsotopeCount(deuterium), is(1));
         assertThat(mf.getIsotopeCount(hydrogen), is(5));
+    }
+
+    @Test public void testMassNumberDisplay() throws Exception {
+        IsotopeFactory ifac = Isotopes.getInstance();
+        IIsotope br81 = ifac.getIsotope("Br", 81);
+
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        IMolecularFormula mf = bldr.newInstance(IMolecularFormula.class);
+
+        mf.addIsotope(new Atom("C"), 7);
+        mf.addIsotope(new Atom("O"), 3);
+        mf.addIsotope(new Atom("H"), 3);
+        mf.addIsotope(new Atom("Br"), 1);
+        mf.addIsotope(ifac.getIsotope("Br", 81), 1);
+
+        assertThat(MolecularFormulaManipulator.getString(mf, false, false), is("C7H3Br2O3"));
+        assertThat(MolecularFormulaManipulator.getString(mf, false, true), is("C7H3Br[81]BrO3"));
+    }
+
+    @Test
+    public void testMassNumberDisplayWithDefinedIsotopes() throws Exception {
+        IsotopeFactory ifac = Isotopes.getInstance();
+
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        IMolecularFormula mf = bldr.newInstance(IMolecularFormula.class);
+
+        mf.addIsotope(ifac.getMajorIsotope("C"), 7);
+        mf.addIsotope(ifac.getMajorIsotope("O"), 3);
+        mf.addIsotope(ifac.getMajorIsotope("H"), 3);
+        mf.addIsotope(ifac.getMajorIsotope("Br"), 1);
+        mf.addIsotope(ifac.getIsotope("Br", 81), 1);
+        Isotopes.clearMajorIsotopes(mf);
+        assertThat(MolecularFormulaManipulator.getString(mf, false, false), is("C7H3Br2O3"));
+        assertThat(MolecularFormulaManipulator.getString(mf, false, true), is("C7H3Br[81]BrO3"));
+    }
+
+    @Test public void parseMFMass() throws Exception {
+        String str = "C7H3[81]BrBrO3";
+        IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+        IMolecularFormula mf = MolecularFormulaManipulator.getMolecularFormula(str, builder);
+        assertThat(MolecularFormulaManipulator.getString(mf, false, true),
+            is("C7H3Br[81]BrO3"));
+    }
+
+    @Test
+    public void testRoundTripCharge() {
+        String f = "[C3H7]+";
+        IMolecularFormula m =
+                MolecularFormulaManipulator.getMolecularFormula(f,
+                                                                SilentChemObjectBuilder.getInstance());
+        assertThat(MolecularFormulaManipulator.getString(m), is("[C3H7]+"));
     }
 }

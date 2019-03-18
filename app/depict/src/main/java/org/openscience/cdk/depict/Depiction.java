@@ -73,6 +73,11 @@ public abstract class Depiction {
     public static final String PS_FMT = "ps";
 
     /**
+     * Encapsulated PostScript (EPS) format key.
+     */
+    public static final String EPS_FMT = "eps";
+
+    /**
      * Portable Document Format (PDF) format key.
      */
     public static final String PDF_FMT = "pdf";
@@ -91,6 +96,16 @@ public abstract class Depiction {
      * Graphics Interchange Format (GIF) format key.
      */
     public static final String GIF_FMT = "gif";
+
+    /**
+     * Units in MM (specific to SVG).
+     */
+    public static final String UNITS_MM = "mm";
+
+    /**
+     * Units in PX (specific to SVG).
+     */
+    public static final String UNITS_PX = "px";
 
     static final double ACS_1996_BOND_LENGTH_MM = 5.08;
 
@@ -120,16 +135,38 @@ public abstract class Depiction {
      * @return svg XML content
      */
     public final String toSvgStr() {
-        return toVecStr(SVG_FMT);
+        return toSvgStr(UNITS_MM);
     }
 
     /**
-     * Render the image to an EPS format string.
+     * Render the image to an SVG image.
      *
-     * @return eps content
+     * @param units the units for SVG - 'px' or 'mm'
+     * @return svg XML content
+     */
+    public final String toSvgStr(String units) {
+        if (!units.equals(UNITS_MM) && !units.equals(UNITS_PX))
+            throw new IllegalArgumentException("Units must be 'px' or 'mm'!");
+        return toVecStr(SVG_FMT, units);
+    }
+
+    /**
+     * Render the image to an PS (PostScript) format string.
+     *
+     * @return PS content
+     */
+    public final String toPsStr() {
+        return toVecStr(PS_FMT, UNITS_MM);
+    }
+
+    /**
+     * Render the image to an EPS (Encapsulated PostScript) format
+     * string.
+     *
+     * @return EPS content
      */
     public final String toEpsStr() {
-        return toVecStr(PS_FMT);
+        return toVecStr(EPS_FMT, UNITS_MM);
     }
 
     /**
@@ -138,7 +175,7 @@ public abstract class Depiction {
      * @return pdf content
      */
     public final String toPdfStr() {
-        return toVecStr(PDF_FMT);
+        return toVecStr(PDF_FMT, UNITS_MM);
     }
 
     /**
@@ -174,9 +211,10 @@ public abstract class Depiction {
      * rendering.
      *
      * @param fmt the vector graphics format
+     * @param units the units to use (px or mm)
      * @return the vector graphics format string
      */
-    abstract String toVecStr(String fmt);
+    abstract String toVecStr(String fmt, String units);
 
     /**
      * List the available formats that can be rendered.
@@ -189,6 +227,8 @@ public abstract class Depiction {
         formats.add(SVG_FMT.toUpperCase(Locale.ROOT));
         formats.add(PS_FMT);
         formats.add(PS_FMT.toUpperCase(Locale.ROOT));
+        formats.add(EPS_FMT);
+        formats.add(EPS_FMT.toUpperCase(Locale.ROOT));
         formats.add(PDF_FMT);
         formats.add(PDF_FMT.toUpperCase(Locale.ROOT));
         formats.addAll(Arrays.asList(ImageIO.getWriterFormatNames()));

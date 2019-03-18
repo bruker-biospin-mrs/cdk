@@ -30,6 +30,7 @@ import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conforma
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,8 +67,12 @@ import org.openscience.cdk.sgroup.Sgroup;
 import org.openscience.cdk.sgroup.SgroupKey;
 import org.openscience.cdk.stereo.Atropisomeric;
 import org.openscience.cdk.stereo.DoubleBondStereochemistry;
+import org.openscience.cdk.stereo.ExtendedCisTrans;
 import org.openscience.cdk.stereo.ExtendedTetrahedral;
 import org.openscience.cdk.stereo.TetrahedralChirality;
+
+import javax.vecmath.Point2d;
+import javax.vecmath.Point3d;
 
 /**
  * Class with convenience methods that provide methods to manipulate
@@ -515,14 +520,15 @@ public class AtomContainerManipulator {
 
                 IAtom   focus    = tc.getFocus();
                 IAtom[] carriers = tc.getCarriers().toArray(new IAtom[4]);
-                IAtom   hydrogen = hNeighbor.get(focus);
-
-                // in sulfoxide - the implicit part of the tetrahedral centre
-                // is a lone pair
-
-                if (hydrogen != null) {
-                    replaceAtom(carriers, focus, hydrogen);
-                    stereos.add(new TetrahedralChirality(focus, carriers, tc.getConfig()));
+                IAtom[] ends     = ExtendedTetrahedral.findTerminalAtoms(atomContainer, focus);
+                IAtom   h1       = hNeighbor.get(ends[0]);
+                IAtom   h2       = hNeighbor.get(ends[1]);
+                if (h1 != null || h2 != null) {
+                    if (h1 != null)
+                        replaceAtom(carriers, ends[0], h1);
+                    if (h2 != null)
+                        replaceAtom(carriers, ends[1], h2);
+                    stereos.add(new ExtendedTetrahedral(focus, carriers, tc.getConfigOrder()));
                 } else {
                     stereos.add(stereo);
                 }
@@ -730,7 +736,21 @@ public class AtomContainerManipulator {
             }
         }
 
-        if (!anyHydrogenPresent) return org;
+        if (!anyHydrogenPresent)
+            return org;
+
+        // crossing atoms, positional variation atoms etc
+        Set<IAtom>         xatoms  = Collections.emptySet();
+        Collection<Sgroup> sgroups = org.getProperty(CDKConstants.CTAB_SGROUPS);
+        if (sgroups != null) {
+            xatoms = new HashSet<>();
+            for (Sgroup sgroup : sgroups) {
+                for (IBond bond : sgroup.getBonds()) {
+                    xatoms.add(bond.getBegin());
+                    xatoms.add(bond.getEnd());
+                }
+            }
+        }
 
         // we need fast adjacency checks (to check for suppression and
         // update hydrogen counts)
@@ -743,14 +763,16 @@ public class AtomContainerManipulator {
         int nCpyAtoms = 0;
         int nCpyBonds = 0;
 
-        final Set<IAtom> hydrogens = new HashSet<IAtom>(nOrgAtoms);
+        final Set<IAtom> hydrogens        = new HashSet<IAtom>(nOrgAtoms);
+        final Set<IBond> bondsToHydrogens = new HashSet<IBond>();
         final IAtom[] cpyAtoms = new IAtom[nOrgAtoms];
 
         // filter the original container atoms for those that can/can't
         // be suppressed
         for (int v = 0; v < nOrgAtoms; v++) {
             final IAtom atom = org.getAtom(v);
-            if (suppressibleHydrogen(org, graph, bondmap, v)) {
+            if (suppressibleHydrogen(org, graph, bondmap, v) &&
+                !xatoms.contains(atom)) {
                 hydrogens.add(atom);
                 incrementImplHydrogenCount(org.getAtom(graph[v][0]));
             } else {
@@ -761,8 +783,6 @@ public class AtomContainerManipulator {
         // none of the hydrogens could be suppressed - no changes need to be made
         if (hydrogens.isEmpty()) return org;
 
-        org.setAtoms(Arrays.copyOf(cpyAtoms, nCpyAtoms));
-
         // we now update the bonds - we have auxiliary variable remaining that
         // bypasses the set membership checks if all suppressed bonds are found
         IBond[] cpyBonds = new IBond[nOrgBonds - hydrogens.size()];
@@ -770,6 +790,7 @@ public class AtomContainerManipulator {
 
         for (final IBond bond : org.bonds()) {
             if (remaining > 0 && (hydrogens.contains(bond.getBegin()) || hydrogens.contains(bond.getEnd()))) {
+                bondsToHydrogens.add(bond);
                 remaining--;
                 continue;
             }
@@ -780,8 +801,6 @@ public class AtomContainerManipulator {
         // same number of bonds otherwise the containers is a strange
         if (nCpyBonds != cpyBonds.length)
             throw new IllegalArgumentException("number of removed bonds was less than the number of removed hydrogens");
-
-        org.setBonds(cpyBonds);
 
         List<IStereoElement> elements = new ArrayList<IStereoElement>();
 
@@ -803,6 +822,27 @@ public class AtomContainerManipulator {
                     elements.add(tc);
                 } else {
                     elements.add(new TetrahedralChirality(focus, neighbors, tc.getStereo()));
+                }
+            } else if (se instanceof ExtendedTetrahedral) {
+                ExtendedTetrahedral tc = (ExtendedTetrahedral) se;
+                IAtom   focus    = tc.getFocus();
+                IAtom[] carriers = tc.getCarriers().toArray(new IAtom[4]);
+                IAtom[] ends     = ExtendedTetrahedral.findTerminalAtoms(org, focus);
+                boolean updated = false;
+                for (int i = 0; i < carriers.length; i++) {
+                    if (hydrogens.contains(carriers[i])) {
+                        if (org.getBond(carriers[i], ends[0]) != null)
+                            carriers[i] = ends[0];
+                        else
+                            carriers[i] = ends[1];
+                        updated = true;
+                    }
+                }
+                // no changes
+                if (!updated) {
+                    elements.add(tc);
+                } else {
+                    elements.add(new ExtendedTetrahedral(focus, carriers, tc.getConfigOrder()));
                 }
             } else if (se instanceof IDoubleBondStereochemistry) {
                 IDoubleBondStereochemistry db = (IDoubleBondStereochemistry) se;
@@ -830,16 +870,18 @@ public class AtomContainerManipulator {
 
                 if (hydrogens.contains(x)) {
                     conformation = conformation.invert();
-                    xNew = findOther(org, u, v, x);
+                    xNew = findSingleBond(org, u, x);
                 }
 
                 if (hydrogens.contains(y)) {
                     conformation = conformation.invert();
-                    yNew = findOther(org, v, u, y);
+                    yNew = findSingleBond(org, v, y);
                 }
 
-                // no other atoms connected, invalid double-bond configuration?
-                if (x == null || y == null) continue;
+                // no other atoms connected, invalid double-bond configuration
+                // is removed. example [2H]/C=C/[H]
+                if (x == null || y == null ||
+                    xNew == null || yNew == null) continue;
 
                 // no changes
                 if (x.equals(xNew) && y.equals(yNew)) {
@@ -848,16 +890,72 @@ public class AtomContainerManipulator {
                 }
 
                 // XXX: may perform slow operations but works for now
-                IBond cpyLeft = !Objects.equals(xNew, x) ? org.getBond(u, xNew) : orgLeft;
+                IBond cpyLeft  = !Objects.equals(xNew, x) ? org.getBond(u, xNew) : orgLeft;
                 IBond cpyRight = !Objects.equals(yNew, y) ? org.getBond(v, yNew) : orgRight;
 
-                elements.add(new DoubleBondStereochemistry(orgStereo, new IBond[]{cpyLeft, cpyRight}, conformation));
+                elements.add(new DoubleBondStereochemistry(orgStereo,
+                                                           new IBond[]{cpyLeft, cpyRight},
+                                                           conformation));
+            } else if (se instanceof ExtendedCisTrans) {
+                ExtendedCisTrans db = (ExtendedCisTrans) se;
+                int config = db.getConfigOrder();
+
+                IBond focus     = db.getFocus();
+                IBond orgLeft   = db.getCarriers().get(0);
+                IBond orgRight  = db.getCarriers().get(1);
+
+                // we use the following variable names to refer to the
+                // extended double bond atoms and substituents
+                // x       y
+                //  \     /
+                //   u===v
+                IAtom[] ends = ExtendedCisTrans.findTerminalAtoms(org, focus);
+                IAtom u = ends[0];
+                IAtom v = ends[1];
+                IAtom x = orgLeft.getOther(u);
+                IAtom y = orgRight.getOther(v);
+
+                // if xNew == x and yNew == y we don't need to find the
+                // connecting bonds
+                IAtom xNew = x;
+                IAtom yNew = y;
+
+                if (hydrogens.contains(x)) {
+                    config ^= 0x3;
+                    xNew = findSingleBond(org, u, x);
+                }
+
+                if (hydrogens.contains(y)) {
+                    config ^= 0x3;
+                    yNew = findSingleBond(org, v, y);
+                }
+
+                // no other atoms connected, invalid double-bond configuration
+                // is removed. example [2H]/C=C/[H]
+                if (x == null || y == null ||
+                    xNew == null || yNew == null) continue;
+
+                // no changes
+                if (x.equals(xNew) && y.equals(yNew)) {
+                    elements.add(db);
+                    continue;
+                }
+
+                // XXX: may perform slow operations but works for now
+                IBond cpyLeft  = !Objects.equals(xNew, x) ? org.getBond(u, xNew) : orgLeft;
+                IBond cpyRight = !Objects.equals(yNew, y) ? org.getBond(v, yNew) : orgRight;
+
+                elements.add(new ExtendedCisTrans(focus,
+                                                  new IBond[]{cpyLeft, cpyRight},
+                                                  config));
             } else if (se instanceof Atropisomeric) {
                 // can not have any H's
                 elements.add(se);
             }
         }
 
+        org.setAtoms(Arrays.copyOf(cpyAtoms, nCpyAtoms));
+        org.setBonds(cpyBonds);
         org.setStereoElements(elements);
 
         // single electron and lone pairs are not really used but we update
@@ -881,6 +979,19 @@ public class AtomContainerManipulator {
             }
             for (ILonePair lp : remove) {
                 org.removeLonePair(lp);
+            }
+        }
+
+        if (sgroups != null) {
+            for (Sgroup sgroup : sgroups) {
+                if (sgroup.getValue(SgroupKey.CtabParentAtomList) != null) {
+                    Collection<IAtom> pal = sgroup.getValue(SgroupKey.CtabParentAtomList);
+                    pal.removeAll(hydrogens);
+                }
+                for (IAtom hydrogen : hydrogens)
+                    sgroup.removeAtom(hydrogen);
+                for (IBond bondToHydrogen : bondsToHydrogens)
+                    sgroup.removeBond(bondToHydrogen);
             }
         }
 
@@ -917,7 +1028,7 @@ public class AtomContainerManipulator {
         // is the hydrogen an ion?
         if (atom.getFormalCharge() != null && atom.getFormalCharge() != 0) return false;
         // is the hydrogen deuterium / tritium?
-        if (atom.getMassNumber() != null && atom.getMassNumber() != 1) return false;
+        if (atom.getMassNumber() != null) return false;
         // molecule hydrogen with implicit H?
         if (atom.getImplicitHydrogenCount() != null && atom.getImplicitHydrogenCount() != 0) return false;
         // molecule hydrogen
@@ -968,7 +1079,7 @@ public class AtomContainerManipulator {
         // is the hydrogen an ion?
         if (atom.getFormalCharge() != null && atom.getFormalCharge() != 0) return false;
         // is the hydrogen deuterium / tritium?
-        if (atom.getMassNumber() != null && atom.getMassNumber() != 1) return false;
+        if (atom.getMassNumber() != null) return false;
         // hydrogen is either not attached to 0 or 2 neighbors
         if (graph[v].length != 1) return false;
         // non-single bond
@@ -985,18 +1096,21 @@ public class AtomContainerManipulator {
     }
 
     /**
-     * Finds an neighbor connected to 'atom' which is not 'exclude1'
-     * or 'exclude2'. If no neighbor exists - null is returned.
+     * Finds an neighbor connected to 'atom' which is connected by a
+     * single bond and is not 'exclude'.
      *
      * @param container structure
      * @param atom      atom to find a neighbor of
-     * @param exclude1  the neighbor should not be this atom
-     * @param exclude2  the neighbor should also not be this atom
+     * @param exclude   the neighbor should not be this atom
      * @return a neighbor of 'atom', null if not found
      */
-    private static IAtom findOther(IAtomContainer container, IAtom atom, IAtom exclude1, IAtom exclude2) {
-        for (IAtom neighbor : container.getConnectedAtomsList(atom)) {
-            if (!neighbor.equals(exclude1) && !neighbor.equals(exclude2)) return neighbor;
+    private static IAtom findSingleBond(IAtomContainer container, IAtom atom, IAtom exclude) {
+        for (IBond bond : container.getConnectedBondsList(atom)) {
+            if (bond.getOrder() != Order.SINGLE)
+                continue;
+            IAtom neighbor = bond.getOther(atom);
+            if (!neighbor.equals(exclude))
+                return neighbor;
         }
         return null;
     }
@@ -1381,7 +1495,15 @@ public class AtomContainerManipulator {
         IBond[] bonds = new IBond[src.getBondCount()];
 
         for (int i = 0; i < atoms.length; i++) {
-            atoms[i] = builder.newInstance(IAtom.class, "C");
+            atoms[i] = builder.newAtom();
+            atoms[i].setAtomicNumber(6);
+            atoms[i].setSymbol("C");
+            atoms[i].setImplicitHydrogenCount(0);
+            IAtom srcAtom = src.getAtom(i);
+            if (srcAtom.getPoint2d() != null)
+                atoms[i].setPoint2d(new Point2d(srcAtom.getPoint2d()));
+            if (srcAtom.getPoint3d() != null)
+                atoms[i].setPoint3d(new Point3d(srcAtom.getPoint3d()));
         }
         for (int i = 0; i < bonds.length; i++) {
             IBond bond = src.getBond(i);

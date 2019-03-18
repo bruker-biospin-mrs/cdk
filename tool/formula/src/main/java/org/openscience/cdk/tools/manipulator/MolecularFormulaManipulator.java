@@ -24,14 +24,11 @@
 package org.openscience.cdk.tools.manipulator;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.config.AtomTypeFactory;
+import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.config.IsotopeFactory;
 import org.openscience.cdk.exception.CDKException;
@@ -42,6 +39,7 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IIsotope;
 import org.openscience.cdk.interfaces.IMolecularFormula;
+import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
  * Class with convenience methods that provide methods to manipulate
@@ -188,35 +186,96 @@ public class MolecularFormulaManipulator {
      * @param formula       The IMolecularFormula Object
      * @param orderElements The order of Elements
      * @param setOne        True, when must be set the value 1 for elements with
-     * 					    one atom
-     * @return              A String containing the molecular formula
-     *
+     *                      one atom
+     * @return A String containing the molecular formula
      * @see #getHTML(IMolecularFormula)
      * @see #generateOrderEle()
      * @see #generateOrderEle_Hill_NoCarbons()
      * @see #generateOrderEle_Hill_WithCarbons()
-     *
      */
-    public static String getString(IMolecularFormula formula, String[] orderElements, boolean setOne) {
-        StringBuffer stringMF = new StringBuffer();
+    public static String getString(IMolecularFormula formula, String[] orderElements,
+                                   boolean setOne) {
+        return getString(formula, orderElements, setOne, true);
+    }
+
+    private static void appendElement(StringBuilder sb, Integer mass, int elem, int count) {
+        if (mass != null)
+            sb.append('[')
+              .append(mass)
+              .append(']')
+              .append(Elements.ofNumber(elem).symbol());
+        else
+            sb.append(Elements.ofNumber(elem).symbol());
+        if (count != 0)
+            sb.append(count);
+    }
+
+    /**
+     * Returns the string representation of the molecule formula.
+     *
+     * @param formula       The IMolecularFormula Object
+     * @param orderElements The order of Elements
+     * @param setOne        True, when must be set the value 1 for elements with
+     *                      one atom
+     * @param setMassNumber If the formula contains an isotope of an element that is the
+     *                      non-major isotope, the element is represented as <code>[XE]</code> where
+     *                      <code>X</code> is the mass number and <code>E</code> is the element symbol
+     * @return A String containing the molecular formula
+     * @see #getHTML(IMolecularFormula)
+     * @see #generateOrderEle()
+     * @see #generateOrderEle_Hill_NoCarbons()
+     * @see #generateOrderEle_Hill_WithCarbons()
+     */
+    public static String getString(IMolecularFormula formula, String[] orderElements,
+                                   boolean setOne, boolean setMassNumber) {
+        StringBuilder  stringMF     = new StringBuilder();
         List<IIsotope> isotopesList = putInOrder(orderElements, formula);
+        Integer q = formula.getCharge();
 
-        // collect elements in a map - since different isotopes of the
-        // same element will get repeated in the formula
-        List<String> elemSet = new ArrayList<String>();
-        for (IIsotope isotope : isotopesList) {
-            String symbol = isotope.getSymbol();
-            if (!elemSet.contains(symbol)) elemSet.add(symbol);
-        }
+        if (q != null && q != 0)
+            stringMF.append('[');
 
-        for (String elem : elemSet) {
+        if (!setMassNumber) {
             int count = 0;
-            for (IIsotope isotope : formula.isotopes()) {
-                if (isotope.getSymbol().equals(elem)) count += formula.getIsotopeCount(isotope);
+            int prev  = -1;
+            for (IIsotope isotope : isotopesList) {
+                if (!Objects.equals(isotope.getAtomicNumber(), prev)) {
+                    if (count != 0)
+                        appendElement(stringMF,
+                                      null, prev,
+                                      setOne || count != 1 ? count : 0);
+                    prev   = isotope.getAtomicNumber();
+                    count  = formula.getIsotopeCount(isotope);
+                } else
+                    count += formula.getIsotopeCount(isotope);
             }
-            stringMF.append(elem);
-            if (!(count == 1 && !setOne)) stringMF.append(count);
+            if (count != 0)
+                appendElement(stringMF,
+                              null, prev,
+                              setOne || count != 1 ? count : 0);
+        } else {
+            for (IIsotope isotope : isotopesList) {
+                int count = formula.getIsotopeCount(isotope);
+                appendElement(stringMF,
+                              isotope.getMassNumber(), isotope.getAtomicNumber(),
+                              setOne || count != 1 ? count : 0);
+            }
         }
+
+
+        if (q != null && q != 0) {
+            stringMF.append(']');
+            if (q > 0) {
+                if (q > 1)
+                    stringMF.append(q);
+                stringMF.append('+');
+            } else {
+                if (q < -1)
+                    stringMF.append(-q);
+                stringMF.append('-');
+            }
+        }
+
         return stringMF.toString();
     }
 
@@ -258,9 +317,37 @@ public class MolecularFormulaManipulator {
     public static String getString(IMolecularFormula formula, boolean setOne) {
 
         if (containsElement(formula, formula.getBuilder().newInstance(IElement.class, "C")))
-            return getString(formula, generateOrderEle_Hill_WithCarbons(), setOne);
+            return getString(formula, generateOrderEle_Hill_WithCarbons(), setOne, false);
         else
-            return getString(formula, generateOrderEle_Hill_NoCarbons(), setOne);
+            return getString(formula, generateOrderEle_Hill_NoCarbons(), setOne, false);
+    }
+
+
+    /**
+     * Returns the string representation of the molecule formula.
+     * Based on Hill System. The Hill system is a system of writing
+     * chemical formulas such that the number of carbon atoms in a
+     * molecule is indicated first, the number of hydrogen atoms next,
+     * and then the number of all other chemical elements subsequently,
+     * in alphabetical order. When the formula contains no carbon, all
+     * the elements, including hydrogen, are listed alphabetically.
+     *
+     * @param  formula  The IMolecularFormula Object
+     * @param  setOne   True, when must be set the value 1 for elements with
+     * 					one atom
+     * @param setMassNumber If the formula contains an isotope of an element that is the
+     *                      non-major isotope, the element is represented as <code>[XE]</code> where
+     *                      <code>X</code> is the mass number and <code>E</code> is the element symbol
+     * @return          A String containing the molecular formula
+     *
+     * @see #getHTML(IMolecularFormula)
+     */
+    public static String getString(IMolecularFormula formula, boolean setOne, boolean setMassNumber) {
+
+        if (containsElement(formula, formula.getBuilder().newInstance(IElement.class, "C")))
+            return getString(formula, generateOrderEle_Hill_WithCarbons(), setOne, setMassNumber);
+        else
+            return getString(formula, generateOrderEle_Hill_NoCarbons(), setOne, setMassNumber);
     }
 
     public static List<IIsotope> putInOrder(String[] orderElements, IMolecularFormula formula) {
@@ -269,9 +356,21 @@ public class MolecularFormulaManipulator {
             IElement element = formula.getBuilder().newInstance(IElement.class, orderElement);
             if (containsElement(formula, element)) {
                 List<IIsotope> isotopes = getIsotopes(formula, element);
-                for (IIsotope isotope : isotopes) {
-                    isotopesList.add(isotope);
-                }
+                Collections.sort(isotopes,
+                                 new Comparator<IIsotope>() {
+                                     @Override
+                                     public int compare(IIsotope a,
+                                                        IIsotope b) {
+                                         Integer aMass = a.getMassNumber();
+                                         Integer bMass = b.getMassNumber();
+                                         if (aMass == null)
+                                             return -1;
+                                         if (bMass == null)
+                                             return +1;
+                                         return aMass.compareTo(bMass);
+                                     }
+                                 });
+                isotopesList.addAll(isotopes);
             }
         }
         return isotopesList;
@@ -458,7 +557,7 @@ public class MolecularFormulaManipulator {
     private static final char MINUS  = '–';
     private static final String HYPHEN_STR = "-";
     private static final String MINUS_STR  = "–";
-    
+
     /**
      * add in a instance of IMolecularFormula the elements extracts form
      * molecular formula string. The string is immediately analyzed and a set of Nodes
@@ -471,6 +570,96 @@ public class MolecularFormulaManipulator {
      */
     public static IMolecularFormula getMolecularFormula(String stringMF, IMolecularFormula formula) {
         return getMolecularFormula(stringMF, formula, false);
+    }
+
+    private static boolean isUpper(char c) {
+        return c >= 'A' && c <= 'Z';
+    }
+
+    private static boolean isLower(char c) {
+        return c >= 'a' && c <= 'z';
+    }
+
+    private static boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    // helper class for parsing MFs
+    private static final class CharIter {
+        int pos;
+        String str;
+
+        char next() {
+            return pos == str.length() ? '\0' : str.charAt(pos++);
+        }
+
+        int nextUInt() {
+            char c = next();
+            if (!isDigit(c)) {
+                if (c != '\0')
+                    pos--;
+                return -1;
+            }
+            int res = c - '0';
+            while (isDigit(c = next()))
+                res = (10 * res) + (c - '0');
+            if (c != '\0')
+                pos--;
+            return res;
+        }
+
+        boolean nextIf(char c) {
+            if (str.charAt(pos) == c) {
+                pos++;
+                return true;
+            }
+            return false;
+        }
+    }
+
+    // parses an isotope from a symbol in the form:
+     // ('[' <DIGIT> ']')? <UPPER> <LOWER>? <DIGIT>+?
+    private static boolean parseIsotope(CharIter iter,
+                                        IMolecularFormula mf,
+                                        boolean setMajor) {
+        Elements elem = null;
+        int mass = 0;
+        int count = 0;
+        if (iter.nextIf('[')) {
+            mass = iter.nextUInt();
+            if (mass < 0)
+                return false;
+            if (!iter.nextIf(']'))
+                return false;
+        }
+        char c1 = iter.next();
+        char c2 = iter.next();
+        if (!isLower(c2)) {
+            // could use a switch, see SMARTS parser
+            elem = Elements.ofString("" + c1);
+            if (c2 != '\0')
+                iter.pos--;
+        } else {
+            elem = Elements.ofString("" + c1 + c2);
+        }
+        count = iter.nextUInt();
+        if (count < 0)
+            count = 1;
+        IIsotope isotope = mf.getBuilder().newInstance(IIsotope.class, elem.symbol());
+        isotope.setAtomicNumber(elem.number());
+        if (mass != 0)
+            isotope.setMassNumber(mass);
+        else if (setMajor) {
+            try {
+                IIsotope major = Isotopes.getInstance().getMajorIsotope(elem.number());
+                if (major != null)
+                    isotope.setMassNumber(major.getMassNumber());
+            } catch (IOException ex) {
+                // ignored
+            }
+        }
+        mf.addIsotope(isotope, count);
+        return true;
     }
 
     /**
@@ -498,68 +687,19 @@ public class MolecularFormulaManipulator {
             charge = extractCharge(stringMF);
             stringMF = cleanMFfromCharge(stringMF);
         }
-
-        // FIXME: MF: variables with lower case first char
-        char ThisChar;
-        /*
-         * Buffer for
-         */
-        String RecentElementSymbol = "";
-        String RecentElementCountString = "0";
-        /*
-         * String to be converted to an integer
-         */
-        int RecentElementCount;
-
-        if (stringMF.length() == 0) {
+        if (stringMF.isEmpty())
             return null;
-        }
-
-        for (int f = 0; f < stringMF.length(); f++) {
-            ThisChar = stringMF.charAt(f);
-            if (f < stringMF.length()) {
-                if (ThisChar >= 'A' && ThisChar <= 'Z') {
-                    /*
-                     * New Element begins
-                     */
-                    RecentElementSymbol = java.lang.String.valueOf(ThisChar);
-                    RecentElementCountString = "0";
-                }
-                if (ThisChar >= 'a' && ThisChar <= 'z') {
-                    /*
-                     * Two-letter Element continued
-                     */
-                    RecentElementSymbol += ThisChar;
-                }
-                if (ThisChar >= '0' && ThisChar <= '9') {
-                    /*
-                     * Two-letter Element continued
-                     */
-                    RecentElementCountString += ThisChar;
-                }
-            }
-            if (f == stringMF.length() - 1 || (stringMF.charAt(f + 1) >= 'A' && stringMF.charAt(f + 1) <= 'Z')) {
-                /*
-                 * Here an element symbol as well as its number should have been
-                 * read completely
-                 */
-                RecentElementCount = Integer.valueOf(RecentElementCountString);
-                if (RecentElementCount == 0) {
-                    RecentElementCount = 1;
-                }
-
-                IIsotope isotope = formula.getBuilder().newInstance(IIsotope.class, RecentElementSymbol);
-                if (assumeMajorIsotope) {
-                    try {
-                        isotope = Isotopes.getInstance().getMajorIsotope(RecentElementSymbol);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Cannot load the IsotopeFactory");
-                    }
-                }
-                formula.addIsotope(isotope, RecentElementCount);
-
+        int len = stringMF.length();
+        CharIter iter = new CharIter();
+        iter.str = stringMF;
+        while (iter.pos < len) {
+            if (!parseIsotope(iter, formula, assumeMajorIsotope)) {
+                LoggingToolFactory.createLoggingTool(MolecularFormulaManipulator.class)
+                    .error("Could not parse MF: " + iter.str);
+                return null;
             }
         }
+
         if (charge != null) formula.setCharge(charge);
         return formula;
     }
@@ -585,7 +725,7 @@ public class MolecularFormulaManipulator {
         }
         return finalFormula;
     }
-    
+
     /**
      * Extract the charge given a molecular formula format [O3S]2-.
      *
@@ -625,20 +765,27 @@ public class MolecularFormulaManipulator {
      * @return         The summed exact mass of all atoms in this MolecularFormula
      */
     public static double getTotalExactMass(IMolecularFormula formula) {
-        Double mass = 0.0;
-
+        double mass = 0.0;
         for (IIsotope isotope : formula.isotopes()) {
-            if (isotope.getExactMass() == CDKConstants.UNSET) {
-                try {
+            try {
+                Integer massNum  = isotope.getMassNumber();
+                Double  exactMass = isotope.getExactMass();
+                if (massNum == null || massNum == 0) {
                     IIsotope majorIsotope = Isotopes.getInstance().getMajorIsotope(isotope.getSymbol());
-                    if (majorIsotope != null) {
-                        mass += majorIsotope.getExactMass() * formula.getIsotopeCount(isotope);
+                    if (majorIsotope != null)
+                        exactMass = majorIsotope.getExactMass();
+                } else {
+                    if (exactMass == null) {
+                        IIsotope temp = Isotopes.getInstance().getIsotope(isotope.getSymbol(), massNum);
+                        if (temp != null)
+                            exactMass = temp.getExactMass();
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException("Could not instantiate the IsotopeFactory.");
                 }
-            } else
-                mass += isotope.getExactMass() * formula.getIsotopeCount(isotope);
+                if (exactMass != null)
+                    mass += exactMass * formula.getIsotopeCount(isotope);
+            } catch (IOException e) {
+                throw new RuntimeException("Could not instantiate the IsotopeFactory.");
+            }
         }
         if (formula.getCharge() != null) mass = correctMass(mass, formula.getCharge());
         return mass;

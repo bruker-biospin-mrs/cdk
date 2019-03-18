@@ -31,7 +31,8 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
-import org.openscience.cdk.isomorphism.matchers.CTFileQueryBond;
+import org.openscience.cdk.isomorphism.matchers.Expr;
+import org.openscience.cdk.isomorphism.matchers.QueryBond;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -107,8 +108,8 @@ public class MDLV2000BondBlockTest {
         assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
         assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
         assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
-        assertThat(bond, is(instanceOf(CTFileQueryBond.class)));
-        assertThat(((CTFileQueryBond) bond).getType(), is(CTFileQueryBond.Type.SINGLE_OR_DOUBLE));
+        assertThat(bond, is(instanceOf(QueryBond.class)));
+        assertThat(((QueryBond) bond).getExpression().type(), is(Expr.Type.SINGLE_OR_DOUBLE));
     }
 
     @Test
@@ -119,8 +120,8 @@ public class MDLV2000BondBlockTest {
         assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
         assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
         assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
-        assertThat(bond, is(instanceOf(CTFileQueryBond.class)));
-        assertThat(((CTFileQueryBond) bond).getType(), is(CTFileQueryBond.Type.SINGLE_OR_AROMATIC));
+        assertThat(bond, is(instanceOf(QueryBond.class)));
+        assertThat(((QueryBond) bond).getExpression().type(), is(Expr.Type.SINGLE_OR_AROMATIC));
     }
 
     @Test
@@ -131,8 +132,8 @@ public class MDLV2000BondBlockTest {
         assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
         assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
         assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
-        assertThat(bond, is(instanceOf(CTFileQueryBond.class)));
-        assertThat(((CTFileQueryBond) bond).getType(), is(CTFileQueryBond.Type.DOUBLE_OR_AROMATIC));
+        assertThat(bond, is(instanceOf(QueryBond.class)));
+        assertThat(((QueryBond) bond).getExpression().type(), is(Expr.Type.DOUBLE_OR_AROMATIC));
     }
 
     @Test
@@ -143,8 +144,8 @@ public class MDLV2000BondBlockTest {
         assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
         assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
         assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
-        assertThat(bond, is(instanceOf(CTFileQueryBond.class)));
-        assertThat(((CTFileQueryBond) bond).getType(), is(CTFileQueryBond.Type.ANY));
+        assertThat(bond, is(instanceOf(QueryBond.class)));
+        assertThat(((QueryBond) bond).getExpression().type(), is(Expr.Type.TRUE));
     }
 
     @Test

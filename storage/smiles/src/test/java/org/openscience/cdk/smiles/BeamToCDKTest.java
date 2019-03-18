@@ -439,7 +439,7 @@ public class BeamToCDKTest {
     @Test
     public void erroneousLabels_tRNA() throws Exception {
         IAtomContainer ac = convert("[tRNA]CC");
-        assertThat(ac.getAtom(0).getSymbol(), is("*"));
+        assertThat(ac.getAtom(0).getSymbol(), is("R"));
         assertThat(ac.getAtom(0), is(instanceOf(IPseudoAtom.class)));
         assertThat(((IPseudoAtom) ac.getAtom(0)).getLabel(), is("tRNA"));
     }
@@ -449,7 +449,7 @@ public class BeamToCDKTest {
     @Test
     public void erroneousLabels_nested() throws Exception {
         IAtomContainer ac = convert("[now-[this]-is-mean]CC");
-        assertThat(ac.getAtom(0).getSymbol(), is("*"));
+        assertThat(ac.getAtom(0).getSymbol(), is("R"));
         assertThat(ac.getAtom(0), is(instanceOf(IPseudoAtom.class)));
         assertThat(((IPseudoAtom) ac.getAtom(0)).getLabel(), is("now-[this]-is-mean"));
     }
@@ -498,17 +498,17 @@ public class BeamToCDKTest {
     }
 
     @Test public void titleWithTab() throws Exception {
-        assertEquals(convert("CN1C=NC2=C1C(=O)N(C(=O)N2C)C\tcaffeine").getProperty(CDKConstants.TITLE),
+        assertEquals(convert("CN1C=NC2=C1C(=O)N(C(=O)N2C)C\tcaffeine").getTitle(),
                      "caffeine");
     }
 
     @Test public void titleWithSpace() throws Exception {
-        assertEquals(convert("CN1C=NC2=C1C(=O)N(C(=O)N2C)C caffeine").getProperty(CDKConstants.TITLE),
+        assertEquals(convert("CN1C=NC2=C1C(=O)N(C(=O)N2C)C caffeine").getTitle(),
                      "caffeine");
     }
 
     @Test public void titleWithMultipleSpace() throws Exception {
-        assertEquals(convert("CN1C=NC2=C1C(=O)N(C(=O)N2C)C caffeine compound").getProperty(CDKConstants.TITLE),
+        assertEquals(convert("CN1C=NC2=C1C(=O)N(C(=O)N2C)C caffeine compound").getTitle(),
                      "caffeine compound");
     }
 

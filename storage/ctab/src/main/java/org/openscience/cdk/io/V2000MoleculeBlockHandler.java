@@ -32,8 +32,9 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.io.setting.BooleanIOSetting;
 import org.openscience.cdk.io.setting.IOSetting;
-import org.openscience.cdk.isomorphism.matchers.CTFileQueryBond;
+import org.openscience.cdk.isomorphism.matchers.Expr;
 import org.openscience.cdk.isomorphism.matchers.QueryAtomContainer;
+import org.openscience.cdk.isomorphism.matchers.QueryBond;
 import org.openscience.cdk.stereo.TetrahedralChirality;
 
 import javax.vecmath.Point2d;
@@ -53,7 +54,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
     private final BooleanIOSetting addStereoElements;
 
     private int linecount;
-    private int atomCount;
+    private int nAtoms;
     private int[] explicitValence;
     private boolean hasQueryBonds;
     private boolean hasX = false, hasY = false, hasZ = false;
@@ -84,7 +85,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
     }
 
     public int getAtomCount() {
-        return atomCount;
+        return nAtoms;
     }
 
     public int[] getExplicitValence() {
@@ -111,6 +112,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
 
         IAtomContainer outputContainer;
         String title = null;
+        String program = null;
         String remark = null;
 
         String line = input.readLine();
@@ -125,8 +127,9 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
         if (line.length() > 0) {
             title = line;
         }
-        input.readLine();
+        line = input.readLine();
         linecount++;
+        program = line;
         line = input.readLine();
         linecount++;
         if (line.length() > 0) {
@@ -165,16 +168,20 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
             // okay to read in relaxed mode
         }
 
-        atomCount = readMolfileInt(line, 0);
+        this.nAtoms = readMolfileInt(line, 0);
         int nBonds = readMolfileInt(line, 3);
 
-        final IAtom[] atoms = new IAtom[atomCount];
+        final IAtom[] atoms = new IAtom[nAtoms];
         final IBond[] bonds = new IBond[nBonds];
 
         // used for applying the MDL valence model
-        explicitValence = new int[atomCount];
+        explicitValence = new int[nAtoms];
 
-        for (int i = 0; i < atomCount; i++) {
+        hasX = false;
+        hasY = false;
+        hasZ = false;
+
+        for (int i = 0; i < nAtoms; i++) {
             line = input.readLine();
             linecount++;
 
@@ -190,7 +197,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
 
         // convert to 2D, if totalZ == 0
         if (!hasX && !hasY && !hasZ) {
-            if (atomCount == 1) {
+            if (nAtoms == 1) {
                 atoms[0].setPoint2d(new Point2d(0, 0));
             } else {
                 for (IAtom atomToUpdate : atoms) {
@@ -198,8 +205,11 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
                 }
             }
         } else if (!hasZ) {
-
-            if (!forceReadAs3DCoords.isSet()) {
+            //'  CDK     09251712073D'
+            // 0123456789012345678901
+            if (is3Dfile(program)) {
+                hasZ = true;
+            } else if (!forceReadAs3DCoords.isSet()) {
                 for (IAtom atomToUpdate : atoms) {
                     Point3d p3d = atomToUpdate.getPoint3d();
                     if (p3d != null) {
@@ -226,7 +236,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
             outputContainer = new QueryAtomContainer(molecule.getBuilder());
 
         if (title != null)
-            outputContainer.setProperty(CDKConstants.TITLE, title);
+            outputContainer.setTitle(title);
         if (remark != null)
             outputContainer.setProperty(CDKConstants.REMARK, remark);
 
@@ -253,7 +263,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
                 IAtom focus = e.getKey();
                 IAtom[] carriers = new IAtom[4];
                 int hidx = -1;
-                for (IAtom nbr : molecule.getConnectedAtomsList(focus)) {
+                for (IAtom nbr : outputContainer.getConnectedAtomsList(focus)) {
                     if (idx == 4)
                         continue Parities; // too many neighbors
                     if (nbr.getAtomicNumber() == 1) {
@@ -275,12 +285,16 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
                     // we adjust the winding as needed
                     if (hidx == 0 || hidx == 2)
                         winding = winding.invert();
-                    molecule.addStereoElement(new TetrahedralChirality(focus, carriers, winding));
+                    outputContainer.addStereoElement(new TetrahedralChirality(focus, carriers, winding));
                 }
             }
         }
 
         return outputContainer;
+    }
+
+    private boolean is3Dfile(String program) {
+        return program.length() >= 22 && program.substring(20, 22).equals("3D");
     }
 
     protected IAtom readAtom(String line, IChemObjectBuilder builder, int lineNum) throws CDKException, IOException {
@@ -308,6 +322,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
      * @return a new atom instance
      */
     protected IAtom readAtom(String line, IChemObjectBuilder builder, Map<IAtom, Integer> parities, int lineNum) throws CDKException, IOException {
+
 
         // The line may be truncated and it's checked in reverse at the specified
         // lengths:
@@ -504,10 +519,20 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
                 atoms[v].setFlag(CDKConstants.ISAROMATIC, true);
                 break;
             case 5: // single or double
+                bond = new QueryBond(bond.getBegin(), bond.getEnd(), Expr.Type.SINGLE_OR_DOUBLE);
+                bond.setOrder(IBond.Order.UNSET);
+                break;
             case 6: // single or aromatic
+                bond = new QueryBond(bond.getBegin(), bond.getEnd(), Expr.Type.SINGLE_OR_AROMATIC);
+                bond.setOrder(IBond.Order.UNSET);
+                break;
             case 7: // double or aromatic
+                bond = new QueryBond(bond.getBegin(), bond.getEnd(), Expr.Type.DOUBLE_OR_AROMATIC);
+                bond.setOrder(IBond.Order.UNSET);
+                break;
             case 8: // any
-                bond = CTFileQueryBond.ofType(bond, type);
+                bond = new QueryBond(bond.getBegin(), bond.getEnd(), Expr.Type.TRUE);
+                bond.setOrder(IBond.Order.UNSET);
                 break;
             default:
                 throw new CDKException("unrecognised bond type: " + type + ", " + line);

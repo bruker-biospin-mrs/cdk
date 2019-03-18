@@ -34,15 +34,15 @@ import org.openscience.cdk.interfaces.IMolecularFormula;
 public abstract class FormulaRuleTest extends CDKTestCase {
 
     protected static IRule rule;
+    private static Class<? extends IRule> ruleClass;
 
-    public static void setRule(Class ruleClass) throws Exception {
-        if (FormulaRuleTest.rule == null) {
-            Object rule = (Object) ruleClass.newInstance();
-            if (!(rule instanceof IRule)) {
-                throw new CDKException("The passed rule class must be a IRule");
-            }
-            FormulaRuleTest.rule = (IRule) rule;
-        }
+    public static void setRule(Class<? extends IRule> ruleClass) throws Exception {
+        FormulaRuleTest.ruleClass = ruleClass;
+        FormulaRuleTest.rule = getRule();
+    }
+    
+    private static IRule getRule() throws Exception {
+        return ruleClass.newInstance();
     }
 
     /**
@@ -65,28 +65,9 @@ public abstract class FormulaRuleTest extends CDKTestCase {
     }
 
     @Test
-    public void testGetParameters() {
-        Object[] params = rule.getParameters();
-        //		FIXME: the next would be nice, but not currently agreed-upon policy
-        //		assertNotNull(
-        //			"The method getParameters() must return a non-null value, possible a zero length Object[] array",
-        //			paramNames
-        //		);
-        //		FIXME: so instead:
-        if (params == null) params = new Object[0];
-        for (int i = 0; i < params.length; i++) {
-            Assert.assertNotNull("A parameter default must not be null.", params[i]);
-        }
-    }
-
-    @Test
-    public void testSetParameters_arrayObject() throws Exception {
-        Object[] defaultParams = rule.getParameters();
-        rule.setParameters(defaultParams);
-    }
-
-    @Test
     public void testValidate_IMolecularFormula() throws Exception {
+        IRule rule = getRule();
+    	
         IMolecularFormula mf = new MolecularFormula();
         mf.addIsotope(new Isotope("C", 13));
         mf.addIsotope(new Isotope("H", 2), 4);
@@ -95,5 +76,4 @@ public abstract class FormulaRuleTest extends CDKTestCase {
         // can it handle an empty MF?
         rule.validate(new MolecularFormula());
     }
-
 }

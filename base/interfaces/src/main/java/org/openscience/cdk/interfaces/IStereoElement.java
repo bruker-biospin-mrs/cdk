@@ -95,14 +95,17 @@ public interface IStereoElement<F extends IChemObject, C extends IChemObject>
      * there are two geometries with the same number of carriers.
      */
 
-    /** Geomeric CisTrans (e.g. but-2-ene) */
+    /** Geometric CisTrans (e.g. but-2-ene) */
     public static final int CT   = 0x21_00;
 
     /** Tetrahedral (T-4) (e.g. butan-2-ol)*/
     public static final int TH   = 0x42_00;
 
-    /** ExtendedTetrahedral (e.g. 2,3-pentadiene) */
+    /** ExtendedTetrahedral a.k.a. allene (e.g. 2,3-pentadiene) */
     public static final int AL   = 0x43_00;
+
+    /** ExtendedCisTrans a.k.a. cumulene (e.g. hexa-2,3,4-triene) */
+    public static final int CU   = 0x22_00;
 
     /** Atropisomeric (e.g. BiNAP) */
     public static final int AT   = 0x44_00;
@@ -128,7 +131,7 @@ public interface IStereoElement<F extends IChemObject, C extends IChemObject>
     /** Heptagonal Bipyramidal (HBPY-9) */
     public static final int HBPY9 = 0x91_00;
 
-    /** Geomeric CisTrans (e.g. but-2-ene) */
+    /** Geometric CisTrans (e.g. but-2-ene) */
     public static final int CisTrans              = CT;
 
     /** Tetrahedral (T-4) (e.g. butan-2-ol)*/
@@ -136,6 +139,9 @@ public interface IStereoElement<F extends IChemObject, C extends IChemObject>
 
     /** ExtendedTetrahedral (e.g. 2,3-pentadiene) */
     public static final int Allenal               = AL;
+
+    /** Cumulene */
+    public static final int Cumulene              = CU;
 
     /** Atropisomeric (e.g. BiNAP) */
     public static final int Atropisomeric         = AT;
@@ -161,6 +167,13 @@ public interface IStereoElement<F extends IChemObject, C extends IChemObject>
     /** Heptagonal Bipyramidal (HBPY-9) */
     public static final int HeptagonalBipyramidal = HBPY9;
 
+    /** Square Planar Configutation in U Shape */
+    public static final int SPU = SP | 1;
+    /** Square Planar Configutation in 4 Shape */
+    public static final int SP4 = SP | 2;
+    /** Square Planar Configutation in Z Shape */
+    public static final int SPZ = SP | 3;
+
     /**
      * The focus atom or bond at the 'centre' of the stereo-configuration.
      * @return the focus
@@ -180,16 +193,22 @@ public interface IStereoElement<F extends IChemObject, C extends IChemObject>
     int getConfigClass();
 
     /**
-     * The configuration of the stereochemistry.
+     * The configuration order of the stereochemistry.
      * @return configuration
      */
-    int getConfig();
+    int getConfigOrder();
 
     /**
-     * Set the configuration of the stereochemistry.
+     * Set the configuration order of the stereochemistry.
      * @param cfg the new configuration
      */
-    void setConfig(int cfg);
+    void setConfigOrder(int cfg);
+
+    /**
+     * Access the configuration order and class of the stereochemistry.
+     * @return the configuration
+     */
+    int getConfig();
 
     /**
      * Does the stereo element contain the provided atom.

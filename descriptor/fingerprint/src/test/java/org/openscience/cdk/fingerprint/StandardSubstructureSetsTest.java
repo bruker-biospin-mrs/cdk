@@ -39,4 +39,12 @@ public class StandardSubstructureSetsTest extends CDKTestCase {
         Assert.assertEquals(307, smarts.length);
     }
 
+    @Test
+    public void testGetCountableMACCSSMARTSSubstructureSet() throws Exception {
+        String[] smarts = null;
+        smarts = StandardSubstructureSets.getCountableMACCSSMARTS();
+        Assert.assertNotNull(smarts);
+        Assert.assertEquals(142, smarts.length); // currently fragment pattern is ignored
+    }
+
 }

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
@@ -31,7 +32,7 @@ import org.openscience.cdk.qsar.IMolecularDescriptor;
 import org.openscience.cdk.qsar.result.IDescriptorResult;
 import org.openscience.cdk.qsar.result.IntegerResult;
 import org.openscience.cdk.qsar.result.IntegerResultType;
-import org.openscience.cdk.smiles.smarts.SMARTSQueryTool;
+import org.openscience.cdk.smarts.SmartsPattern;
 
 /**
  * Returns the number of basic groups. The list of basic groups is defined
@@ -50,8 +51,7 @@ public class BasicGroupCountDescriptor extends AbstractMolecularDescriptor imple
     private final static String[] SMARTS_STRINGS = {"[$([NH2]-[CX4])]", "[$([NH](-[CX4])-[CX4])]",
             "[$(N(-[CX4])(-[CX4])-[CX4])]", "[$([*;+;!$(*~[*;-])])]", "[$(N=C-N)]", "[$(N-C=N)]"};
     private final static String[] NAMES          = {"nBase"};
-
-    private List<SMARTSQueryTool> tools          = new ArrayList<SMARTSQueryTool>();
+    private List<SmartsPattern> tools            = new ArrayList<SmartsPattern>();
 
     /**
      * Creates a new {@link BasicGroupCountDescriptor}.
@@ -61,7 +61,7 @@ public class BasicGroupCountDescriptor extends AbstractMolecularDescriptor imple
     @Override
     public void initialise(IChemObjectBuilder builder) {
         for (String smarts : SMARTS_STRINGS) {
-            tools.add(new SMARTSQueryTool(smarts, builder));
+            tools.add(SmartsPattern.create(smarts));
         }
     }
 
@@ -97,16 +97,18 @@ public class BasicGroupCountDescriptor extends AbstractMolecularDescriptor imple
             throw new IllegalStateException("descriptor is not initalised, invoke 'initalise' first");
         }
 
-        try {
-            int count = 0;
-            for (SMARTSQueryTool tool : tools) {
-                if (tool.matches(atomContainer)) count += tool.countMatches();
-            }
-            return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new IntegerResult(
-                    count), getDescriptorNames());
-        } catch (CDKException exception) {
-            return getDummyDescriptorValue(exception);
+        atomContainer = clone(atomContainer);
+        for (IAtom atom : atomContainer.atoms()) {
+            if (atom.getImplicitHydrogenCount() == null)
+                atom.setImplicitHydrogenCount(0);
         }
+
+        int count = 0;
+        for (SmartsPattern ptrn : tools) {
+            count += ptrn.matchAll(atomContainer).count();
+        }
+        return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new IntegerResult(
+                count), getDescriptorNames());
     }
 
     /** {@inheritDoc} */

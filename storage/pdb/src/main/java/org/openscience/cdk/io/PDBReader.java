@@ -241,11 +241,7 @@ public class PDBReader extends DefaultChemObjectReader {
                 logger.debug("Read line: ", cRead);
                 if (cRead != null) {
                     lineLength = cRead.length();
-
-                    if (lineLength < 80) {
-                        logger.warn("Line is not of the expected length 80!");
-                    }
-
+                    
                     // make sure the record name is 6 characters long
                     if (lineLength < 6) {
                         cRead = cRead + "      ";
@@ -365,6 +361,8 @@ public class PDBReader extends DefaultChemObjectReader {
                                 oBP = new PDBPolymer();
                                 oModel = oFile.getBuilder().newInstance(IChemModel.class);
                                 oSet = oFile.getBuilder().newInstance(IAtomContainerSet.class);
+                                // avoid duplicate atom warnings
+                                atomNumberMap.clear();
                             }
                         } else {
                             if (molecularStructure.getAtomCount() > 0) {
@@ -424,7 +422,7 @@ public class PDBReader extends DefaultChemObjectReader {
                                     }
                                     if (atomFromNumber != -1 && atomToNumber != -1) {
                                         addBond(molecule, atomFromNumber, atomToNumber);
-                                        logger.warn("Bonded " + atomFromNumber + " with " + atomToNumber);
+                                        logger.debug("Bonded " + atomFromNumber + " with " + atomToNumber);
                                     }
                                 }
                                 lineIndex += 5;

@@ -24,21 +24,63 @@
  */
 package org.openscience.cdk.io;
 
+import com.google.common.collect.ImmutableSet;
+import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.config.IsotopeFactory;
+import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.interfaces.*;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IAtomContainerSet;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemFile;
+import org.openscience.cdk.interfaces.IChemModel;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IChemSequence;
+import org.openscience.cdk.interfaces.IIsotope;
+import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.interfaces.ISingleElectron;
+import org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo;
 import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.io.formats.MDLV2000Format;
 import org.openscience.cdk.io.setting.BooleanIOSetting;
 import org.openscience.cdk.io.setting.IOSetting;
+import org.openscience.cdk.isomorphism.matchers.Expr;
+import org.openscience.cdk.isomorphism.matchers.QueryAtomContainer;
+import org.openscience.cdk.isomorphism.matchers.QueryBond;
+import org.openscience.cdk.sgroup.Sgroup;
+import org.openscience.cdk.sgroup.SgroupBracket;
+import org.openscience.cdk.sgroup.SgroupKey;
+import org.openscience.cdk.sgroup.SgroupType;
 import org.openscience.cdk.stereo.StereoElementFactory;
+import org.openscience.cdk.stereo.TetrahedralChirality;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
-import java.io.*;
+import javax.vecmath.Point2d;
+import javax.vecmath.Point3d;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.openscience.cdk.io.MDLV2000Writer.SPIN_MULTIPLICITY;
 
 /**
  * Reads content from MDL molfiles and SD files. It can read a {@link
@@ -83,8 +125,23 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
     private BooleanIOSetting         interpretHydrogenIsotopes;
     private BooleanIOSetting         addStereoElements;
 
+    // Pattern to remove trailing space (String.trim() will remove leading space, which we don't want)
+    private static final Pattern     TRAILING_SPACE   = Pattern.compile("\\s+$");
+
     /** Delimits Structure-Data (SD) Files. */
     private static final String      RECORD_DELIMITER = "$$$$";
+
+    /**
+     *  @deprecated  Incorrect spelling
+    */
+    private static final Set<String> PSUEDO_LABELS    = ImmutableSet.<String> builder().add("*").add("A").add("Q")
+                                                              .add("L").add("LP").add("R") // XXX: not in spec
+                                                              .add("R#").build();
+
+    /** Valid pseudo labels. */
+    private static final Set<String> PSEUDO_LABELS    = ImmutableSet.<String> builder().add("*").add("A").add("Q")
+                                                              .add("L").add("LP").add("R") // XXX: not in spec
+                                                              .add("R#").build();
 
     public MDLV2000Reader() {
         this(new StringReader(""));
