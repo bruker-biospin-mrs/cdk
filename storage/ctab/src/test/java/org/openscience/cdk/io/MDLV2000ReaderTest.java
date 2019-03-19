@@ -27,6 +27,7 @@ package org.openscience.cdk.io;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.ChemFile;
@@ -1290,7 +1291,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         BufferedReader input = new BufferedReader(new StringReader(sb.toString()));
         IAtomContainer mock = mock(IAtomContainer.class);
 
-        MDLV2000Reader.readNonStructuralData(input, mock);
+        new V2000NonStructuralDataBlockHandler(Mockito.mock(MDLV2000Reader.class),"$$$$").readNonStructuralData(input, mock);
 
         verify(mock).setProperty("DENSITY", "0.9132 - 20.0");
         verify(mock).setProperty("BOILING.POINT", "63.0 (737 MM)\n79.0 (42 MM)");
@@ -1316,7 +1317,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         BufferedReader input = new BufferedReader(new StringReader(sb.toString()));
         IAtomContainer mock = mock(IAtomContainer.class);
 
-        MDLV2000Reader.readNonStructuralData(input, mock);
+        new V2000NonStructuralDataBlockHandler(Mockito.mock(MDLV2000Reader.class),"$$$$").readNonStructuralData(input, mock);
 
         verify(mock).setProperty("ONE_SPACE", " ");
         verify(mock).setProperty("EMTPY_LINES", "");
@@ -1334,7 +1335,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         BufferedReader input = new BufferedReader(new StringReader(sb.toString()));
         IAtomContainer mock = mock(IAtomContainer.class);
 
-        MDLV2000Reader.readNonStructuralData(input, mock);
+        new V2000NonStructuralDataBlockHandler(Mockito.mock(MDLV2000Reader.class),"$$$$").readNonStructuralData(input, mock);
 
         verify(mock).setProperty("LONG_PROPERTY",
                 "This is a long property which should be wrapped when stored as field in an SDF Data entry");
@@ -1740,7 +1741,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
             Assert.assertEquals(2, atom.getMassNumber().intValue());
         }
     }
-	
+
     @Test
     public void testBadAtomCoordinateFormat() throws Exception {
 

@@ -22,13 +22,11 @@
  *  */
 package org.openscience.cdk.io.iterator;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Properties;
-
+import com.google.common.base.Function;
+import com.google.common.base.Supplier;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
@@ -36,12 +34,24 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.io.*;
+import org.openscience.cdk.io.formats.IChemFormat;
+import org.openscience.cdk.io.formats.MDLFormat;
 import org.openscience.cdk.io.formats.MDLV2000Format;
+import org.openscience.cdk.io.formats.MDLV3000Format;
 import org.openscience.cdk.io.listener.IChemObjectIOListener;
 import org.openscience.cdk.io.listener.PropertiesListener;
 import org.openscience.cdk.io.setting.IOSetting;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
+
+import java.io.*;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * TestCase for the reading MDL mol files using one test file.
@@ -349,4 +359,244 @@ public class IteratingSDFReaderTest extends CDKTestCase {
 
     }
 
+    @Test
+    public void testDefaultBuilder() throws Exception {
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .build();
+
+        Assert.assertEquals(MDLV2000Reader.class, reader.createReader(new MDLV2000Format()).getClass());
+        Assert.assertEquals(MDLV3000Reader.class, reader.createReader(new MDLV3000Format()).getClass());
+        Assert.assertEquals(MDLReader.class, reader.createReader(new MDLFormat()).getClass());
+
+        Assert.assertEquals(false, reader.isSkip());
+        Assert.assertEquals(IChemObjectReader.Mode.RELAXED, reader.getReaderMode());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testUnsuportedFormat() throws Exception {
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .build();
+
+        reader.createReader(Mockito.mock(IChemFormat.class));
+    }
+
+    @Test
+    public void testBuilderWithCustomV2000Reader() throws Exception {
+
+        final ISimpleChemObjectReader v2000Reader = mock(ISimpleChemObjectReader.class);
+        //noinspection unchecked
+        final Supplier<ISimpleChemObjectReader> v2000Factory = mock(Supplier.class);
+        when(v2000Factory.get()).thenReturn(v2000Reader);
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setV2000ReaderSupplier(v2000Factory)
+                .build();
+
+        Assert.assertEquals(v2000Reader, reader.createReader(new MDLV2000Format()));
+        Mockito.verify(v2000Factory, Mockito.times(1)).get();
+        Mockito.verifyNoMoreInteractions(v2000Factory);
+    }
+
+    @Test
+    public void testBuilderWithCustomV3000Reader() throws Exception {
+
+        final ISimpleChemObjectReader v3000Reader = mock(ISimpleChemObjectReader.class);
+        //noinspection unchecked
+        final Supplier<ISimpleChemObjectReader> v3000Factory = mock(Supplier.class);
+        when(v3000Factory.get()).thenReturn(v3000Reader);
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setV3000ReaderSupplier(v3000Factory)
+                .build();
+
+        Assert.assertEquals(v3000Reader, reader.createReader(new MDLV3000Format()));
+        Mockito.verify(v3000Factory, Mockito.times(1)).get();
+        Mockito.verifyNoMoreInteractions(v3000Factory);
+    }
+
+    @Test
+    public void testBuilderWithCustomMdlReader() throws Exception {
+
+        final ISimpleChemObjectReader mdlReader = mock(ISimpleChemObjectReader.class);
+        //noinspection unchecked
+        final Supplier<ISimpleChemObjectReader> mdlFactory = mock(Supplier.class);
+        when(mdlFactory.get()).thenReturn(mdlReader);
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setMdlReaderSupplier(mdlFactory)
+                .build();
+
+        Assert.assertEquals(mdlReader, reader.createReader(new MDLFormat()));
+        Mockito.verify(mdlFactory, Mockito.times(1)).get();
+        Mockito.verifyNoMoreInteractions(mdlFactory);
+    }
+
+    @Test
+    public void testBuilderSetSkip() throws Exception {
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setSkip(true)
+                .build();
+
+        Assert.assertEquals(true, reader.isSkip());
+    }
+
+    @Test
+    public void testBuilderSetReadingMode() throws Exception {
+
+        final IteratingSDFReader reader = new IteratingSDFReader.Builder(Mockito.mock(BufferedReader.class), Mockito.mock(IChemObjectBuilder.class))
+                .setReadingMode(IChemObjectReader.Mode.STRICT)
+                .build();
+
+        Assert.assertEquals(IChemObjectReader.Mode.STRICT, reader.getReaderMode());
+    }
+
+    @Test
+    public void testEndTagWithExtraSpaces() throws Exception {
+
+        final String v2000 = "\n" +
+                "  CDK     1031171559\n" +
+                "\n" +
+                "  7  7  0  0  0  0  0  0  0  0999 V2000\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "  1  2  2  0  0  0  0 \n" +
+                "  2  3  1  0  0  0  0 \n" +
+                "  3  4  2  0  0  0  0 \n" +
+                "  4  5  1  0  0  0  0 \n" +
+                "  5  6  2  0  0  0  0 \n" +
+                "  1  6  1  0  0  0  0 \n" +
+                "  6  7  1  0  0  0  0 \n" +
+                "M END\n" + //Has one space between M and END instead of two
+                "$$$$\n" +
+                "\n" +
+                "  CDK     1031171559\n" +
+                "\n" +
+                "  7  7  0  0  0  0  0  0  0  0999 V2000\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "  1  2  2  0  0  0  0 \n" +
+                "  2  3  1  0  0  0  0 \n" +
+                "  3  4  2  0  0  0  0 \n" +
+                "  4  5  1  0  0  0  0 \n" +
+                "  5  6  2  0  0  0  0 \n" +
+                "  1  6  1  0  0  0  0 \n" +
+                "  6  7  1  0  0  0  0 \n" +
+                "M END\n" + //Has one space between M and END instead of two
+                "$$$$\n" +
+                "";
+
+        final Function<String, Boolean> eomFunction = new Function<String, Boolean>() {
+            @Override
+            public Boolean apply(final String line) {
+                return line.startsWith("M END");
+            }
+        };
+
+        try (IteratingSDFReader reader = new IteratingSDFReader.Builder(new StringReader(v2000), SilentChemObjectBuilder.getInstance())
+                .setEndOfMoleculeFunction(eomFunction)
+                .build()) {
+
+            final IAtomContainer molecule1 = reader.next();
+            Assert.assertNotNull(molecule1);
+            Assert.assertEquals(7, molecule1.getAtomCount());
+            Assert.assertEquals("C", molecule1.getAtom(0).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(1).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(2).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(3).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(4).getSymbol());
+            Assert.assertEquals("C", molecule1.getAtom(5).getSymbol());
+            Assert.assertEquals("O", molecule1.getAtom(6).getSymbol());
+
+            final IAtomContainer molecule2 = reader.next();
+            Assert.assertNotNull(molecule2);
+            Assert.assertEquals(7, molecule2.getAtomCount());
+            Assert.assertEquals("C", molecule2.getAtom(0).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(1).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(2).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(3).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(4).getSymbol());
+            Assert.assertEquals("C", molecule2.getAtom(5).getSymbol());
+            Assert.assertEquals("O", molecule2.getAtom(6).getSymbol());
+
+            Assert.assertEquals(false, reader.hasNext());
+        }
+    }
+
+    @Test
+    public void testNewLineBeforeDataBlock() throws Exception {
+
+        final String v2000 = "\n" +
+                "\n" +
+                "\n" +
+                "  5  4  0  0000  0  0  0  0  0999 V2000\n" +
+                "    4.5981    0.2500    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    3.7321    0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    2.0000    0.7500    0.0000 O   0  5  0  0  0  0  0  0  0  0  0\n" +
+                "    2.8660   -0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    2.8660    0.2500    0.0000 N   0  3  0  0  0  0  0  0  0  0  0\n" +
+                "  1  2  1  0\n" +
+                "  2  5  1  0\n" +
+                "  3  5  1  0\n" +
+                "  4  5  2  0\n" +
+                "M  CHG  2   3  -1   5   1\n" +
+                "M  END\n" +
+                "\n" +
+                "> <CSID>\n" +
+                "\n" +
+                "\n" +
+                "$$$$\n";
+
+        try (IteratingSDFReader reader = new IteratingSDFReader.Builder(new StringReader(v2000), SilentChemObjectBuilder.getInstance()).build()) {
+
+            final IAtomContainer molecule1 = reader.next();
+
+            final Map<Object, Object> properties = molecule1.getProperties();
+            Assert.assertEquals("", properties.get("CSID"));
+        }
+    }
+
+    @Test
+    public void testNoNewLineBeforeDataBlock() throws Exception {
+
+        final String v2000 = "\n" +
+                "\n" +
+                "\n" +
+                "  5  4  0  0000  0  0  0  0  0999 V2000\n" +
+                "    4.5981    0.2500    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    3.7321    0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    2.0000    0.7500    0.0000 O   0  5  0  0  0  0  0  0  0  0  0\n" +
+                "    2.8660   -0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0\n" +
+                "    2.8660    0.2500    0.0000 N   0  3  0  0  0  0  0  0  0  0  0\n" +
+                "  1  2  1  0\n" +
+                "  2  5  1  0\n" +
+                "  3  5  1  0\n" +
+                "  4  5  2  0\n" +
+                "M  CHG  2   3  -1   5   1\n" +
+                "M  END\n" +
+                "> <CSID>\n" +
+                "\n" +
+                "\n" +
+                "$$$$\n";
+
+        try (IteratingSDFReader reader = new IteratingSDFReader.Builder(new StringReader(v2000), SilentChemObjectBuilder.getInstance()).build()) {
+
+            final IAtomContainer molecule1 = reader.next();
+
+            final Map<Object, Object> properties = molecule1.getProperties();
+            Assert.assertEquals("", properties.get("CSID"));
+        }
+    }
 }
