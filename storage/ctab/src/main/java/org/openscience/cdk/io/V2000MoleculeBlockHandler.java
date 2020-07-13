@@ -32,8 +32,9 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.io.setting.BooleanIOSetting;
 import org.openscience.cdk.io.setting.IOSetting;
-import org.openscience.cdk.isomorphism.matchers.CTFileQueryBond;
+import org.openscience.cdk.isomorphism.matchers.Expr;
 import org.openscience.cdk.isomorphism.matchers.QueryAtomContainer;
+import org.openscience.cdk.isomorphism.matchers.QueryBond;
 import org.openscience.cdk.stereo.TetrahedralChirality;
 
 import javax.vecmath.Point2d;
@@ -112,6 +113,7 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
         IAtomContainer outputContainer;
         String title = null;
         String remark = null;
+        String program;
 
         String line = input.readLine();
         linecount++;
@@ -125,8 +127,9 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
         if (line.length() > 0) {
             title = line;
         }
-        input.readLine();
+        line = input.readLine();
         linecount++;
+        program = line;
         line = input.readLine();
         linecount++;
         if (line.length() > 0) {
@@ -198,8 +201,11 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
                 }
             }
         } else if (!hasZ) {
-
-            if (!forceReadAs3DCoords.isSet()) {
+            //'  CDK     09251712073D'
+            // 0123456789012345678901
+            if (is3Dfile(program)) {
+                hasZ = true;
+            } else if (!forceReadAs3DCoords.isSet()) {
                 for (IAtom atomToUpdate : atoms) {
                     Point3d p3d = atomToUpdate.getPoint3d();
                     if (p3d != null) {
@@ -483,7 +489,6 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
 
         IBond bond = builder.newBond();
         bond.setAtoms(new IAtom[]{atoms[u], atoms[v]});
-
         switch (type) {
             case 1: // single
                 bond.setOrder(IBond.Order.SINGLE);
@@ -504,10 +509,16 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
                 atoms[v].setFlag(CDKConstants.ISAROMATIC, true);
                 break;
             case 5: // single or double
+                bond = new QueryBond(bond.getBegin(), bond.getEnd(), Expr.Type.SINGLE_OR_DOUBLE);
+                break;
             case 6: // single or aromatic
+                bond = new QueryBond(bond.getBegin(), bond.getEnd(), Expr.Type.SINGLE_OR_AROMATIC);
+                break;
             case 7: // double or aromatic
+                bond = new QueryBond(bond.getBegin(), bond.getEnd(), Expr.Type.DOUBLE_OR_AROMATIC);
+                break;
             case 8: // any
-                bond = CTFileQueryBond.ofType(bond, type);
+                bond = new QueryBond(bond.getBegin(), bond.getEnd(), Expr.Type.TRUE);
                 break;
             default:
                 throw new CDKException("unrecognised bond type: " + type + ", " + line);
@@ -522,4 +533,10 @@ public class V2000MoleculeBlockHandler extends V2000BlockHandler {
 
         return bond;
     }
+
+
+    private boolean is3Dfile(String program) {
+        return program.length() >= 22 && program.substring(20, 22).equals("3D");
+    }
+
 }

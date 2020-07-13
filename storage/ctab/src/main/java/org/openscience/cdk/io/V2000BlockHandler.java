@@ -55,7 +55,7 @@ public class V2000BlockHandler {
 
     public V2000BlockHandler(MDLV2000Reader reader) {
         this.reader = reader;
-        this.mode = reader.getReaderMode();
+        this.mode = reader.mode;
     }
 
     /**
