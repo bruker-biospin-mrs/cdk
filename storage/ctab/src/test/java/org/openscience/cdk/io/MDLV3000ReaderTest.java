@@ -187,18 +187,18 @@ public class MDLV3000ReaderTest extends SimpleChemObjectReaderTest {
 
         try(final MDLV3000Reader reader = new MDLV3000Reader(new StringReader(v3000))){
 
-            final AtomContainer container = reader.read(new AtomContainer(0, 0, 0, 0));
+            final IAtomContainer container = reader.read(new AtomContainer(0, 0, 0, 0));
             Assert.assertEquals(6, container.getAtomCount());
             for(IAtom atom : container.atoms()){
 
-                Assert.assertEquals(true, atom.isAromatic());
+                assertTrue(atom.isAromatic());
             }
 
             Assert.assertEquals(6, container.getBondCount());
             for(IBond bond : container.bonds()){
 
-                Assert.assertEquals(true, bond.isAromatic());
-                Assert.assertEquals(true, bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+                assertTrue(bond.isAromatic());
+                assertTrue(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
                 Assert.assertEquals(0, bond.getOrder().numeric().intValue());
                 Assert.assertEquals(0, bond.getElectronCount().intValue());
             }
@@ -245,7 +245,7 @@ public class MDLV3000ReaderTest extends SimpleChemObjectReaderTest {
 
         try(final MDLV3000Reader reader = new MDLV3000Reader(new StringReader(v3000))){
 
-            final AtomContainer container = reader.read(new AtomContainer(0, 0, 0, 0));
+            final IAtomContainer container = reader.read(new AtomContainer(0, 0, 0, 0));
 
             Assert.assertEquals("H", container.getAtom(4).getSymbol());
             Assert.assertEquals(2, container.getAtom(4).getMassNumber().intValue());
@@ -370,7 +370,7 @@ public class MDLV3000ReaderTest extends SimpleChemObjectReaderTest {
         reader.close();
         Assert.assertNotNull(mol);
         Assert.assertEquals(5, mol.getAtomCount());
-        Assert.assertEquals(true, GeometryUtil.has3DCoordinates(mol));
+        assertTrue(GeometryUtil.has3DCoordinates(mol));
     }
 
     @Test
