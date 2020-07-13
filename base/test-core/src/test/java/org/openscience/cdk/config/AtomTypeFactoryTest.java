@@ -23,16 +23,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Source;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.CDKTestCase;
@@ -63,17 +57,7 @@ public class AtomTypeFactoryTest extends CDKTestCase {
 
     private static final String  W3C_XML_SCHEMA       = "http://www.w3.org/2001/XMLSchema";
 
-    static File                  tmpCMLSchema;
-
-    static {
-        try {
-            InputStream in = AtomTypeFactoryTest.class.getClassLoader().getResourceAsStream(
-                    "org/openscience/cdk/io/cml/data/cml25b1.xsd");
-            tmpCMLSchema = copyFileToTmp("cml2.5.b1", ".xsd", in, null, null);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    public static final String CML_XSD_SCHEMA = "/org/openscience/cdk/io/cml/data/cml25b1.xsd";
 
     @Test
     public void testAtomTypeFactory() {
@@ -290,7 +274,7 @@ public class AtomTypeFactoryTest extends CDKTestCase {
 
     @Test
     public void testCanReadCMLSchema() throws Exception {
-        InputStream cmlSchema = new FileInputStream(tmpCMLSchema);
+        InputStream cmlSchema = getClass().getResourceAsStream(CML_XSD_SCHEMA);
         Assert.assertNotNull("Could not find the CML schema", cmlSchema);
 
         DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -328,12 +312,13 @@ public class AtomTypeFactoryTest extends CDKTestCase {
 
     private void assertValidCML(String atomTypeList, String shortcut) throws Exception {
         InputStream ins = this.getClass().getClassLoader().getResourceAsStream(atomTypeList);
-        File tmpInput = copyFileToTmp(shortcut, ".cmlinput", ins, "../../io/cml/data/cml25b1.xsd", "file://"
-                + tmpCMLSchema.getAbsolutePath());
+        final URL cmlSchema = getClass().getResource(CML_XSD_SCHEMA);
+        Assert.assertNotNull("Could not find the CML schema", cmlSchema);
+
+        File tmpInput = copyFileToTmp(shortcut, ".cmlinput", ins,
+                "../../io/cml/data/cml25b1.xsd", cmlSchema.toExternalForm());
         Assert.assertNotNull("Could not find the atom type list CML source", ins);
 
-        InputStream cmlSchema = new FileInputStream(tmpCMLSchema);
-        Assert.assertNotNull("Could not find the CML schema", cmlSchema);
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         factory.setValidating(true);
