@@ -92,13 +92,6 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
     /** Delimits Structure-Data (SD) Files. */
     private static final String      RECORD_DELIMITER = "$$$$";
 
-    /** 
-     *  @deprecated  Incorrect spelling
-    */
-    private static final Set<String> PSUEDO_LABELS    = ImmutableSet.<String> builder().add("*").add("A").add("Q")
-                                                              .add("L").add("LP").add("R") // XXX: not in spec
-                                                              .add("R#").build();
-
     /** Valid pseudo labels. */
     private static final Set<String> PSEUDO_LABELS    = ImmutableSet.<String> builder().add("*").add("A").add("Q")
                                                               .add("L").add("LP").add("R") // XXX: not in spec
@@ -135,11 +128,6 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
         input = new BufferedReader(in);
         initIOSettings();
         super.mode = mode;
-    }
-
-    Mode getReaderMode() {
-
-        return mode;
     }
 
     @Override
@@ -280,9 +268,6 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
         Map<IAtom,Integer> parities = new HashMap<>();
 
         int linecount = 0;
-        String title = null;
-        String program = null;
-        String remark = null;
         String line = "";
 
         try {
@@ -343,10 +328,6 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
         }
 
         return outputContainer;
-    }
-
-    private boolean is3Dfile(String program) {
-        return program.length() >= 22 && program.substring(20, 22).equals("3D");
     }
 
     /**
