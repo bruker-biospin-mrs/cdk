@@ -272,11 +272,12 @@ public class PathTools {
             // now look at bonds
             List<IBond> bonds = atomContainer.getConnectedBondsList(atom);
             for (IBond bond : bonds) {
+                nextAtom = bond.getOther(atom);
                 if (!bond.getFlag(CDKConstants.VISITED)) {
+                    molecule.addAtom(nextAtom);
                     molecule.addBond(bond);
                     bond.setFlag(CDKConstants.VISITED, true);
                 }
-                nextAtom = bond.getOther(atom);
                 if (!nextAtom.getFlag(CDKConstants.VISITED)) {
                     //					logger.debug("wie oft???");
                     newSphere.add(nextAtom);
@@ -459,7 +460,6 @@ public class PathTools {
         }
         dist[atomContainer.indexOf(start)] = 0;
 
-        List<IAtom> sList = new ArrayList<IAtom>();
         List<Integer> qList = new ArrayList<Integer>();
         for (int i = 0; i < natom; i++)
             qList.add(i);
@@ -476,8 +476,7 @@ public class PathTools {
                     index = tmp;
                 }
             }
-            qList.remove(qList.indexOf(index));
-            sList.add(atomContainer.getAtom(index));
+            qList.remove((Integer)index);
             if (index == endNumber) break;
 
             // relaxation

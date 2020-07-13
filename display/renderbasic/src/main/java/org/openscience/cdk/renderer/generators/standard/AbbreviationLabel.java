@@ -92,7 +92,7 @@ final class AbbreviationLabel {
     //
     //    For more information, please refer to <http://unlicense.org/>
     private final static String[] SYMBOL_LIST = new String[]{"acac", "Ace", "Acetyl", "Acyl", "Ad", "All", "Alloc", "Allyl", "Amyl", "AOC",
-                                                             "BDMS", "Benzoyl", "Benzyl", "Bn", "BOC", "Boc", "BOM", "Bromo", "Bs", "Bu", "But", "Butyl", "Bz", "Bzl",
+                                                             "BDMS", "Benzoyl", "Benzyl", "Bn", "BOC", "Boc", "BOM", "bpy", "Bromo", "Bs", "Bu", "But", "Butyl", "Bz", "Bzl",
                                                              "Car", "Cbz", "Chloro", "CoA", "Cy",
                                                              "dppf", "dppp", "dba", "D", "Dan", "Dansyl", "DEIPS", "DEM", "Dip", "Dmb", "DPA", "DTBMS",
                                                              "EE", "EOM", "Et", "Ethyl",
@@ -381,9 +381,6 @@ final class AbbreviationLabel {
      * @return normalised character
      */
     private static char norm(char c) {
-        // if character is out of scope don't
-        if (c > 128)
-            return 0;
         switch (c) {
             case '\u002d': // hyphen
             case '\u2012': // figure dash
@@ -414,6 +411,8 @@ final class AbbreviationLabel {
         if (i == string.length())
             return best;
         final char c = norm(string.charAt(i));
+        if (c > 128)
+            return best;
         return findPrefix(trie.children[c], string, i + 1, best);
     }
 

@@ -24,7 +24,6 @@
 
 package org.openscience.cdk.smiles;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -32,7 +31,11 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.stereo.DoubleBondStereochemistry;
+import org.openscience.cdk.stereo.ExtendedCisTrans;
+import org.openscience.cdk.stereo.Octahedral;
+import org.openscience.cdk.stereo.SquarePlanar;
 import org.openscience.cdk.stereo.TetrahedralChirality;
+import org.openscience.cdk.stereo.TrigonalBipyramidal;
 import uk.ac.ebi.beam.Atom;
 import uk.ac.ebi.beam.Bond;
 import uk.ac.ebi.beam.Configuration;
@@ -40,6 +43,7 @@ import uk.ac.ebi.beam.Edge;
 import uk.ac.ebi.beam.Element;
 import uk.ac.ebi.beam.Graph;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -129,6 +133,9 @@ final class BeamToCDK {
             atoms[i] = toCDKAtom(g.atom(i), g.implHCount(i));
         }
         ac.setAtoms(atoms);
+        // get the atom-refs
+        for (int i = 0; i < g.order(); i++)
+            atoms[i] = ac.getAtom(i);
         for (Edge edge : g.edges()) {
 
             final int u = edge.either();
@@ -198,12 +205,26 @@ final class BeamToCDK {
                     }
                     case ExtendedTetrahedral: {
                         IStereoElement se = newExtendedTetrahedral(u, g, atoms);
-
                         if (se != null) ac.addStereoElement(se);
                         break;
                     }
                     case DoubleBond: {
                         checkBondStereo = true;
+                        break;
+                    }
+                    case SquarePlanar: {
+                        IStereoElement se = newSquarePlanar(u, g.neighbors(u), atoms, c);
+                        if (se != null) ac.addStereoElement(se);
+                        break;
+                    }
+                    case TrigonalBipyramidal: {
+                        IStereoElement se = newTrigonalBipyramidal(u, g.neighbors(u), atoms, c);
+                        if (se != null) ac.addStereoElement(se);
+                        break;
+                    }
+                    case Octahedral: {
+                        IStereoElement se = newOctahedral(u, g.neighbors(u), atoms, c);
+                        if (se != null) ac.addStereoElement(se);
                         break;
                     }
                 }
@@ -218,9 +239,20 @@ final class BeamToCDK {
         }
 
         // title suffix
-        ac.setProperty(CDKConstants.TITLE, g.getTitle());
+        ac.setTitle(g.getTitle());
 
         return ac;
+    }
+
+    private Edge findCumulatedEdge(Graph g, int v, Edge e) {
+        Edge res = null;
+        for (Edge f : g.edges(v)) {
+            if (f != e && f.bond() == Bond.DOUBLE) {
+                if (res != null) return null;
+                res = f;
+            }
+        }
+        return res;
     }
 
     /**
@@ -240,27 +272,58 @@ final class BeamToCDK {
             int v = e.other(u);
 
             // find a directional bond for either end
-            Edge first = null;
+            Edge first  = null;
             Edge second = null;
 
             // if either atom is not incident to a directional label there
             // is no configuration
-            if ((first = findDirectionalEdge(g, u)) != null && (second = findDirectionalEdge(g, v)) != null) {
+            if ((first = findDirectionalEdge(g, u)) != null) {
+                if ((second = findDirectionalEdge(g, v)) != null) {
 
-                // if the directions (relative to the double bond) are the
-                // same then they are on the same side - otherwise they
-                // are opposite
-                Conformation conformation = first.bond(u) == second.bond(v) ? Conformation.TOGETHER : Conformation.OPPOSITE;
+                    // if the directions (relative to the double bond) are the
+                    // same then they are on the same side - otherwise they
+                    // are opposite
+                    Conformation conformation = first.bond(u) == second.bond(v) ?
+                                                Conformation.TOGETHER : Conformation.OPPOSITE;
 
-                // get the stereo bond and build up the ligands for the
-                // stereo-element - linear search could be improved with
-                // map or API change to double bond element
-                IBond db = ac.getBond(ac.getAtom(u), ac.getAtom(v));
+                    // get the stereo bond and build up the ligands for the
+                    // stereo-element - linear search could be improved with
+                    // map or API change to double bond element
+                    IBond db = ac.getBond(ac.getAtom(u), ac.getAtom(v));
 
-                IBond[] ligands = new IBond[]{ac.getBond(ac.getAtom(u), ac.getAtom(first.other(u))),
-                                              ac.getBond(ac.getAtom(v), ac.getAtom(second.other(v)))};
+                    IBond[] ligands = new IBond[]{
+                        ac.getBond(ac.getAtom(u), ac.getAtom(first.other(u))),
+                        ac.getBond(ac.getAtom(v), ac.getAtom(second.other(v)))};
 
-                ac.addStereoElement(new DoubleBondStereochemistry(db, ligands, conformation));
+                    ac.addStereoElement(new DoubleBondStereochemistry(db, ligands, conformation));
+                } else if (g.degree(v) == 2) {
+                    List<Edge> edges = new ArrayList<>();
+                    edges.add(e);
+                    Edge f = findCumulatedEdge(g, v, e);
+                    while (f != null) {
+                        edges.add(f);
+                        v = f.other(v);
+                        f = findCumulatedEdge(g, v, f);
+                    }
+                    // only odd number of cumulated bonds here, otherwise is
+                    // extended tetrahedral
+                    if ((edges.size() & 0x1) == 0)
+                        continue;
+                    second = findDirectionalEdge(g, v);
+                    if (second != null) {
+                        int   cfg        = first.bond(u) == second.bond(v)
+                                           ? IStereoElement.TOGETHER
+                                           : IStereoElement.OPPOSITE;
+                        Edge  middleEdge = edges.get(edges.size()/2);
+                        IBond middleBond = ac.getBond(ac.getAtom(middleEdge.either()),
+                                                      ac.getAtom(middleEdge.other(middleEdge.either())));
+                        IBond[] ligands = new IBond[]{
+                            ac.getBond(ac.getAtom(u), ac.getAtom(first.other(u))),
+                            ac.getBond(ac.getAtom(v), ac.getAtom(second.other(v)))};
+
+                        ac.addStereoElement(new ExtendedCisTrans(middleBond, ligands, cfg));
+                    }
+                }
             }
             // extension F[C@]=[C@@]F
             else {
@@ -357,11 +420,17 @@ final class BeamToCDK {
         List<Edge> edges = g.edges(u);
         if (edges.size() == 1)
             return null;
+        Edge first = null;
         for (Edge e : edges) {
             Bond b = e.bond();
-            if (b == Bond.UP || b == Bond.DOWN) return e;
+            if (b == Bond.UP || b == Bond.DOWN) {
+                if (first == null)
+                    first = e;
+                else if (((first.either() == e.either()) == (first.bond() == b)))
+                    return null;
+            }
         }
-        return null;
+        return first;
     }
 
     /**
@@ -396,9 +465,91 @@ final class BeamToCDK {
                 stereo);
     }
 
+    private IStereoElement newSquarePlanar(int u, int[] vs, IAtom[] atoms, Configuration c) {
+
+        if (vs.length != 4)
+            return null;
+
+        int order;
+        switch (c) {
+            case SP1:
+                order = IStereoElement.SP | 1;
+                break;
+            case SP2:
+                order = IStereoElement.SP | 2;
+                break;
+            case SP3:
+                order = IStereoElement.SP | 3;
+                break;
+            default:
+                return null;
+        }
+
+        return new SquarePlanar(atoms[u],
+                                new IAtom[]{atoms[vs[0]], atoms[vs[1]], atoms[vs[2]], atoms[vs[3]]},
+                                order);
+    }
+
+    private IStereoElement newTrigonalBipyramidal(int u, int[] vs, IAtom[] atoms, Configuration c) {
+        if (vs.length != 5)
+            return null;
+        int order = 1 + c.ordinal() - Configuration.TB1.ordinal();
+        if (order < 1 || order > 20)
+            return null;
+        return new TrigonalBipyramidal(atoms[u],
+                                       new IAtom[]{atoms[vs[0]], atoms[vs[1]], atoms[vs[2]], atoms[vs[3]], atoms[vs[4]]},
+                                       order);
+    }
+
+    private IStereoElement newOctahedral(int u, int[] vs, IAtom[] atoms, Configuration c) {
+        if (vs.length != 6)
+            return null;
+        int order = 1 + c.ordinal() - Configuration.OH1.ordinal();
+        if (order < 1 || order > 30)
+            return null;
+        return new Octahedral(atoms[u],
+                              new IAtom[]{atoms[vs[0]],
+                                          atoms[vs[1]],
+                                          atoms[vs[2]],
+                                          atoms[vs[3]],
+                                          atoms[vs[4]],
+                                          atoms[vs[5]]},
+                              order);
+    }
+
+    private int getOtherDb(Graph g, int u, int v) {
+        for (Edge e : g.edges(u)) {
+            if (e.bond() != Bond.DOUBLE)
+                continue;
+            int nbr = e.other(u);
+            if (nbr == v)
+                continue;
+            return nbr;
+        }
+        return -1;
+    }
+
+    private int[] findExtendedTetrahedralEnds(Graph g, int focus) {
+        List<Edge> es = g.edges(focus);
+        int prevEnd1 = focus;
+        int prevEnd2 = focus;
+        int end1 = es.get(0).other(prevEnd2);
+        int end2 = es.get(1).other(prevEnd2);
+        int tmp;
+        while (end1 >= 0 && end2 >= 0) {
+            tmp = getOtherDb(g, end1, prevEnd1);
+            prevEnd1 = end1;
+            end1 = tmp;
+            tmp = getOtherDb(g, end2, prevEnd2);
+            prevEnd2 = end2;
+            end2 = tmp;
+        }
+        return new int[]{prevEnd1, prevEnd2};
+    }
+
     private IStereoElement newExtendedTetrahedral(int u, Graph g, IAtom[] atoms) {
 
-        int[] terminals = g.neighbors(u);
+        int[] terminals = findExtendedTetrahedralEnds(g, u);
         int[] xs = new int[]{-1, terminals[0], -1, terminals[1]};
 
         int n = 0;

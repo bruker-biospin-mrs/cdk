@@ -27,12 +27,9 @@ package org.openscience.cdk.stereo;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IStereoElement;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo;
 
@@ -128,7 +125,22 @@ public final class ExtendedTetrahedral
      * @return winding configuration
      */
     public Stereo winding() {
-        return Stereo.toStereo(getConfig());
+        return Stereo.toStereo(getConfigOrder());
+    }
+
+    private static IAtom getOtherNbr(IAtomContainer mol, IAtom atom, IAtom other) {
+        IAtom res = null;
+        for (IBond bond : mol.getConnectedBondsList(atom)) {
+            if (bond.getOrder() != IBond.Order.DOUBLE)
+                continue;
+            IAtom nbr = bond.getOther(atom);
+            if (!nbr.equals(other)) {
+                if (res != null)
+                    return null;
+                res = nbr;
+            }
+        }
+        return res;
     }
 
     /**
@@ -141,13 +153,22 @@ public final class ExtendedTetrahedral
      */
     public static IAtom[] findTerminalAtoms(IAtomContainer container, IAtom focus) {
         List<IBond> focusBonds = container.getConnectedBondsList(focus);
-
-        if (focusBonds.size() != 2) throw new IllegalArgumentException("focus must have exactly 2 neighbors");
-
-        IAtom left = focusBonds.get(0).getOther(focus);
-        IAtom right = focusBonds.get(1).getOther(focus);
-
-        return new IAtom[]{left, right};
+        if (focusBonds.size() != 2)
+            throw new IllegalArgumentException("focus must have exactly 2 neighbors");
+        IAtom leftPrev  = focus;
+        IAtom rightPrev = focus;
+        IAtom left      = focusBonds.get(0).getOther(focus);
+        IAtom right     = focusBonds.get(1).getOther(focus);
+        IAtom tmp;
+        while (left != null && right != null) {
+            tmp = getOtherNbr(container, left, leftPrev);
+            leftPrev = left;
+            left     = tmp;
+            tmp = getOtherNbr(container, right, rightPrev);
+            rightPrev = right;
+            right     = tmp;
+        }
+        return new IAtom[]{leftPrev, rightPrev};
     }
 
     /**
@@ -160,21 +181,15 @@ public final class ExtendedTetrahedral
      * @return the terminal atoms (ordered)
      */
     public IAtom[] findTerminalAtoms(IAtomContainer container) {
-        List<IBond> focusBonds = container.getConnectedBondsList(getFocus());
-
-        if (focusBonds.size() != 2) throw new IllegalArgumentException("focus must have exactly 2 neighbors");
-
-        final IAtom left = focusBonds.get(0).getOther(getFocus());
-        final IAtom right = focusBonds.get(1).getOther(getFocus());
-
-        List<IAtom> leftAtoms = container.getConnectedAtomsList(left);
-        List<IAtom> carriers  = getCarriers();
-
-        if (leftAtoms.contains(carriers.get(2)) || leftAtoms.contains(carriers.get(3))) {
-            return new IAtom[]{right, left};
-        } else {
-            return new IAtom[]{left, right};
+        IAtom[] atoms = findTerminalAtoms(container, getFocus());
+        List<IAtom> carriers = getCarriers();
+        if (container.getBond(atoms[0], carriers.get(2)) != null ||
+            container.getBond(atoms[0], carriers.get(3)) != null) {
+            IAtom tmp = atoms[0];
+            atoms[0] = atoms[1];
+            atoms[1] = tmp;
         }
+        return atoms;
     }
 
     @Override

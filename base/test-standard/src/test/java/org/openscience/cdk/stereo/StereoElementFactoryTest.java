@@ -26,6 +26,7 @@ package org.openscience.cdk.stereo;
 
 import com.google.common.collect.Iterables;
 import org.junit.Test;
+import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -34,7 +35,6 @@ import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
 import org.openscience.cdk.io.MDLV2000Reader;
-import org.openscience.cdk.io.MDLV2000Writer;
 import org.openscience.cdk.silent.Atom;
 import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.smiles.SmiFlavor;
@@ -44,7 +44,7 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -200,6 +200,118 @@ public class StereoElementFactoryTest {
 
         assertNotNull(element);
         assertThat(element.getStereo(), is(TOGETHER));
+    }
+
+    /**
+     * (E)-hexa-2,3,4-triene
+     * @cdk.smiles C/C=C=C=C/C
+     */
+    @Test
+    public void e_hexa234triene() {
+        IAtomContainer mol = new AtomContainer();
+        mol.addAtom(atom("C", 1, 2.48d, 0.00d));
+        mol.addAtom(atom("C", 0, 1.65d, 0.00d));
+        mol.addAtom(atom("C", 0, 0.83d, 0.00d));
+        mol.addAtom(atom("C", 1, 0.00d, 0.00d));
+        mol.addAtom(atom("C", 3, -0.41d, -0.71d));
+        mol.addAtom(atom("C", 3, 2.89d, 0.71d));
+        mol.addBond(0,1,IBond.Order.DOUBLE);
+        mol.addBond(1,2,IBond.Order.DOUBLE);
+        mol.addBond(2,3,IBond.Order.DOUBLE);
+        mol.addBond(3,4,IBond.Order.SINGLE);
+        mol.addBond(0,5,IBond.Order.SINGLE);
+        StereoElementFactory factory = StereoElementFactory.using2DCoordinates(mol);
+        List<IBond> dbs = new ArrayList<>();
+        dbs.add(mol.getBond(0));
+        dbs.add(mol.getBond(1));
+        dbs.add(mol.getBond(2));
+        ExtendedCisTrans element = factory.createExtendedCisTrans(dbs, Stereocenters.of(mol));
+        assertNotNull(element);
+        assertThat(element.getConfigOrder(), is(IStereoElement.OPPOSITE));
+    }
+
+    /**
+     * (Z)-hexa-2,3,4-triene
+     * @cdk.smiles C/C=C=C=C\C
+     */
+    @Test
+    public void z_hexa234triene() {
+        IAtomContainer mol = new AtomContainer();
+        mol.addAtom(atom("C", 1, 2.48d, 0.00d));
+        mol.addAtom(atom("C", 0, 1.65d, 0.00d));
+        mol.addAtom(atom("C", 0, 0.83d, 0.00d));
+        mol.addAtom(atom("C", 1, 0.00d, 0.00d));
+        mol.addAtom(atom("C", 3, -0.41d, -0.71d));
+        mol.addAtom(atom("C", 3, 2.92d, -0.69d));
+        mol.addBond(0,1,IBond.Order.DOUBLE);
+        mol.addBond(1,2,IBond.Order.DOUBLE);
+        mol.addBond(2,3,IBond.Order.DOUBLE);
+        mol.addBond(3,4,IBond.Order.SINGLE);
+        mol.addBond(0,5,IBond.Order.SINGLE);
+        StereoElementFactory factory = StereoElementFactory.using2DCoordinates(mol);
+        List<IBond> dbs = new ArrayList<>();
+        dbs.add(mol.getBond(0));
+        dbs.add(mol.getBond(1));
+        dbs.add(mol.getBond(2));
+        ExtendedCisTrans element = factory.createExtendedCisTrans(dbs, Stereocenters.of(mol));
+        assertNotNull(element);
+        assertThat(element.getConfigOrder(), is(IStereoElement.TOGETHER));
+    }
+
+    /**
+     * (E)-hexa-2,3,4-triene
+     * @cdk.smiles C/C=C=C=C/C
+     */
+    @Test
+    public void e_hexa234triene_3D() {
+        IAtomContainer mol = new AtomContainer();
+        mol.addAtom(atom("C", 1, 0.29d, 0.01d, 0.02d));
+        mol.addAtom(atom("C", 0, -0.56d, -0.90d, 0.25d));
+        mol.addAtom(atom("C", 0, -1.37d, -1.75d, 0.46d));
+        mol.addAtom(atom("C", 1, -2.24d, -2.65d, 0.67d));
+        mol.addAtom(atom("C", 3, -3.66d, -2.36d, 0.68d));
+        mol.addAtom(atom("C", 3, 1.69d, -0.32d, -0.11d));
+        mol.addBond(0,1,IBond.Order.DOUBLE);
+        mol.addBond(1,2,IBond.Order.DOUBLE);
+        mol.addBond(2,3,IBond.Order.DOUBLE);
+        mol.addBond(3,4,IBond.Order.SINGLE);
+        mol.addBond(0,5,IBond.Order.SINGLE);
+        StereoElementFactory factory = StereoElementFactory.using3DCoordinates(mol);
+        List<IBond> dbs = new ArrayList<>();
+        dbs.add(mol.getBond(0));
+        dbs.add(mol.getBond(1));
+        dbs.add(mol.getBond(2));
+        ExtendedCisTrans element = factory.createExtendedCisTrans(dbs, Stereocenters.of(mol));
+        assertNotNull(element);
+        assertThat(element.getConfigOrder(), is(IStereoElement.OPPOSITE));
+    }
+
+    /**
+     * (Z)-hexa-2,3,4-triene
+     * @cdk.smiles C/C=C=C=C\C
+     */
+    @Test
+    public void z_hexa234triene_3D() {
+        IAtomContainer mol = new AtomContainer();
+        mol.addAtom(atom("C", 1, -0.09d, -0.45d, -1.07d));
+        mol.addAtom(atom("C", 0, -0.67d, -1.04d, -0.11d));
+        mol.addAtom(atom("C", 0, -1.23d, -1.59d, 0.79d));
+        mol.addAtom(atom("C", 1, -1.84d, -2.17d, 1.74d));
+        mol.addAtom(atom("C", 3, -3.13d, -1.73d, 2.21d));
+        mol.addAtom(atom("C", 3, -0.70d, 0.69d, -1.73d));
+        mol.addBond(0,1,IBond.Order.DOUBLE);
+        mol.addBond(1,2,IBond.Order.DOUBLE);
+        mol.addBond(2,3,IBond.Order.DOUBLE);
+        mol.addBond(3,4,IBond.Order.SINGLE);
+        mol.addBond(0,5,IBond.Order.SINGLE);
+        StereoElementFactory factory = StereoElementFactory.using3DCoordinates(mol);
+        List<IBond> dbs = new ArrayList<>();
+        dbs.add(mol.getBond(0));
+        dbs.add(mol.getBond(1));
+        dbs.add(mol.getBond(2));
+        ExtendedCisTrans element = factory.createExtendedCisTrans(dbs, Stereocenters.of(mol));
+        assertNotNull(element);
+        assertThat(element.getConfigOrder(), is(IStereoElement.TOGETHER));
     }
 
     @Test
@@ -1172,8 +1284,8 @@ public class StereoElementFactoryTest {
         IStereoElement s2 = stereoDown.get(0);
         assertThat(s1.getFocus(), is(s2.getFocus()));
         assertThat(s1.getCarriers(), is(s2.getCarriers()));
-        assertThat(s1.getConfig(), is(IStereoElement.RIGHT));
-        assertThat(s2.getConfig(), is(IStereoElement.LEFT));
+        assertThat(s1.getConfigOrder(), is(IStereoElement.RIGHT));
+        assertThat(s2.getConfigOrder(), is(IStereoElement.LEFT));
 
         // now test placement of wedges else where
         m.getBond(12).setStereo(IBond.Stereo.NONE);
@@ -1185,7 +1297,7 @@ public class StereoElementFactoryTest {
         IStereoElement s3 = stereoUpOther.get(0);
         assertThat(s3.getFocus(), is(s2.getFocus()));
         assertThat(s3.getCarriers(), is(s2.getCarriers()));
-        assertThat(s3.getConfig(), is(s2.getConfig()));
+        assertThat(s3.getConfigOrder(), is(s2.getConfigOrder()));
 
         m.getBond(m.getAtom(9), m.getAtom(12)).setStereo(IBond.Stereo.DOWN);
         List<IStereoElement> stereoDownOther =
@@ -1195,7 +1307,7 @@ public class StereoElementFactoryTest {
         IStereoElement s4 = stereoDownOther.get(0);
         assertThat(s4.getFocus(), is(s1.getFocus()));
         assertThat(s4.getCarriers(), is(s1.getCarriers()));
-        assertThat(s4.getConfig(), is(s1.getConfig()));
+        assertThat(s4.getConfigOrder(), is(s1.getConfigOrder()));
     }
 
     /**
@@ -1424,6 +1536,31 @@ public class StereoElementFactoryTest {
             StereoElementFactory.using3DCoordinates(m)
                                 .createAll();
         assertThat(stereo.size(), is(1));
+    }
+    
+    @Test
+    public void samePositionWithStereocenter() throws Exception {
+    	IAtomContainer m = new AtomContainer();
+        m.addAtom(atom("F", 0, -1, -1));
+        m.addAtom(atom("Cl", 0, 1, -1));
+        m.addAtom(atom("C", 0, 0, 0));
+        m.addAtom(atom("Br", 0, 1, 1));
+        m.addAtom(atom("H", 0, 0, 0));
+        m.addBond(2, 0, IBond.Order.SINGLE);
+        m.addBond(2, 1, IBond.Order.SINGLE);
+        m.addBond(2, 3, IBond.Order.SINGLE);
+        m.addBond(2, 4, IBond.Order.SINGLE);
+        m.getBond(2).setStereo(IBond.Stereo.DOWN);
+        
+        List<IStereoElement> ses = StereoElementFactory.using2DCoordinates(m).createAll();
+        boolean flag = false;
+        for (IStereoElement se : ses) {
+        	if (se != null) {
+        		flag = true;
+        		break;
+        	}
+        }
+        assertThat(flag, is(true));
     }
 
     static IAtom atom(String symbol, int h, double x, double y) {

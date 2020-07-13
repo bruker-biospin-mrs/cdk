@@ -19,6 +19,8 @@
 package org.openscience.cdk.interfaces;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -28,15 +30,22 @@ import javax.vecmath.Point2d;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Test;
+import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.NoSuchAtomException;
+import org.openscience.cdk.sgroup.Sgroup;
+import org.openscience.cdk.sgroup.SgroupBracket;
+import org.openscience.cdk.sgroup.SgroupKey;
+import org.openscience.cdk.sgroup.SgroupType;
 import org.openscience.cdk.stereo.DoubleBondStereochemistry;
 import org.openscience.cdk.stereo.TetrahedralChirality;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -978,6 +987,64 @@ public abstract class AbstractAtomContainerTest extends AbstractChemObjectTest {
         Assert.assertEquals(c1, acetone.getAtom(0));
         Assert.assertEquals(c2, acetone.getAtom(1));
         Assert.assertEquals(o, acetone.getAtom(2));
+    }
+
+    @Test
+    public void testRemoveAtomWithLonePairs() {
+        IAtomContainer mol = (IAtomContainer) newChemObject();
+        IAtom c0 = mol.getBuilder().newInstance(IAtom.class, "C");
+        IAtom c1 = mol.getBuilder().newInstance(IAtom.class, "C");
+        IAtom c2 = mol.getBuilder().newInstance(IAtom.class, "C");
+        mol.addAtom(c0);
+        mol.addAtom(c1);
+        mol.addAtom(c2);
+        IBond b1 = mol.getBuilder().newInstance(IBond.class, c0, c1, IBond.Order.SINGLE);
+        IBond b2 = mol.getBuilder().newInstance(IBond.class, c1, c2, IBond.Order.SINGLE);
+        mol.addBond(b1);
+        mol.addBond(b2);
+                
+        mol.addLonePair(1);
+        mol.addLonePair(2);
+
+        int n;
+        n = mol.getLonePairCount();
+        for (int i = 0; i < n; i++)
+            for (int j = i + 1; j < n; j++)
+                Assert.assertFalse(mol.getLonePair(i) == mol.getLonePair(j));
+        mol.removeAtom(c0);
+        n = mol.getLonePairCount();
+        for (int i = 0; i < n; i++)
+            for (int j = i + 1; j < n; j++)
+                Assert.assertFalse(mol.getLonePair(i) == mol.getLonePair(j));
+    }
+
+    @Test
+    public void testRemoveAtomWithSingleElectron() {
+        IAtomContainer mol = (IAtomContainer) newChemObject();
+        IAtom c0 = mol.getBuilder().newInstance(IAtom.class, "C");
+        IAtom c1 = mol.getBuilder().newInstance(IAtom.class, "C");
+        IAtom c2 = mol.getBuilder().newInstance(IAtom.class, "C");
+        mol.addAtom(c0);
+        mol.addAtom(c1);
+        mol.addAtom(c2);
+        IBond b1 = mol.getBuilder().newInstance(IBond.class, c0, c1, IBond.Order.SINGLE);
+        IBond b2 = mol.getBuilder().newInstance(IBond.class, c1, c2, IBond.Order.SINGLE);
+        mol.addBond(b1);
+        mol.addBond(b2);
+
+        mol.addSingleElectron(1);
+        mol.addSingleElectron(2);
+        
+        int n;
+        n = mol.getSingleElectronCount();
+        for (int i = 0; i < n; i++)
+            for (int j = i + 1; j < n; j++)
+                Assert.assertFalse(mol.getSingleElectron(i) == mol.getSingleElectron(j));
+        mol.removeAtom(0);
+        n = mol.getSingleElectronCount();
+        for (int i = 0; i < n; i++)
+            for (int j = i + 1; j < n; j++)
+                Assert.assertFalse(mol.getSingleElectron(i) == mol.getSingleElectron(j));
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
@@ -3018,4 +3085,193 @@ public abstract class AbstractAtomContainerTest extends AbstractChemObjectTest {
         container.getConnectedSingleElectronsCount(atom);
     }
 
+    @Test
+    public void addSameAtomTwice() {
+        IAtomContainer mol  = (IAtomContainer) newChemObject();
+        IAtom          atom = mol.getBuilder().newAtom();
+        mol.addAtom(atom);
+        mol.addAtom(atom);
+        assertThat(mol.getAtomCount(), is(1));
+    }
+
+    @Test
+    public void preserveAdjacencyOnSetAtoms() {
+        IAtomContainer mol = (IAtomContainer) newChemObject();
+        IAtom          a1  = mol.getBuilder().newAtom();
+        IAtom          a2  = mol.getBuilder().newAtom();
+        IAtom          a3  = mol.getBuilder().newAtom();
+        IAtom          a4  = mol.getBuilder().newAtom();
+        IBond          b1  = mol.getBuilder().newBond();
+        IBond          b2  = mol.getBuilder().newBond();
+        IBond          b3  = mol.getBuilder().newBond();
+        b1.setAtoms(new IAtom[]{a1, a2});
+        b2.setAtoms(new IAtom[]{a2, a3});
+        b3.setAtoms(new IAtom[]{a3, a4});
+        mol.addAtom(a1);
+        mol.addAtom(a2);
+        mol.addAtom(a3);
+        mol.addAtom(a4);
+        mol.addBond(b1);
+        mol.addBond(b2);
+        mol.addBond(b3);
+        assertThat(mol.getConnectedBondsCount(a1), is(1));
+        assertThat(mol.getConnectedBondsCount(a2), is(2));
+        assertThat(mol.getConnectedBondsCount(a3), is(2));
+        assertThat(mol.getConnectedBondsCount(a4), is(1));
+        mol.setAtoms(new IAtom[]{a3, a4, a2, a1});
+        assertThat(mol.getConnectedBondsCount(a1), is(1));
+        assertThat(mol.getConnectedBondsCount(a2), is(2));
+        assertThat(mol.getConnectedBondsCount(a3), is(2));
+        assertThat(mol.getConnectedBondsCount(a4), is(1));
+    }
+
+    @Test
+    public void setConnectedAtomsAfterAddBond() {
+        IAtomContainer mol = (IAtomContainer) newChemObject();
+        IAtom          a1  = mol.getBuilder().newAtom();
+        IAtom          a2  = mol.getBuilder().newAtom();
+        IBond          b1  = mol.getBuilder().newBond();
+        mol.addAtom(a1);
+        mol.addAtom(a2);
+        mol.addBond(b1);
+        // can't call on b1!
+        mol.getBond(0).setAtoms(new IAtom[]{a1, a2});
+        assertThat(mol.getConnectedBondsCount(a1), is(1));
+        assertThat(mol.getConnectedBondsCount(a2), is(1));
+    }
+
+    @Test
+    public void changeConnectedAtomsAfterAddBond() {
+        IAtomContainer mol = (IAtomContainer) newChemObject();
+        IAtom          a1  = mol.getBuilder().newAtom();
+        IAtom          a2  = mol.getBuilder().newAtom();
+        IAtom          a3  = mol.getBuilder().newAtom();
+        IBond          b1  = mol.getBuilder().newBond();
+        mol.addAtom(a1);
+        mol.addAtom(a2);
+        mol.addAtom(a3);
+        b1.setAtoms(new IAtom[]{a1, a2});
+        mol.addBond(b1);
+        assertThat(mol.getConnectedBondsCount(a1), is(1));
+        assertThat(mol.getConnectedBondsCount(a2), is(1));
+        assertThat(mol.getConnectedBondsCount(a3), is(0));
+        mol.getBond(0).setAtom(a3, 0);
+        assertThat(mol.getConnectedBondsCount(a1), is(0));
+        assertThat(mol.getConnectedBondsCount(a2), is(1));
+        assertThat(mol.getConnectedBondsCount(a3), is(1));
+        mol.getBond(0).setAtom(a1, 1);
+        assertThat(mol.getConnectedBondsCount(a1), is(1));
+        assertThat(mol.getConnectedBondsCount(a2), is(0));
+        assertThat(mol.getConnectedBondsCount(a3), is(1));
+    }
+
+    @Test public void cloneSgroups() throws CloneNotSupportedException {
+        IAtomContainer mol = (IAtomContainer) newChemObject();
+        IAtom          a1  = mol.getBuilder().newAtom();
+        IAtom          a2  = mol.getBuilder().newAtom();
+        IAtom          a3  = mol.getBuilder().newAtom();
+        IBond          b1  = mol.getBuilder().newBond();
+        IBond          b2  = mol.getBuilder().newBond();
+        b1.setAtom(a1, 0);
+        b1.setAtom(a2, 1);
+        b2.setAtom(a2, 0);
+        b2.setAtom(a3, 1);
+        mol.addAtom(a1);
+        mol.addAtom(a2);
+        mol.addAtom(a3);
+        mol.addBond(b1);
+        mol.addBond(b2);
+        Sgroup sgroup = new Sgroup();
+        sgroup.setType(SgroupType.CtabStructureRepeatUnit);
+        sgroup.setSubscript("n");
+        sgroup.addAtom(a2);
+        sgroup.addBond(b1);
+        sgroup.addBond(b2);
+        mol.setProperty(CDKConstants.CTAB_SGROUPS,
+                        Collections.singletonList(sgroup));
+        IAtomContainer clone = mol.clone();
+        Collection<Sgroup> sgroups = clone.getProperty(CDKConstants.CTAB_SGROUPS);
+        assertNotNull(sgroups);
+        assertThat(sgroups.size(), is(1));
+        Sgroup clonedSgroup = sgroups.iterator().next();
+        assertThat(clonedSgroup.getType(), is(SgroupType.CtabStructureRepeatUnit));
+        assertThat(clonedSgroup.getSubscript(), is("n"));
+        assertFalse(clonedSgroup.getAtoms().contains(a2));
+        assertFalse(clonedSgroup.getBonds().contains(b1));
+        assertFalse(clonedSgroup.getBonds().contains(b2));
+        assertTrue(clonedSgroup.getAtoms().contains(clone.getAtom(1)));
+        assertTrue(clonedSgroup.getBonds().contains(clone.getBond(0)));
+        assertTrue(clonedSgroup.getBonds().contains(clone.getBond(1)));
+    }
+
+    @Test public void cloneSgroupsBrackets() throws CloneNotSupportedException {
+        IAtomContainer mol = (IAtomContainer) newChemObject();
+        IAtom          a1  = mol.getBuilder().newAtom();
+        IAtom          a2  = mol.getBuilder().newAtom();
+        IAtom          a3  = mol.getBuilder().newAtom();
+        IBond          b1  = mol.getBuilder().newBond();
+        IBond          b2  = mol.getBuilder().newBond();
+        b1.setAtom(a1, 0);
+        b1.setAtom(a2, 1);
+        b2.setAtom(a2, 0);
+        b2.setAtom(a3, 1);
+        mol.addAtom(a1);
+        mol.addAtom(a2);
+        mol.addAtom(a3);
+        mol.addBond(b1);
+        mol.addBond(b2);
+        Sgroup sgroup = new Sgroup();
+        sgroup.setType(SgroupType.CtabStructureRepeatUnit);
+        sgroup.setSubscript("n");
+        sgroup.addAtom(a2);
+        sgroup.addBond(b1);
+        sgroup.addBond(b2);
+        SgroupBracket bracket1 = new SgroupBracket(0, 1, 2, 3);
+        SgroupBracket bracket2 = new SgroupBracket(1, 2, 3, 4);
+        sgroup.addBracket(bracket1);
+        sgroup.addBracket(bracket2);
+        mol.setProperty(CDKConstants.CTAB_SGROUPS,
+                        Collections.singletonList(sgroup));
+        IAtomContainer clone = mol.clone();
+        Collection<Sgroup> sgroups = clone.getProperty(CDKConstants.CTAB_SGROUPS);
+        assertNotNull(sgroups);
+        assertThat(sgroups.size(), is(1));
+        Sgroup clonedSgroup = sgroups.iterator().next();
+        assertThat(clonedSgroup.getType(), is(SgroupType.CtabStructureRepeatUnit));
+        assertThat(clonedSgroup.getSubscript(), is("n"));
+        assertFalse(clonedSgroup.getAtoms().contains(a2));
+        assertFalse(clonedSgroup.getBonds().contains(b1));
+        assertFalse(clonedSgroup.getBonds().contains(b2));
+        assertTrue(clonedSgroup.getAtoms().contains(clone.getAtom(1)));
+        assertTrue(clonedSgroup.getBonds().contains(clone.getBond(0)));
+        assertTrue(clonedSgroup.getBonds().contains(clone.getBond(1)));
+        List<SgroupBracket> brackets = clonedSgroup.getValue(SgroupKey.CtabBracket);
+        assertThat(brackets.size(), is(2));
+        assertThat(brackets.get(0), is(not(sameInstance(bracket1))));
+        assertThat(brackets.get(1), is(not(sameInstance(bracket2))));
+        assertEquals(brackets.get(0).getFirstPoint(), new Point2d(0, 1), 0.01);
+        assertEquals(brackets.get(0).getSecondPoint(), new Point2d(2, 3), 0.01);
+        assertEquals(brackets.get(1).getFirstPoint(), new Point2d(1, 2), 0.01);
+        assertEquals(brackets.get(1).getSecondPoint(), new Point2d(3, 4), 0.01);
+    }
+
+    @Test
+    public void getSelfBond() {
+        IAtomContainer mol = (IAtomContainer) newChemObject();
+        IAtom          a1  = mol.getBuilder().newAtom();
+        IAtom          a2  = mol.getBuilder().newAtom();
+        IAtom          a3  = mol.getBuilder().newAtom();
+        IBond          b1  = mol.getBuilder().newBond();
+        IBond          b2  = mol.getBuilder().newBond();
+        b1.setAtom(a1, 0);
+        b1.setAtom(a2, 1);
+        b2.setAtom(a2, 0);
+        b2.setAtom(a3, 1);
+        mol.addAtom(a1);
+        mol.addAtom(a2);
+        mol.addAtom(a3);
+        mol.addBond(b1);
+        mol.addBond(b2);
+        assertThat(mol.getBond(a1, a1), is(nullValue()));
+    }
 }

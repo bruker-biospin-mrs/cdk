@@ -22,19 +22,25 @@ package org.openscience.cdk.isomorphism.matchers;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
+import org.openscience.cdk.AtomRef;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.tools.ILoggingTool;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.periodictable.PeriodicTable;
 
 /**
  * @cdk.module  isomorphism
  * @cdk.githash
  */
-public abstract class QueryAtom extends QueryChemObject implements IQueryAtom {
+public class QueryAtom extends QueryChemObject implements IQueryAtom {
+
+    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(QueryAtom.class);
 
     /**
      *  The partial charge of the atom.
@@ -131,6 +137,9 @@ public abstract class QueryAtom extends QueryChemObject implements IQueryAtom {
     /** The atomic number for this element giving their position in the periodic table. */
     protected Integer                 atomicNumber         = (Integer) CDKConstants.UNSET;
 
+    /** Atom Expression */
+    private Expr expr = new Expr(Expr.Type.TRUE);
+
     public QueryAtom(String symbol, IChemObjectBuilder builder) {
         this(builder);
         this.symbol = symbol;
@@ -169,6 +178,14 @@ public abstract class QueryAtom extends QueryChemObject implements IQueryAtom {
      */
     @Override
     public int getBondCount() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IBond getBond(IAtom atom) {
         throw new UnsupportedOperationException();
     }
 
@@ -722,9 +739,96 @@ public abstract class QueryAtom extends QueryChemObject implements IQueryAtom {
         setFlag(CDKConstants.ISINRING, ring);
     }
 
+    /**
+     * Set the atom-expression predicate for this query atom.
+     * @param expr the expression
+     */
+    public void setExpression(Expr expr) {
+        this.expr = expr;
+    }
+
+    /**
+     * Get the atom-expression predicate for this query atom.
+     * @return the expression
+     */
+    public Expr getExpression() {
+        return expr;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(IAtom atom) {
+        return expr.matches(atom);
+    }
+
     @Override
     public IAtom clone() throws CloneNotSupportedException {
         // XXX: clone always dodgy
         return (IAtom) super.clone();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof AtomRef)
+            return super.equals(((AtomRef) obj).deref());
+        return super.equals(obj);
+    }
+
+    /**
+     * Create a new query atom with the given an expression.
+     *
+     * <pre>{@code
+     * // oxygen in a ring
+     * Expr expr = new Expr(IS_IN_RING);
+     * expr.and(new Expr(ELEMENT, 8));
+     * new QueryAtom(expr);
+     * }</pre>
+     *
+     * @param expr the expr
+     */
+    public QueryAtom(Expr expr) {
+        this((IChemObjectBuilder) null);
+        this.expr.set(expr);
+    }
+
+    /**
+     * Create a new query atom with the given an predicate expression type.
+     *
+     * <pre>{@code
+     * new QueryAtom(IS_IN_RING);
+     * }</pre>
+     *
+     * @param type the expr type
+     */
+    public QueryAtom (Expr.Type type) {
+        this(new Expr(type));
+    }
+
+    /**
+     * Create a new query atom with the given an value expression type.
+     *
+     * <pre>{@code
+     * // oxygen
+     * new QueryAtom(ELEMENT, 8);
+     * }</pre>
+     *
+     * @param type the expr type
+     * @param val the expr value
+     */
+    public QueryAtom(Expr.Type type, int val) {
+        this(new Expr(type, val));
     }
 }

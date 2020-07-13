@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
@@ -32,7 +33,7 @@ import org.openscience.cdk.qsar.IMolecularDescriptor;
 import org.openscience.cdk.qsar.result.IDescriptorResult;
 import org.openscience.cdk.qsar.result.IntegerResult;
 import org.openscience.cdk.qsar.result.IntegerResultType;
-import org.openscience.cdk.smiles.smarts.SMARTSQueryTool;
+import org.openscience.cdk.smarts.SmartsPattern;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 /**
@@ -52,7 +53,7 @@ public class AcidicGroupCountDescriptor extends AbstractMolecularDescriptor impl
             "[$([NH](S(=O)=O)C(F)(F)F)]", "[$(n1nnnc1)]"};
     private final static String[] NAMES          = {"nAcid"};
 
-    private List<SMARTSQueryTool> tools          = new ArrayList<SMARTSQueryTool>();
+    private List<SmartsPattern> tools  = new ArrayList<SmartsPattern>();
     private boolean               checkAromaticity;
 
     /**
@@ -65,7 +66,7 @@ public class AcidicGroupCountDescriptor extends AbstractMolecularDescriptor impl
     @Override
     public void initialise(IChemObjectBuilder builder) {
         for (String smarts : SMARTS_STRINGS) {
-            tools.add(new SMARTSQueryTool(smarts, builder));
+            tools.add(SmartsPattern.create(smarts));
         }
     }
 
@@ -114,6 +115,12 @@ public class AcidicGroupCountDescriptor extends AbstractMolecularDescriptor impl
             throw new IllegalStateException("descriptor is not initalised, invoke 'initalise' first");
         }
 
+        atomContainer = clone(atomContainer); // don't mod original
+        for (IAtom atom : atomContainer.atoms()) {
+            if (atom.getImplicitHydrogenCount() == null)
+                atom.setImplicitHydrogenCount(0);
+        }
+
         // do aromaticity detection
         if (this.checkAromaticity) {
             try {
@@ -124,16 +131,12 @@ public class AcidicGroupCountDescriptor extends AbstractMolecularDescriptor impl
             }
         }
 
-        try {
-            int count = 0;
-            for (SMARTSQueryTool tool : tools) {
-                if (tool.matches(atomContainer)) count += tool.countMatches();
-            }
-            return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new IntegerResult(
-                    count), getDescriptorNames());
-        } catch (CDKException exception) {
-            return getDummyDescriptorValue(exception);
-        }
+        int count = 0;
+        for (SmartsPattern tool : tools)
+            count += tool.matchAll(atomContainer).count();
+        return new DescriptorValue(getSpecification(), getParameterNames(),
+                                   getParameters(), new IntegerResult(count),
+                                   getDescriptorNames());
     }
 
     /** {@inheritDoc} */

@@ -30,6 +30,7 @@ package org.openscience.cdk.fingerprint;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +45,7 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
-
+import org.openscience.cdk.interfaces.IStereoElement;
 
 
 /**
@@ -77,11 +78,7 @@ import org.openscience.cdk.interfaces.IBond;
  *  <p>For the FCFP class of fingerprints, atom typing is done using a scheme similar to that described by
  *  Green et al {@cdk.cite Green1994}.</p>
  *  
- *  <p>The fingerprints and their uses have been described in the literature: A.M. Clark, M. Sarker, E. Ekins,
- *  "New target prediction and visualization tools incorporating open source molecular fingerprints for TB Mobile 2.0",
- *  Journal of Cheminformatics, 6:38 (2014).</p>
- *  
- *  	<a href="http://www.jcheminf.com/content/6/1/38">http://www.jcheminf.com/content/6/1/38</a>
+ *  <p>The fingerprints and their uses have been described in Clark et al. {@cdk.cite Clark2014}.
  *
  * @author         am.clark
  * @cdk.created    2014-01-01
@@ -124,7 +121,6 @@ public class CircularFingerprinter extends AbstractFingerprinter implements IFin
     private final int      ATOMCLASS_ECFP = 1;
     private final int      ATOMCLASS_FCFP = 2;
 
-    private int            classType, atomClass;
     private IAtomContainer mol;
     private final int      length;
 
@@ -152,6 +148,10 @@ public class CircularFingerprinter extends AbstractFingerprinter implements IFin
     private boolean[]      isOxide;                                             // true if the atom has a double bond to oxygen
     private boolean[]      lonePair;                                            // true if the atom is N,O,S with octet valence and at least one lone pair
     private boolean[]      tetrazole;                                           // special flag for being in a tetrazole (C1=NN=NN1) ring
+
+    // ------------ options -------------------
+    private int     classType, atomClass;
+    private boolean optPerceiveStereo = false;
 
     // ------------ public methods ------------
 
@@ -188,6 +188,17 @@ public class CircularFingerprinter extends AbstractFingerprinter implements IFin
         this.length = len;
     }
 
+    /**
+     * Sets whether stereochemistry should be re-perceived from 2D/3D
+     * coordinates. By default stereochemistry encoded as {@link IStereoElement}s
+     * are used.
+     *
+     * @param val perceived from 2D
+     */
+    public void setPerceiveStereo(boolean val) {
+        this.optPerceiveStereo = val;
+    }
+
     @Override
     protected List<Map.Entry<String, String>> getParameters() {
         String type = null;
@@ -201,8 +212,10 @@ public class CircularFingerprinter extends AbstractFingerprinter implements IFin
             case CLASS_FCFP4: type = "FCFP4"; break;
             case CLASS_FCFP6: type = "FCFP6"; break;
         }
-        return Collections.<Map.Entry<String,String>>singletonList(
-            new AbstractMap.SimpleImmutableEntry<>("classType", type)
+        return Arrays.<Map.Entry<String, String>>asList(
+            new AbstractMap.SimpleImmutableEntry<>("classType", type),
+            new AbstractMap.SimpleImmutableEntry<>("perceiveStereochemistry",
+                                                   Boolean.toString(optPerceiveStereo))
         );
     }
 
@@ -617,8 +630,12 @@ public class CircularFingerprinter extends AbstractFingerprinter implements IFin
         detectStrictAromaticity();
 
         tetra = new int[na][];
-        for (int n = 0; n < na; n++)
-            tetra[n] = rubricTetrahedral(n);
+        if (optPerceiveStereo) {
+            for (int n = 0; n < na; n++)
+                tetra[n] = rubricTetrahedral(n);
+        } else {
+            rubricTetrahedralsCdk();
+        }
     }
 
     // assign a ring block ID to each atom (0=not in ring)
@@ -832,6 +849,39 @@ public class CircularFingerprinter extends AbstractFingerprinter implements IFin
         }
     }
 
+    // tetrahedral 'rubric': for any sp3 atom that has stereo defined
+    // in the CDK's object model.
+    private void rubricTetrahedralsCdk() {
+        for (IStereoElement se : mol.stereoElements()) {
+            if (se.getConfigClass() == IStereoElement.Tetrahedral) {
+                @SuppressWarnings("unchecked") final IStereoElement<IAtom, IAtom> th =
+                    (IStereoElement<IAtom, IAtom>) se;
+                final IAtom focus = th.getFocus();
+                final List<IAtom> carriers = th.getCarriers();
+                int[]             adj      = new int[4];
+
+                for (int i = 0; i < 4; i++) {
+                    if (focus.equals(carriers.get(i)))
+                        adj[i] = -1; // impl H
+                    else
+                        adj[i] = mol.indexOf(carriers.get(i));
+                }
+                switch (th.getConfigOrder()) {
+                    case IStereoElement.LEFT:
+                        int i = adj[2];
+                        adj[2] = adj[3];
+                        adj[3] = i;
+                        tetra[mol.indexOf(focus)] = adj;
+                        break;
+                    case IStereoElement.RIGHT:
+                        tetra[mol.indexOf(focus)] = adj;
+                        break;
+                    default:
+                }
+            }
+        }
+    }
+
     // tetrahedral 'rubric': for any sp3 atom that has enough neighbours and appropriate wedge bond/3D geometry information,
     // build up a list of neighbours in a certain permutation order; the resulting array of size 4 can have a total of
     // 24 permutations; there are two groups of 12 that can be mapped onto each other by tetrahedral rotations, hence this
@@ -916,15 +966,9 @@ public class CircularFingerprinter extends AbstractFingerprinter implements IFin
         int[] adj = atomAdj[aidx];
         if (adjc == 3) {
             adj = appendInteger(adj, -1);
-            xp[3] = -(xp[0] + xp[1] + xp[2]);
-            yp[3] = -(yp[0] + yp[1] + yp[2]);
-            zp[3] = -(zp[0] + zp[1] + zp[2]);
-            float dsq = xp[3] * xp[3] + yp[3] * yp[3] + zp[3] * zp[3];
-            if (dsq < 0.01f * 0.01f) return null;
-            float inv = 1.0f / (float) Math.sqrt(dsq);
-            xp[3] *= inv;
-            yp[3] *= inv;
-            zp[3] *= inv;
+            xp[3] = 0;
+            yp[3] = 0;
+            zp[3] = 0;
         }
 
         // make the call on permutational parity

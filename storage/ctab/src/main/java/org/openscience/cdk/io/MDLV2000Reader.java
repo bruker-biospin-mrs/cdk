@@ -24,6 +24,7 @@
  */
 package org.openscience.cdk.io;
 
+import com.google.common.collect.ImmutableSet;
 import org.openscience.cdk.config.IsotopeFactory;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.*;
@@ -39,6 +40,8 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Reads content from MDL molfiles and SD files. It can read a {@link
@@ -83,9 +86,24 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
     private BooleanIOSetting         interpretHydrogenIsotopes;
     private BooleanIOSetting         addStereoElements;
 
+    // Pattern to remove trailing space (String.trim() will remove leading space, which we don't want)
+    private static final Pattern     TRAILING_SPACE   = Pattern.compile("\\s+$");
+
     /** Delimits Structure-Data (SD) Files. */
     private static final String      RECORD_DELIMITER = "$$$$";
 
+    /** 
+     *  @deprecated  Incorrect spelling
+    */
+    private static final Set<String> PSUEDO_LABELS    = ImmutableSet.<String> builder().add("*").add("A").add("Q")
+                                                              .add("L").add("LP").add("R") // XXX: not in spec
+                                                              .add("R#").build();
+
+    /** Valid pseudo labels. */
+    private static final Set<String> PSEUDO_LABELS    = ImmutableSet.<String> builder().add("*").add("A").add("Q")
+                                                              .add("L").add("LP").add("R") // XXX: not in spec
+                                                              .add("R#").build();
+    
     public MDLV2000Reader() {
         this(new StringReader(""));
     }
@@ -262,6 +280,9 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
         Map<IAtom,Integer> parities = new HashMap<>();
 
         int linecount = 0;
+        String title = null;
+        String program = null;
+        String remark = null;
         String line = "";
 
         try {
@@ -322,6 +343,10 @@ public class MDLV2000Reader extends DefaultChemObjectReader {
         }
 
         return outputContainer;
+    }
+
+    private boolean is3Dfile(String program) {
+        return program.length() >= 22 && program.substring(20, 22).equals("3D");
     }
 
     /**

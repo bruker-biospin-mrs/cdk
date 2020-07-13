@@ -63,11 +63,13 @@ import org.openscience.cdk.tools.manipulator.RingSetManipulator;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -112,7 +114,7 @@ public class StructureDiagramGenerator {
 
     private IAtomContainer molecule;
     private IRingSet       sssr;
-    private double bondLength = DEFAULT_BOND_LENGTH;
+    private final double bondLength = DEFAULT_BOND_LENGTH;
     private Vector2d firstBondVector;
     private RingPlacer       ringPlacer          = new RingPlacer();
     private AtomPlacer       atomPlacer          = new AtomPlacer();
@@ -234,6 +236,8 @@ public class StructureDiagramGenerator {
                 afix.clear();
                 bfix.clear();
 
+                boolean aggresive = false;
+
                 if (largest != null && largest.getAtomCount() > 1) {
 
                     int idx = largest.getAtom(0).getProperty(CDKConstants.ATOM_ATOM_MAPPING);
@@ -244,12 +248,21 @@ public class StructureDiagramGenerator {
                         idx = atom.getProperty(CDKConstants.ATOM_ATOM_MAPPING);
                         final IAtom src = reference.get(idx);
                         if (src == null) continue;
+                        if (!aggresive) {
+                            // no way to get the container of 'src' without
+                            // lots of refactoring, instead we just use the
+                            // new API points - first checking these will not
+                            // fail
+                            if (src.getContainer() != null
+                                && atom.getContainer() != null
+                                && AtomPlacer.isColinear(src, src.bonds())
+                                   != AtomPlacer.isColinear(atom, atom.bonds()))
+                                continue;
+                        }
                         atom.setPoint2d(new Point2d(src.getPoint2d()));
                         afix.put(atom, src);
                     }
                 }
-
-                boolean aggresive = false;
 
                 if (!afix.isEmpty()) {
                     if (aggresive) {
@@ -288,11 +301,57 @@ public class StructureDiagramGenerator {
                                 }
                             }
                         }
-                        // XXX: can do better
+
                         afix.clear();
                         for (IBond bond : bfix) {
                             afix.put(bond.getBegin(), null);
                             afix.put(bond.getEnd(), null);
+                        }
+
+                        int[] parts2 = new int[mol.getAtomCount()];
+                        int numParts = 0;
+                        Deque<IAtom> queue = new ArrayDeque<>();
+                        for (IAtom atom : afix.keySet()) {
+                            if (parts2[mol.indexOf(atom)] != 0)
+                                continue;
+                            parts2[mol.indexOf(atom)] = ++numParts;
+                            for (IBond bond : mol.getConnectedBondsList(atom)) {
+                                if (bfix.contains(bond))
+                                    queue.add(bond.getOther(atom));
+                            }
+                            while (!queue.isEmpty()) {
+                                atom = queue.poll();
+                                if (parts2[mol.indexOf(atom)] != 0)
+                                    continue;
+                                parts2[mol.indexOf(atom)] = numParts;
+                                for (IBond bond : mol.getConnectedBondsList(atom)) {
+                                    if (bfix.contains(bond))
+                                        queue.add(bond.getOther(atom));
+                                }
+                            }
+                        }
+
+                        if (numParts > 1) {
+                            int best     = 0;
+                            int bestSize = 0;
+                            for (int part = 1; part <= numParts; part++) {
+                                int size = 0;
+                                for (int i = 0; i < parts2.length; i++) {
+                                    if (parts2[i] == part)
+                                        ++size;
+                                }
+                                if (size > bestSize) {
+                                    bestSize = size;
+                                    best = part;
+                                }
+                            }
+
+                            for (IAtom atom : new ArrayList<>(afix.keySet())) {
+                                if (parts2[mol.indexOf(atom)] != best) {
+                                    afix.remove(atom);
+                                    bfix.removeAll(mol.getConnectedBondsList(atom));
+                                }
+                            }
                         }
                     }
                 }
@@ -615,6 +674,7 @@ public class StructureDiagramGenerator {
         refinePlacement(molecule);
         finalizeLayout(molecule);
 
+        // stereo must be after refinement (due to flipping!)
         if (!isSubLayout)
             assignStereochem(molecule);
 
@@ -782,7 +842,7 @@ public class StructureDiagramGenerator {
                                 if (begBonds.size() != 1 || endBonds.size() != 1)
                                     continue;
                                 boolean flipped = begBonds.contains(firstCarrier) != endBonds.contains(secondCarrier);
-                                int cfg = flipped ? se.getConfig() ^ 0x3 : se.getConfig();
+                                int cfg = flipped ? se.getConfigOrder() ^ 0x3 : se.getConfigOrder();
                                 ring.addStereoElement(new DoubleBondStereochemistry(stereoBond,
                                                                                     new IBond[]{begBonds.get(0), endBonds.get(0)},
                                                                                     cfg));
@@ -2072,13 +2132,27 @@ public class StructureDiagramGenerator {
     }
 
     /**
-     * Set the bond length used for laying out the molecule.
-     * The default value is 1.5.
+     * This method used to set the bond length used for laying out the molecule.
+     * Since bond lengths in 2D are are arbitrary, the preferred way to do this
+     * is with {@link GeometryUtil#scaleMolecule(IAtomContainer, double)}.
+     *
+     * <pre>
+     * IAtomContainer mol = ...;
+     * sdg.generateCoordinates(mol);
+     * int targetBondLength = 28;
+     * double factor = targetBondLength/GeometryUtil.getMedianBondLength(mol);
+     * GeometryUtil.scaleMolecule(mol, factor);
+     * </pre>
      *
      * @param bondLength The new bondLength value
+     * @deprecated use {@link GeometryUtil#scaleMolecule(IAtomContainer, double)}
+     * @throws UnsupportedOperationException not supported
      */
+    @Deprecated
     public void setBondLength(double bondLength) {
-        this.bondLength = bondLength;
+        throw new UnsupportedOperationException(
+            "Bond length should be adjusted post layout"
+            + " with GeometryUtil.scaleMolecule();");
     }
 
     /**
@@ -2358,8 +2432,24 @@ public class StructureDiagramGenerator {
                     final Vector2d bndXVec = new Vector2d(-bndVec.y, bndVec.x);
 
                     // ensure vector is pointing out of rings
-                    Vector2d centerVec = new Vector2d(center.x - ((newBegP.x + newEndP.x) / 2), center.y - ((newBegP.y + newEndP.y) / 2));
-                    if (bndXVec.dot(centerVec) > 0) {
+                    Vector2d centerVec = new Vector2d(center.x - ((newBegP.x + newEndP.x) / 2),
+                                                      center.y - ((newBegP.y + newEndP.y) / 2));
+
+                    double dot = bndXVec.dot(centerVec);
+                    if (Math.abs(dot) < 0.01) {
+                        // close to zero... grab adjacent bonds and use those as
+                        // well to choose the side we point the bond
+                        Set<IAtom> adj = new HashSet<>();
+                        adj.addAll(mol.getConnectedAtomsList(bond.getBegin()));
+                        adj.addAll(mol.getConnectedAtomsList(bond.getEnd()));
+                        adj.remove(bond.getBegin());
+                        adj.remove(bond.getEnd());
+                        Point2d newCenter = GeometryUtil.get2DCenter(adj);
+                        centerVec = new Vector2d(newCenter.x - ((newBegP.x + newEndP.x) / 2),
+                                                 newCenter.y - ((newBegP.y + newEndP.y) / 2));
+                        if (bndXVec.dot(centerVec) > 0.01)
+                            bndXVec.negate();
+                    } else if (dot > 0) {
                         bndXVec.negate();
                     }
 
@@ -2423,7 +2513,7 @@ public class StructureDiagramGenerator {
                     Vector2d orgVec = new Vector2d(endP.x-begP.x, endP.y-begP.y);
                     Vector2d newVec = new Vector2d(newEndP.x-newBegP.x, newEndP.y-newBegP.y);
 
-                    // need perpendiculat dot product to get signed angle
+                    // need perpendicular dot product to get signed angle
                     double pDot = orgVec.x * newVec.y - orgVec.y * newVec.x;
                     double theta = Math.atan2(pDot, newVec.dot(orgVec));
 

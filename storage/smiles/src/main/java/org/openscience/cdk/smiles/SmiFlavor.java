@@ -66,7 +66,7 @@ public final class SmiFlavor {
 
     /**
      * Writes aromatic atoms as lower case letters. For portability
-     * this option is not recomended.
+     * this option is not recommended.
      */
     public static final int UseAromaticSymbols = 0x010;
 
@@ -93,6 +93,8 @@ public final class SmiFlavor {
      */
     public static final int StereoExTetrahedral = 0x400;
 
+    public static final int StereoExCisTrans    = 0x500;
+
     /**
      * Generate SMILES with the major isotopes, only omit mass numbers when it
      * is unset.
@@ -109,7 +111,10 @@ public final class SmiFlavor {
      * @see #StereoCisTrans
      * @see #StereoExTetrahedral
      */
-    public static final int Stereo              = StereoTetrahedral | StereoCisTrans | StereoExTetrahedral;
+    public static final int Stereo              = StereoTetrahedral |
+                                                  StereoCisTrans |
+                                                  StereoExTetrahedral |
+                                                  StereoExCisTrans;
 
     /**
      * Output 2D coordinates.
@@ -132,7 +137,9 @@ public final class SmiFlavor {
     public static final int CxAtomLabel         = 0x008000;
 
     /**
-     * Output atom values, atom values are specified by {@link IPseudoAtom#getLabel()}.
+     * Output atom values, atom values are specified by the property 
+     * {@link org.openscience.cdk.CDKConstants#COMMENT} using 
+     * {@link org.openscience.cdk.interfaces.IAtom#setProperty(Object, Object)}
      */
     public static final int CxAtomValue         = 0x010000;
 
@@ -156,6 +163,11 @@ public final class SmiFlavor {
      * Output fragment grouping for reactions.
      */
     public static final int CxFragmentGroup     = 0x100000;
+
+    /**
+     * Renumber AtomAtomMaps during canonical generation
+     */
+    public static final int AtomAtomMapRenumber = Canonical | AtomAtomMap | 0x200000;
 
     /**
      * Output CXSMILES layers.

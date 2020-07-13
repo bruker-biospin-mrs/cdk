@@ -140,7 +140,6 @@ public abstract class IsotopeFactory {
      * @return the corresponding isotope
      */
     public IIsotope getIsotope(String symbol, int massNumber) {
-        IIsotope ret = null;
         int elem = Elements.ofString(symbol).number();
         List<IIsotope> isotopes = this.isotopes[elem];
         if (isotopes == null)
@@ -180,14 +179,11 @@ public abstract class IsotopeFactory {
 
     /**
      * Returns the most abundant (major) isotope with a given atomic number.
-     *
-     * <p>The isotope's abundance is for atoms with atomic number 60 and smaller
-     * defined as a number that is proportional to the 100 of the most abundant
-     * isotope. For atoms with higher atomic numbers, the abundance is defined
-     * as a percentage.
+     * Note that some high mass elements do not have a major isotopes
+     * (0% abundance) and this method will return null for those.
      *
      * @param  elem  The atomicNumber for which an isotope is to be returned
-     * @return               The isotope corresponding to the given atomic number
+     * @return       The isotope corresponding to the given atomic number
      *
      * @see #getMajorIsotope(String symbol)
      */

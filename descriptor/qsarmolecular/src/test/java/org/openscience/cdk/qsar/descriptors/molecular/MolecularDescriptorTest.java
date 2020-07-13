@@ -20,6 +20,7 @@ package org.openscience.cdk.qsar.descriptors.molecular;
 
 import javax.vecmath.Point3d;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -29,6 +30,9 @@ import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.dict.Dictionary;
 import org.openscience.cdk.dict.DictionaryDatabase;
 import org.openscience.cdk.dict.Entry;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.exception.InvalidSmilesException;
+import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
@@ -45,8 +49,12 @@ import org.openscience.cdk.qsar.result.DoubleResult;
 import org.openscience.cdk.qsar.result.IDescriptorResult;
 import org.openscience.cdk.qsar.result.IntegerArrayResult;
 import org.openscience.cdk.qsar.result.IntegerResult;
+import org.openscience.cdk.smiles.SmilesParser;
+import org.openscience.cdk.templates.TestMoleculeFactory;
 import org.openscience.cdk.tools.diff.AtomContainerDiff;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+
+import java.util.Iterator;
 
 /**
  * Tests for molecular descriptors.
@@ -59,6 +67,39 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
     private static Dictionary         dict   = dictDB.getDictionary("descriptor-algorithms");
 
     public MolecularDescriptorTest() {}
+
+    private Number[] getAtomFlags(IAtomContainer mol) {
+        Number[] flags = new Number[mol.getAtomCount()];
+        for (int i = 0; i < mol.getAtomCount(); i++) {
+            flags[i] = mol.getAtom(i).getFlagValue();
+        }
+        return flags;
+    }
+
+    private Number[] getBondFlags(IAtomContainer mol) {
+        Number[] flags = new Number[mol.getBondCount()];
+        for (int i = 0; i < mol.getBondCount(); i++) {
+            flags[i] = mol.getBond(i).getFlagValue();
+        }
+        return flags;
+    }
+
+    @Test
+    public void descriptorDoesNotChangeFlags() throws CDKException {
+        IAtomContainer mol = TestMoleculeFactory.makeBenzene();
+        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
+        Cycles.markRingAtomsAndBonds(mol);
+        Number   mflags = mol.getFlagValue();
+        Number[] aflags = getAtomFlags(mol);
+        Number[] bflags = getBondFlags(mol);
+        descriptor.calculate(mol);
+        Assert.assertThat("Molecule flags were modified by descriptor!",
+                          mol.getFlagValue(), CoreMatchers.is(mflags));
+        Assert.assertThat("Molecule's Atom flags were modified by descriptor!",
+                          getAtomFlags(mol), CoreMatchers.is(aflags));
+        Assert.assertThat("Molecule's Bond flags were modified by descriptor!",
+                          getBondFlags(mol), CoreMatchers.is(bflags));
+    }
 
     @Test
     public void testDescriptorIdentifierExistsInOntology() {
@@ -299,7 +340,8 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
     public void testAtomContainerHandling() throws Exception {
         IAtomContainer water1 = someoneBringMeSomeWater(DefaultChemObjectBuilder.getInstance());
         // creates an AtomContainer with the atoms / bonds from water1
-        IAtomContainer water2 = new AtomContainer(water1);
+        IAtomContainer water2 = SilentChemObjectBuilder.getInstance().newAtomContainer();
+        water2.add(water1);
 
         IDescriptorResult v1 = descriptor.calculate(water1).getValue();
         IDescriptorResult v2 = descriptor.calculate(water2).getValue();
@@ -316,7 +358,8 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
      */
     @Test
     public void testDisconnectedStructureHandling() throws Exception {
-        IAtomContainer disconnected = new AtomContainer();
+        IAtomContainer disconnected = SilentChemObjectBuilder.getInstance()
+                                                             .newAtomContainer();
         IAtom chloride = new Atom("Cl");
         chloride.setFormalCharge(-1);
         disconnected.addAtom(chloride);

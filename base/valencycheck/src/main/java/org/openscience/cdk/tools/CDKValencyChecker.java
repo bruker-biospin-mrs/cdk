@@ -69,14 +69,13 @@ public class CDKValencyChecker implements IValencyChecker {
 
     @Override
     public boolean isSaturated(IAtom atom, IAtomContainer container) throws CDKException {
-        System.out.println(atom.getAtomTypeName());
         IAtomType type = atomTypeList.getAtomType(atom.getAtomTypeName());
         if (type == null)
             throw new CDKException("Atom type is not a recognized CDK atom type: " + atom.getAtomTypeName());
 
         if (type.getFormalNeighbourCount() == CDKConstants.UNSET)
             throw new CDKException(
-                    "Atom tfindAndConfigureAtomTypesForAllAtomsype is too general; cannot decide the number of implicit hydrogen to add for: "
+                    "Atom type is too general; cannot decide the number of implicit hydrogen to add for: "
                             + atom.getAtomTypeName());
 
         if (type.getProperty(CDKConstants.PI_BOND_COUNT) == CDKConstants.UNSET)

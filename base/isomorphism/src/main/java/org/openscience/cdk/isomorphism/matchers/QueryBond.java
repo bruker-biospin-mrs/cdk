@@ -23,6 +23,7 @@ import java.util.Iterator;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
+import org.openscience.cdk.BondRef;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -37,7 +38,7 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
  * @cdk.githash
  * @cdk.created 2010-12-16
  */
-public abstract class QueryBond extends QueryChemObject implements IQueryBond {
+public class QueryBond extends QueryChemObject implements IQueryBond {
 
     /**
      * The bond order of this query bond.
@@ -58,6 +59,60 @@ public abstract class QueryBond extends QueryChemObject implements IQueryBond {
      * A descriptor the stereochemical orientation of this query bond.
      */
     protected IQueryBond.Stereo stereo;
+
+    /**
+     * The bond expression.
+     */
+    private Expr expr = new Expr(Expr.Type.TRUE);
+
+    /**
+     * Constructs an query bond from an expression.
+     *
+     * <pre>{@code
+     * // pi-bond in a ring
+     * Expr e = new Expr(IS_IN_RING);
+     * e.and(new Expr(ALIPHATIC_ORDER, 2));
+     * new QueryBond(beg, end, e);
+     * }</pre>
+     *
+     * @param expr the expression
+     */
+    public QueryBond(IAtom beg, IAtom end, Expr expr) {
+        this(beg, end, null, IQueryBond.Stereo.NONE, beg.getBuilder());
+        this.expr.set(expr);
+        atomCount = 2;
+    }
+
+    /**
+     * Constructs an query bond from an expression type.
+     *
+     * <pre>{@code
+     * new QueryBond(beg, end, IS_IN_RING);
+     * }</pre>
+     *
+     * @param type the expression type
+     */
+    public QueryBond(IAtom beg, IAtom end, Expr.Type type) {
+        this(beg, end, null, IQueryBond.Stereo.NONE, beg.getBuilder());
+        this.expr.setPrimitive(type);
+        atomCount = 2;
+    }
+
+    /**
+     * Constructs an query bond from an expression type and value.
+     *
+     * <pre>{@code
+     * new QueryBond(beg, end, ALIPHATIC_ORDER, 8);
+     * }</pre>
+     *
+     * @param type the expression type
+     * @param val the expression value
+     */
+    public QueryBond(IAtom beg, IAtom end, Expr.Type type, int val) {
+        this(beg, end, null, IQueryBond.Stereo.NONE, beg.getBuilder());
+        this.expr.setPrimitive(type, val);
+        atomCount = 2;
+    }
 
     /**
      * Constructs an empty query bond.
@@ -527,4 +582,45 @@ public abstract class QueryBond extends QueryChemObject implements IQueryBond {
         notifyChanged();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof BondRef)
+            return super.equals(((BondRef) obj).deref());
+        return super.equals(obj);
+    }
+
+    /**
+     * Access the bond expression predicate associated with this query bond.
+     * @return the bond expression
+     */
+    public Expr getExpression() {
+        return expr;
+    }
+
+    /**
+     * Set the bond expression for this query bond.
+     * @param expr the new bond expression
+     */
+    public void setExpression(Expr expr) {
+        this.expr = expr;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(IBond bond) {
+        return expr.matches(bond);
+    }
 }

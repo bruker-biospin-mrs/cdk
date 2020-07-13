@@ -165,16 +165,16 @@ public interface IAtom extends IAtomType {
 
     /**
      * Acces the index of an atom in the context of an {@link IAtomContainer}. If the
-     * index is not known, < 0 is returned.
+     * index is not known, &lt; 0 is returned.
      *
-     * @return atom index or < 0 if the index is not known
+     * @return atom index or &lt; 0 if the index is not known
      */
     int getIndex();
 
     /**
      * Returns the bonds connected to this atom. If the bonds are not
      * known an exception is thrown. This method will only throw an exception
-     * if {@link #getIndex()} returns < 0 or {@link #getContainer()} returns null.
+     * if {@link #getIndex()} returns &lt; 0 or {@link #getContainer()} returns null.
      *
      * <pre>{@code
      *
@@ -204,7 +204,20 @@ public interface IAtom extends IAtomType {
      */
     Iterable<IBond> bonds();
 
+    /**
+     * Get the number of explicit bonds connected to this atom.
+     * @return the total bond count
+     */
     int getBondCount();
+
+    /**
+     * Returns the bond connecting 'this' atom to the provided atom. If the
+     * atoms are not bonded, null is returned.
+     * @param atom the other atom
+     * @return the bond connecting the atoms
+     * @throws UnsupportedOperationException thrown if the bonds are not known
+     */
+    IBond getBond(IAtom atom);
 
     /**
      * Access whether this atom has been marked as aromatic. The default

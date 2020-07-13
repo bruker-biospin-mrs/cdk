@@ -312,8 +312,8 @@ public class VFlibMCSHandler extends AbstractMCSAlgorithm implements IMCSBase {
                 } else {
                     tAtom = query.getAtom(mapping.getKey());
                     qAtom = mapping.getValue();
-                    qIndex = getReactantMol().indexOf(qAtom);
-                    tIndex = getProductMol().indexOf(tAtom);
+                    tIndex = getProductMol().indexOf(qAtom);
+                    qIndex = getReactantMol().indexOf(tAtom);
                 }
 
                 if (qIndex != -1 && tIndex != -1) {

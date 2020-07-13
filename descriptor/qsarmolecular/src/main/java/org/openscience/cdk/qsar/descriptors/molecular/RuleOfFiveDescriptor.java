@@ -142,7 +142,7 @@ public class RuleOfFiveDescriptor extends AbstractMolecularDescriptor implements
      */
     @Override
     public DescriptorValue calculate(IAtomContainer mol) {
-
+        mol = clone(mol); // don't mod original
         int lipinskifailures = 0;
 
         IMolecularDescriptor xlogP = new XLogPDescriptor();
@@ -162,7 +162,7 @@ public class RuleOfFiveDescriptor extends AbstractMolecularDescriptor implements
             int donors = ((IntegerResult) don.calculate(mol).getValue()).intValue();
 
             IMolecularDescriptor mw = new WeightDescriptor();
-            Object[] mwparams = {""};
+            Object[] mwparams = {"*"};
             mw.setParameters(mwparams);
             double mwvalue = ((DoubleResult) mw.calculate(mol).getValue()).doubleValue();
 
