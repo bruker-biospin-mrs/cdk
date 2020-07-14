@@ -24,7 +24,6 @@
  *  */
 package org.openscience.cdk.io;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,8 +40,6 @@ import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IBond.Order;
 import org.openscience.cdk.interfaces.IChemFile;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
@@ -60,17 +57,9 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.closeTo;
@@ -1294,6 +1283,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         BufferedReader input = new BufferedReader(new StringReader(sb.toString()));
         IAtomContainer mock = mock(IAtomContainer.class);
 
+        //TODO V2000NonStructuralDataBlockHandler?
         MDLV2000Reader.readNonStructuralData(input, mock);
 
         verify(mock).setProperty("DENSITY", "0.9132 - 20.0");
@@ -1320,6 +1310,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         BufferedReader input = new BufferedReader(new StringReader(sb.toString()));
         IAtomContainer mock = mock(IAtomContainer.class);
 
+        //TODO V2000NonStructuralDataBlockHandler?
         MDLV2000Reader.readNonStructuralData(input, mock);
 
         verify(mock).setProperty("ONE_SPACE", " ");
@@ -1338,6 +1329,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
         BufferedReader input = new BufferedReader(new StringReader(sb.toString()));
         IAtomContainer mock = mock(IAtomContainer.class);
 
+        //TODO V2000NonStructuralDataBlockHandler?
         MDLV2000Reader.readNonStructuralData(input, mock);
 
         verify(mock).setProperty("LONG_PROPERTY",
@@ -1744,7 +1736,7 @@ public class MDLV2000ReaderTest extends SimpleChemObjectReaderTest {
             Assert.assertEquals(2, atom.getMassNumber().intValue());
         }
     }
-	
+
     @Test
     public void testBadAtomCoordinateFormat() throws Exception {
 

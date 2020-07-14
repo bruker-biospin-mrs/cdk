@@ -118,7 +118,7 @@ public final class ShortestPaths {
      * @param container container used to access atoms and their indices
      * @param start     the start atom index of the shortest paths
      */
-    ShortestPaths(int[][] adjacent, IAtomContainer container, int start) {
+    public ShortestPaths(int[][] adjacent, IAtomContainer container, int start) {
         this(adjacent, container, start, null);
     }
 
@@ -133,7 +133,7 @@ public final class ShortestPaths {
      * @param start     the start atom index of the shortest paths
      * @param ordering  vertex ordering for preceding path (null = don't use)
      */
-    ShortestPaths(int[][] adjacent, IAtomContainer container, int start, int[] ordering) {
+    public ShortestPaths(int[][] adjacent, IAtomContainer container, int start, int[] ordering) {
         this(adjacent, container, start, adjacent.length, ordering);
     }
 
@@ -149,7 +149,7 @@ public final class ShortestPaths {
      * @param limit     the maximum length path to find
      * @param ordering  vertex ordering for preceding path (null = don't use)
      */
-    ShortestPaths(int[][] adjacent, IAtomContainer container, int start, int limit, int[] ordering) {
+    public ShortestPaths(int[][] adjacent, IAtomContainer container, int start, int limit, int[] ordering) {
 
         int n = adjacent.length;
 
