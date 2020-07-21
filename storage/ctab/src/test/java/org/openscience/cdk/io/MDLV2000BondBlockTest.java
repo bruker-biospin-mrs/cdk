@@ -37,6 +37,7 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -104,7 +105,7 @@ public class MDLV2000BondBlockTest {
     public void singleOrDoubleBond() throws Exception {
         String input = "  1  3  5  0  0  0  0";
         IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
-        assertThat(bond.getOrder(), is(IBond.Order.UNSET));
+        assertThat(bond.getOrder(), nullValue());
         assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
         assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
         assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
@@ -116,7 +117,7 @@ public class MDLV2000BondBlockTest {
     public void singleOrAromaticBond() throws Exception {
         String input = "  1  3  6  0  0  0  0";
         IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
-        assertThat(bond.getOrder(), is(IBond.Order.UNSET));
+        assertThat(bond.getOrder(), nullValue());
         assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
         assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
         assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
@@ -128,7 +129,7 @@ public class MDLV2000BondBlockTest {
     public void doubleOrAromaticBond() throws Exception {
         String input = "  1  3  7  0  0  0  0";
         IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
-        assertThat(bond.getOrder(), is(IBond.Order.UNSET));
+        assertThat(bond.getOrder(), nullValue());
         assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
         assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
         assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
@@ -140,7 +141,7 @@ public class MDLV2000BondBlockTest {
     public void anyBond() throws Exception {
         String input = "  1  3  8  0  0  0  0";
         IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
-        assertThat(bond.getOrder(), is(IBond.Order.UNSET));
+        assertThat(bond.getOrder(), nullValue());
         assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
         assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
         assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
