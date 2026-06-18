@@ -1011,5 +1011,20 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>bbio-artifactory-deploy</id>
+            <distributionManagement>
+                <repository>
+                    <id>${repository.id.release}</id>
+                    <name>Artifactory-releases</name>
+                    <url>${artifactory.base.url}/${deployment.release.url}</url>
+                </repository>
+                <snapshotRepository>
+                    <id>${repository.id.snapshot}</id>
+                    <name>Artifactory-snapshots</name>
+                    <url>${artifactory.base.url}/${deployment.snapshot.url}</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
     </profiles>
 </project>
