@@ -367,10 +367,9 @@ public class IteratingSDFReader extends DefaultIteratingChemObjectReader<IAtomCo
             data.append(currentLine);
             currentLine = input.readLine();
         }
-        // trim trailing newline
-        int len = data.length();
-        if (len > 1 && data.charAt(len - 1) == '\n')
-            data.setLength(len - 1);
+        // trim trailing blank lines
+        while (data.length() > 0 && data.charAt(data.length() - 1) == '\n')
+            data.setLength(data.length() - 1);
         return data.toString();
     }
 

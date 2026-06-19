@@ -922,7 +922,7 @@ public class V2000PropertiesBlockHandler extends V2000BlockHandler {
             pseudoAtom.setLabel(label);
         } else {
             pseudoAtom.setSymbol(label);
-            pseudoAtom.setAtomicNumber(0);
+            pseudoAtom.setAtomicNumber(atom.getAtomicNumber());
             pseudoAtom.setPoint2d(atom.getPoint2d());
             pseudoAtom.setPoint3d(atom.getPoint3d());
             pseudoAtom.setMassNumber(atom.getMassNumber());
