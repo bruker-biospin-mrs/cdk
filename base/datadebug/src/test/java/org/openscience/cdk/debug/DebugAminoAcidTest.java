@@ -19,35 +19,26 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractAminoAcidTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractAminoAcidTest;
 import org.openscience.cdk.interfaces.IAminoAcid;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugAminoAcid}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugAminoAcidTest extends AbstractAminoAcidTest {
+class DebugAminoAcidTest extends AbstractAminoAcidTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugAminoAcid();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugAminoAcid::new);
     }
 
     @Test
-    public void testDebugAminoAcid() {
+    void testDebugAminoAcid() {
         IAminoAcid oAminoAcid = new DebugAminoAcid();
-        Assert.assertNotNull(oAminoAcid);
+        Assertions.assertNotNull(oAminoAcid);
     }
 }

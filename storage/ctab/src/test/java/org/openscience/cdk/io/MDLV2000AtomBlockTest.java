@@ -24,66 +24,64 @@
 
 package org.openscience.cdk.io;
 
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.number.IsCloseTo.closeTo;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.number.IsCloseTo.closeTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 /**
  * @author John May
- * @cdk.module test-io
  */
-public class MDLV2000AtomBlockTest {
+class MDLV2000AtomBlockTest {
 
-    private final V2000MoleculeBlockHandler handler = new V2000MoleculeBlockHandler(new MDLV2000Reader());
+    private final MDLV2000Reader     reader  = new MDLV2000Reader();
     private final IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
 
     @Test
-    public void lineLength_excessSpace() throws Exception {
-        IAtom a1 = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0 ",
+    void lineLength_excessSpace() throws Exception {
+        IAtom a1 = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0 ",
                 builder, 1);
-        IAtom a2 = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0    ",
-                builder, 1);
-    }
-
-    @Test
-    public void lineLength_exact() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0",
+        IAtom a2 = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0    ",
                 builder, 1);
     }
 
     @Test
-    public void lineLength_truncated() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  ",
+    void lineLength_exact() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
     }
 
     @Test
-    public void symbol_C() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0",
+    void lineLength_truncated() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  ",
+                builder, 1);
+    }
+
+    @Test
+    void symbol_C() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getSymbol(), is("C"));
     }
 
     @Test
-    public void symbol_N() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0",
+    void symbol_N() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getSymbol(), is("N"));
     }
 
     @Test
-    public void readCoordinates() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0",
+    void readCoordinates() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getPoint3d().x, is(closeTo(7.8089, 0.5)));
         assertThat(atom.getPoint3d().y, is(closeTo(-1.3194, 0.5)));
@@ -91,250 +89,244 @@ public class MDLV2000AtomBlockTest {
     }
 
     @Test
-    public void massDiff_c13() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   1  0  0  0  0  0  0  0  0  0  0  0",
+    void massDiff_c13() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   1  0  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getMassNumber(), is(13));
     }
 
     @Test
-    public void massDiff_c14() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   2  0  0  0  0  0  0  0  0  0  0  0",
+    void massDiff_c14() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   2  0  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getMassNumber(), is(14));
     }
 
     @Test
-    public void massDiff_c11() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C  -1  0  0  0  0  0  0  0  0  0  0  0",
+    void massDiff_c11() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C  -1  0  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getMassNumber(), is(11));
     }
 
     @Test
-    public void charge_cation() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  1  0  0  0  0  0  0  0  0  0  0",
+    void charge_cation() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  1  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getFormalCharge(), is(3));
     }
 
     @Test
-    public void charge_dication() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  2  0  0  0  0  0  0  0  0  0  0",
+    void charge_dication() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  2  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getFormalCharge(), is(2));
     }
 
     @Test
-    public void charge_trication() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  3  0  0  0  0  0  0  0  0  0  0",
+    void charge_trication() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  3  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getFormalCharge(), is(1));
     }
 
     // SingleElectronContainer created by M  RAD
     @Test
-    public void charge_doubletradical() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  4  0  0  0  0  0  0  0  0  0  0",
+    void charge_doubletradical() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  4  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getFormalCharge(), is(0));
     }
 
     @Test
-    public void charge_anion() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  5  0  0  0  0  0  0  0  0  0  0",
+    void charge_anion() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  5  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getFormalCharge(), is(-1));
     }
 
     @Test
-    public void charge_dianion() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  6  0  0  0  0  0  0  0  0  0  0",
+    void charge_dianion() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  6  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getFormalCharge(), is(-2));
     }
 
     @Test
-    public void charge_trianion() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  7  0  0  0  0  0  0  0  0  0  0",
+    void charge_trianion() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  7  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getFormalCharge(), is(-3));
     }
 
     @Test
-    public void charge_invalid() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  8  0  0  0  0  0  0  0  0  0  0",
+    void charge_invalid() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  8  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getFormalCharge(), is(0));
     }
 
     @Test
-    public void valence_0() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0 15  0  0  0  0  0  0",
+    void valence_0() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0 15  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getValency(), is(0));
     }
 
     @Test
-    public void valence_unset() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0",
+    void valence_unset() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getValency(), is(nullValue()));
     }
 
     @Test
-    public void valence_1() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  1  0  0  0  0  0  0",
+    void valence_1() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  1  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getValency(), is(1));
     }
 
     @Test
-    public void valence_14() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0 14  0  0  0  0  0  0",
+    void valence_14() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0 14  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getValency(), is(14));
     }
 
     @Test
-    public void valence_invalid() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0 16  0  0  0  0  0  0",
+    void valence_invalid() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0 16  0  0  0  0  0  0",
                 builder, 1);
         assertThat(atom.getValency(), is(nullValue()));
     }
 
     @Test
-    public void mapping() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  1  0  0",
+    void mapping() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0  1  0  0",
                 builder, 1);
         assertThat(atom.getProperty(CDKConstants.ATOM_ATOM_MAPPING, Integer.class), is(1));
     }
 
     @Test
-    public void mapping_42() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0 42  0  0",
+    void mapping_42() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0 42  0  0",
                 builder, 1);
         assertThat(atom.getProperty(CDKConstants.ATOM_ATOM_MAPPING, Integer.class), is(42));
     }
 
     @Test
-    public void mapping_999() throws Exception {
-        IAtom atom = handler.readAtom("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0999  0  0",
+    void mapping_999() throws Exception {
+        IAtom atom = reader.readAtomFast("    7.8089   -1.3194    0.0000 C   0  0  0  0  0  0  0  0  0999  0  0",
                 builder, 1);
         assertThat(atom.getProperty(CDKConstants.ATOM_ATOM_MAPPING, Integer.class), is(999));
     }
 
     @Test
-    public void lonePairAtomSymbol() throws Exception {
-        assertTrue(V2000MoleculeBlockHandler.isPseudoElement("LP"));
+    void lonePairAtomSymbol() throws Exception {
+        Assertions.assertTrue(MDLV2000Reader.isPseudoElement("LP"));
     }
 
     @Test
-    public void atomListAtomSymbol() throws Exception {
-        assertTrue(V2000MoleculeBlockHandler.isPseudoElement("L"));
+    void atomListAtomSymbol() throws Exception {
+        Assertions.assertTrue(MDLV2000Reader.isPseudoElement("L"));
     }
 
     @Test
-    public void heavyAtomSymbol() throws Exception {
-        assertTrue(V2000MoleculeBlockHandler.isPseudoElement("A"));
+    void heavyAtomSymbol() throws Exception {
+        Assertions.assertTrue(MDLV2000Reader.isPseudoElement("A"));
     }
 
     @Test
-    public void hetroAtomSymbol() throws Exception {
-        assertTrue(V2000MoleculeBlockHandler.isPseudoElement("Q"));
+    void hetroAtomSymbol() throws Exception {
+        Assertions.assertTrue(MDLV2000Reader.isPseudoElement("Q"));
     }
 
     @Test
-    public void unspecifiedAtomSymbol() throws Exception {
-        assertTrue(V2000MoleculeBlockHandler.isPseudoElement("*"));
+    void unspecifiedAtomSymbol() throws Exception {
+        Assertions.assertTrue(MDLV2000Reader.isPseudoElement("*"));
     }
 
     @Test
-    public void rGroupAtomSymbol() throws Exception {
-        assertTrue(V2000MoleculeBlockHandler.isPseudoElement("R"));
+    void rGroupAtomSymbol() throws Exception {
+        Assertions.assertTrue(MDLV2000Reader.isPseudoElement("R"));
     }
 
     @Test
-    public void rGroupAtomSymbol_hash() throws Exception {
-        assertTrue(V2000MoleculeBlockHandler.isPseudoElement("R#"));
+    void rGroupAtomSymbol_hash() throws Exception {
+        Assertions.assertTrue(MDLV2000Reader.isPseudoElement("R#"));
     }
 
     @Test
-    public void invalidAtomSymbol() throws Exception {
-        assertFalse(V2000MoleculeBlockHandler.isPseudoElement("RNA"));
-        assertFalse(V2000MoleculeBlockHandler.isPseudoElement("DNA"));
-        assertFalse(V2000MoleculeBlockHandler.isPseudoElement("ACP"));
+    void invalidAtomSymbol() throws Exception {
+        Assertions.assertFalse(MDLV2000Reader.isPseudoElement("RNA"));
+        Assertions.assertFalse(MDLV2000Reader.isPseudoElement("DNA"));
+        Assertions.assertFalse(MDLV2000Reader.isPseudoElement("ACP"));
     }
 
     @Test
-    public void readMDLCoordinate() throws Exception {
-        final MDLV2000Reader reader = new MDLV2000Reader();
-        reader.setReaderMode(IChemObjectReader.Mode.RELAXED);
-        assertThat(new V2000MoleculeBlockHandler(reader).readMDLCoordinate("    7.8089", 0), is(closeTo(7.8089, 0.1)));
+    void readMDLCoordinate() throws Exception {
+        assertThat(new MDLV2000Reader().readMDLCoordinate("    7.8089", 0), is(closeTo(7.8089, 0.1)));
     }
 
     @Test
-    public void readMDLCoordinate_negative() throws Exception {
-        final MDLV2000Reader reader = new MDLV2000Reader();
-        reader.setReaderMode(IChemObjectReader.Mode.RELAXED);
-        assertThat(new V2000MoleculeBlockHandler(reader).readMDLCoordinate("   -2.0012", 0), is(closeTo(-2.0012, 0.1)));
+    void readMDLCoordinate_negative() throws Exception {
+        assertThat(new MDLV2000Reader().readMDLCoordinate("   -2.0012", 0), is(closeTo(-2.0012, 0.1)));
     }
 
     @Test
-    public void readMDLCoordinate_offset() throws Exception {
-        final MDLV2000Reader reader = new MDLV2000Reader();
-        reader.setReaderMode(IChemObjectReader.Mode.RELAXED);
-        assertThat(new V2000MoleculeBlockHandler(reader).readMDLCoordinate("   -2.0012    7.8089", 10), is(closeTo(7.8089, 0.1)));
+    void readMDLCoordinate_offset() throws Exception {
+        assertThat(new MDLV2000Reader().readMDLCoordinate("   -2.0012    7.8089", 10), is(closeTo(7.8089, 0.1)));
     }
 
     @Test
-    public void readOldJmolCoords() throws Exception {
-        final MDLV2000Reader reader = new MDLV2000Reader();
-        reader.setReaderMode(IChemObjectReader.Mode.RELAXED);
-        V2000MoleculeBlockHandler handler = new V2000MoleculeBlockHandler(reader);
-        assertThat(handler.readMDLCoordinate("  -2.00120    7.8089", 0), is(closeTo(-2.00120, 0.1)));
-    }
-
-    @Test(expected = CDKException.class)
-    public void readOldJmolCoordsFailOnStrictRead() throws Exception {
-        final MDLV2000Reader reader = new MDLV2000Reader();
-        reader.setReaderMode( IChemObjectReader.Mode.STRICT);
-        V2000MoleculeBlockHandler handler = new V2000MoleculeBlockHandler(reader);
-        handler.readMDLCoordinate("  -2.00120    7.8089", 0);
-    }
-
-    @Test(expected = CDKException.class)
-    public void readMDLCoordinates_wrong_decimal_position_strict() throws Exception {
-
+    void readOldJmolCoords() throws Exception {
         MDLV2000Reader reader = new MDLV2000Reader();
-        reader.setReaderMode(IChemObjectReader.Mode.STRICT);
-        V2000MoleculeBlockHandler handler = new V2000MoleculeBlockHandler(reader);
-        assertThat(handler.readMDLCoordinate("   -2.0012   7.8089 ", 10), is(closeTo(7.8089, 0.1)));
+        reader.setReaderMode(IChemObjectReader.Mode.RELAXED);
+        assertThat(reader.readMDLCoordinate("  -2.00120    7.8089", 0), is(closeTo(-2.00120, 0.1)));
     }
 
     @Test
-    public void readMDLCoordinates_wrong_decimal_position_relaxed() throws Exception {
+    void readOldJmolCoordsFailOnStrictRead() throws Exception {
+        Assertions.assertThrows(CDKException.class,
+                                () -> {
+                                    MDLV2000Reader reader = new MDLV2000Reader();
+                                    reader.setReaderMode(IChemObjectReader.Mode.STRICT);
+                                    reader.readMDLCoordinate("  -2.00120    7.8089", 0);
+                                });
+    }
+
+    @Test
+    void readMDLCoordinates_wrong_decimal_position_strict() throws Exception {
+        Assertions.assertThrows(CDKException.class,
+                                () -> {
+                                    MDLV2000Reader reader = new MDLV2000Reader();
+                                    reader.setReaderMode(IChemObjectReader.Mode.STRICT);
+                                    assertThat(reader.readMDLCoordinate("   -2.0012   7.8089 ", 10), is(closeTo(7.8089, 0.1)));
+                                });
+    }
+
+    @Test
+    void readMDLCoordinates_wrong_decimal_position_relaxed() throws Exception {
 
         MDLV2000Reader reader = new MDLV2000Reader();
         reader.setReaderMode(IChemObjectReader.Mode.RELAXED);
-        V2000MoleculeBlockHandler handler = new V2000MoleculeBlockHandler(reader);
-        assertThat(handler.readMDLCoordinate("   -2.0012   7.8089 ", 10), is(closeTo(7.8089, 0.1)));
+        assertThat(reader.readMDLCoordinate("   -2.0012   7.8089 ", 10), is(closeTo(7.8089, 0.1)));
     }
 
     @Test
-    public void readMDLCoordinates_no_value_relaxed() throws Exception {
+    void readMDLCoordinates_no_value_relaxed() throws Exception {
 
         MDLV2000Reader reader = new MDLV2000Reader();
         reader.setReaderMode(IChemObjectReader.Mode.RELAXED);
-        assertThat(handler.readMDLCoordinate("   -2.0012          ", 10), is(closeTo(0.0, 0.1)));
+        assertThat(reader.readMDLCoordinate("   -2.0012          ", 10), is(closeTo(0.0, 0.1)));
     }
 
     @Test
-    public void readMDLCoordinates_no_decimal_relaxed() throws Exception {
+    void readMDLCoordinates_no_decimal_relaxed() throws Exception {
 
         MDLV2000Reader reader = new MDLV2000Reader();
         reader.setReaderMode(IChemObjectReader.Mode.RELAXED);
-        V2000MoleculeBlockHandler handler = new V2000MoleculeBlockHandler(reader);
-        assertThat(handler.readMDLCoordinate("   -2.0012   708089 ", 10), is(closeTo(708089, 0.1)));
+        assertThat(reader.readMDLCoordinate("   -2.0012   708089 ", 10), is(closeTo(708089, 0.1)));
     }
 }

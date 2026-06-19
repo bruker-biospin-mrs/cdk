@@ -18,12 +18,12 @@
  */
 package org.openscience.cdk.layout;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.geometry.GeometryUtil;
@@ -37,30 +37,31 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 import javax.vecmath.Point2d;
 import java.io.InputStream;
 
-import static org.junit.Assert.assertNotNull;
-
-/** @cdk.module test-sdg */
-public class HydrogenPlacerTest extends CDKTestCase {
+class HydrogenPlacerTest extends CDKTestCase {
 
     public boolean       standAlone = false;
-    private ILoggingTool logger     = LoggingToolFactory.createLoggingTool(HydrogenPlacerTest.class);
+    private final ILoggingTool logger     = LoggingToolFactory.createLoggingTool(HydrogenPlacerTest.class);
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAtomWithoutCoordinates() {
-        HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
-        hydrogenPlacer.placeHydrogens2D(new AtomContainer(), new Atom(), 1.5);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testNullContainer() {
-        HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
-        hydrogenPlacer.placeHydrogens2D(null, new Atom(), 1.5);
+    @Test
+    void testAtomWithoutCoordinates() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
+            hydrogenPlacer.placeHydrogens2D(DefaultChemObjectBuilder.getInstance().newAtomContainer(), new Atom(), 1.5);
+        });
     }
 
     @Test
-    public void testNoConnections() {
+    void testNullContainer() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
+            hydrogenPlacer.placeHydrogens2D(null, new Atom(), 1.5);
+        });
+    }
+
+    @Test
+    void testNoConnections() {
         HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
-        AtomContainer  container      = new AtomContainer();
+        IAtomContainer  container     = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom           atom         = new Atom("C", new Point2d(0, 0));
         container.addAtom(atom);
         hydrogenPlacer.placeHydrogens2D(container, atom, 1.5);
@@ -68,52 +69,54 @@ public class HydrogenPlacerTest extends CDKTestCase {
 
     /** @cdk.bug 1269 */
     @Test
-    public void testH2() {
+    void testH2() {
         HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
 
         // h1 has no coordinates
         IAtom h1 = new Atom("H");
         IAtom h2 = new Atom("H", new Point2d(0, 0));
-        IAtomContainer m = new AtomContainer();
+        IAtomContainer m = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(h1);
         m.addAtom(h2);
         m.addBond(new Bond(h1, h2));
         hydrogenPlacer.placeHydrogens2D(m, 1.5);
-        assertNotNull(h1.getPoint2d());
+        Assertions.assertNotNull(h1.getPoint2d());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void unplacedNonHydrogen() {
-        HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
+    @Test
+    void unplacedNonHydrogen() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
 
-        // c2 is unplaced
-        IAtom c1 = new Atom("C", new Point2d(0, 0));
-        IAtom c2 = new Atom("C");
-        IAtomContainer m = new AtomContainer();
-        m.addAtom(c1);
-        m.addAtom(c2);
-        m.addBond(new Bond(c1, c2));
-        hydrogenPlacer.placeHydrogens2D(m, 1.5);
+            // c2 is unplaced
+            IAtom c1 = new Atom("C", new Point2d(0, 0));
+            IAtom c2 = new Atom("C");
+            IAtomContainer m = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+            m.addAtom(c1);
+            m.addAtom(c2);
+            m.addBond(new Bond(c1, c2));
+            hydrogenPlacer.placeHydrogens2D(m, 1.5);
+        });
     }
 
     /** @cdk.bug 933572 */
     @Test
-    public void testBug933572() throws Exception {
-        IAtomContainer ac = new AtomContainer();
+    void testBug933572() throws Exception {
+        IAtomContainer ac = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         ac.addAtom(new Atom("H"));
         ac.getAtom(0).setPoint2d(new Point2d(0, 0));
         addExplicitHydrogens(ac);
         HydrogenPlacer hPlacer = new HydrogenPlacer();
         hPlacer.placeHydrogens2D(ac, 36);
         for (int i = 0; i < ac.getAtomCount(); i++) {
-            Assert.assertNotNull(ac.getAtom(i).getPoint2d());
+            Assertions.assertNotNull(ac.getAtom(i).getPoint2d());
         }
     }
 
     @Test
-    public void testPlaceHydrogens2D() throws Exception {
+    void testPlaceHydrogens2D() throws Exception {
         HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
-        IAtomContainer dichloromethane = new AtomContainer();
+        IAtomContainer dichloromethane = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom carbon = new Atom("C");
         Point2d carbonPos = new Point2d(0.0, 0.0);
         carbon.setPoint2d(carbonPos);
@@ -135,8 +138,8 @@ public class HydrogenPlacerTest extends CDKTestCase {
         dichloromethane.addBond(new Bond(carbon, cl1));
         dichloromethane.addBond(new Bond(carbon, cl2));
 
-        Assert.assertNull(h1.getPoint2d());
-        Assert.assertNull(h2.getPoint2d());
+        Assertions.assertNull(h1.getPoint2d());
+        Assertions.assertNull(h2.getPoint2d());
 
         // generate new coords
         hydrogenPlacer.placeHydrogens2D(dichloromethane, carbon);
@@ -144,8 +147,8 @@ public class HydrogenPlacerTest extends CDKTestCase {
         assertEquals(carbonPos, carbon.getPoint2d(), 0.01);
         assertEquals(cl1Pos, cl1.getPoint2d(), 0.01);
         assertEquals(cl2Pos, cl2.getPoint2d(), 0.01);
-        Assert.assertNotNull(h1.getPoint2d());
-        Assert.assertNotNull(h2.getPoint2d());
+        Assertions.assertNotNull(h1.getPoint2d());
+        Assertions.assertNotNull(h2.getPoint2d());
     }
 
     /*
@@ -154,7 +157,7 @@ public class HydrogenPlacerTest extends CDKTestCase {
      * HydrogenPlacer, not to be run as a JUnit test. Thus the name without
      * "test".
      */
-    public void visualFullMolecule2DEvaluation() throws Exception {
+    void visualFullMolecule2DEvaluation() throws Exception {
         HydrogenPlacer hydrogenPlacer = new HydrogenPlacer();
         String filename = "data/mdl/reserpine.mol";
         InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);

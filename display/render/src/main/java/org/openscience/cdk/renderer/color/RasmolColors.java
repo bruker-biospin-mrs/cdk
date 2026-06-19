@@ -29,8 +29,6 @@ import org.openscience.cdk.interfaces.IAtom;
  * <a href="http://www.umass.edu/microbio/rasmol/rascolor.htm"
  * >http://www.umass.edu/microbio/rasmol/rascolor.htm</a>.
  *
- * @cdk.module render
- * @cdk.githash
  */
 public class RasmolColors implements IAtomColorer, java.io.Serializable {
 
@@ -38,14 +36,14 @@ public class RasmolColors implements IAtomColorer, java.io.Serializable {
 
     private final static Color        DEFAULT          = new Color(255, 20, 147);
 
-    private static Map<String, Color> colorMap;
+    private static final Map<String, Color> colorMap;
 
     /*
      * Color map with RasMol/Chime Color RGB Values. Excepted H and C (too
      * light).
      */
     static {
-        colorMap = new HashMap<String, Color>();
+        colorMap = new HashMap<>();
 
         colorMap.put("C", new Color(144, 144, 144));
         colorMap.put("H", new Color(144, 144, 144));

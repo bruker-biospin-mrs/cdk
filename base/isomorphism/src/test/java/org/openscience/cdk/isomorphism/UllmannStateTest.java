@@ -24,7 +24,8 @@
 
 package org.openscience.cdk.isomorphism;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.graph.GraphUtil;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.templates.TestMoleculeFactory;
@@ -33,16 +34,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author John May
- * @cdk.module test-isomorphism
  */
-public class UllmannStateTest {
+class UllmannStateTest {
 
     @Test
-    public void testNextN() throws Exception {
+    void testNextN() throws Exception {
         UllmannState state = createBenzeneToNaphthalene(AtomMatcher.forAny(), BondMatcher.forAny());
         assertThat(state.nextN(0), is(0));
         state.size = 1;
@@ -52,7 +51,7 @@ public class UllmannStateTest {
     }
 
     @Test
-    public void testNextM() throws Exception {
+    void testNextM() throws Exception {
         UllmannState state = createBenzeneToNaphthalene(AtomMatcher.forAny(), BondMatcher.forAny());
         assertThat(state.nextM(0, -1), is(0));
         assertThat(state.nextM(0, 0), is(1));
@@ -62,37 +61,37 @@ public class UllmannStateTest {
     }
 
     @Test
-    public void add() throws Exception {
+    void add() throws Exception {
         UllmannState state = createBenzeneToNaphthalene(AtomMatcher.forAny(), BondMatcher.forAny());
         assertThat(state.matrix.fix(), is(new int[][]{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}}));
-        assertTrue(state.add(0, 0));
+        Assertions.assertTrue(state.add(0, 0));
         assertThat(state.matrix.fix(), is(new int[][]{{1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
                 {-1, 1, -1, -1, -1, -1, -1, -1, -1, 1}, {1, -1, 1, -1, -1, -1, -1, -1, 1, -1},
                 {-1, 1, -1, 1, -1, -1, -1, 1, -1, 1}, {1, -1, 1, -1, -1, -1, -1, -1, 1, -1},
                 {-1, 1, -1, -1, -1, -1, -1, -1, -1, 1}}));
-        assertTrue(state.add(1, 9));
+        Assertions.assertTrue(state.add(1, 9));
         assertThat(state.matrix.fix(), is(new int[][]{{1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
                 {-1, -2, -1, -1, -1, -1, -1, -1, -1, 1}, {1, -1, -2, -1, -1, -1, -1, -1, 1, -1},
                 {-1, 1, -1, -2, -1, -1, -1, 1, -1, 1}, {1, -1, 1, -1, -1, -1, -1, -1, 1, -1},
                 {-1, 1, -1, -1, -1, -1, -1, -1, -1, 1}}));
-        assertTrue(state.add(2, 8));
+        Assertions.assertTrue(state.add(2, 8));
         assertThat(state.matrix.fix(), is(new int[][]{{1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
                 {-1, -2, -1, -1, -1, -1, -1, -1, -1, 1}, {-3, -1, -2, -1, -1, -1, -1, -1, 1, -1},
                 {-1, -3, -1, -2, -1, -1, -1, 1, -1, 1}, {1, -1, 1, -1, -1, -1, -1, -1, 1, -1},
                 {-1, 1, -1, -1, -1, -1, -1, -1, -1, 1}}));
-        assertTrue(state.add(3, 7));
+        Assertions.assertTrue(state.add(3, 7));
         assertThat(state.matrix.fix(), is(new int[][]{{1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
                 {-1, -2, -1, -1, -1, -1, -1, -1, -1, 1}, {-3, -1, -2, -1, -1, -1, -1, -1, 1, -1},
                 {-1, -3, -1, -2, -1, -1, -1, 1, -1, -4}, {-4, -1, 1, -1, -1, -1, -1, -1, 1, -1},
                 {-1, 1, -1, -1, -1, -1, -1, -1, -1, 1}}));
-        assertTrue(state.add(4, 2));
+        Assertions.assertTrue(state.add(4, 2));
         assertThat(state.matrix.fix(), is(new int[][]{{1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
                 {-1, -2, -1, -1, -1, -1, -1, -1, -1, 1}, {-3, -1, -2, -1, -1, -1, -1, -1, 1, -1},
                 {-1, -3, -1, -2, -1, -1, -1, 1, -1, -4}, {-4, -1, 1, -1, -1, -1, -1, -1, -5, -1},
                 {-1, 1, -1, -1, -1, -1, -1, -1, -1, -5}}));
-        assertTrue(state.add(5, 1));
+        Assertions.assertTrue(state.add(5, 1));
         assertThat(state.matrix.fix(), is(new int[][]{{1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
                 {-1, -2, -1, -1, -1, -1, -1, -1, -1, 1}, {-3, -1, -2, -1, -1, -1, -1, -1, 1, -1},
                 {-1, -3, -1, -2, -1, -1, -1, 1, -1, -4}, {-4, -1, 1, -1, -1, -1, -1, -1, -5, -1},
@@ -100,17 +99,17 @@ public class UllmannStateTest {
     }
 
     @Test
-    public void remove() throws Exception {
+    void remove() throws Exception {
         UllmannState state = createBenzeneToNaphthalene(AtomMatcher.forAny(), BondMatcher.forAny());
         assertThat(state.matrix.fix(), is(new int[][]{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}}));
-        assertTrue(state.add(0, 0));
-        assertTrue(state.add(1, 9));
-        assertTrue(state.add(2, 8));
-        assertTrue(state.add(3, 7));
-        assertTrue(state.add(4, 2));
-        assertTrue(state.add(5, 1));
+        Assertions.assertTrue(state.add(0, 0));
+        Assertions.assertTrue(state.add(1, 9));
+        Assertions.assertTrue(state.add(2, 8));
+        Assertions.assertTrue(state.add(3, 7));
+        Assertions.assertTrue(state.add(4, 2));
+        Assertions.assertTrue(state.add(5, 1));
         assertThat(state.matrix.fix(), is(new int[][]{{1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
                 {-1, -2, -1, -1, -1, -1, -1, -1, -1, 1}, {-3, -1, -2, -1, -1, -1, -1, -1, 1, -1},
                 {-1, -3, -1, -2, -1, -1, -1, 1, -1, -4}, {-4, -1, 1, -1, -1, -1, -1, -1, -5, -1},
@@ -147,7 +146,7 @@ public class UllmannStateTest {
     }
 
     @Test
-    public void mapping() throws Exception {
+    void mapping() throws Exception {
         UllmannState state = createBenzeneToNaphthalene(AtomMatcher.forAny(), BondMatcher.forAny());
         state.m1[0] = 1;
         state.m1[1] = 2;
@@ -156,7 +155,7 @@ public class UllmannStateTest {
     }
 
     @Test
-    public void accessors() throws Exception {
+    void accessors() throws Exception {
         UllmannState state = createBenzeneToNaphthalene(AtomMatcher.forAny(), BondMatcher.forAny());
         state.size = 1;
         assertThat(state.size(), is(1));

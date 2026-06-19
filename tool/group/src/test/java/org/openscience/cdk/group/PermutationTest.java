@@ -24,158 +24,159 @@ package org.openscience.cdk.group;
 
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * @author maclean
- * @cdk.module test-group
  *
  */
-public class PermutationTest extends CDKTestCase {
+class PermutationTest extends CDKTestCase {
 
     @Test
-    public void sizeNConstructor() {
+    void sizeNConstructor() {
         int size = 4;
         Permutation p = new Permutation(size);
         for (int index = 0; index < size; index++) {
-            Assert.assertEquals(index, p.get(index));
+            Assertions.assertEquals(index, p.get(index));
         }
     }
 
     @Test
-    public void valuesConstructor() {
+    void valuesConstructor() {
         int[] values = new int[]{1, 0, 3, 2};
         Permutation p = new Permutation(values);
         for (int index = 0; index < p.size(); index++) {
-            Assert.assertEquals(values[index], p.get(index));
+            Assertions.assertEquals(values[index], p.get(index));
         }
     }
 
     @Test
-    public void cloneConstructor() {
+    void cloneConstructor() {
         int[] values = new int[]{1, 0, 3, 2};
         Permutation a = new Permutation(values);
         Permutation b = new Permutation(a);
-        Assert.assertEquals(a, b);
+        Assertions.assertEquals(a, b);
     }
 
     @Test
-    public void equalsTest() {
+    void equalsTest() {
         Permutation a = new Permutation(1, 2, 0, 3);
         Permutation b = new Permutation(1, 2, 0, 3);
-        Assert.assertEquals(a, b);
+        Assertions.assertEquals(a, b);
     }
 
     @Test
-    public void equalsTest_null() {
+    void equalsTest_null() {
         Permutation a = new Permutation(1, 2, 0, 3);
-        Assert.assertNotSame(a, null);
+        Assertions.assertNotSame(a, null);
     }
 
     @Test
-    public void equalsTest_difference() {
+    void equalsTest_difference() {
         Permutation a = new Permutation(1, 2, 0, 3);
         Permutation b = new Permutation(1, 0, 2, 3);
-        Assert.assertNotSame(a, b);
+        Assertions.assertNotSame(a, b);
     }
 
     @Test
-    public void isIdentityTest() {
+    void isIdentityTest() {
         int size = 4;
         Permutation p = new Permutation(size);
-        Assert.assertTrue(p.isIdentity());
+        Assertions.assertTrue(p.isIdentity());
     }
 
     @Test
-    public void sizeTest() {
+    void sizeTest() {
         int size = 4;
         Permutation p = new Permutation(size);
-        Assert.assertEquals(size, p.size());
+        Assertions.assertEquals(size, p.size());
     }
 
     @Test
-    public void getTest() {
+    void getTest() {
         Permutation p = new Permutation(1, 0);
-        Assert.assertEquals(1, p.get(0));
+        Assertions.assertEquals(1, p.get(0));
     }
 
     @Test
-    public void getValuesTest() {
+    void getValuesTest() {
         int[] values = new int[]{1, 0, 3, 2};
         Permutation p = new Permutation(values);
-        Assert.assertArrayEquals(values, p.getValues());
+        Assertions.assertArrayEquals(values, p.getValues());
     }
 
     @Test
-    public void firstIndexDiffTest() {
+    void firstIndexDiffTest() {
         int[] valuesA = new int[]{1, 0, 3, 2};
         int[] valuesB = new int[]{1, 0, 2, 3};
         Permutation a = new Permutation(valuesA);
         Permutation b = new Permutation(valuesB);
-        Assert.assertEquals(2, a.firstIndexOfDifference(b));
+        Assertions.assertEquals(2, a.firstIndexOfDifference(b));
     }
 
     @Test
-    public void getOrbitTest() {
+    void getOrbitTest() {
         Permutation p = new Permutation(4, 6, 1, 3, 2, 5, 0);
         List<Integer> orbit = p.getOrbit(1);
-        Assert.assertEquals(5, orbit.size());
-        Assert.assertTrue(orbit.contains(1));
+        Assertions.assertEquals(5, orbit.size());
+        Assertions.assertTrue(orbit.contains(1));
     }
 
     @Test
-    public void setTest() {
+    void setTest() {
         Permutation p = new Permutation(1, 0);
         p.set(0, 0);
         p.set(1, 1);
-        Assert.assertEquals(0, p.get(0));
-        Assert.assertEquals(1, p.get(1));
+        Assertions.assertEquals(0, p.get(0));
+        Assertions.assertEquals(1, p.get(1));
     }
 
     @Test
-    public void setToTest() {
+    void setToTest() {
         int[] values = new int[]{1, 0, 3, 2};
         Permutation a = new Permutation(values);
         Permutation b = new Permutation(values.length);
         a.setTo(b);
-        Assert.assertTrue(a.isIdentity());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void setToTest_differentLength() {
-        Permutation a = new Permutation(1, 0, 2);
-        Permutation b = new Permutation(0, 1);
-        a.setTo(b);
+        Assertions.assertTrue(a.isIdentity());
     }
 
     @Test
-    public void multiplyTest() {
+    void setToTest_differentLength() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            Permutation a = new Permutation(1, 0, 2);
+            Permutation b = new Permutation(0, 1);
+            a.setTo(b);
+        });
+    }
+
+    @Test
+    void multiplyTest() {
         int[] valuesA = new int[]{1, 0, 2, 3};
         int[] valuesB = new int[]{0, 1, 3, 2};
         int[] expectC = new int[]{1, 0, 3, 2};
         Permutation a = new Permutation(valuesA);
         Permutation b = new Permutation(valuesB);
         Permutation c = new Permutation(expectC);
-        Assert.assertEquals(c, a.multiply(b));
+        Assertions.assertEquals(c, a.multiply(b));
     }
 
     @Test
-    public void invertTest() {
+    void invertTest() {
         int[] values = new int[]{3, 1, 0, 2};
         int[] invert = new int[]{2, 1, 3, 0};
         Permutation p = new Permutation(values);
         Permutation invP = new Permutation(invert);
-        Assert.assertEquals(invP, p.invert());
+        Assertions.assertEquals(invP, p.invert());
     }
 
     @Test
-    public void toCycleStringTest() {
+    void toCycleStringTest() {
         int[] values = new int[]{0, 2, 1, 4, 5, 3, 7, 8, 9, 6};
         String expected = "(0)(1, 2)(3, 4, 5)(6, 7, 8, 9)";
         Permutation p = new Permutation(values);
-        Assert.assertEquals(expected, p.toCycleString());
+        Assertions.assertEquals(expected, p.toCycleString());
     }
 
 }

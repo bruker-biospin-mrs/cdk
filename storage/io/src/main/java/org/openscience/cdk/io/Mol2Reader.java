@@ -28,13 +28,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.vecmath.Point3d;
 
-import com.google.common.collect.ImmutableMap;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.config.AtomTypeFactory;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
@@ -60,8 +60,6 @@ import org.openscience.cdk.tools.periodictable.PeriodicTable;
  * See the specs <a href="http://www.tripos.com/data/support/mol2.pdf">here</a>.
  *
  * @author Egon Willighagen
- * @cdk.module io
- * @cdk.githash
  * @cdk.iooptions
  * @cdk.created 2003-08-21
  * @cdk.keyword file format, Mol2
@@ -70,25 +68,33 @@ public class Mol2Reader extends DefaultChemObjectReader {
 
     boolean                                  firstLineisMolecule = false;
 
-    BufferedReader                           input               = null;
-    private static ILoggingTool              logger              = LoggingToolFactory
+    BufferedReader                           input;
+    private static final ILoggingTool              logger              = LoggingToolFactory
                                                                          .createLoggingTool(Mol2Reader.class);
+
+    // helper function for immutable map of String -> String, JDK 9+ has Map.of()
+    private static Map<String,String> immutableMap(String ... strs) {
+        if ((strs.length & 0x1) != 0)
+            throw new IllegalArgumentException();
+        Map<String,String> map = new HashMap<>(2*strs.length);
+        for (int i=0; i<strs.length; i+=2)
+            map.put(strs[i],strs[i+1]);
+        return Collections.unmodifiableMap(map);
+    }
 
     /**
      * Dictionary of known atom type aliases. If the key is seen on input, it
      * is repleaced with the specified value. Bugs /openbabel/bug/214 and /cdk/bug/1346
      */
-    private static final Map<String, String> ATOM_TYPE_ALIASES   = ImmutableMap
-                                                                         .<String, String> builder()
-                                                                         // previously produced by Open Babel
-                                                                         .put("S.o2", "S.O2")
-                                                                         .put("S.o", "S.O")
-                                                                         // seen in MMFF94 validation suite
-                                                                         .put("CL", "Cl").put("CU", "Cu")
-                                                                         .put("FE", "Fe").put("BR", "Br")
-                                                                         .put("NA", "Na").put("SI", "Si")
-                                                                         .put("CA", "Ca").put("ZN", "Zn")
-                                                                         .put("LI", "Li").put("MG", "Mg").build();
+    private static final Map<String, String> ATOM_TYPE_ALIASES = immutableMap("S.o2", "S.O2", // previously produced by Open Babel
+                                                                              "S.o", "S.O",
+                                                                              // seen in MMFF94 validation suite
+                                                                              "CL", "Cl",
+                                                                              "CU", "Cu",
+                                                                              "FE", "Fe", "BR", "Br",
+                                                                              "NA", "Na", "SI", "Si",
+                                                                              "CA", "Ca", "ZN", "Zn",
+                                                                              "LI", "Li", "MG", "Mg");
 
     /**
      * Constructs a new MDLReader that can read Molecule from a given Reader.
@@ -231,7 +237,7 @@ public class Mol2Reader extends DefaultChemObjectReader {
      * @return The Reaction that was read from the MDL file.
      */
     private IAtomContainer readMolecule(IAtomContainer molecule) throws CDKException {
-        AtomTypeFactory atFactory = null;
+        AtomTypeFactory atFactory;
         try {
             atFactory = AtomTypeFactory.getInstance("org/openscience/cdk/config/data/mol2_atomtypes.xml",
                     molecule.getBuilder());
@@ -242,8 +248,8 @@ public class Mol2Reader extends DefaultChemObjectReader {
             throw new CDKException(error, exception);
         }
         try {
-            int atomCount = 0;
-            int bondCount = 0;
+            int atomCount;
+            int bondCount;
 
             String line;
             while (true) {
@@ -380,9 +386,9 @@ public class Mol2Reader extends DefaultChemObjectReader {
                                     bond.setOrder(Order.TRIPLE);
                                 } else if ("am".equals(orderStr) || "ar".equals(orderStr)) {
                                     bond.setOrder(Order.SINGLE);
-                                    bond.setFlag(CDKConstants.ISAROMATIC, true);
-                                    bond.getBegin().setFlag(CDKConstants.ISAROMATIC, true);
-                                    bond.getEnd().setFlag(CDKConstants.ISAROMATIC, true);
+                                    bond.setFlag(IChemObject.AROMATIC, true);
+                                    bond.getBegin().setFlag(IChemObject.AROMATIC, true);
+                                    bond.getEnd().setFlag(IChemObject.AROMATIC, true);
                                 } else if ("du".equals(orderStr)) {
                                     bond.setOrder(Order.SINGLE);
                                 } else if ("un".equals(orderStr)) {

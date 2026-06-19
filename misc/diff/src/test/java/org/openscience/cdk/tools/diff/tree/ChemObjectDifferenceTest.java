@@ -18,28 +18,29 @@
  */
 package org.openscience.cdk.tools.diff.tree;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.CoreMatchers.containsString;
 
 /**
- * @cdk.module test-diff
  */
-public class ChemObjectDifferenceTest extends CDKTestCase {
+class ChemObjectDifferenceTest {
 
     @Test
-    public void testToString() {
+    void testToString() {
         ChemObjectDifference diff = new ChemObjectDifference("AtomTypeDiff");
         String diffString = diff.toString();
-        Assert.assertNotNull(diffString);
-        Assert.assertEquals(0, diffString.length());
+        Assertions.assertNotNull(diffString);
+        Assertions.assertEquals(0, diffString.length());
 
         diff.addChild(StringDifference.construct("Foo", "bar", "bar1"));
         diffString = diff.toString();
-        Assert.assertNotNull(diffString);
-        assertOneLiner(diffString);
-        assertContains(diffString, "AtomTypeDiff");
-        assertContains(diffString, "{");
-        assertContains(diffString, "}");
+        Assertions.assertNotNull(diffString);
+        StringDifferenceTest.assertOneLiner(diffString);
+        MatcherAssert.assertThat(diffString, containsString( "AtomTypeDiff"));
+        MatcherAssert.assertThat(diffString, containsString( "{"));
+        MatcherAssert.assertThat(diffString, containsString( "}"));
     }
 }

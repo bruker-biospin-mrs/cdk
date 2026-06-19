@@ -42,12 +42,11 @@ import org.openscience.cdk.tools.manipulator.BondManipulator;
  * Validator which tests a number of basic chemical semantics.
  *
  * @author   Egon Willighagen
- * @cdk.githash
  * @cdk.created  2003-08-22
  */
 public class BasicValidator extends AbstractValidator {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(BasicValidator.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(BasicValidator.class);
 
     public BasicValidator() {}
 
@@ -124,8 +123,8 @@ public class BasicValidator extends AbstractValidator {
     private ValidationReport validateCharge(IAtom atom) {
         ValidationReport report = new ValidationReport();
         ValidationTest tooCharged = new ValidationTest(atom, "Atom has an unlikely large positive or negative charge");
-        if (atom.getSymbol().equals("O") || atom.getSymbol().equals("N") || atom.getSymbol().equals("C")
-                || atom.getSymbol().equals("H")) {
+        if (atom.getAtomicNumber() == IElement.O || atom.getAtomicNumber() == IElement.N || atom.getAtomicNumber() == IElement.C
+                || atom.getAtomicNumber() == IElement.H) {
             if (atom.getFormalCharge() == 0) {
                 report.addOK(tooCharged);
             } else {
@@ -206,7 +205,8 @@ public class BasicValidator extends AbstractValidator {
         ValidationReport report = new ValidationReport();
         ValidationTest bondStereo = new ValidationTest(bond, "Defining stereochemistry on bonds is not safe.",
                 "Use atom based stereochemistry.");
-        if (bond.getStereo() != IBond.Stereo.NONE) {
+        // JWM: Eh? but there is no test to check if the atom stereo is set?
+        if (bond.getDisplay() != IBond.Display.Solid) {
             report.addWarning(bondStereo);
         } else {
             report.addOK(bondStereo);
@@ -229,11 +229,11 @@ public class BasicValidator extends AbstractValidator {
                 IAtomType[] atomTypes = structgenATF.getAtomTypes(atom.getSymbol());
                 IAtomType failedOn = null;
                 boolean foundMatchingAtomType = false;
-                for (int j = 0; j < atomTypes.length; j++) {
-                    if (!BondManipulator.isHigherOrder(bond.getOrder(), atomTypes[j].getMaxBondOrder())) {
+                for (IAtomType atomType : atomTypes) {
+                    if (!BondManipulator.isHigherOrder(bond.getOrder(), atomType.getMaxBondOrder())) {
                         foundMatchingAtomType = true;
                     } else {
-                        failedOn = atomTypes[j];
+                        failedOn = atomType;
                     }
                 }
                 if (foundMatchingAtomType) {
@@ -249,7 +249,7 @@ public class BasicValidator extends AbstractValidator {
         } catch (Exception exception) {
             logger.error("Error while performing atom bos validation");
             logger.debug(exception);
-            maxBO.setDetails("Error while performing atom bos validation: " + exception.toString());
+            maxBO.setDetails("Error while performing atom bos validation: " + exception);
             report.addCDKError(maxBO);
         }
         return report;
@@ -267,8 +267,8 @@ public class BasicValidator extends AbstractValidator {
             if (isotope.getMassNumber() != null &&
                 isotope.getMassNumber() != 0) {
                 boolean foundKnownIsotope = false;
-                for (int i = 0; i < isotopes.length; i++) {
-                    if (Objects.equals(isotopes[i].getMassNumber(), isotope.getMassNumber())) {
+                for (IIsotope iIsotope : isotopes) {
+                    if (Objects.equals(iIsotope.getMassNumber(), isotope.getMassNumber())) {
                         foundKnownIsotope = true;
                     }
                 }
@@ -304,14 +304,13 @@ public class BasicValidator extends AbstractValidator {
             } else {
                 IAtomType failedOn = null;
                 boolean foundMatchingAtomType = false;
-                for (int j = 0; j < atomTypes.length; j++) {
-                    IAtomType type = atomTypes[j];
+                for (IAtomType type : atomTypes) {
                     if (Objects.equals(atom.getFormalCharge(), type.getFormalCharge())) {
-                        foundMatchingAtomType = true;
                         if (bos == type.getBondOrderSum()) {
+                            foundMatchingAtomType = true;
                             // skip this atom type
                         } else {
-                            failedOn = atomTypes[j];
+                            failedOn = type;
                         }
                     }
                 }
@@ -353,12 +352,12 @@ public class BasicValidator extends AbstractValidator {
         Iterator<IAtom> atoms1 = reactants.atoms().iterator();
         int totalCharge1 = 0;
         while (atoms1.hasNext()) {
-            totalCharge1 = +((IAtom) atoms1.next()).getFormalCharge();
+            totalCharge1 = +atoms1.next().getFormalCharge();
         }
         Iterator<IAtom> atoms2 = products.atoms().iterator();
         int totalCharge2 = 0;
         while (atoms2.hasNext()) {
-            totalCharge2 = +((IAtom) atoms2.next()).getFormalCharge();
+            totalCharge2 = +atoms2.next().getFormalCharge();
         }
         if (totalCharge1 != totalCharge2) {
             report.addError(chargeConservation);

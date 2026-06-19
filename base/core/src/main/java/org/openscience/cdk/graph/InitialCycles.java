@@ -23,16 +23,16 @@
  */
 package org.openscience.cdk.graph;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.TreeMultimap;
-import com.google.common.primitives.Ints;
-
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.copyOf;
 
 /**
@@ -43,7 +43,6 @@ import static java.util.Arrays.copyOf;
  * algorithms.
  *
  * @author John May
- * @cdk.module core
  * @see RelevantCycles
  */
 final class InitialCycles {
@@ -55,10 +54,11 @@ final class InitialCycles {
     private final int[]                    ordering;
 
     /** Cycle prototypes indexed by their length. */
-    private final Multimap<Integer, Cycle> cycles         = TreeMultimap.create();
+    private final Map<Integer, Set<Cycle>> cycles = new TreeMap<>();
 
     /** Index of edges in the graph */
-    private final BiMap<Edge, Integer>     edges;
+    private final Map<Edge, Integer> edgeToIndex;
+    private final Edge[] edges;
 
     /**
      * Initial array size for 'ordering()'. This method sorts vertices by degree
@@ -113,7 +113,7 @@ final class InitialCycles {
      * @throws NullPointerException the graph was null
      */
     private InitialCycles(final int[][] graph, final int limit, boolean biconnected) {
-        this.graph = checkNotNull(graph, "no graph provided");
+        this.graph = Objects.requireNonNull(graph, "no graph provided");
 
         // ordering ensures the number of initial cycles is polynomial
         this.biconnected = biconnected;
@@ -124,16 +124,19 @@ final class InitialCycles {
         // - edge representation: binary vector indicates whether an edge
         //                        is present or
         // - path representation: sequential list vertices forming the cycle
-        edges = HashBiMap.create(graph.length);
+        edgeToIndex = new HashMap<>(2*graph.length);
         int n = graph.length;
         for (int v = 0; v < n; v++) {
             for (int w : graph[v]) {
                 if (w > v) {
                     Edge edge = new Edge(v, w);
-                    edges.put(edge, edges.size());
+                    edgeToIndex.put(edge, edgeToIndex.size());
                 }
             }
         }
+        edges = new Edge[edgeToIndex.size()];
+        for (Map.Entry<Edge,Integer> e : edgeToIndex.entrySet())
+            edges[e.getValue()] = e.getKey();
 
         // compute the initial set of cycles
         compute();
@@ -166,7 +169,7 @@ final class InitialCycles {
      * @see #lengths()
      */
     Collection<Cycle> cyclesOfLength(int length) {
-        return cycles.get(length);
+        return Collections.unmodifiableSet(cycles.getOrDefault(length, Collections.emptySet()));
     }
 
     /**
@@ -175,7 +178,10 @@ final class InitialCycles {
      * @return list of cycles
      */
     Collection<Cycle> cycles() {
-        return cycles.values();
+        Set<Cycle> res = new TreeSet<>();
+        for (Set<Cycle> val : cycles.values())
+            res.addAll(val);
+        return Collections.unmodifiableSet(res);
     }
 
     /**
@@ -184,7 +190,10 @@ final class InitialCycles {
      * @return number of cycles
      */
     int numberOfCycles() {
-        return cycles.size();
+        int count = 0;
+        for (Set<Cycle> val : cycles.values())
+            count += val.size();
+        return count;
     }
 
     /**
@@ -193,7 +202,7 @@ final class InitialCycles {
      * @return number of edges
      */
     int numberOfEdges() {
-        return edges.size();
+        return edgeToIndex.size();
     }
 
     /**
@@ -203,7 +212,7 @@ final class InitialCycles {
      * @return the edge at the given index
      */
     Edge edge(int i) {
-        return edges.inverse().get(i);
+        return edges[i];
     }
 
     /**
@@ -215,7 +224,7 @@ final class InitialCycles {
      * @return the index of the edge
      */
     int indexOfEdge(final int u, final int v) {
-        return edges.get(new Edge(u, v));
+        return edgeToIndex.get(new Edge(u, v));
     }
 
     /**
@@ -227,7 +236,7 @@ final class InitialCycles {
      * @see #indexOfEdge(int, int)
      */
     BitSet toEdgeVector(final int[] path) {
-        final BitSet incidence = new BitSet(edges.size());
+        final BitSet incidence = new BitSet(edgeToIndex.size());
         int len = path.length - 1;
         for (int i = 0; i < len; i++) {
             incidence.set(indexOfEdge(path[i], path[i + 1]));
@@ -360,7 +369,9 @@ final class InitialCycles {
      * @param cycle the cycle to add
      */
     private void add(Cycle cycle) {
-        if (cycle.length() <= limit) cycles.put(cycle.length(), cycle);
+        if (cycle.length() <= limit)
+            cycles.computeIfAbsent(cycle.length(), k -> new TreeSet<>())
+                  .add(cycle);
     }
 
     /**
@@ -379,8 +390,8 @@ final class InitialCycles {
         int[] count = new int[DEFAULT_DEGREE + 1];
 
         // count the occurrences of each key (degree)
-        for (int v = 0; v < n; v++) {
-            int key = graph[v].length + 1;
+        for (int[] ints : graph) {
+            int key = ints.length + 1;
             if (key >= count.length) count = copyOf(count, key * 2);
             count[key]++;
         }
@@ -423,8 +434,8 @@ final class InitialCycles {
     static int[] join(int[] pathToY, int[] pathToZ) {
         int[] path = copyOf(pathToY, pathToY.length + pathToZ.length);
         int j = path.length - 1;
-        for (int i = 0; i < pathToZ.length; i++) {
-            path[j--] = pathToZ[i];
+        for (int k : pathToZ) {
+            path[j--] = k;
         }
         return path;
     }
@@ -443,8 +454,8 @@ final class InitialCycles {
         int[] path = copyOf(pathToP, 1 + pathToQ.length + pathToQ.length);
         path[pathToP.length] = y;
         int j = path.length - 1;
-        for (int i = 0; i < pathToQ.length; i++) {
-            path[j--] = pathToQ[i];
+        for (int k : pathToQ) {
+            path[j--] = k;
         }
         return path;
     }
@@ -478,9 +489,9 @@ final class InitialCycles {
      */
     static abstract class Cycle implements Comparable<Cycle> {
 
-        private int[] path;
-        ShortestPaths paths;
-        BitSet        edgeVector;
+        private final int[] path;
+        final ShortestPaths paths;
+        final BitSet        edgeVector;
 
         Cycle(final ShortestPaths paths, final int[] path) {
             this.path = path;
@@ -542,7 +553,15 @@ final class InitialCycles {
 
         @Override
         public int compareTo(Cycle that) {
-            return Ints.lexicographicalComparator().compare(this.path, that.path);
+            int cmp = this.path.length - that.path.length;
+            if (cmp != 0)
+                return cmp;
+            for (int i = 0; i < this.path.length; i++) {
+                cmp = Integer.compare(this.path[i], that.path[i]);
+                if (cmp != 0)
+                    return cmp;
+            }
+            return 0;
         }
     }
 
@@ -554,7 +573,9 @@ final class InitialCycles {
      */
     class EvenCycle extends Cycle {
 
-        int p, q, y;
+        final int p;
+        final int q;
+        final int y;
 
         EvenCycle(ShortestPaths paths, int[] pathToP, int y, int[] pathToQ) {
             super(paths, join(pathToP, y, pathToQ));
@@ -601,7 +622,8 @@ final class InitialCycles {
      */
     class OddCycle extends Cycle {
 
-        int y, z;
+        final int y;
+        final int z;
 
         OddCycle(ShortestPaths paths, int[] pathToY, int[] pathToZ) {
             super(paths, join(pathToY, pathToZ));
@@ -653,8 +675,11 @@ final class InitialCycles {
 
         @Override
         public boolean equals(Object o) {
+            if (!(o instanceof Edge))
+                return false;
             Edge that = (Edge) o;
-            return (this.v == that.v && this.w == that.w) || (this.v == that.w && this.w == that.v);
+            return ((this.v == that.v && this.w == that.w) ||
+                    (this.v == that.w && this.w == that.v));
         }
 
         @Override

@@ -27,12 +27,12 @@
  */
 package org.openscience.cdk;
 
-import com.google.common.base.Objects;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IElement;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * The base class for atom types. Atom types are typically used to describe the
@@ -42,8 +42,6 @@ import java.io.Serializable;
  *
  * @author       steinbeck
  * @cdk.created  2001-08-08
- * @cdk.module   data
- * @cdk.githash
  * @cdk.keyword  atom, type
  */
 public class AtomType extends Isotope implements IAtomType, Serializable, Cloneable {
@@ -65,12 +63,12 @@ public class AtomType extends Isotope implements IAtomType, Serializable, Clonea
     /**
      *  The maximum sum of all bond orders allowed for this atom type.
      */
-    Double                            bondOrderSum         = (Double) CDKConstants.UNSET;
+    Double                            bondOrderSum         = null;
 
     /**
      * The covalent radius of this atom type.
      */
-    Double                            covalentRadius       = (Double) CDKConstants.UNSET;
+    Double                            covalentRadius       = null;
 
     /**
      *  The formal charge of the atom with CDKConstants.UNSET as default. Implements RFC #6.
@@ -78,30 +76,34 @@ public class AtomType extends Isotope implements IAtomType, Serializable, Clonea
      *  Note that some constructors ({@link #AtomType(String)} and
      * {@link #AtomType(String, String)} ) will explicitly set this field to 0
      */
-    protected Integer                 formalCharge         = (Integer) CDKConstants.UNSET;
+    protected Integer                 formalCharge         = null;
 
     /**
      * The hybridization state of this atom with CDKConstants.HYBRIDIZATION_UNSET
      * as default.
      */
-    protected IAtomType.Hybridization hybridization        = (Hybridization) CDKConstants.UNSET;
+    protected IAtomType.Hybridization hybridization        = null;
 
     /**
      *  The electron Valency of this atom with CDKConstants.UNSET as default.
      */
-    protected Integer                 electronValency      = (Integer) CDKConstants.UNSET;
+    protected Integer                 electronValency      = null;
 
     /**
      * The formal number of neighbours this atom type can have with CDKConstants_UNSET
      * as default. This includes explicitely and implicitly connected atoms, including
      * implicit hydrogens.
      */
-    protected Integer                 formalNeighbourCount = (Integer) CDKConstants.UNSET;
+    protected Integer                 formalNeighbourCount = null;
 
     /**
      * String representing the identifier for this atom type with null as default.
      */
-    private String                    identifier           = (String) CDKConstants.UNSET;
+    private String                    identifier           = null;
+
+    protected AtomType() {
+        this.formalCharge = 0;
+    }
 
     /**
      * Constructor for the AtomType object.
@@ -318,8 +320,8 @@ public class AtomType extends Isotope implements IAtomType, Serializable, Clonea
             return false;
         }
         AtomType type = (AtomType) object;
-        return Objects.equal(getAtomTypeName(), type.getAtomTypeName())
-                && Objects.equal(maxBondOrder, type.maxBondOrder) && Objects.equal(bondOrderSum, type.bondOrderSum);
+        return Objects.equals(getAtomTypeName(), type.getAtomTypeName())
+                && Objects.equals(maxBondOrder, type.maxBondOrder) && Objects.equals(bondOrderSum, type.bondOrderSum);
     }
 
     /**
@@ -377,7 +379,7 @@ public class AtomType extends Isotope implements IAtomType, Serializable, Clonea
 
     @Override
     public String toString() {
-        StringBuffer resultString = new StringBuffer(64);
+        StringBuilder resultString = new StringBuilder(64);
         resultString.append("AtomType(").append(hashCode());
         if (getAtomTypeName() != null) {
             resultString.append(", N:").append(getAtomTypeName());

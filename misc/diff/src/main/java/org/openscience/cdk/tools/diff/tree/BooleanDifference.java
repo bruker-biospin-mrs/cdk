@@ -24,14 +24,12 @@ import java.util.Objects;
  * {@link IDifference} between two {@link Boolean}s.
  *
  * @author     egonw
- * @cdk.module diff
- * @cdk.githash
  */
 public class BooleanDifference implements IDifference {
 
-    private String  name;
-    private Boolean first;
-    private Boolean second;
+    private final String  name;
+    private final Boolean first;
+    private final Boolean second;
 
     private BooleanDifference(String name, Boolean first, Boolean second) {
         this.name = name;

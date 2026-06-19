@@ -32,18 +32,17 @@
 
 package org.openscience.cdk.io;
 
-import com.google.common.collect.Maps;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Adds implicit hydrogens and specifies valency using the MDL valence model.
  *
  * @author John May
- * @cdk.module io
  * @see <a href="http://nextmovesoftware.com/blog/2013/02/27/explicit-and-implicit-hydrogens-taking-liberties-with-valence/">Explicit
  *      and Implicit Hydrogens: taking liberties with valence</a>
  */
@@ -63,7 +62,7 @@ final class MDLValence {
 
         int[] valences = new int[n];
 
-        Map<IAtom, Integer> atomToIndex = Maps.newHashMapWithExpectedSize(n);
+        Map<IAtom, Integer> atomToIndex = new HashMap<>(2*n);
         for (IAtom atom : container.atoms())
             atomToIndex.put(atom, atomToIndex.size());
 

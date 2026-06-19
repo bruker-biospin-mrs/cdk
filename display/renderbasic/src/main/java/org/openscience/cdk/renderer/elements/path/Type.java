@@ -27,9 +27,9 @@ package org.openscience.cdk.renderer.elements.path;
  * The type of the path elements.
  *
  * @author Arvid
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public enum Type {
-    MoveTo, LineTo, QuadTo, CubicTo, Close;
+    // note the ordinal matches the AWT integers =
+    // java.awt.PathIterator.SEG_MOVETO = 0, SEW_LINETO = 1, etc.
+    MoveTo, LineTo, QuadTo, CubicTo, Close
 }

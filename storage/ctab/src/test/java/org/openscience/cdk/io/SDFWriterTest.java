@@ -23,17 +23,17 @@
 package org.openscience.cdk.io;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collections;
 import java.util.Properties;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.AtomContainerSet;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemModel;
@@ -45,45 +45,46 @@ import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.io.listener.PropertiesListener;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.InvPair;
 import org.openscience.cdk.templates.TestMoleculeFactory;
+import org.openscience.cdk.test.io.ChemObjectWriterTest;
+import org.openscience.cdk.tools.LoggingToolFactory;
 
-import static org.junit.Assert.assertThat;
-import static org.openscience.cdk.CDKConstants.ISAROMATIC;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.openscience.cdk.interfaces.IChemObject.AROMATIC;
 
 /**
  * TestCase for the writer MDL SD file writer.
  *
- * @cdk.module test-io
  *
  * @see org.openscience.cdk.io.SDFWriter
  */
-public class SDFWriterTest extends ChemObjectWriterTest {
+class SDFWriterTest extends ChemObjectWriterTest {
 
     private static IChemObjectBuilder builder;
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         builder = DefaultChemObjectBuilder.getInstance();
         setChemObjectWriter(new SDFWriter());
     }
 
     @Test
-    public void testAccepts() throws Exception {
+    void testAccepts() throws Exception {
         SDFWriter reader = new SDFWriter();
-        Assert.assertTrue(reader.accepts(ChemFile.class));
-        Assert.assertTrue(reader.accepts(ChemModel.class));
-        Assert.assertTrue(reader.accepts(AtomContainerSet.class));
+        Assertions.assertTrue(reader.accepts(ChemFile.class));
+        Assertions.assertTrue(reader.accepts(ChemModel.class));
+        Assertions.assertTrue(reader.accepts(AtomContainerSet.class));
     }
 
     @Test
-    public void testWrite_IAtomContainerSet_Properties_Off() throws Exception {
+    void testWrite_IAtomContainerSet_Properties_Off() throws Exception {
         StringWriter writer = new StringWriter();
         IAtomContainerSet molSet = new AtomContainerSet();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("C"));
         molecule.setProperty("foo", "bar");
         molSet.addAtomContainer(molecule);
@@ -96,14 +97,14 @@ public class SDFWriterTest extends ChemObjectWriterTest {
         sdfWriter.write(molSet);
         sdfWriter.close();
         String result = writer.toString();
-        Assert.assertFalse(result.contains("<foo>"));
+        Assertions.assertFalse(result.contains("<foo>"));
     }
 
     /**
      * @cdk.bug 2827745
      */
     @Test
-    public void testWrite_IAtomContainerSet() throws Exception {
+    void testWrite_IAtomContainerSet() throws Exception {
         StringWriter writer = new StringWriter();
         IAtomContainerSet molSet = builder.newInstance(IAtomContainerSet.class);
         IAtomContainer molecule = builder.newInstance(IAtomContainer.class);
@@ -113,14 +114,14 @@ public class SDFWriterTest extends ChemObjectWriterTest {
         SDFWriter sdfWriter = new SDFWriter(writer);
         sdfWriter.write(molSet);
         sdfWriter.close();
-        Assert.assertNotSame(0, writer.toString().length());
+        Assertions.assertNotSame(0, writer.toString().length());
     }
 
     @Test
-    public void testWrite_IAtomContainerSet_Properties() throws Exception {
+    void testWrite_IAtomContainerSet_Properties() throws Exception {
         StringWriter writer = new StringWriter();
         IAtomContainerSet molSet = new AtomContainerSet();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("C"));
         molecule.setProperty("foo", "bar");
         molSet.addAtomContainer(molecule);
@@ -128,15 +129,15 @@ public class SDFWriterTest extends ChemObjectWriterTest {
         SDFWriter sdfWriter = new SDFWriter(writer);
         sdfWriter.write(molSet);
         sdfWriter.close();
-        Assert.assertTrue(writer.toString().indexOf("<foo>") != -1);
-        Assert.assertTrue(writer.toString().indexOf("bar") != -1);
+        Assertions.assertTrue(writer.toString().contains("<foo>"));
+        Assertions.assertTrue(writer.toString().contains("bar"));
     }
 
     @Test
-    public void testWrite_IAtomContainerSet_CDKProperties() throws Exception {
+    void testWrite_IAtomContainerSet_CDKProperties() throws Exception {
         StringWriter writer = new StringWriter();
         IAtomContainerSet molSet = new AtomContainerSet();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("C"));
         molecule.setProperty(InvPair.CANONICAL_LABEL, "bar");
         molSet.addAtomContainer(molecule);
@@ -144,92 +145,92 @@ public class SDFWriterTest extends ChemObjectWriterTest {
         SDFWriter sdfWriter = new SDFWriter(writer);
         sdfWriter.write(molSet);
         sdfWriter.close();
-        Assert.assertTrue(writer.toString().indexOf(InvPair.CANONICAL_LABEL) == -1);
+        Assertions.assertTrue(!writer.toString().contains(InvPair.CANONICAL_LABEL));
     }
 
     @Test
-    public void testWrite_IAtomContainerSet_SingleMolecule() throws Exception {
+    void testWrite_IAtomContainerSet_SingleMolecule() throws Exception {
         StringWriter writer = new StringWriter();
         IAtomContainerSet molSet = new AtomContainerSet();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("C"));
         molSet.addAtomContainer(molecule);
 
         SDFWriter sdfWriter = new SDFWriter(writer);
         sdfWriter.write(molSet);
         sdfWriter.close();
-        Assert.assertTrue(writer.toString().indexOf("$$$$") != -1);
+        Assertions.assertTrue(writer.toString().contains("$$$$"));
     }
 
     @Test
-    public void testWrite_IAtomContainerSet_MultIAtomContainer() throws Exception {
+    void testWrite_IAtomContainerSet_MultIAtomContainer() throws Exception {
         StringWriter writer = new StringWriter();
         IAtomContainerSet molSet = new AtomContainerSet();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("C"));
         molSet.addAtomContainer(molecule);
-        molecule = new AtomContainer();
+        molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("C"));
         molSet.addAtomContainer(molecule);
 
         SDFWriter sdfWriter = new SDFWriter(writer);
         sdfWriter.write(molSet);
         sdfWriter.close();
-        Assert.assertTrue(writer.toString().indexOf("$$$$") != -1);
+        Assertions.assertTrue(writer.toString().contains("$$$$"));
     }
 
     @Test
-    public void testWrite_IAtomContainer_MultIAtomContainer() throws Exception {
+    void testWrite_IAtomContainer_MultIAtomContainer() throws Exception {
         StringWriter writer = new StringWriter();
         SDFWriter sdfWriter = new SDFWriter(writer);
 
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("C"));
         molecule.setProperty("foo", "bar");
         sdfWriter.write(molecule);
 
-        molecule = new AtomContainer();
+        molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("C"));
         molecule.setProperty("toys", "r-us");
         sdfWriter.write(molecule);
 
         sdfWriter.close();
-        Assert.assertTrue(writer.toString().indexOf("foo") != -1);
-        Assert.assertTrue(writer.toString().indexOf("bar") != -1);
-        Assert.assertTrue(writer.toString().indexOf("toys") != -1);
-        Assert.assertTrue(writer.toString().indexOf("r-us") != -1);
-        Assert.assertTrue(writer.toString().indexOf("$$$$") != -1);
+        Assertions.assertTrue(writer.toString().contains("foo"));
+        Assertions.assertTrue(writer.toString().contains("bar"));
+        Assertions.assertTrue(writer.toString().contains("toys"));
+        Assertions.assertTrue(writer.toString().contains("r-us"));
+        Assertions.assertTrue(writer.toString().contains("$$$$"));
     }
 
     @Test
-    public void invalidSDfileHeaderTags() throws Exception {
+    void invalidSDfileHeaderTags() throws Exception {
         StringWriter writer = new StringWriter();
         SDFWriter sdfWriter = new SDFWriter(writer);
 
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("C"));
         molecule.setProperty("http://not-valid.com", "URL");
         sdfWriter.write(molecule);
 
         sdfWriter.close();
-        Assert.assertThat(writer.toString(), Matchers.containsString("> <http://not_valid_com>"));
+        org.hamcrest.MatcherAssert.assertThat(writer.toString(), Matchers.containsString("> <http://not_valid_com>"));
     }
 
     @Test
-    public void chooseFormatToWrite() throws Exception {
+    void chooseFormatToWrite() throws Exception {
         StringWriter writer = new StringWriter();
         SDFWriter sdfWriter = new SDFWriter(writer);
 
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("CH4"));
         sdfWriter.write(molecule);
 
-        molecule = new AtomContainer();
+        molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         for (int i = 0; i < 1000; i++)
             molecule.addAtom(new Atom("CH4"));
         sdfWriter.write(molecule);
 
-        molecule = new AtomContainer();
+        molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("CH4"));
         sdfWriter.write(molecule);
 
@@ -240,21 +241,21 @@ public class SDFWriterTest extends ChemObjectWriterTest {
     }
 
     @Test
-    public void chooseFormatToWrite2() throws Exception {
+    void chooseFormatToWrite2() throws Exception {
         StringWriter writer = new StringWriter();
         SDFWriter sdfWriter = new SDFWriter(writer);
         sdfWriter.setAlwaysV3000(true);
 
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("CH4"));
         sdfWriter.write(molecule);
 
-        molecule = new AtomContainer();
+        molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         for (int i = 0; i < 1000; i++)
             molecule.addAtom(new Atom("CH4"));
         sdfWriter.write(molecule);
 
-        molecule = new AtomContainer();
+        molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.addAtom(new Atom("CH4"));
         sdfWriter.write(molecule);
 
@@ -268,13 +269,13 @@ public class SDFWriterTest extends ChemObjectWriterTest {
      * @cdk.bug 3392485
      */
     @Test
-    public void testIOPropPropagation() throws Exception {
+    void testIOPropPropagation() throws Exception {
         IAtomContainer mol = TestMoleculeFactory.makeBenzene();
         for (IAtom atom : mol.atoms()) {
-            atom.setFlag(ISAROMATIC, true);
+            atom.setFlag(AROMATIC, true);
         }
         for (IBond bond : mol.bonds()) {
-            bond.setFlag(ISAROMATIC, true);
+            bond.setFlag(AROMATIC, true);
         }
 
         StringWriter strWriter = new StringWriter();
@@ -288,11 +289,11 @@ public class SDFWriterTest extends ChemObjectWriterTest {
         writer.close();
 
         String output = strWriter.toString();
-        Assert.assertTrue(output.contains("4  0  0  0  0"));
+        Assertions.assertTrue(output.contains("4  0  0  0  0"));
     }
 
     @Test
-    public void testPropertyOutput_All() throws CDKException, IOException {
+    void testPropertyOutput_All() throws CDKException, IOException {
         IAtomContainer adenine = TestMoleculeFactory.makeAdenine();
         StringWriter sw = new StringWriter();
         SDFWriter sdf = new SDFWriter(sw);
@@ -301,12 +302,12 @@ public class SDFWriterTest extends ChemObjectWriterTest {
         sdf.write(adenine);
         sdf.close();
         String out = sw.toString();
-        assertTrue(out.contains("> <one>"));
-        assertTrue(out.contains("> <two>"));
+        Assertions.assertTrue(out.contains("> <one>"));
+        Assertions.assertTrue(out.contains("> <two>"));
     }
 
     @Test
-    public void testPropertyOutput_one() throws CDKException, IOException {
+    void testPropertyOutput_one() throws CDKException, IOException {
         IAtomContainer adenine = TestMoleculeFactory.makeAdenine();
         StringWriter sw = new StringWriter();
         SDFWriter sdf = new SDFWriter(sw, Collections.singleton("one"));
@@ -315,12 +316,12 @@ public class SDFWriterTest extends ChemObjectWriterTest {
         sdf.write(adenine);
         sdf.close();
         String out = sw.toString();
-        assertTrue(out.contains("> <one>"));
-        assertFalse(out.contains("> <two>"));
+        Assertions.assertTrue(out.contains("> <one>"));
+        Assertions.assertFalse(out.contains("> <two>"));
     }
 
     @Test
-    public void testPropertyOutput_two() throws CDKException, IOException {
+    void testPropertyOutput_two() throws CDKException, IOException {
         IAtomContainer adenine = TestMoleculeFactory.makeAdenine();
         StringWriter sw = new StringWriter();
         SDFWriter sdf = new SDFWriter(sw, Collections.singleton("two"));
@@ -329,26 +330,89 @@ public class SDFWriterTest extends ChemObjectWriterTest {
         sdf.write(adenine);
         sdf.close();
         String out = sw.toString();
-        assertTrue(out.contains("> <two>"));
-        assertFalse(out.contains("> <one>"));
+        Assertions.assertTrue(out.contains("> <two>"));
+        Assertions.assertFalse(out.contains("> <one>"));
     }
 
     @Test
-    public void testPropertyOutput_none() throws CDKException, IOException {
+    void testPropertyOutput_none() throws CDKException, IOException {
         IAtomContainer adenine = TestMoleculeFactory.makeAdenine();
         StringWriter sw = new StringWriter();
-        SDFWriter sdf = new SDFWriter(sw, Collections.<String> emptySet());
+        SDFWriter sdf = new SDFWriter(sw, Collections.emptySet());
         adenine.setProperty("one", "a");
         adenine.setProperty("two", "b");
         sdf.write(adenine);
         sdf.close();
         String out = sw.toString();
-        assertFalse(out.contains("> <two>"));
-        assertFalse(out.contains("> <one>"));
+        Assertions.assertFalse(out.contains("> <two>"));
+        Assertions.assertFalse(out.contains("> <one>"));
     }
 
     @Test
-    public void setProgramName() {
+    void testPropertyOutput_noneOption() throws CDKException, IOException {
+        IAtomContainer adenine = TestMoleculeFactory.makeAdenine();
+        StringWriter sw = new StringWriter();
+        SDFWriter sdf = new SDFWriter(sw);
+        sdf.getSetting(SDFWriter.OptWriteData).setSetting("false");
+        adenine.setProperty("one", "a");
+        adenine.setProperty("two", "b");
+        sdf.write(adenine);
+        sdf.close();
+        String out = sw.toString();
+        Assertions.assertFalse(out.contains("> <two>"));
+        Assertions.assertFalse(out.contains("> <one>"));
+    }
+
+    @Test
+    void testPropertyOutput_V3000() throws CDKException, IOException {
+        IAtomContainer adenine = TestMoleculeFactory.makeAdenine();
+        StringWriter sw = new StringWriter();
+        SDFWriter sdf = new SDFWriter(sw);
+        sdf.getSetting(SDFWriter.OptAlwaysV3000).setSetting("true");
+        sdf.getSetting(SDFWriter.OptWriteData).setSetting("true");
+        adenine.setProperty("one", "a");
+        adenine.setProperty("two", "b");
+        sdf.write(adenine);
+        sdf.close();
+        String out = sw.toString();
+        Assertions.assertTrue(out.contains("> <two>"));
+        Assertions.assertTrue(out.contains("> <one>"));
+    }
+
+    @Test
+    void testPropertyOutput_V3000_acceptTags() throws CDKException, IOException {
+        IAtomContainer adenine = TestMoleculeFactory.makeAdenine();
+        StringWriter sw = new StringWriter();
+        SDFWriter sdf = new SDFWriter(sw, Collections.emptySet());
+        sdf.getSetting(SDFWriter.OptAlwaysV3000).setSetting("true");
+        sdf.getSetting(SDFWriter.OptWriteData).setSetting("true");
+        adenine.setProperty("one", "a");
+        adenine.setProperty("two", "b");
+        sdf.write(adenine);
+        sdf.close();
+        String out = sw.toString();
+        Assertions.assertFalse(out.contains("> <two>"));
+        Assertions.assertFalse(out.contains("> <one>"));
+    }
+
+    @Test
+    void testPropertyOutput_V3000_acceptTag() throws CDKException, IOException {
+        IAtomContainer adenine = TestMoleculeFactory.makeAdenine();
+        StringWriter sw = new StringWriter();
+        SDFWriter sdf = new SDFWriter(sw, Collections.singleton("one"));
+        sdf.getSetting(SDFWriter.OptAlwaysV3000).setSetting("true");
+        sdf.getSetting(SDFWriter.OptWriteData).setSetting("true");
+        adenine.setProperty("one", "a");
+        adenine.setProperty("two", "b");
+        sdf.write(adenine);
+        sdf.close();
+        String out = sw.toString();
+        Assertions.assertFalse(out.contains("> <two>"));
+        Assertions.assertTrue(out.contains("> <one>"));
+    }
+
+    @Test
+    void setProgramName() {
         StringWriter sw = new StringWriter();
         try (SDFWriter sdfw = new SDFWriter(sw)) {
             sdfw.getSetting(MDLV2000Writer.OptWriteDefaultProperties)
@@ -363,11 +427,255 @@ public class SDFWriterTest extends ChemObjectWriterTest {
 
             sdfw.write(TestMoleculeFactory.make123Triazole());
         } catch (IOException | CDKException e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(SDFWriterTest.class)
+                              .warn("Unexpected Error:", e);
         }
         String sdf = sw.toString();
         for (String mol : sdf.split("\\$\\$\\$\\$", 2)) {
             assertThat(mol, CoreMatchers.containsString("Bioclip"));
         }
+    }
+
+    @Test
+    void optionallyTruncateLongProperties() {
+        StringWriter sw = new StringWriter();
+        try (SDFWriter sdfw = new SDFWriter(sw)) {
+            sdfw.getSetting(MDLV2000Writer.OptWriteDefaultProperties)
+                .setSetting("false");
+            sdfw.getSetting(SDFWriter.OptTruncateLongData)
+                .setSetting("true");
+            IAtomContainer mol = TestMoleculeFactory.make123Triazole();
+            mol.setProperty("MyLongField",
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped" +
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped" +
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped" +
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped" +
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped" +
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped" +
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped" +
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped" +
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped" +
+                            "ThisIsAVeryLongFieldThatShouldBeWrapped");
+            sdfw.write(mol);
+        } catch (IOException | CDKException e) {
+            LoggingToolFactory.createLoggingTool(SDFWriterTest.class)
+                              .warn("Unexpected Error:", e);
+        }
+        String sdf = sw.toString();
+        assertThat(sdf,
+                   CoreMatchers.containsString("ThisIsAVeryLongFieldThatShouldBeWrappedThisIsAVeryLongFieldThatShouldBeWrappedThisIsAVeryLongFieldThatShouldBeWrappedThisIsAVeryLongFieldThatShouldBeWrappedThisIsAVeryLongFieldThatShouldBeWrappedThisI\n"));
+    }
+
+
+    @Test
+    void testNoChiralFlag() throws Exception {
+        final String input = "\n" +
+                "  Mrv1810 02052112362D          \n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 7 7 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C -2.1407 12.3148 0 0 CFG=2\n" +
+                "M  V30 2 C -3.4743 11.5447 0 0\n" +
+                "M  V30 3 C -3.4743 10.0047 0 0\n" +
+                "M  V30 4 C -2.1407 9.2347 0 0\n" +
+                "M  V30 5 C -0.807 10.0047 0 0\n" +
+                "M  V30 6 N -0.807 11.5447 0 0\n" +
+                "M  V30 7 O -2.1407 13.8548 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 1 1 2\n" +
+                "M  V30 2 1 2 3\n" +
+                "M  V30 3 1 3 4\n" +
+                "M  V30 4 1 4 5\n" +
+                "M  V30 5 1 5 6\n" +
+                "M  V30 6 1 1 6\n" +
+                "M  V30 7 1 1 7 CFG=1\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n";
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        StringWriter sw = new StringWriter();
+        try (MDLV3000Reader mdlr = new MDLV3000Reader(new StringReader(input));
+             SDFWriter mdlw = new SDFWriter(sw)) {
+            mdlw.write(mdlr.read(bldr.newAtomContainer()));
+        }
+        assertThat(sw.toString(), containsString("  7  7  0  0  0  0  0  0  0  0999 V2000"));
+        assertThat(sw.toString(), not(containsString("BEGIN COLLECTION\n" +
+                "M  V30 MDLV30/STERAC1 ATOMS=(1)\n" +
+                "END COLLECTION")));
+    }
+
+    @Test
+    void testChiralFlag() throws Exception {
+        final String input = "\n" +
+                "  Mrv1810 02052112362D          \n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 7 7 0 0 1\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C -2.1407 12.3148 0 0 CFG=2\n" +
+                "M  V30 2 C -3.4743 11.5447 0 0\n" +
+                "M  V30 3 C -3.4743 10.0047 0 0\n" +
+                "M  V30 4 C -2.1407 9.2347 0 0\n" +
+                "M  V30 5 C -0.807 10.0047 0 0\n" +
+                "M  V30 6 N -0.807 11.5447 0 0\n" +
+                "M  V30 7 O -2.1407 13.8548 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 1 1 2\n" +
+                "M  V30 2 1 2 3\n" +
+                "M  V30 3 1 3 4\n" +
+                "M  V30 4 1 4 5\n" +
+                "M  V30 5 1 5 6\n" +
+                "M  V30 6 1 1 6\n" +
+                "M  V30 7 1 1 7 CFG=1\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n";
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        StringWriter sw = new StringWriter();
+        try (MDLV3000Reader mdlr = new MDLV3000Reader(new StringReader(input));
+             SDFWriter mdlw = new SDFWriter(sw)) {
+            mdlw.write(mdlr.read(bldr.newAtomContainer()));
+        }
+        assertThat(sw.toString(), containsString("7  7  0  0  1  0  0  0  0  0999 V2000"));
+    }
+
+    @Test
+    void testStereoRac1() throws Exception {
+        final String input = "\n" +
+                "  Mrv1810 02052113162D          \n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 7 7 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C -2.1407 12.3148 0 0 CFG=2\n" +
+                "M  V30 2 C -3.4743 11.5447 0 0\n" +
+                "M  V30 3 C -3.4743 10.0047 0 0\n" +
+                "M  V30 4 C -2.1407 9.2347 0 0\n" +
+                "M  V30 5 C -0.807 10.0047 0 0\n" +
+                "M  V30 6 N -0.807 11.5447 0 0\n" +
+                "M  V30 7 O -2.1407 13.8548 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 1 1 2\n" +
+                "M  V30 2 1 2 3\n" +
+                "M  V30 3 1 3 4\n" +
+                "M  V30 4 1 4 5\n" +
+                "M  V30 5 1 5 6\n" +
+                "M  V30 6 1 1 6\n" +
+                "M  V30 7 1 1 7 CFG=1\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 BEGIN COLLECTION\n" +
+                "M  V30 MDLV30/STERAC1 ATOMS=(1 1)\n" +
+                "M  V30 END COLLECTION\n" +
+                "M  V30 END CTAB\n" +
+                "M  END";
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        StringWriter sw = new StringWriter();
+        try (MDLV3000Reader mdlr = new MDLV3000Reader(new StringReader(input));
+             SDFWriter mdlw = new SDFWriter(sw)) {
+            mdlw.write(mdlr.read(bldr.newAtomContainer()));
+        }
+        assertThat(sw.toString(), containsString("  7  7  0  0  0  0  0  0  0  0999 V2000"));
+    }
+
+    @Test
+    void testStereoRel1() throws Exception {
+        final String input = "\n" +
+                "  Mrv1810 02052113162D          \n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 7 7 0 0 0\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C -2.1407 12.3148 0 0 CFG=2\n" +
+                "M  V30 2 C -3.4743 11.5447 0 0\n" +
+                "M  V30 3 C -3.4743 10.0047 0 0\n" +
+                "M  V30 4 C -2.1407 9.2347 0 0\n" +
+                "M  V30 5 C -0.807 10.0047 0 0\n" +
+                "M  V30 6 N -0.807 11.5447 0 0\n" +
+                "M  V30 7 O -2.1407 13.8548 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 1 1 2\n" +
+                "M  V30 2 1 2 3\n" +
+                "M  V30 3 1 3 4\n" +
+                "M  V30 4 1 4 5\n" +
+                "M  V30 5 1 5 6\n" +
+                "M  V30 6 1 1 6\n" +
+                "M  V30 7 1 1 7 CFG=1\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 BEGIN COLLECTION\n" +
+                "M  V30 MDLV30/STEREL5 ATOMS=(1 1)\n" +
+                "M  V30 END COLLECTION\n" +
+                "M  V30 END CTAB\n" +
+                "M  END";
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        StringWriter sw = new StringWriter();
+        try (MDLV3000Reader mdlr = new MDLV3000Reader(new StringReader(input));
+             SDFWriter mdlw = new SDFWriter(sw)) {
+            mdlw.write(mdlr.read(bldr.newAtomContainer()));
+        }
+        assertThat(sw.toString(), containsString("M  V30 BEGIN COLLECTION\n" +
+                "M  V30 MDLV30/STEREL1 ATOMS=(1 1)\n" +
+                "M  V30 END COLLECTION"));
+    }
+
+    @Test
+    void testStereoRac1And() throws Exception {
+        final String input = "\n" +
+                "  Mrv1810 02062121432D          \n" +
+                "\n" +
+                "  0  0  0     0  0            999 V3000\n" +
+                "M  V30 BEGIN CTAB\n" +
+                "M  V30 COUNTS 11 11 0 0 1\n" +
+                "M  V30 BEGIN ATOM\n" +
+                "M  V30 1 C 0 6.16 0 0\n" +
+                "M  V30 2 C 0 4.62 0 0 CFG=2\n" +
+                "M  V30 3 O -1.3337 3.85 0 0\n" +
+                "M  V30 4 C 1.3337 3.85 0 0 CFG=2\n" +
+                "M  V30 5 O 2.6674 4.62 0 0\n" +
+                "M  V30 6 C 1.3337 2.31 0 0\n" +
+                "M  V30 7 C 2.6674 1.54 0 0\n" +
+                "M  V30 8 C 2.6674 -0 0 0\n" +
+                "M  V30 9 C 1.3337 -0.77 0 0\n" +
+                "M  V30 10 C 0 0 0 0\n" +
+                "M  V30 11 C 0 1.54 0 0\n" +
+                "M  V30 END ATOM\n" +
+                "M  V30 BEGIN BOND\n" +
+                "M  V30 1 1 2 1\n" +
+                "M  V30 2 1 2 3 CFG=1\n" +
+                "M  V30 3 1 2 4\n" +
+                "M  V30 4 1 4 5 CFG=3\n" +
+                "M  V30 5 1 4 6\n" +
+                "M  V30 6 1 6 7\n" +
+                "M  V30 7 1 7 8\n" +
+                "M  V30 8 1 8 9\n" +
+                "M  V30 9 1 9 10\n" +
+                "M  V30 10 1 10 11\n" +
+                "M  V30 11 1 6 11\n" +
+                "M  V30 END BOND\n" +
+                "M  V30 BEGIN COLLECTION\n" +
+                "M  V30 MDLV30/STEABS ATOMS=(1 4)\n" +
+                "M  V30 MDLV30/STERAC1 ATOMS=(1 2)\n" +
+                "M  V30 END COLLECTION\n" +
+                "M  V30 END CTAB\n" +
+                "M  END\n";
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        StringWriter sw = new StringWriter();
+        try (MDLV3000Reader mdlr = new MDLV3000Reader(new StringReader(input));
+             SDFWriter mdlw = new SDFWriter(sw)) {
+            mdlw.write(mdlr.read(bldr.newAtomContainer()));
+        }
+        assertThat(sw.toString(), containsString("M  V30 COUNTS 11 11 0 0 0"));
+        assertThat(sw.toString(), containsString("M  V30 BEGIN COLLECTION\n" +
+                "M  V30 MDLV30/STEABS ATOMS=(1 4)\n" +
+                "M  V30 MDLV30/STERAC1 ATOMS=(1 2)\n" +
+                "M  V30 END COLLECTION"));
     }
 }

@@ -18,9 +18,6 @@
  */
 package org.openscience.cdk.smiles.smarts;
 
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Sets;
-import com.google.common.primitives.Ints;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.exception.CDKException;
@@ -43,13 +40,17 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.StreamSupport;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * This class provides a easy to use wrapper around SMARTS matching functionality.  User code that wants to do
@@ -69,12 +70,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *    }
  * }
  * }</pre>
- * <h3>SMARTS Extensions</h3>
+ * <b>SMARTS Extensions</b><br/>
  * 
  * Currently the CDK supports the following SMARTS symbols, that are not described in the Daylight specification.
  * However they are supported by other packages and are noted as such.
  * 
- * <table border=1 cellpadding=3><caption>Table 1 - Supported Extensions</caption> <thead>
+ * <table border=1 style="padding: 3px;"><caption>Table 1 - Supported Extensions</caption> <thead>
  * <tr> <th>Symbol</th><th>Meaning</th><th>Default</th><th>Notes</th> </tr>
  * </thead> <tbody> <tr> <td>Gx</td><td>Periodic group number</td><td>None</td><td>x must be specified and must be a
  * number between 1 and 18. This symbol is supported by the MOE SMARTS implementation</td> <tr> <td>#X</td><td>Any
@@ -83,7 +84,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * should be between 1 and 8 (inclusive), corresponding to SP1, SP2, SP3, SP3D1, SP3D2 SP3D3, SP3D4 and SP3D5. Supported
  * by the OpenEye SMARTS implementation</td> </tr> </tbody> </table>
  * 
- * <h3>Notes</h3> <ul> <li>As <a href="http://sourceforge.net/mailarchive/message.php?msg_name=4964F605.1070502%40emolecules.com">described</a>
+ * <b>Notes</b> <ul> <li>As <a href="http://sourceforge.net/mailarchive/message.php?msg_name=4964F605.1070502%40emolecules.com">described</a>
  * by Craig James the <code>h&lt;n&gt;</code> SMARTS pattern should not be used. It was included in the Daylight spec
  * for backwards compatibility. To match hydrogens, use the <code>H&lt;n&gt;</code> pattern.</li> <li>The wild card
  * pattern (<code>*</code>) will not match hydrogens (explicit or implicit) unless an isotope is specified. In other
@@ -102,8 +103,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Rajarshi Guha
  * @cdk.created 2007-04-08
- * @cdk.module smarts
- * @cdk.githash
  * @cdk.keyword SMARTS
  * @cdk.keyword substructure search
  * @deprecated use {@link org.openscience.cdk.smarts.SmartsPattern}
@@ -111,7 +110,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Deprecated
 public class SMARTSQueryTool {
 
-    private static ILoggingTool logger        = LoggingToolFactory.createLoggingTool(SMARTSQueryTool.class);
+    private static final ILoggingTool logger        = LoggingToolFactory.createLoggingTool(SMARTSQueryTool.class);
     private String              smarts;
     private IAtomContainer      atomContainer = null;
     private QueryAtomContainer  query         = null;
@@ -187,11 +186,11 @@ public class SMARTSQueryTool {
      * the molecules being tests are known to all have the same aromaticity
      * model.
      */
-    private boolean                  skipAromaticity = false;
+    private final boolean                  skipAromaticity = false;
 
     // a simplistic cache to store parsed SMARTS queries
     private int                      MAX_ENTRIES     = 20;
-    Map<String, QueryAtomContainer>  cache           = new LinkedHashMap<String, QueryAtomContainer>(MAX_ENTRIES + 1,
+    final Map<String, QueryAtomContainer>  cache           = new LinkedHashMap<String, QueryAtomContainer>(MAX_ENTRIES + 1,
                                                              .75F, true) {
 
                                                          @Override
@@ -213,9 +212,7 @@ public class SMARTSQueryTool {
         this.smarts = smarts;
         try {
             initializeQuery();
-        } catch (TokenMgrError error) {
-            throw new IllegalArgumentException("Error parsing SMARTS", error);
-        } catch (CDKException error) {
+        } catch (TokenMgrError | CDKException error) {
             throw new IllegalArgumentException("Error parsing SMARTS", error);
         }
     }
@@ -284,7 +281,7 @@ public class SMARTSQueryTool {
      * @see Cycles
      */
     public void setAromaticity(Aromaticity aromaticity) {
-        this.aromaticity = checkNotNull(aromaticity, "aromaticity was not provided");
+        this.aromaticity = Objects.requireNonNull(aromaticity, "aromaticity was not provided");
     }
 
     /**
@@ -357,17 +354,17 @@ public class SMARTSQueryTool {
             // lets get the query atom
             IQueryAtom queryAtom = (IQueryAtom) query.getAtom(0);
 
-            mappings = new ArrayList<int[]>();
+            mappings = new ArrayList<>();
             for (int i = 0; i < atomContainer.getAtomCount(); i++) {
                 if (queryAtom.matches(atomContainer.getAtom(i))) {
                     mappings.add(new int[]{i});
                 }
             }
         } else {
-            mappings = FluentIterable.from(VentoFoggia.findSubstructure(query)
-                                                      .matchAll(atomContainer)
-                                                      .filter(new SmartsStereoMatch(query, atomContainer)))
-                                     .toList();
+            mappings = StreamSupport.stream(VentoFoggia.findSubstructure(query)
+                                                       .matchAll(atomContainer)
+                                                       .filter(new SmartsStereoMatch(query, atomContainer)).spliterator(), false)
+                                    .collect(Collectors.toList());
         }
 
         return !mappings.isEmpty();
@@ -383,6 +380,10 @@ public class SMARTSQueryTool {
         return mappings.size();
     }
 
+    private static List<Integer> toList(int[] values) {
+        return IntStream.of(values).boxed().collect(Collectors.toList());
+    }
+
     /**
      * Get the atoms in the target molecule that match the query pattern.  Since there may be multiple matches, the
      * return value is a List of List objects. Each List object contains the indices of the atoms in the target
@@ -391,9 +392,9 @@ public class SMARTSQueryTool {
      * @return A List of List of atom indices in the target molecule
      */
     public List<List<Integer>> getMatchingAtoms() {
-        List<List<Integer>> matched = new ArrayList<List<Integer>>(mappings.size());
+        List<List<Integer>> matched = new ArrayList<>(mappings.size());
         for (int[] mapping : mappings)
-            matched.add(Ints.asList(mapping));
+            matched.add(toList(mapping));
         return matched;
     }
 
@@ -405,13 +406,14 @@ public class SMARTSQueryTool {
      * @return A List of List of atom indices in the target molecule
      */
     public List<List<Integer>> getUniqueMatchingAtoms() {
-        List<List<Integer>> matched = new ArrayList<List<Integer>>(mappings.size());
-        Set<BitSet> atomSets = Sets.newHashSetWithExpectedSize(mappings.size());
+        List<List<Integer>> matched = new ArrayList<>(mappings.size());
+        Set<BitSet> atomSets = new HashSet<>(2*mappings.size());
         for (int[] mapping : mappings) {
             BitSet atomSet = new BitSet();
             for (int x : mapping)
                 atomSet.set(x);
-            if (atomSets.add(atomSet)) matched.add(Ints.asList(mapping));
+            if (atomSets.add(atomSet))
+                matched.add(toList(mapping));
         }
         return matched;
     }
@@ -453,11 +455,11 @@ public class SMARTSQueryTool {
 
     private List<Set<Integer>> matchedAtoms(List<List<RMap>> bondMapping, IAtomContainer atomContainer) {
 
-        List<Set<Integer>> atomMapping = new ArrayList<Set<Integer>>();
+        List<Set<Integer>> atomMapping = new ArrayList<>();
         // loop over each mapping
         for (List<RMap> mapping : bondMapping) {
 
-            Set<Integer> tmp = new TreeSet<Integer>();
+            Set<Integer> tmp = new TreeSet<>();
             IAtom atom1 = null;
             IAtom atom2 = null;
             // loop over this mapping
@@ -479,8 +481,9 @@ public class SMARTSQueryTool {
             if (tmp.size() == query.getAtomCount()) atomMapping.add(tmp);
 
             // If there is only one bond, check if it matches both ways.
-            if (mapping.size() == 1 && atom1.getAtomicNumber().equals(atom2.getAtomicNumber())) {
-                atomMapping.add(new TreeSet<Integer>(tmp));
+            if (mapping.size() == 1 && atom1 != null && atom2 != null &&
+                    Objects.equals(atom1.getAtomicNumber(), atom2.getAtomicNumber())) {
+                atomMapping.add(new TreeSet<>(tmp));
             }
         }
 

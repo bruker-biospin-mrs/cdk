@@ -27,8 +27,6 @@ import org.openscience.cdk.io.listener.IReaderListener;
  * Abstract class that ChemObjectReader's can implement to have it
  * take care of basic stuff, like managing the ReaderListeners.
  *
- * @cdk.module io
- * @cdk.githash
  */
 public abstract class DefaultChemObjectReader extends ChemObjectIO implements ISimpleChemObjectReader {
 
@@ -38,7 +36,7 @@ public abstract class DefaultChemObjectReader extends ChemObjectIO implements IS
     private ReaderEvent                     frameReadEvent = null;
 
     protected IChemObjectReader.Mode        mode           = IChemObjectReader.Mode.RELAXED;
-    protected IChemObjectReaderErrorHandler errorHandler   = null;
+    protected IChemObjectReaderErrorHandler errorHandler   = new DefaultChemObjectReaderErrorHandler(getClass());
 
     /* Extra convenience methods */
 

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2013 European Bioinformatics Institute (EMBL-EBI)
- *                    John May <jwmay@users.sf.net>
+ * Copyright (c) 2022 John Mayfield (né May)
  *
  * Contact: cdk-devel@lists.sourceforge.net
  *
@@ -24,66 +23,76 @@
 
 package org.openscience.cdk.isomorphism;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Sets;
-
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
- * A predicate for filtering atom-mapping results. This class is intended for
- * use with {@link Pattern}.
+ * A predicate for filtering atom-mapping results. Important
+ *
+ * <pre>{@code
+ * [0, 1, 2]  => accept
+ * [0, 1, 3]  => accept
+ * [2, 1, 3]  => accept (nothing new but not seen this combination before)
+ * </pre>
+ *
+ * This class is intended for use with {@link Pattern}.
  *
  * <blockquote><pre>{@code
- *     Pattern     pattern = Ullmann.findSubstructure(query);
+ *     Pattern     pattern = Pattern.findSubstructure(query);
  *     List<int[]> unique  = FluentIterable.of(patter.matchAll(target))
  *                                         .filter(new UniqueAtomMatches())
  *                                         .toList();
  * }</pre></blockquote>
  *
- * @author John May
- * @cdk.module isomorphism
+ * @author John Mayfield
  */
 final class UniqueAtomMatches implements Predicate<int[]> {
 
-    /** Which mappings have we seen already. */
-    private final Set<BitSet> unique;
-
     /**
-     * Create filter for the expected number of unique matches. The number
-     * of matches can grow if required.
-     *
-     * @param expectedHits expected number of unique matches
+     * Which atoms have we seen in a mapping already.
      */
-    private UniqueAtomMatches(int expectedHits) {
-        this.unique = Sets.newHashSetWithExpectedSize(expectedHits);
-    }
+    private final Set<BitSet> visit = new HashSet<>();
 
     /**
      * Create filter for unique matches.
      */
     public UniqueAtomMatches() {
-        this(10);
     }
 
     /**
-     *{@inheritDoc}
+     * {@inheritDoc}
      */
     @Override
-    public boolean apply(int[] input) {
-        return unique.add(toBitSet(input));
+    public boolean test(int[] mapping) {
+        return add(mapping);
+    }
+
+    private boolean add(int[] mapping) {
+       return this.visit.add(toBitSet(mapping));
     }
 
     /**
-     * Convert a mapping to a bitset.
+     * Backwards compatible method from when we used GUAVA predicates.
      *
-     * @param mapping an atom mapping
-     * @return a bit set of the mapped vertices (values in array)
+     * @param ints atom index bijection
+     * @return true/false
+     * @see #test(int[])
      */
-    private BitSet toBitSet(int[] mapping) {
-        BitSet hits = new BitSet();
-        for (int v : mapping)
-            hits.set(v);
-        return hits;
+    public boolean apply(int[] ints) {
+        return test(ints);
+    }
+
+    // If some (at least one) has not been seen yet
+    private boolean some(int[] mapping) {
+        return !visit.contains(toBitSet(mapping));
+    }
+
+    public BitSet toBitSet(int[] mapping) {
+        BitSet bs = new BitSet();
+        for (int x : mapping)
+            bs.set(x);
+        return bs;
     }
 }

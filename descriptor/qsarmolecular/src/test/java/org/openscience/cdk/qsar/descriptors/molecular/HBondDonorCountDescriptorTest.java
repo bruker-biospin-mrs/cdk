@@ -20,11 +20,10 @@ package org.openscience.cdk.qsar.descriptors.molecular;
 
 import javax.vecmath.Point3d;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -33,24 +32,23 @@ import org.openscience.cdk.qsar.result.IntegerResult;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
- * @cdk.module test-qsarmolecular
  */
-public class HBondDonorCountDescriptorTest extends MolecularDescriptorTest {
+class HBondDonorCountDescriptorTest extends MolecularDescriptorTest {
 
-    public HBondDonorCountDescriptorTest() {}
+    HBondDonorCountDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(HBondDonorCountDescriptor.class);
     }
 
     @Test
-    public void testHBondDonorCountDescriptor() throws ClassNotFoundException, CDKException, java.lang.Exception {
-        Object[] params = {new Boolean(true)};
+    void testHBondDonorCountDescriptor() throws java.lang.Exception {
+        Object[] params = {Boolean.TRUE};
         descriptor.setParameters(params);
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("Oc1ccccc1"); //
-        Assert.assertEquals(1, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
+        Assertions.assertEquals(1, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
     }
 
     /**
@@ -58,7 +56,7 @@ public class HBondDonorCountDescriptorTest extends MolecularDescriptorTest {
      * @cdk.inchi InChI=1S/C2H3N3/c1-3-2-5-4-1/h1-2H,(H,3,4,5)
      */
     @Test
-    public void testCID9257() {
+    void testCID9257() {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "N");
@@ -110,7 +108,7 @@ public class HBondDonorCountDescriptorTest extends MolecularDescriptorTest {
         IBond b8 = builder.newInstance(IBond.class, a5, a8, IBond.Order.SINGLE);
         mol.addBond(b8);
 
-        Assert.assertEquals(1, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
+        Assertions.assertEquals(1, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
     }
 
 }

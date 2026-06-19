@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.atomtype;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.SingleElectron;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -31,9 +31,8 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.tools.StructureResonanceGeneratorTest;
 
 /**
- * @cdk.module test-reaction
  */
-public class ResonanceStructuresTest extends CDKTestCase {
+class ResonanceStructuresTest extends CDKTestCase {
 
     private final static IChemObjectBuilder builder;
     private final static CDKAtomTypeMatcher matcher;
@@ -46,7 +45,7 @@ public class ResonanceStructuresTest extends CDKTestCase {
     /**
      * Constructor of the ResonanceStructuresTest.
      */
-    public ResonanceStructuresTest() {
+    ResonanceStructuresTest() {
         super();
     }
 
@@ -58,7 +57,7 @@ public class ResonanceStructuresTest extends CDKTestCase {
      * @cdk.inchi InChI=1/C8H10/c1-7-5-3-4-6-8(7)2/h3-6H,1-2H3
      */
     @Test
-    public void testGetAllStructures_IAtomContainer() throws Exception {
+    void testGetAllStructures_IAtomContainer() throws Exception {
 
         //COMPOUND
         //O=C([H])C(=[O+])C([H])([H])[H]
@@ -84,13 +83,12 @@ public class ResonanceStructuresTest extends CDKTestCase {
         molecule.addBond(4, 8, IBond.Order.SINGLE);
 
         String[] expectedTypes = {"C.sp2", "O.sp2", "C.sp2", "O.plus.sp2.radical", "C.sp3", "H", "H", "H", "H"};
-        Assert.assertEquals(expectedTypes.length, molecule.getAtomCount());
+        Assertions.assertEquals(expectedTypes.length, molecule.getAtomCount());
         for (int i = 0; i < expectedTypes.length; i++) {
             IAtom nextAtom = molecule.getAtom(i);
             IAtomType perceivedType = matcher.findMatchingAtomType(molecule, nextAtom);
-            Assert.assertNotNull("Missing atom type for: " + nextAtom, perceivedType);
-            Assert.assertEquals("Incorrect atom type perceived for: " + nextAtom, expectedTypes[i],
-                    perceivedType.getAtomTypeName());
+            Assertions.assertNotNull(perceivedType, "Missing atom type for: " + nextAtom);
+            Assertions.assertEquals(expectedTypes[i], perceivedType.getAtomTypeName(), "Incorrect atom type perceived for: " + nextAtom);
         }
         //
         //		//FRAGMENT_1
@@ -142,7 +140,7 @@ public class ResonanceStructuresTest extends CDKTestCase {
      * @cdk.inchi InChI=1/C8H10/c1-7-5-3-4-6-8(7)2/h3-6H,1-2H3
      */
     @Test
-    public void test12DimethylBenzene() throws Exception {
+    void test12DimethylBenzene() throws Exception {
 
         //COMPOUND
         //[H]C1=C([H])C([H])=C(C(=C1([H]))C([H])([H])[H])C([H])([H])[H]
@@ -167,13 +165,12 @@ public class ResonanceStructuresTest extends CDKTestCase {
 
         String[] expectedTypes = {"C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp3", "C.sp3", "H", "H",
                 "H", "H", "H", "H", "H", "H", "H", "H"};
-        Assert.assertEquals(expectedTypes.length, molecule.getAtomCount());
+        Assertions.assertEquals(expectedTypes.length, molecule.getAtomCount());
         for (int i = 0; i < expectedTypes.length; i++) {
             IAtom nextAtom = molecule.getAtom(i);
             IAtomType perceivedType = matcher.findMatchingAtomType(molecule, nextAtom);
-            Assert.assertNotNull("Missing atom type for: " + nextAtom, perceivedType);
-            Assert.assertEquals("Incorrect atom type perceived for: " + nextAtom, expectedTypes[i],
-                    perceivedType.getAtomTypeName());
+            Assertions.assertNotNull(perceivedType, "Missing atom type for: " + nextAtom);
+            Assertions.assertEquals(expectedTypes[i], perceivedType.getAtomTypeName(), "Incorrect atom type perceived for: " + nextAtom);
         }
 
         //FRAGMENT_1
@@ -199,13 +196,12 @@ public class ResonanceStructuresTest extends CDKTestCase {
 
         String[] expectedTypes1 = {"C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp3", "C.sp3", "H", "H",
                 "H", "H", "H", "H", "H", "H", "H", "H"};
-        Assert.assertEquals(expectedTypes.length, expectedStructure.getAtomCount());
+        Assertions.assertEquals(expectedTypes.length, expectedStructure.getAtomCount());
         for (int i = 0; i < expectedTypes1.length; i++) {
             IAtom nextAtom = expectedStructure.getAtom(i);
             IAtomType perceivedType = matcher.findMatchingAtomType(expectedStructure, nextAtom);
-            Assert.assertNotNull("Missing atom type for: " + nextAtom, perceivedType);
-            Assert.assertEquals("Incorrect atom type perceived for: " + nextAtom, expectedTypes1[i],
-                    perceivedType.getAtomTypeName());
+            Assertions.assertNotNull(perceivedType, "Missing atom type for: " + nextAtom);
+            Assertions.assertEquals(expectedTypes1[i], perceivedType.getAtomTypeName(), "Incorrect atom type perceived for: " + nextAtom);
         }
     }
 

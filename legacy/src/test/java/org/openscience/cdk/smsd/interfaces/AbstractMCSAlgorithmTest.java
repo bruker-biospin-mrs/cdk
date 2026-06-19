@@ -21,15 +21,14 @@
  */
 package org.openscience.cdk.smsd.interfaces;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit test class to be extended by test classes for classes that
  * implement the {@link AbstractMCSAlgorithm} interface.
  *
  * @author     egonw
- * @cdk.module test-smsd
  */
 public abstract class AbstractMCSAlgorithmTest {
 
@@ -47,17 +46,16 @@ public abstract class AbstractMCSAlgorithmTest {
      * Meta test that tests if #setMCSAlgorithm has been called.
      */
     @Test
-    public void testIsMCSAlgorithmSet() {
-        Assert.assertNotNull("The extending class has not set an IMCSAlgorithm with the" + "setMCSAlgorithm() method.",
-                AbstractMCSAlgorithmTest.algorithm);
+    void testIsMCSAlgorithmSet() {
+        Assertions.assertNotNull(AbstractMCSAlgorithmTest.algorithm, "The extending class has not set an IMCSAlgorithm with the" + "setMCSAlgorithm() method.");
     }
 
     @Test
     public void testSearchMCS() {
-        Assert.fail("missing unit test");
+        Assertions.fail("missing unit test");
     }
 
-    public class AbstractMCSAlgorithmImpl extends AbstractMCSAlgorithm {
+    private class AbstractMCSAlgorithmImpl extends AbstractMCSAlgorithm {
 
         @Override
         public void searchMCS(boolean shouldMatchBonds) {

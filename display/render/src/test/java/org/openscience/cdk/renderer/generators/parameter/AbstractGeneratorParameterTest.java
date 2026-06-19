@@ -21,14 +21,11 @@
  */
 package org.openscience.cdk.renderer.generators.parameter;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.renderer.generators.IGeneratorParameter;
 
-/**
- * @cdk.module test-render
- */
-public class AbstractGeneratorParameterTest {
+class AbstractGeneratorParameterTest {
 
     class MockParameter extends AbstractGeneratorParameter<Boolean> {
 
@@ -39,14 +36,14 @@ public class AbstractGeneratorParameterTest {
     }
 
     @Test
-    public void testValue() {
+    void testValue() {
         IGeneratorParameter<Boolean> param = new MockParameter();
         // test the default
-        Assert.assertFalse(param.getValue());
+        Assertions.assertFalse(param.getValue());
         param.setValue(true);
-        Assert.assertTrue(param.getValue());
+        Assertions.assertTrue(param.getValue());
         param.setValue(false);
-        Assert.assertFalse(param.getValue());
+        Assertions.assertFalse(param.getValue());
     }
 
 }

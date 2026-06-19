@@ -18,28 +18,26 @@
  */
 package org.openscience.cdk.formula.rules;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.formula.MolecularFormula;
 import org.openscience.cdk.interfaces.IIsotope;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 /**
- * @cdk.module test-formula
  */
-public class ChargeRuleTest extends FormulaRuleTest {
+class ChargeRuleTest extends FormulaRuleTest {
 
     private static IChemObjectBuilder builder;
 
     /**
     *  The JUnit setup method
     */
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         builder = DefaultChemObjectBuilder.getInstance();
         setRule(ChargeRule.class);
     }
@@ -47,40 +45,40 @@ public class ChargeRuleTest extends FormulaRuleTest {
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testChargeRule() throws ClassNotFoundException, CDKException, Exception {
+    void testChargeRule() throws Exception {
 
         IRule rule = new ChargeRule();
-        Assert.assertNotNull(rule);
+        Assertions.assertNotNull(rule);
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testDefault() throws ClassNotFoundException, CDKException, Exception {
+    void testDefault() throws Exception {
 
         IRule rule = new ChargeRule();
         Object[] objects = rule.getParameters();
-        Assert.assertEquals(1, objects.length);
+        Assertions.assertEquals(1, objects.length);
 
         double charge = (Double) objects[0];
-        Assert.assertEquals(0.0, charge, 0.00001);
+        Assertions.assertEquals(0.0, charge, 0.00001);
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testSetParameters() throws ClassNotFoundException, CDKException, Exception {
+    void testSetParameters() throws Exception {
 
         IRule rule = new ChargeRule();
 
@@ -90,20 +88,20 @@ public class ChargeRuleTest extends FormulaRuleTest {
         rule.setParameters(params);
 
         Object[] objects = rule.getParameters();
-        Assert.assertEquals(1, objects.length);
+        Assertions.assertEquals(1, objects.length);
 
         double charge = (Double) objects[0];
-        Assert.assertEquals(-1.0, charge, 0.00001);
+        Assertions.assertEquals(-1.0, charge, 0.00001);
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testDefaultValidFalse() throws ClassNotFoundException, CDKException, Exception {
+    void testDefaultValidFalse() throws Exception {
 
         IRule rule = new ChargeRule();
 
@@ -112,16 +110,16 @@ public class ChargeRuleTest extends FormulaRuleTest {
         formula.addIsotope(builder.newInstance(IIsotope.class, "H"), 200);
         formula.setCharge(1);
 
-        Assert.assertEquals(0.0, rule.validate(formula), 0.0001);
+        Assertions.assertEquals(0.0, rule.validate(formula), 0.0001);
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testDefaultValidFalse_SetParam() throws ClassNotFoundException, CDKException, Exception {
+    void testDefaultValidFalse_SetParam() throws Exception {
 
         IRule rule = new ChargeRule();
 
@@ -134,16 +132,16 @@ public class ChargeRuleTest extends FormulaRuleTest {
         params[0] = -1.0;
         rule.setParameters(params);
 
-        Assert.assertEquals(0.0, rule.validate(formula), 0.0001);
+        Assertions.assertEquals(0.0, rule.validate(formula), 0.0001);
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testDefaultValidTrue() throws ClassNotFoundException, CDKException, Exception {
+    void testDefaultValidTrue() throws Exception {
 
         IRule rule = new ChargeRule();
 
@@ -152,7 +150,7 @@ public class ChargeRuleTest extends FormulaRuleTest {
         formula.addIsotope(builder.newInstance(IIsotope.class, "H"), 6);
         formula.setCharge(0);
 
-        Assert.assertEquals(1.0, rule.validate(formula), 0.0001);
+        Assertions.assertEquals(1.0, rule.validate(formula), 0.0001);
     }
 
 }

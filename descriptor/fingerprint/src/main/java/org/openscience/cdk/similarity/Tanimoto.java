@@ -56,14 +56,14 @@ import java.util.TreeSet;
  *  <p>Note that the continuous Tanimoto coefficient does not lead to a metric space
  *
  *@author         steinbeck
- * @cdk.githash
  *@cdk.created    2005-10-19
  *@cdk.keyword    jaccard
  *@cdk.keyword    similarity, tanimoto
- * @cdk.module fingerprint
  */
 // see also SignatureFingerprintTanimotoTest
 public class Tanimoto {
+
+    public static final String EMPTY_FINGERPRINTS_PROVIDED = "Cannot compute Tanimoto of two empty fingerprints!";
 
     private Tanimoto() {}
 
@@ -135,7 +135,10 @@ public class Tanimoto {
             a2 += features1[i] * features1[i];
             b2 += features2[i] * features2[i];
         }
-        return (float) ab / (float) (a2 + b2 - ab);
+        double union = a2 + b2 - ab;
+        if (union == 0.0)
+            throw new IllegalArgumentException(EMPTY_FINGERPRINTS_PROVIDED);
+        return (float) ab / (float) union;
     }
 
     /**
@@ -150,7 +153,7 @@ public class Tanimoto {
      * @return The Tanimoto coefficient
      */                         
     public static float calculate(Map<String, Integer> features1, Map<String, Integer> features2) {
-        Set<String> common = new TreeSet<String>(features1.keySet());
+        Set<String> common = new TreeSet<>(features1.keySet());
         common.retainAll(features2.keySet());
         double xy = 0., x = 0., y = 0.;
         for (String s : common) {
@@ -163,7 +166,10 @@ public class Tanimoto {
         for (Integer c : features2.values()) {
             y += c * c;
         }
-        return (float) (xy / (x + y - xy));
+        double union = x + y - xy;
+        if (union == 0.0)
+            throw new IllegalArgumentException(EMPTY_FINGERPRINTS_PROVIDED);
+        return (float) (xy / union);
     }
 
     /**
@@ -198,16 +204,20 @@ public class Tanimoto {
             int hash = fp1.getHash(i);
             for (int j = 0; j < fp2.numOfPopulatedbins(); j++) {
                 if (hash == fp2.getHash(j)) {
-                    xy += fp1.getCount(i) * fp2.getCount(j);
+                    xy += (long) fp1.getCount(i) * fp2.getCount(j);
                 }
             }
-            x += fp1.getCount(i) * fp1.getCount(i);
+            x += (long) fp1.getCount(i) * fp1.getCount(i);
         }
         for (int j = 0; j < fp2.numOfPopulatedbins(); j++) {
-            y += fp2.getCount(j) * fp2.getCount(j);
+            y += (long) fp2.getCount(j) * fp2.getCount(j);
         }
-        return ((double) xy / (x + y - xy));
+        long union = x + y - xy;
+        if (union == 0)
+            throw new IllegalArgumentException(EMPTY_FINGERPRINTS_PROVIDED);
+        return ((double) xy / union);
     }
+
 
     /**
      * Calculates Tanimoto distance for two count fingerprints using method 2 {@cdk.cite Grant06}.
@@ -220,29 +230,30 @@ public class Tanimoto {
 
         long maxSum = 0, minSum = 0;
         int i = 0, j = 0;
-        while (i < fp1.numOfPopulatedbins() || j < fp2.numOfPopulatedbins()) {
-            Integer hash1 = i < fp1.numOfPopulatedbins() ? fp1.getHash(i) : null;
-            Integer hash2 = j < fp2.numOfPopulatedbins() ? fp2.getHash(j) : null;
-            Integer count1 = i < fp1.numOfPopulatedbins() ? fp1.getCount(i) : null;
-            Integer count2 = j < fp2.numOfPopulatedbins() ? fp2.getCount(j) : null;
+        while (i < fp1.numOfPopulatedbins() && j < fp2.numOfPopulatedbins()) {
+            int hash1 = fp1.getHash(i);
+            int count1 = fp1.getCount(i);
+            int hash2 = fp2.getHash(j);
+            int count2 = fp2.getCount(j);
 
-            if (count2 == null || (hash1 != null && hash1 < hash2)) {
+            if (hash1 < hash2) {
                 maxSum += count1;
                 i++;
-                continue;
-            }
-            if (count1 == null || (hash2 != null && hash1 > hash2)) {
+            } else if (hash1 > hash2) {
                 maxSum += count2;
                 j++;
-                continue;
-            }
-
-            if (hash1.equals(hash2)) {
+            } else {
                 maxSum += Math.max(count1, count2);
                 minSum += Math.min(count1, count2);
                 i++;
                 j++;
             }
+        }
+        for (;i < fp1.numOfPopulatedbins(); i++) {
+            maxSum += fp1.getCount(i);
+        }
+        for (;j < fp2.numOfPopulatedbins(); j++) {
+            maxSum += fp2.getCount(i);
         }
         return ((double) minSum) / maxSum;
     }

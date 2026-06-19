@@ -24,11 +24,9 @@
 
 package org.openscience.cdk.isomorphism;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Sets;
-
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * A predicate for filtering atom-mapping results for those which cover unique
@@ -42,7 +40,6 @@ import java.util.Set;
  * }</pre></blockquote>
  *
  * @author John May
- * @cdk.module isomorphism
  */
 final class UniqueBondMatches implements Predicate<int[]> {
 
@@ -59,7 +56,7 @@ final class UniqueBondMatches implements Predicate<int[]> {
      * @param expectedHits expected number of unique matches
      */
     private UniqueBondMatches(int[][] g, int expectedHits) {
-        this.unique = Sets.newHashSetWithExpectedSize(expectedHits);
+        this.unique = new HashSet<>(2*expectedHits);
         this.g = g;
     }
 
@@ -70,8 +67,18 @@ final class UniqueBondMatches implements Predicate<int[]> {
 
     /**{@inheritDoc} */
     @Override
-    public boolean apply(int[] input) {
+    public boolean test(int[] input) {
         return unique.add(toEdgeSet(input));
+    }
+
+    /**
+     * Backwards compatible method from when we used GUAVA predicates.
+     * @param ints atom index bijection
+     * @return true/false
+     * @see #test(int[])
+     */
+    public boolean apply(int[] ints) {
+        return test(ints);
     }
 
     /**
@@ -81,7 +88,7 @@ final class UniqueBondMatches implements Predicate<int[]> {
      * @return a bit set of the mapped vertices (values in array)
      */
     private Set<Tuple> toEdgeSet(int[] mapping) {
-        Set<Tuple> edges = new HashSet<Tuple>(mapping.length * 2);
+        Set<Tuple> edges = new HashSet<>(mapping.length * 2);
         for (int u = 0; u < g.length; u++) {
             for (int v : g[u]) {
                 edges.add(new Tuple(mapping[u], mapping[v]));

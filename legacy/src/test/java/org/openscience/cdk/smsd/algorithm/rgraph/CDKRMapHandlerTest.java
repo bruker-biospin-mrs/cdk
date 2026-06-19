@@ -26,106 +26,105 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.Assert;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.smsd.helper.FinalMappings;
 
 /**
- * @cdk.module test-smsd
  * @author     Syed Asad Rahman
  * @cdk.require java1.5+
  */
-public class CDKRMapHandlerTest {
+class CDKRMapHandlerTest {
 
     private final CDKRMapHandler handler = new CDKRMapHandler();
 
     public CDKRMapHandlerTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     /**
      * Test of getSource method, of class CDKRMapHandler.
      */
     @Test
-    public void testGetSource() {
+    void testGetSource() {
         IAtomContainer expResult = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         handler.setSource(expResult);
         IAtomContainer result = handler.getSource();
-        Assert.assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of setSource method, of class CDKRMapHandler.
      */
     @Test
-    public void testSetSource() {
+    void testSetSource() {
         IAtomContainer expResult = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         handler.setSource(expResult);
         IAtomContainer result = handler.getSource();
-        Assert.assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of getTarget method, of class CDKRMapHandler.
      */
     @Test
-    public void testGetTarget() {
+    void testGetTarget() {
         IAtomContainer expResult = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         handler.setTarget(expResult);
         IAtomContainer result = handler.getTarget();
-        Assert.assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of setTarget method, of class CDKRMapHandler.
      */
     @Test
-    public void testSetTarget() {
+    void testSetTarget() {
         IAtomContainer expResult = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         handler.setTarget(expResult);
         IAtomContainer result = handler.getTarget();
-        Assert.assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of calculateOverlapsAndReduce method, of class CDKRMapHandler.
      */
     @Test
-    public void testCalculateOverlapsAndReduce() throws Exception {
+    void testCalculateOverlapsAndReduce() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         SmilesParser sp = new SmilesParser(builder);
         IAtomContainer Molecule1 = sp.parseSmiles("O1C=CC=C1");
         IAtomContainer Molecule2 = sp.parseSmiles("C1CCCC1");
         CDKRMapHandler instance = new CDKRMapHandler();
         instance.calculateOverlapsAndReduce(Molecule1, Molecule2, true);
-        Assert.assertNotNull(FinalMappings.getInstance().getSize());
+        Assertions.assertNotNull(FinalMappings.getInstance());
+        Assertions.assertNotEquals(0, FinalMappings.getInstance().getSize());
     }
 
     /**
      * Test of calculateOverlapsAndReduceExactMatch method, of class CDKRMapHandler.
      */
     @Test
-    public void testCalculateOverlapsAndReduceExactMatch() throws Exception {
+    void testCalculateOverlapsAndReduceExactMatch() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         SmilesParser sp = new SmilesParser(builder);
         IAtomContainer Molecule1 = sp.parseSmiles("O1C=CC=C1");
@@ -133,14 +132,15 @@ public class CDKRMapHandlerTest {
         CDKRMapHandler instance = new CDKRMapHandler();
         instance.calculateOverlapsAndReduceExactMatch(Molecule1, Molecule2, true);
         // TODO review the generated test code and remove the default call to fail.
-        Assert.assertNotNull(FinalMappings.getInstance().getSize());
+        Assertions.assertNotNull(FinalMappings.getInstance());
+        Assertions.assertNotEquals(0, FinalMappings.getInstance().getSize());
     }
 
     /**
      * Test of getMappings method, of class CDKRMapHandler.
      */
     @Test
-    public void testGetMappings() throws InvalidSmilesException, CDKException {
+    void testGetMappings() throws CDKException {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         SmilesParser sp = new SmilesParser(builder);
         IAtomContainer Molecule1 = sp.parseSmiles("O1C=CC=C1");
@@ -148,45 +148,45 @@ public class CDKRMapHandlerTest {
         CDKRMapHandler instance = new CDKRMapHandler();
         instance.calculateOverlapsAndReduceExactMatch(Molecule1, Molecule2, true);
         List<Map<Integer, Integer>> result = instance.getMappings();
-        Assert.assertEquals(2, result.size());
+        Assertions.assertEquals(2, result.size());
     }
 
     /**
      * Test of setMappings method, of class CDKRMapHandler.
      */
     @Test
-    public void testSetMappings() {
-        Map<Integer, Integer> map = new TreeMap<Integer, Integer>();
+    void testSetMappings() {
+        Map<Integer, Integer> map = new TreeMap<>();
         map.put(0, 0);
         map.put(1, 1);
 
-        List<Map<Integer, Integer>> mappings = new ArrayList<Map<Integer, Integer>>();
+        List<Map<Integer, Integer>> mappings = new ArrayList<>();
         mappings.add(map);
         CDKRMapHandler instance = new CDKRMapHandler();
         instance.setMappings(mappings);
-        Assert.assertNotNull(instance.getMappings());
+        Assertions.assertNotNull(instance.getMappings());
     }
 
     /**
      * Test of isTimeoutFlag method, of class CDKRMapHandler.
      */
     @Test
-    public void testIsTimeoutFlag() {
+    void testIsTimeoutFlag() {
         CDKRMapHandler instance = new CDKRMapHandler();
         boolean expResult = true;
         instance.setTimeoutFlag(true);
         boolean result = instance.isTimeoutFlag();
-        Assert.assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of setTimeoutFlag method, of class CDKRMapHandler.
      */
     @Test
-    public void testSetTimeoutFlag() {
+    void testSetTimeoutFlag() {
         boolean timeoutFlag = false;
         CDKRMapHandler instance = new CDKRMapHandler();
         instance.setTimeoutFlag(timeoutFlag);
-        Assert.assertNotSame(true, instance.isTimeoutFlag());
+        Assertions.assertNotSame(true, instance.isTimeoutFlag());
     }
 }

@@ -47,8 +47,6 @@ import java.util.Random;
  * @author         maclean
  * @cdk.created    2009-09-09
  * @cdk.keyword    permutation
- * @cdk.module     standard
- * @cdk.githash
  */
 public class Permutor {
 
@@ -60,17 +58,17 @@ public class Permutor {
     /**
      * The maximum rank possible, given the size
      */
-    private int    maxRank;
+    private final int    maxRank;
 
     /**
      * The number of objects to permute
      */
-    private int    size;
+    private final int    size;
 
     /**
      * For accessing part of the permutation space
      */
-    private Random random;
+    private final Random random;
 
     /**
      * Create a permutor that will generate permutations of numbers up to

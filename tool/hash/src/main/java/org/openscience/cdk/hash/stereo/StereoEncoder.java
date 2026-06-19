@@ -30,14 +30,13 @@ package org.openscience.cdk.hash.stereo;
  * then the appropriate value is the {@code next[]} is modified.
  *
  * @author John May
- * @cdk.module hash
  */
 public interface StereoEncoder {
 
     /**
      * empty stereo encoder when no stereo can be perceived
      */
-    public static StereoEncoder EMPTY = new StereoEncoder() {
+    StereoEncoder EMPTY = new StereoEncoder() {
 
                                           @Override
                                           public boolean encode(long[] current, long[] next) {
@@ -57,12 +56,12 @@ public interface StereoEncoder {
      * @param next    next invariants
      * @return whether any stereo configurations were encoded
      */
-    public boolean encode(long[] current, long[] next);
+    boolean encode(long[] current, long[] next);
 
     /**
      * Reset the stereo-encoders, any currently perceived configurations will be
      * re-activated.
      */
-    public void reset();
+    void reset();
 
 }

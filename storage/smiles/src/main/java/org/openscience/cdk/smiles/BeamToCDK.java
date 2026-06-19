@@ -54,7 +54,7 @@ import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo;
 /**
  * Convert the Beam toolkit object model to the CDK. Currently the aromatic
  * bonds from SMILES are loaded as singly bonded {@link IBond}s with the {@link
- * org.openscience.cdk.CDKConstants#ISAROMATIC} flag set.
+ * org.openscience.cdk.interfaces.IChemObject#AROMATIC} flag set.
  *
  * <blockquote><pre>
  * IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
@@ -69,7 +69,6 @@ import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo;
  * </pre></blockquote>
  *
  * @author John May
- * @cdk.module smiles
  * @see <a href="http://johnmay.github.io/beam">Beam SMILES Toolkit</a>
  */
 final class BeamToCDK {
@@ -152,6 +151,14 @@ final class BeamToCDK {
                 case DOWN:
                     checkBondStereo = true;
                     bond.setOrder(IBond.Order.SINGLE);
+                    break;
+                case UP_AROMATIC:
+                case DOWN_AROMATIC:
+                    checkBondStereo = true;
+                    bond.setOrder(IBond.Order.SINGLE);
+                    bond.setIsAromatic(true);
+                    atoms[u].setIsAromatic(true);
+                    atoms[v].setIsAromatic(true);
                     break;
                 case IMPLICIT:
                     bond.setOrder(IBond.Order.SINGLE);
@@ -272,8 +279,8 @@ final class BeamToCDK {
             int v = e.other(u);
 
             // find a directional bond for either end
-            Edge first  = null;
-            Edge second = null;
+            Edge first;
+            Edge second;
 
             // if either atom is not incident to a directional label there
             // is no configuration
@@ -300,11 +307,19 @@ final class BeamToCDK {
                     List<Edge> edges = new ArrayList<>();
                     edges.add(e);
                     Edge f = findCumulatedEdge(g, v, e);
+                    int beg = v;
                     while (f != null) {
                         edges.add(f);
                         v = f.other(v);
                         f = findCumulatedEdge(g, v, f);
+                        if (beg == v) {
+                            beg = -1;
+                            break;
+                        }
                     }
+                    // cumulated loop
+                    if (beg < 0)
+                        continue;
                     // only odd number of cumulated bonds here, otherwise is
                     // extended tetrahedral
                     if ((edges.size() & 0x1) == 0)
@@ -354,8 +369,8 @@ final class BeamToCDK {
                     int vPos = Arrays.binarySearch(nbrs, 0, 3, v);
                     int uPos = Arrays.binarySearch(nbrs, 3, 6, u);
 
-                    int uhi = 0, ulo = 0;
-                    int vhi = 0, vlo = 0;
+                    int uhi, ulo;
+                    int vhi, vlo;
 
                     uhi = nbrs[(vPos + 1) % 3];
                     ulo = nbrs[(vPos + 2) % 3];
@@ -426,8 +441,8 @@ final class BeamToCDK {
             if (b == Bond.UP || b == Bond.DOWN) {
                 if (first == null)
                     first = e;
-                else if (((first.either() == e.either()) == (first.bond() == b)))
-                    return null;
+                else if (first.bond(u) == e.bond(u))
+                    return null; // inconsistent e.g. C/C=C(/C)/C
             }
         }
         return first;
@@ -467,8 +482,9 @@ final class BeamToCDK {
 
     private IStereoElement newSquarePlanar(int u, int[] vs, IAtom[] atoms, Configuration c) {
 
-        if (vs.length != 4)
-            return null;
+        if (vs.length != 4) {
+            vs = insert(u, vs, 4);
+        }
 
         int order;
         switch (c) {
@@ -491,8 +507,9 @@ final class BeamToCDK {
     }
 
     private IStereoElement newTrigonalBipyramidal(int u, int[] vs, IAtom[] atoms, Configuration c) {
-        if (vs.length != 5)
-            return null;
+        if (vs.length != 5) {
+            vs = insert(u, vs, 5);
+        }
         int order = 1 + c.ordinal() - Configuration.TB1.ordinal();
         if (order < 1 || order > 20)
             return null;
@@ -502,8 +519,9 @@ final class BeamToCDK {
     }
 
     private IStereoElement newOctahedral(int u, int[] vs, IAtom[] atoms, Configuration c) {
-        if (vs.length != 6)
-            return null;
+        if (vs.length != 6) {
+            vs = insert(u, vs, 6);
+        }
         int order = 1 + c.ordinal() - Configuration.OH1.ordinal();
         if (order < 1 || order > 30)
             return null;
@@ -550,24 +568,41 @@ final class BeamToCDK {
     private IStereoElement newExtendedTetrahedral(int u, Graph g, IAtom[] atoms) {
 
         int[] terminals = findExtendedTetrahedralEnds(g, u);
-        int[] xs = new int[]{-1, terminals[0], -1, terminals[1]};
+        int[] xs = new int[]{-1, -1, -1, -1};
 
         int n = 0;
         for (Edge e : g.edges(terminals[0])) {
             if (e.bond().order() == 1) xs[n++] = e.other(terminals[0]);
         }
+        if (n == 1) {
+            if (xs[0] > terminals[0]) {
+                xs[1] = xs[0];
+                xs[0] = terminals[0];
+            } else {
+                xs[1] = terminals[0];
+            }
+        }
         n = 2;
         for (Edge e : g.edges(terminals[1])) {
             if (e.bond().order() == 1) xs[n++] = e.other(terminals[1]);
         }
-
-        Arrays.sort(xs);
+        if (n == 3) {
+            if (xs[2] > terminals[1]) {
+                xs[3] = xs[2];
+                xs[2] = terminals[1];
+            } else {
+                xs[3] = terminals[1];
+            }
+        }
 
         Stereo stereo = g.configurationOf(u).shorthand() == Configuration.CLOCKWISE ? Stereo.CLOCKWISE
                 : Stereo.ANTI_CLOCKWISE;
 
-        return new org.openscience.cdk.stereo.ExtendedTetrahedral(atoms[u], new IAtom[]{atoms[xs[0]], atoms[xs[1]],
-                atoms[xs[2]], atoms[xs[3]]}, stereo);
+        return new org.openscience.cdk.stereo.ExtendedTetrahedral(atoms[u],
+                                                                  new IAtom[]{atoms[xs[0]],
+                                                                              atoms[xs[1]],
+                                                                              atoms[xs[2]],
+                                                                              atoms[xs[3]]}, stereo);
     }
 
     /**
@@ -590,6 +625,18 @@ final class BeamToCDK {
             ws[i - 1] = tmp;
         }
 
+        return ws;
+    }
+
+    private static int[] insert(int v, int[] vs, int n2) {
+        int n = vs.length;
+        int[] ws = Arrays.copyOf(vs, n2);
+
+        for(int j = n; j < n2; ++j) {
+            ws[j] = v;
+        }
+
+        Arrays.sort(ws);
         return ws;
     }
 

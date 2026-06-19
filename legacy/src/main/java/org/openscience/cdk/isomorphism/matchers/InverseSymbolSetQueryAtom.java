@@ -32,10 +32,8 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
  *  match for all non-"C"-Atoms).
  *
  * @author        kha
- * @cdk.githash
  * @cdk.created   2004-09-16
  * @see           SymbolSetQueryAtom
- * @cdk.module    isomorphism
  * @deprecated @deprecated Use {@code new Expr(Element, 6).and(new Expr(Element, 8)).negate() } etc
  */
 @Deprecated
@@ -43,7 +41,7 @@ public class InverseSymbolSetQueryAtom extends QueryAtom implements IQueryAtom {
 
     private static final long serialVersionUID = -6570190504347822438L;
 
-    private Set<String>       symbols          = new HashSet<String>();
+    private final Set<String>       symbols          = new HashSet<>();
 
     /**
      *  Constructor for the InverseSymbolSetQueryAtom object
@@ -112,7 +110,7 @@ public class InverseSymbolSetQueryAtom extends QueryAtom implements IQueryAtom {
         StringBuilder s = new StringBuilder();
         s.append("InverseSymbolSetQueryAtom(");
         s.append(this.hashCode() + ", ");
-        s.append(symbols.toString());
+        s.append(symbols);
         s.append(')');
         return s.toString();
     }

@@ -27,8 +27,6 @@ import org.openscience.cdk.interfaces.IAtom;
 /**
  * Weight function used in the <code>RDFCalculator</code>.
  *
- * @cdk.module  extra
- * @cdk.githash
  *
  * @author      Egon Willighagen
  * @cdk.created 2005-01-14
@@ -43,6 +41,6 @@ public interface IRDFWeightFunction {
      * @param atom  First atom.
      * @param atom2 Second atom.
      */
-    public double calculate(IAtom atom, IAtom atom2);
+    double calculate(IAtom atom, IAtom atom2);
 
 }

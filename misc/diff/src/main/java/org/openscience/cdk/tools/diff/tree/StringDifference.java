@@ -22,14 +22,12 @@ package org.openscience.cdk.tools.diff.tree;
  * {@link IDifference} between two {@link String}.
  *
  * @author     egonw
- * @cdk.module diff
- * @cdk.githash
  */
 public class StringDifference implements IDifference {
 
-    private String name;
-    private String first;
-    private String second;
+    private final String name;
+    private final String first;
+    private final String second;
 
     private StringDifference(String name, String first, String second) {
         this.name = name;

@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObject;
@@ -35,14 +37,9 @@ import org.openscience.cdk.io.formats.CDKOWLFormat;
 import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.libio.jena.Convertor;
 
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-
 /**
  * Reads content from a CDK OWL serialization.
  *
- * @cdk.module  iordf
- * @cdk.githash
  * @cdk.keyword file format, OWL
  */
 public class CDKOWLReader extends DefaultChemObjectReader {
@@ -98,8 +95,8 @@ public class CDKOWLReader extends DefaultChemObjectReader {
     public boolean accepts(Class<? extends IChemObject> classObject) {
         if (IAtomContainer.class.equals(classObject)) return true;
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (IAtomContainer.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (IAtomContainer.class.equals(anInterface)) return true;
         }
         Class superClass = classObject.getSuperclass();
         if (superClass != null) return this.accepts(superClass);
@@ -125,7 +122,8 @@ public class CDKOWLReader extends DefaultChemObjectReader {
     /** {@inheritDoc} */
     @Override
     public void close() throws IOException {
-        input.close();
+        if (input != null)
+            input.close();
     }
 
 }

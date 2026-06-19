@@ -38,8 +38,6 @@ import java.awt.geom.Rectangle2D;
  * IAtomContainerSet, and IAtomContainer.
  *
  * @author maclean
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public class BoundsCalculator {
 
@@ -72,6 +70,8 @@ public class BoundsCalculator {
         Rectangle2D totalBounds = new Rectangle2D.Double();
         for (IReaction reaction : reactionSet.reactions()) {
             Rectangle2D reactionBounds = calculateBounds(reaction);
+            if (reactionBounds == null)
+                continue;
             if (totalBounds.isEmpty()) {
                 totalBounds = reactionBounds;
             } else {

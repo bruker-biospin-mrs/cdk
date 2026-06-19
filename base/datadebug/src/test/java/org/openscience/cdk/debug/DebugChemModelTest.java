@@ -19,35 +19,26 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractChemModelTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractChemModelTest;
 import org.openscience.cdk.interfaces.IChemModel;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugChemModel}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugChemModelTest extends AbstractChemModelTest {
+class DebugChemModelTest extends AbstractChemModelTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugChemModel();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugChemModel::new);
     }
 
     @Test
-    public void testDebugChemModel() {
+    void testDebugChemModel() {
         IChemModel chemModel = new DebugChemModel();
-        Assert.assertNotNull(chemModel);
+        Assertions.assertNotNull(chemModel);
     }
 }

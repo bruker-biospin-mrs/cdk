@@ -25,15 +25,15 @@ package org.openscience.cdk.fingerprint;
 
 import java.util.BitSet;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.openscience.cdk.test.fingerprint.AbstractFingerprinterTest;
 
 /**
- * @cdk.module test-fingerprint
  */
-public class KlekotaRothFingerprinterTest extends AbstractFingerprinterTest {
+class KlekotaRothFingerprinterTest extends AbstractFingerprinterTest {
 
     @Override
     public IFingerprinter getBitFingerprinter() {
@@ -41,24 +41,24 @@ public class KlekotaRothFingerprinterTest extends AbstractFingerprinterTest {
     }
 
     @Test
-    public void testGetSize() throws Exception {
+    void testGetSize() throws Exception {
         IFingerprinter printer = getBitFingerprinter();
-        Assert.assertEquals(4860, printer.getSize());
+        Assertions.assertEquals(4860, printer.getSize());
     }
 
     @Test
     public void testGetCountFingerprint() throws Exception {}
 
     @Test
-    public void testFingerprint() throws Exception {
+    void testFingerprint() throws Exception {
         SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IFingerprinter printer = getBitFingerprinter();
 
         BitSet bs1 = printer.getBitFingerprint(parser.parseSmiles("C=C-C#N")).asBitSet();
         BitSet bs2 = printer.getBitFingerprint(parser.parseSmiles("C=CCC(O)CC#N")).asBitSet();
 
-        Assert.assertEquals(4860, printer.getSize());
+        Assertions.assertEquals(4860, printer.getSize());
 
-        Assert.assertTrue(FingerprinterTool.isSubset(bs2, bs1));
+        Assertions.assertTrue(FingerprinterTool.isSubset(bs2, bs1));
     }
 }

@@ -21,11 +21,7 @@ package org.openscience.cdk.depict;
 import org.openscience.cdk.renderer.elements.Bounds;
 
 import java.awt.Dimension;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Internal: Immutable value class to help with store diagram dimensions
@@ -57,6 +53,8 @@ final class Dimensions {
     }
 
     Dimensions scale(double coef) {
+        if (this == AUTOMATIC)
+            return this;
         return new Dimensions(coef * w, coef * h);
     }
 

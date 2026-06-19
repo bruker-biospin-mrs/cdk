@@ -22,19 +22,18 @@ package org.openscience.cdk.config.atomtypes;
 import java.io.StringReader;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.interfaces.IAtomType;
 
 /**
  * Checks the functionality of the AtomTypeReader.
  *
- * @cdk.module test-core
  */
-public class OWLAtomTypeReaderTest extends CDKTestCase {
+class OWLAtomTypeReaderTest extends CDKTestCase {
 
     private final String OWL_CONTENT = "<?xml version=\"1.0\"?>" + "<!DOCTYPE rdf:RDF ["
                                              + "  <!ENTITY rdf  \"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" >"
@@ -56,41 +55,41 @@ public class OWLAtomTypeReaderTest extends CDKTestCase {
                                              + "  </at:AtomType>" + "</rdf:RDF>";
 
     @Test
-    public void testAtomTypeReader_Reader() {
+    void testAtomTypeReader_Reader() {
         OWLAtomTypeReader reader = new OWLAtomTypeReader(new StringReader(""));
-        Assert.assertNotNull(reader);
+        Assertions.assertNotNull(reader);
     }
 
     @Test
-    public void testReadAtomTypes_IChemObjectBuilder() {
+    void testReadAtomTypes_IChemObjectBuilder() {
         OWLAtomTypeReader reader = new OWLAtomTypeReader(new StringReader(OWL_CONTENT));
-        Assert.assertNotNull(reader);
+        Assertions.assertNotNull(reader);
         List<IAtomType> types = reader.readAtomTypes(new ChemObject().getBuilder());
-        Assert.assertNotNull(types);
-        Assert.assertEquals(1, types.size());
+        Assertions.assertNotNull(types);
+        Assertions.assertEquals(1, types.size());
     }
 
     @Test
-    public void testReadAtomTypes_CDK() {
+    void testReadAtomTypes_CDK() {
         OWLAtomTypeReader reader = new OWLAtomTypeReader(new StringReader(OWL_CONTENT));
-        Assert.assertNotNull(reader);
+        Assertions.assertNotNull(reader);
         List<IAtomType> types = reader.readAtomTypes(new ChemObject().getBuilder());
-        Assert.assertNotNull(types);
-        Assert.assertEquals(1, types.size());
+        Assertions.assertNotNull(types);
+        Assertions.assertEquals(1, types.size());
 
         Object object = types.get(0);
-        Assert.assertNotNull(object);
-        Assert.assertTrue(object instanceof IAtomType);
+        Assertions.assertNotNull(object);
+        Assertions.assertTrue(object instanceof IAtomType);
         IAtomType atomType = (IAtomType) object;
 
-        Assert.assertEquals("C", atomType.getSymbol());
-        Assert.assertEquals("C.sp3.0", atomType.getAtomTypeName());
-        Assert.assertEquals(0, atomType.getFormalCharge().intValue());
-        Assert.assertEquals(IAtomType.Hybridization.SP3, atomType.getHybridization());
-        Assert.assertEquals(4, atomType.getFormalNeighbourCount().intValue());
-        Assert.assertEquals(0, atomType.getProperty(CDKConstants.LONE_PAIR_COUNT));
-        Assert.assertEquals(0, atomType.getProperty(CDKConstants.PI_BOND_COUNT));
-        Assert.assertEquals(0, atomType.getProperty(CDKConstants.SINGLE_ELECTRON_COUNT));
+        Assertions.assertEquals("C", atomType.getSymbol());
+        Assertions.assertEquals("C.sp3.0", atomType.getAtomTypeName());
+        Assertions.assertEquals(0, atomType.getFormalCharge().intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP3, atomType.getHybridization());
+        Assertions.assertEquals(4, atomType.getFormalNeighbourCount().intValue());
+        Assertions.assertEquals((Integer)0, atomType.getProperty(CDKConstants.LONE_PAIR_COUNT));
+        Assertions.assertEquals((Integer)0, atomType.getProperty(CDKConstants.PI_BOND_COUNT));
+        Assertions.assertEquals((Integer)0, atomType.getProperty(CDKConstants.SINGLE_ELECTRON_COUNT));
     }
 
 }

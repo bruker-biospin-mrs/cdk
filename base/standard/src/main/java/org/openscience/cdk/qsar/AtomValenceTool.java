@@ -29,8 +29,6 @@ import java.util.Map;
  *
  * @author      mfe4
  * @cdk.created 2004-11-13
- * @cdk.module  standard
- * @cdk.githash
  * @cdk.dictref valence, atom
  */
 public class AtomValenceTool {
@@ -39,7 +37,7 @@ public class AtomValenceTool {
 
     public static int getValence(IAtom atom) {
         if (valencesTable == null) {
-            valencesTable = new HashMap<String, Integer>();
+            valencesTable = new HashMap<>();
             valencesTable.put("H", 1);
             valencesTable.put("He", 8);
             valencesTable.put("Ne", 8);

@@ -24,7 +24,6 @@
 
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
 /**
@@ -34,8 +33,6 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  * location.
  *
  * @author John May
- * @cdk.module smarts
- * @cdk.githash
  */
 @Deprecated
 public final class SmartsMatchers {

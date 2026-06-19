@@ -22,19 +22,14 @@
  */
 package org.openscience.cdk.tautomers;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.invariant.InChINumbersTools;
 import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.inchi.InChIGeneratorFactory;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.isomorphism.AtomMatcher;
 import org.openscience.cdk.isomorphism.BondMatcher;
 import org.openscience.cdk.smiles.SmiFlavor;
@@ -42,6 +37,19 @@ import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Creates tautomers for a given input molecule, based on the mobile H atoms listed in the InChI.
@@ -52,8 +60,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  * InChITautomerGeneratorTest test case.
  *
  * @author Mark Rijnbeek
- * @cdk.module tautomer
- * @cdk.githash
  */
 public final class InChITautomerGenerator {
 
@@ -160,7 +166,7 @@ public final class InChITautomerGenerator {
                 atom.setImplicitHydrogenCount(0);
         }
 
-        List<IAtomContainer> tautomers = new ArrayList<IAtomContainer>();
+        List<IAtomContainer> tautomers = new ArrayList<>();
         if (!inchi.contains("(H")) { //No mobile H atoms according to InChI, so bail out.
             tautomers.add(mol);
             return tautomers;
@@ -181,7 +187,7 @@ public final class InChITautomerGenerator {
             mapInputMoleculeToInchiMolgraph(inchiMolGraph, mol);
         }
 
-        List<Integer> mobHydrAttachPositions = new ArrayList<Integer>();
+        List<Integer> mobHydrAttachPositions = new ArrayList<>();
         int totalMobHydrCount = parseMobileHydrogens(mobHydrAttachPositions, inchi);
 
         tautomers = constructTautomers(mol, mobHydrAttachPositions, totalMobHydrCount);
@@ -199,7 +205,7 @@ public final class InChITautomerGenerator {
      */
     private Map<Integer, IAtom> getElementsByPosition(String inputInchi, IAtomContainer inputMolecule)
             throws CDKException {
-        Map<Integer, IAtom> inchiAtomsByPosition = new HashMap<Integer, IAtom>();
+        Map<Integer, IAtom> inchiAtomsByPosition = new HashMap<>();
         int position = 0;
         String inchi = inputInchi;
 
@@ -226,7 +232,7 @@ public final class InChITautomerGenerator {
             if (!elementSymbol.equals("H")) {
                 int elementCnt = 1;
                 if (!(elementSymbol.length() == symbolAndCount.length())) {
-                    elementCnt = Integer.valueOf(symbolAndCount.substring(elementSymbol.length()));
+                    elementCnt = Integer.parseInt(symbolAndCount.substring(elementSymbol.length()));
                 }
 
                 for (int i = 0; i < elementCnt; i++) {
@@ -261,10 +267,10 @@ public final class InChITautomerGenerator {
         String connections = inchi.substring(1, inchi.indexOf('/'));
         Pattern connectionPattern = Pattern.compile("(-|\\(|\\)|,|([0-9])*)");
         Matcher match = connectionPattern.matcher(connections);
-        Stack<IAtom> atomStack = new Stack<IAtom>();
+        Stack<IAtom> atomStack = new Stack<>();
         IAtomContainer inchiMolGraph = inputMolecule.getBuilder().newInstance(IAtomContainer.class);
         boolean pop = false;
-        boolean push = true;
+        boolean push;
         while (match.find()) {
             String group = match.group();
             push = true;
@@ -272,7 +278,7 @@ public final class InChITautomerGenerator {
                 if (group.matches("[0-9]*")) {
                     IAtom atom = inchiAtomsByPosition.get(Integer.valueOf(group));
                     if (!inchiMolGraph.contains(atom)) inchiMolGraph.addAtom(atom);
-                    IAtom prevAtom = null;
+                    IAtom prevAtom;
                     if (atomStack.size() != 0) {
                         if (pop) {
                             prevAtom = atomStack.pop();
@@ -362,9 +368,9 @@ public final class InChITautomerGenerator {
     private int parseMobileHydrogens(List<Integer> mobHydrAttachPositions, String inputInchi) {
 
         int totalMobHydrCount = 0;
-        String hydrogens = "";
+        String hydrogens;
         String inchi = inputInchi;
-        if (inchi.indexOf("/h") != -1) {
+        if (inchi.contains("/h")) {
             hydrogens = inchi.substring(inchi.indexOf("/h") + 2);
             if (hydrogens.indexOf('/') != -1) {
                 hydrogens = hydrogens.substring(0, hydrogens.indexOf('/'));
@@ -391,7 +397,7 @@ public final class InChITautomerGenerator {
                  */
                 while (subMatch.find()) {
                     if (!subMatch.group().equals("")) {
-                        mobHCount += Integer.valueOf(subMatch.group());
+                        mobHCount += Integer.parseInt(subMatch.group());
                     }
                 }
                 totalMobHydrCount += mobHCount;
@@ -407,112 +413,79 @@ public final class InChITautomerGenerator {
         return totalMobHydrCount;
     }
 
+    static boolean nextToDoubleBond(IAtom atom) {
+        for (IBond bond : atom.bonds()) {
+            if (bond.getOrder() == IBond.Order.DOUBLE)
+                return true;
+        }
+        return false;
+    }
+
     /**
      * Constructs tautomers following (most) steps of the algorithm in {@cdk.cite Thalheim2010}.
      * @param inputMolecule input molecule
-     * @param mobHydrAttachPositions mobile H positions
+     * @param mobileHydrogensAttach mobile H positions
      * @param totalMobHydrCount count of mobile hydrogens in molecule
      * @return tautomers
      * @throws CloneNotSupportedException
      */
-    private List<IAtomContainer> constructTautomers(IAtomContainer inputMolecule, List<Integer> mobHydrAttachPositions,
-            int totalMobHydrCount) throws CloneNotSupportedException {
-        List<IAtomContainer> tautomers = new ArrayList<IAtomContainer>();
+    private List<IAtomContainer> constructTautomers(IAtomContainer inputMolecule,
+                                                    List<Integer> mobileHydrogensAttach,
+                                                    int totalMobHydrCount) throws CloneNotSupportedException, CDKException {
+        List<IAtomContainer> tautomers = new ArrayList<>();
 
         //Tautomeric skeleton generation
-        IAtomContainer skeleton = (IAtomContainer) inputMolecule.clone();
+        IAtomContainer skeleton = inputMolecule.getBuilder().newAtomContainer();
 
-        boolean atomsToRemove = true;
-        List<IAtom> removedAtoms = new ArrayList<IAtom>();
-        boolean atomRemoved = false;
-        while (atomsToRemove) {
-            ATOMS: for (IAtom atom : skeleton.atoms()) {
-                atomRemoved = false;
-                int position = Integer.valueOf(atom.getID());
-                if (!mobHydrAttachPositions.contains(position)
-                        && atom.getHybridization().equals(IAtomType.Hybridization.SP3)) {
-                    skeleton.removeAtomOnly(atom);
-                    removedAtoms.add(atom);
-                    atomRemoved = true;
-                    break ATOMS;
-                } else {
-                    for (IBond bond : skeleton.bonds()) {
-                        if (bond.contains(atom) && bond.getOrder().equals(IBond.Order.TRIPLE)) {
-                            skeleton.removeAtomOnly(atom);
-                            removedAtoms.add(atom);
-                            atomRemoved = true;
-                            break ATOMS;
-                        }
-                    }
-                }
+        Set<IAtom> included = new HashSet<>();
+        for (IAtom atom : inputMolecule.atoms()) {
+            int position = Integer.parseInt(atom.getID());
+            if (mobileHydrogensAttach.contains(position) ||
+                nextToDoubleBond(atom)) {
+                skeleton.addAtom(atom);
+                included.add(atom);
+                if (mobileHydrogensAttach.contains(position))
+                    atom.setImplicitHydrogenCount(0);
             }
-            if (!atomRemoved) atomsToRemove = false;
-
         }
-        boolean bondsToRemove = true;
-        boolean bondRemoved = false;
-        while (bondsToRemove) {
-            BONDS: for (IBond bond : skeleton.bonds()) {
-                bondRemoved = false;
-                for (IAtom removedAtom : removedAtoms) {
-                    if (bond.contains(removedAtom)) {
-                        IAtom other = bond.getOther(removedAtom);
-                        int decValence = 0;
-                        switch (bond.getOrder()) {
-                            case SINGLE:
-                                decValence = 1;
-                                break;
-                            case DOUBLE:
-                                decValence = 2;
-                                break;
-                            case TRIPLE:
-                                decValence = 3;
-                                break;
-                            case QUADRUPLE:
-                                decValence = 4;
-                                break;
-                        }
-                        other.setValency(other.getValency() - decValence);
-                        skeleton.removeBond(bond);
-                        bondRemoved = true;
-                        break BONDS;
-                    }
-                }
+        for (IBond bond : inputMolecule.bonds()) {
+            IAtom beg = bond.getBegin();
+            IAtom end = bond.getEnd();
+            if (included.contains(beg) && included.contains(end)) {
+                skeleton.addBond(bond);
+            } else if (included.contains(beg)) {
+                beg.setValency(beg.getValency() - bond.getOrder().numeric());
+            }else if (included.contains(end)) {
+                end.setValency(end.getValency() - bond.getOrder().numeric());
             }
-            if (!bondRemoved) bondsToRemove = false;
-
         }
+
         int doubleBondCount = 0;
         for (IBond bond : skeleton.bonds()) {
             if (bond.getOrder().equals(IBond.Order.DOUBLE)) {
-            	bond.setOrder(IBond.Order.SINGLE);
+                bond.setOrder(IBond.Order.SINGLE);
                 doubleBondCount++;
             }
         }
 
-        for (int hPosition : mobHydrAttachPositions) {
-            IAtom atom = findAtomByPosition(skeleton, hPosition);
-            atom.setImplicitHydrogenCount(0);
-        }
-
-       
-
         // Make combinations for mobile Hydrogen attachments
-        List<List<Integer>> combinations = new ArrayList<List<Integer>>();
-        combineHydrogenPositions(new ArrayList<Integer>(), combinations, skeleton, totalMobHydrCount,
-                mobHydrAttachPositions);
+        List<List<Integer>> combinations = new ArrayList<>();
+        combineHydrogenPositions(new ArrayList<>(), combinations, skeleton, totalMobHydrCount,
+                mobileHydrogensAttach);
 
-        Stack<Object> solutions = new Stack<Object>();
+        Stack<Object> solutions = new Stack<>();
         for (List<Integer> hPositions : combinations) {
-            IAtomContainer tautomerSkeleton = (IAtomContainer) skeleton.clone();
+            IAtomContainer tautomerSkeleton = skeleton.clone();
             for (Integer hPos : hPositions) {
                 IAtom atom = findAtomByPosition(tautomerSkeleton, hPos);
+                if (atom == null)
+                    throw new IllegalStateException("Could not find H atom at position=" + hPos);
                 atom.setImplicitHydrogenCount(atom.getImplicitHydrogenCount() + 1);
             }
-            List<IAtom> atomsInNeedOfFix = new ArrayList<IAtom>();
+            List<IAtom> atomsInNeedOfFix = new ArrayList<>();
             for (IAtom atom : tautomerSkeleton.atoms()) {
                 if (atom.getValency() - atom.getFormalCharge() != atom.getImplicitHydrogenCount()
-                        + getConnectivity(atom, tautomerSkeleton)) atomsInNeedOfFix.add(atom);
+                        + getConnectivity(atom)) atomsInNeedOfFix.add(atom);
             }
             List<Integer> dblBondPositions = tryDoubleBondCombinations(tautomerSkeleton, 0, 0, doubleBondCount,
                     atomsInNeedOfFix);
@@ -523,7 +496,7 @@ public final class InChITautomerGenerator {
             }
         }
         LOGGER.debug("#possible solutions : ", solutions.size());
-        if (solutions.size() == 0) {
+        if (solutions.isEmpty()) {
             LOGGER.error("Could not generate any tautomers for the input. Is input in Kekule form? ");
             tautomers.add(inputMolecule);
         } else {
@@ -531,7 +504,7 @@ public final class InChITautomerGenerator {
             while (solutions.size() != 0) {
                 IAtomContainer tautomerSkeleton = (IAtomContainer) solutions.pop();
                 List<Integer> dblBondPositions = (List<Integer>) solutions.pop();
-                IAtomContainer tautomer = (IAtomContainer) inputMolecule.clone();
+                IAtomContainer tautomer = inputMolecule.clone();
                 for (IAtom skAtom1 : tautomerSkeleton.atoms()) {
                     for (IAtom atom1 : tautomer.atoms()) {
                         if (atom1.getID().equals(skAtom1.getID())) {
@@ -555,11 +528,11 @@ public final class InChITautomerGenerator {
                     }
                 }
                 for (IAtom atom : tautomer.atoms()) {
-                    atom.setFlag(CDKConstants.ISAROMATIC, false);
+                    atom.setFlag(IChemObject.AROMATIC, false);
                     atom.setValency(null);
                 }
                 for (IBond bond : tautomer.bonds())
-                    bond.setFlag(CDKConstants.ISAROMATIC, false);
+                    bond.setFlag(IChemObject.AROMATIC, false);
                 tautomers.add(tautomer);
             }
         }
@@ -601,7 +574,9 @@ public final class InChITautomerGenerator {
             for (int i = 0; i < mobHydrAttachPositions.size(); i++) {
                 int pos = mobHydrAttachPositions.get(i);
                 IAtom atom = findAtomByPosition(skeleton, pos);
-                int conn = getConnectivity(atom, skeleton);
+                if (atom == null)
+                    throw new IllegalStateException("Could not find H atom at position=" + pos);
+                int conn = getConnectivity(atom);
                 int hCnt = 0;
                 for (int t : taken)
                     if (t == pos) hCnt++;
@@ -612,7 +587,7 @@ public final class InChITautomerGenerator {
                 }
             }
         } else {
-            List<Integer> addList = new ArrayList<Integer>(taken.size());
+            List<Integer> addList = new ArrayList<>(taken.size());
             addList.addAll(taken);
             Collections.sort(addList);
             if (!combinations.contains(addList)) {
@@ -642,77 +617,81 @@ public final class InChITautomerGenerator {
      *
      * @param container
      * @param dblBondsAdded counts double bonds added so far
-     * @param bondOffSet offset for next double bond position to consider
+     * @param offset offset for next double bond position to consider
      * @param doubleBondMax maximum number of double bonds to add
      * @param atomsInNeedOfFix atoms that require more bonds
      * @return a list of double bond positions (index) that make a valid combination, null if none found
      */
-    private List<Integer> tryDoubleBondCombinations(IAtomContainer container, int dblBondsAdded, int bondOffSet,
-            int doubleBondMax, List<IAtom> atomsInNeedOfFix) {
-
-        int offSet = bondOffSet;
+    private List<Integer> tryDoubleBondCombinations(IAtomContainer container,
+                                                    int dblBondsAdded,
+                                                    int offset,
+                                                    int doubleBondMax,
+                                                    List<IAtom> atomsInNeedOfFix) {
         List<Integer> dblBondPositions = null;
-
-        while (offSet < container.getBondCount() && dblBondPositions == null) {
-            IBond bond = container.getBond(offSet);
-            if (atomsInNeedOfFix.contains(bond.getBegin()) && atomsInNeedOfFix.contains(bond.getEnd())) {
-                bond.setOrder(IBond.Order.DOUBLE);
-                dblBondsAdded = dblBondsAdded + 1;
-                if (dblBondsAdded == doubleBondMax) {
-                    boolean validDoubleBondConfig = true;
-                    CHECK: for (IAtom atom : container.atoms()) {
-                        if (atom.getValency() != atom.getImplicitHydrogenCount() + getConnectivity(atom, container)) {
-                            validDoubleBondConfig = false;
-                            break CHECK;
-                        }
-                    }
-                    if (validDoubleBondConfig) {
-                        dblBondPositions = new ArrayList<Integer>();
-                        for (int idx = 0; idx < container.getBondCount(); idx++) {
-                            if (container.getBond(idx).getOrder().equals(IBond.Order.DOUBLE))
-                                dblBondPositions.add(idx);
-                        }
-                        return dblBondPositions;
-                    }
-                } else {
-                    dblBondPositions = tryDoubleBondCombinations(container, dblBondsAdded, offSet + 1, doubleBondMax,
-                            atomsInNeedOfFix);
+        if (dblBondsAdded == doubleBondMax) {
+            for (IAtom atom : container.atoms()) {
+                if (atom.getValency() != atom.getImplicitHydrogenCount() + getConnectivity(atom)) {
+                    return null;
                 }
-
-                bond.setOrder(IBond.Order.SINGLE);
-                dblBondsAdded = dblBondsAdded - 1;
             }
-            offSet++;
+            dblBondPositions = new ArrayList<>();
+            for (int idx = 0; idx < container.getBondCount(); idx++) {
+                if (container.getBond(idx).getOrder().equals(IBond.Order.DOUBLE))
+                    dblBondPositions.add(idx);
+            }
+            return dblBondPositions;
         }
-        return dblBondPositions;
+
+        if (offset >= container.getBondCount())
+            return null;
+
+        IBond bond = container.getBond(offset);
+        if (atomsInNeedOfFix.contains(bond.getBegin()) &&
+            atomsInNeedOfFix.contains(bond.getEnd())) {
+            bond.setOrder(IBond.Order.DOUBLE);
+
+            // these atoms no longer need a double-bond
+            atomsInNeedOfFix.remove(bond.getBegin());
+            atomsInNeedOfFix.remove(bond.getEnd());
+
+            dblBondPositions = tryDoubleBondCombinations(container, dblBondsAdded + 1, offset + 1, doubleBondMax,
+                                                         atomsInNeedOfFix);
+
+            atomsInNeedOfFix.add(bond.getBegin());
+            atomsInNeedOfFix.add(bond.getEnd());
+
+            if (dblBondPositions != null)
+                return dblBondPositions;
+        }
+
+        bond.setOrder(IBond.Order.SINGLE);
+        return tryDoubleBondCombinations(container, dblBondsAdded, offset + 1, doubleBondMax,
+                                         atomsInNeedOfFix);
     }
 
     /**
      * Sums the number of bonds (counting order) an atom is hooked up with.
      * @param atom an atom in the container
-     * @param container the container
      * @return valence (bond order sum) of the atom
      */
-    private int getConnectivity(IAtom atom, IAtomContainer container) {
+    private int getConnectivity(IAtom atom) {
         int connectivity = 0;
-        for (IBond bond : container.bonds()) {
-            if (bond.contains(atom)) {
-                switch (bond.getOrder()) {
-                    case SINGLE:
-                        connectivity++;
-                        break;
-                    case DOUBLE:
-                        connectivity += 2;
-                        break;
-                    case TRIPLE:
-                        connectivity += 3;
-                        break;
-                    case QUADRUPLE:
-                        connectivity += 4;
-                        break;
-                    default:
-                        connectivity += 10;
-                }
+        for (IBond bond : atom.bonds()) {
+            switch (bond.getOrder()) {
+                case SINGLE:
+                    connectivity++;
+                    break;
+                case DOUBLE:
+                    connectivity += 2;
+                    break;
+                case TRIPLE:
+                    connectivity += 3;
+                    break;
+                case QUADRUPLE:
+                    connectivity += 4;
+                    break;
+                default:
+                    connectivity += 10;
             }
         }
         return connectivity;

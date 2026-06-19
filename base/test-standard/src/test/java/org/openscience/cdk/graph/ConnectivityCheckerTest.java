@@ -19,45 +19,55 @@
  */
 package org.openscience.cdk.graph;
 
-import java.io.InputStream;
-import java.util.List;
-
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.LonePair;
 import org.openscience.cdk.SingleElectron;
+import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
+import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
-import org.openscience.cdk.io.HINReader;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.io.ISimpleChemObjectReader;
 import org.openscience.cdk.io.MDLV2000Reader;
+import org.openscience.cdk.sgroup.Sgroup;
+import org.openscience.cdk.sgroup.SgroupType;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.smiles.SmiFlavor;
+import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.templates.TestMoleculeFactory;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
+import org.openscience.cdk.tools.manipulator.ReactionManipulator;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
- *  Checks the functionality of the ConnectivityChecker
+ * Checks the functionality of the ConnectivityChecker
  *
- * @cdk.module test-standard
- *
- * @author     steinbeck
- * @cdk.created    2001-07-24
+ * @author steinbeck
+ * @cdk.created 2001-07-24
  */
-public class ConnectivityCheckerTest extends CDKTestCase {
+class ConnectivityCheckerTest extends CDKTestCase {
 
-    public ConnectivityCheckerTest() {
+    ConnectivityCheckerTest() {
         super();
     }
 
@@ -65,23 +75,23 @@ public class ConnectivityCheckerTest extends CDKTestCase {
      * This test tests the function of the partitionIntoMolecule() method.
      */
     @Test
-    public void testPartitionIntoMolecules_IAtomContainer() {
+    void testPartitionIntoMolecules_IAtomContainer() {
         //logger.debug(atomCon);
-        AtomContainer atomCon = new org.openscience.cdk.AtomContainer();
+        IAtomContainer atomCon = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atomCon.add(TestMoleculeFactory.make4x3CondensedRings());
         atomCon.add(TestMoleculeFactory.makeAlphaPinene());
         atomCon.add(TestMoleculeFactory.makeSpiroRings());
         IAtomContainerSet moleculeSet = ConnectivityChecker.partitionIntoMolecules(atomCon);
-        Assert.assertNotNull(moleculeSet);
-        Assert.assertEquals(3, moleculeSet.getAtomContainerCount());
+        Assertions.assertNotNull(moleculeSet);
+        Assertions.assertEquals(3, moleculeSet.getAtomContainerCount());
     }
 
     /**
      * Test for SF bug #903551
      */
     @Test
-    public void testPartitionIntoMoleculesKeepsAtomIDs() {
-        AtomContainer atomCon = new org.openscience.cdk.AtomContainer();
+    void testPartitionIntoMoleculesKeepsAtomIDs() {
+        IAtomContainer atomCon = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom atom1 = new Atom("C");
         atom1.setID("atom1");
         Atom atom2 = new Atom("C");
@@ -89,13 +99,13 @@ public class ConnectivityCheckerTest extends CDKTestCase {
         atomCon.addAtom(atom1);
         atomCon.addAtom(atom2);
         IAtomContainerSet moleculeSet = ConnectivityChecker.partitionIntoMolecules(atomCon);
-        Assert.assertNotNull(moleculeSet);
-        Assert.assertEquals(2, moleculeSet.getAtomContainerCount());
+        Assertions.assertNotNull(moleculeSet);
+        Assertions.assertEquals(2, moleculeSet.getAtomContainerCount());
         org.openscience.cdk.interfaces.IAtom copy1 = moleculeSet.getAtomContainer(0).getAtom(0);
         org.openscience.cdk.interfaces.IAtom copy2 = moleculeSet.getAtomContainer(1).getAtom(0);
 
-        Assert.assertEquals(atom1.getID(), copy1.getID());
-        Assert.assertEquals(atom2.getID(), copy2.getID());
+        Assertions.assertEquals(atom1.getID(), copy1.getID());
+        Assertions.assertEquals(atom2.getID(), copy2.getID());
     }
 
     /**
@@ -103,19 +113,19 @@ public class ConnectivityCheckerTest extends CDKTestCase {
      * partitionIntoMolecules().
      */
     @Test
-    public void testPartitionIntoMolecules_IsConnected_Consistency() {
+    void testPartitionIntoMolecules_IsConnected_Consistency() {
         //logger.debug(atomCon);
-        AtomContainer atomCon = new org.openscience.cdk.AtomContainer();
+        IAtomContainer atomCon = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atomCon.add(TestMoleculeFactory.make4x3CondensedRings());
         atomCon.add(TestMoleculeFactory.makeAlphaPinene());
         atomCon.add(TestMoleculeFactory.makeSpiroRings());
         IAtomContainerSet moleculeSet = ConnectivityChecker.partitionIntoMolecules(atomCon);
-        Assert.assertNotNull(moleculeSet);
-        Assert.assertEquals(3, moleculeSet.getAtomContainerCount());
+        Assertions.assertNotNull(moleculeSet);
+        Assertions.assertEquals(3, moleculeSet.getAtomContainerCount());
 
-        Assert.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(0)));
-        Assert.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(1)));
-        Assert.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(2)));
+        Assertions.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(0)));
+        Assertions.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(1)));
+        Assertions.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(2)));
     }
 
     /**
@@ -123,16 +133,16 @@ public class ConnectivityCheckerTest extends CDKTestCase {
      * method keeps LonePairs and SingleElectrons with its associated atoms.
      */
     @Test
-    public void testDontDeleteSingleElectrons() {
-        AtomContainer atomCon = new org.openscience.cdk.AtomContainer();
+    void testDontDeleteSingleElectrons() {
+        IAtomContainer atomCon = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         // make two molecules; one with an LonePair, the other with a SingleElectron
-        IAtomContainer mol1 = new AtomContainer();
+        IAtomContainer mol1 = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom atom1 = new Atom("C");
         mol1.addAtom(atom1);
         LonePair lp1 = new LonePair(atom1);
         mol1.addLonePair(lp1);
         // mol2
-        IAtomContainer mol2 = new AtomContainer();
+        IAtomContainer mol2 = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom atom2 = new Atom("C");
         mol2.addAtom(atom2);
         SingleElectron se2 = new SingleElectron(atom2);
@@ -143,90 +153,332 @@ public class ConnectivityCheckerTest extends CDKTestCase {
 
         // now partition
         IAtomContainerSet moleculeSet = ConnectivityChecker.partitionIntoMolecules(atomCon);
-        Assert.assertNotNull(moleculeSet);
-        Assert.assertEquals(2, moleculeSet.getAtomContainerCount());
+        Assertions.assertNotNull(moleculeSet);
+        Assertions.assertEquals(2, moleculeSet.getAtomContainerCount());
 
-        Assert.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(0)));
-        Assert.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(1)));
+        Assertions.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(0)));
+        Assertions.assertTrue(ConnectivityChecker.isConnected(moleculeSet.getAtomContainer(1)));
 
         // make sure
-        Assert.assertEquals(1, moleculeSet.getAtomContainer(0).getAtomCount());
-        Assert.assertEquals(1, moleculeSet.getAtomContainer(0).getElectronContainerCount());
-        Assert.assertEquals(1, moleculeSet.getAtomContainer(1).getAtomCount());
-        Assert.assertEquals(1, moleculeSet.getAtomContainer(1).getElectronContainerCount());
+        Assertions.assertEquals(1, moleculeSet.getAtomContainer(0).getAtomCount());
+        Assertions.assertEquals(1, moleculeSet.getAtomContainer(0).getElectronContainerCount());
+        Assertions.assertEquals(1, moleculeSet.getAtomContainer(1).getAtomCount());
+        Assertions.assertEquals(1, moleculeSet.getAtomContainer(1).getElectronContainerCount());
         // we don't know which partition contains the LP and which the electron
-        Assert.assertTrue(moleculeSet.getAtomContainer(0).getConnectedSingleElectronsCount(
+        Assertions.assertTrue(moleculeSet.getAtomContainer(0).getConnectedSingleElectronsCount(
                 moleculeSet.getAtomContainer(0).getAtom(0)) == 0
-                || moleculeSet.getAtomContainer(1).getConnectedSingleElectronsCount(
-                        moleculeSet.getAtomContainer(1).getAtom(0)) == 0);
-        Assert.assertTrue(moleculeSet.getAtomContainer(0).getConnectedLonePairsCount(
+                              || moleculeSet.getAtomContainer(1).getConnectedSingleElectronsCount(
+                moleculeSet.getAtomContainer(1).getAtom(0)) == 0);
+        Assertions.assertTrue(moleculeSet.getAtomContainer(0).getConnectedLonePairsCount(
                 moleculeSet.getAtomContainer(0).getAtom(0)) == 0
-                || moleculeSet.getAtomContainer(1).getConnectedLonePairsCount(
-                        moleculeSet.getAtomContainer(1).getAtom(0)) == 0);
+                              || moleculeSet.getAtomContainer(1).getConnectedLonePairsCount(
+                moleculeSet.getAtomContainer(1).getAtom(0)) == 0);
     }
 
     /**
      * This test tests the algorithm behind isConnected().
      */
     @Test
-    public void testIsConnected_IAtomContainer() {
+    void testIsConnected_IAtomContainer() {
         IAtomContainer spiro = TestMoleculeFactory.makeSpiroRings();
-        Assert.assertTrue(ConnectivityChecker.isConnected(spiro));
+        Assertions.assertTrue(ConnectivityChecker.isConnected(spiro));
     }
 
     @Test
-    public void testIsConnectedArtemisinin1() throws InvalidSmilesException {
+    void testIsConnectedArtemisinin1() throws InvalidSmilesException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer container = sp.parseSmiles("C1CN2CCN(CCCN(CCN(C1)Cc1ccccn1)CC2)C");
-        Assert.assertTrue(ConnectivityChecker.isConnected(container));
+        Assertions.assertTrue(ConnectivityChecker.isConnected(container));
     }
 
     /**
      * @cdk.bug 2126904
      */
     @Test
-    public void testIsConnectedFromHINFile() throws Exception {
-        String filename = "data/hin/connectivity1.hin";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
-        ISimpleChemObjectReader reader = new HINReader(ins);
-        ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
-        List<IAtomContainer> cList = ChemFileManipulator.getAllAtomContainers(content);
-        IAtomContainer ac = cList.get(0);
-
-        Assert.assertTrue("Molecule appears not to be connected", ConnectivityChecker.isConnected(ac));
+    void testIsConnectedFromHINFile() throws Exception {
+        // connectivity1.hin
+        IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+        IAtomContainer m = builder.newAtomContainer();
+        IAtom a1 = m.newAtom(IElement.C);
+        IAtom a2 = m.newAtom(IElement.C);
+        IAtom a3 = m.newAtom(IElement.N);
+        IAtom a4 = m.newAtom(IElement.C);
+        IAtom a5 = m.newAtom(IElement.C);
+        IAtom a6 = m.newAtom(IElement.N);
+        IAtom a7 = m.newAtom(IElement.C);
+        IAtom a8 = m.newAtom(IElement.C);
+        IAtom a9 = m.newAtom(IElement.C);
+        IAtom a10 = m.newAtom(IElement.N);
+        IAtom a11 = m.newAtom(IElement.C);
+        IAtom a12 = m.newAtom(IElement.C);
+        IAtom a13 = m.newAtom(IElement.N);
+        IAtom a14 = m.newAtom(IElement.C);
+        IAtom a15 = m.newAtom(IElement.C);
+        IAtom a16 = m.newAtom(IElement.C);
+        IAtom a17 = m.newAtom(IElement.C);
+        IAtom a18 = m.newAtom(IElement.C);
+        IAtom a19 = m.newAtom(IElement.C);
+        IAtom a20 = m.newAtom(IElement.C);
+        IAtom a21 = m.newAtom(IElement.C);
+        IAtom a22 = m.newAtom(IElement.C);
+        IAtom a23 = m.newAtom(IElement.C);
+        IAtom a24 = m.newAtom(IElement.N);
+        IAtom a25 = m.newAtom(IElement.H);
+        IAtom a26 = m.newAtom(IElement.H);
+        IAtom a27 = m.newAtom(IElement.H);
+        IAtom a28 = m.newAtom(IElement.H);
+        IAtom a29 = m.newAtom(IElement.H);
+        IAtom a30 = m.newAtom(IElement.H);
+        IAtom a31 = m.newAtom(IElement.H);
+        IAtom a32 = m.newAtom(IElement.H);
+        IAtom a33 = m.newAtom(IElement.H);
+        IAtom a34 = m.newAtom(IElement.H);
+        IAtom a35 = m.newAtom(IElement.H);
+        IAtom a36 = m.newAtom(IElement.H);
+        IAtom a37 = m.newAtom(IElement.H);
+        IAtom a38 = m.newAtom(IElement.H);
+        IAtom a39 = m.newAtom(IElement.H);
+        IAtom a40 = m.newAtom(IElement.H);
+        IAtom a41 = m.newAtom(IElement.H);
+        IAtom a42 = m.newAtom(IElement.H);
+        IAtom a43 = m.newAtom(IElement.H);
+        IAtom a44 = m.newAtom(IElement.H);
+        IAtom a45 = m.newAtom(IElement.H);
+        IAtom a46 = m.newAtom(IElement.H);
+        IAtom a47 = m.newAtom(IElement.H);
+        IAtom a48 = m.newAtom(IElement.H);
+        IAtom a49 = m.newAtom(IElement.H);
+        IAtom a50 = m.newAtom(IElement.H);
+        IAtom a51 = m.newAtom(IElement.H);
+        IAtom a52 = m.newAtom(IElement.H);
+        IAtom a53 = m.newAtom(IElement.H);
+        IAtom a54 = m.newAtom(IElement.H);
+        IAtom a55 = m.newAtom(IElement.H);
+        IAtom a56 = m.newAtom(IElement.H);
+        IAtom a57 = m.newAtom(IElement.H);
+        m.newBond(a1, a2);
+        m.newBond(a1, a14);
+        m.newBond(a1, a25);
+        m.newBond(a1, a26);
+        m.newBond(a2, a3);
+        m.newBond(a2, a27);
+        m.newBond(a2, a28);
+        m.newBond(a3, a4);
+        m.newBond(a3, a15);
+        m.newBond(a4, a5);
+        m.newBond(a4, a29);
+        m.newBond(a4, a30);
+        m.newBond(a5, a6);
+        m.newBond(a5, a31);
+        m.newBond(a5, a32);
+        m.newBond(a6, a7);
+        m.newBond(a6, a17);
+        m.newBond(a7, a8);
+        m.newBond(a7, a33);
+        m.newBond(a7, a34);
+        m.newBond(a8, a9);
+        m.newBond(a8, a35);
+        m.newBond(a8, a36);
+        m.newBond(a9, a10);
+        m.newBond(a9, a37);
+        m.newBond(a9, a38);
+        m.newBond(a10, a11);
+        m.newBond(a10, a16);
+        m.newBond(a11, a12);
+        m.newBond(a11, a39);
+        m.newBond(a11, a40);
+        m.newBond(a12, a13);
+        m.newBond(a12, a41);
+        m.newBond(a12, a42);
+        m.newBond(a13, a14);
+        m.newBond(a13, a18);
+        m.newBond(a14, a43);
+        m.newBond(a14, a44);
+        m.newBond(a15, a16);
+        m.newBond(a15, a45);
+        m.newBond(a15, a46);
+        m.newBond(a16, a47);
+        m.newBond(a16, a48);
+        m.newBond(a17, a49);
+        m.newBond(a17, a50);
+        m.newBond(a17, a51);
+        m.newBond(a18, a19);
+        m.newBond(a18, a52);
+        m.newBond(a18, a53);
+        m.newBond(a19, a20, IBond.Order.QUADRUPLE);
+        m.newBond(a19, a24, IBond.Order.QUADRUPLE);
+        m.newBond(a20, a21, IBond.Order.QUADRUPLE);
+        m.newBond(a20, a54);
+        m.newBond(a21, a22, IBond.Order.QUADRUPLE);
+        m.newBond(a21, a55);
+        m.newBond(a22, a23, IBond.Order.QUADRUPLE);
+        m.newBond(a22, a56);
+        m.newBond(a23, a24, IBond.Order.QUADRUPLE);
+        m.newBond(a23, a57);
+        Assertions.assertTrue(ConnectivityChecker.isConnected(m),
+                              "Molecule appears not to be connected");
     }
 
     /**
-    * @cdk.bug 2126904
-    */
+     * @cdk.bug 2126904
+     */
     @Test
-    public void testIsConnectedFromSDFile() throws Exception {
-        String filename = "data/mdl/mdeotest.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testIsConnectedFromSDFile() throws Exception {
+        String filename = "mdeotest.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new MDLV2000Reader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List<IAtomContainer> cList = ChemFileManipulator.getAllAtomContainers(content);
         IAtomContainer ac = cList.get(0);
 
-        Assert.assertTrue("Molecule appears not to be connected", ConnectivityChecker.isConnected(ac));
+        Assertions.assertTrue(ConnectivityChecker.isConnected(ac), "Molecule appears not to be connected");
     }
 
     @Test
-    public void testPartitionExtendedTetrahedral() throws Exception {
+    void testPartitionExtendedTetrahedral() throws Exception {
         SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer container = smipar.parseSmiles("CC=[C@]=CC.C");
         IAtomContainerSet containerSet = ConnectivityChecker.partitionIntoMolecules(container);
         assertThat(containerSet.getAtomContainerCount(), is(2));
-        assertTrue(containerSet.getAtomContainer(0).stereoElements().iterator().hasNext());
+        Assertions.assertTrue(containerSet.getAtomContainer(0).stereoElements().iterator().hasNext());
     }
 
     /**
      * @cdk.bug 2784209
      */
     @Test
-    public void testNoAtomsIsConnected() {
-        IAtomContainer container = new AtomContainer();
-        Assert.assertTrue("Molecule appears not to be connected", ConnectivityChecker.isConnected(container));
+    void testNoAtomsIsConnected() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        Assertions.assertTrue(ConnectivityChecker.isConnected(container), "Molecule appears not to be connected");
     }
 
+    @Test
+    void copySgroups() throws Exception {
+        String filename = "sgroup-split.mol";
+        try (InputStream ins = this.getClass().getResourceAsStream(filename);
+             ISimpleChemObjectReader reader = new MDLV2000Reader(ins)
+        ) {
+            ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
+            List<IAtomContainer> cList = ChemFileManipulator.getAllAtomContainers(content);
+            IAtomContainer ac = cList.get(0);
+            IAtomContainerSet containerSet = ConnectivityChecker.partitionIntoMolecules(ac);
+            Assertions.assertEquals(2, containerSet.getAtomContainerCount());
+            IAtomContainer container1 = containerSet.getAtomContainer(0);
+            IAtomContainer container2 = containerSet.getAtomContainer(1);
+            IAtomContainer h2o = container1.getAtomCount() <= 3 ? container1 : container2;
+            Assertions.assertNull(h2o.getProperty(CDKConstants.CTAB_SGROUPS));
+            IAtomContainer otherContainer = h2o == container1 ? container2 : container1;
+            List<Sgroup> sgroups = otherContainer.getProperty(CDKConstants.CTAB_SGROUPS);
+            Assertions.assertEquals(1, sgroups.size());
+            Sgroup sgroup = sgroups.get(0);
+            Assertions.assertEquals(SgroupType.CtabStructureRepeatUnit, sgroup.getType());
+            Set<IAtom> atoms = sgroup.getAtoms();
+            Assertions.assertEquals(2, atoms.size());
+
+        }
+    }
+
+    @Test
+    void splitSgroups() throws IOException, CDKException {
+        IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+        try (InputStream in = getClass().getResourceAsStream("sgroup-frags.mol");
+             MDLV2000Reader mdlr = new MDLV2000Reader(in)) {
+            IAtomContainer mol = mdlr.read(builder.newAtomContainer());
+            IAtomContainerSet acset = ConnectivityChecker.partitionIntoMolecules(mol);
+            Assertions.assertEquals(2, acset.getAtomContainerCount());
+            SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.CxSmiles);
+            Assertions.assertEquals("CCOC |Sg:n:1,2:1:|", smigen.create(acset.getAtomContainer(0)));
+            Assertions.assertEquals("C(NC)C |Sg:n:0,1:1:|", smigen.create(acset.getAtomContainer(1)));
+        }
+    }
+
+    @Test
+    void splitSgroupsParent() throws IOException, CDKException {
+        IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+        try (InputStream in = getClass().getResourceAsStream("sgroup-mix.mol");
+             MDLV2000Reader mdlr = new MDLV2000Reader(in)) {
+            IAtomContainer mol = mdlr.read(builder.newAtomContainer());
+            IAtomContainerSet acset = ConnectivityChecker.partitionIntoMolecules(mol);
+            Assertions.assertEquals(2, acset.getAtomContainerCount());
+            SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.CxSmiles);
+            IAtomContainer part1 = acset.getAtomContainer(0);
+            IAtomContainer part2 = acset.getAtomContainer(1);
+            Assertions.assertEquals("C1CCCCC1 |Sg:c:0,1,2,3,4,5::|", smigen.create(part1));
+            Assertions.assertEquals("CO |Sg:c:0,1::|", smigen.create(part2));
+            List<Sgroup> sgroups1 = part1.getProperty(CDKConstants.CTAB_SGROUPS);
+            List<Sgroup> sgroups2 = part2.getProperty(CDKConstants.CTAB_SGROUPS);
+            Assertions.assertEquals(1, sgroups1.size());
+            Assertions.assertEquals(0, sgroups1.get(0).getParents().size());
+            Assertions.assertEquals(1, sgroups2.size());
+            Assertions.assertEquals(0, sgroups2.get(0).getParents().size());
+            List<Sgroup> orgSgroups = mol.getProperty(CDKConstants.CTAB_SGROUPS);
+            assertThat(orgSgroups.size(), is(3));
+            assertNonEmptySgrpParent(orgSgroups);
+        }
+    }
+
+    // check at least one of the sgroups has a non-empty parent
+    private void assertNonEmptySgrpParent(List<Sgroup> orgSgroups) {
+        boolean found = false;
+        for (Sgroup orgSgroup : orgSgroups) {
+            if (!orgSgroup.getParents().isEmpty())
+                found = true;
+        }
+        Assertions.assertTrue(found);
+    }
+
+    static void assertSplit(String smi,
+                            boolean strict,
+                            String... expected) throws CDKException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        List<String> actual = new ArrayList<>();
+        IAtomContainer mol = smi.contains(">") ? ReactionManipulator.toMolecule(smipar.parseReactionSmiles(smi)) : smipar.parseSmiles(smi);
+        for (IAtomContainer part : ConnectivityChecker.partitionIntoMolecules(mol, strict, strict)) {
+            actual.add(smigen.create(part));
+        }
+        Assertions.assertEquals(Arrays.asList(expected), actual);
+    }
+
+    static void assertStrictSplit(String smi,
+                                  String... expected) throws CDKException {
+        assertSplit(smi, true, expected);
+    }
+
+    static void assertNonStrictSplit(String smi,
+                                  String... expected) throws CDKException {
+        assertSplit(smi, false, expected);
+    }
+
+    @Test
+    public void strictSplittingMulticenterBonds() throws CDKException {
+        assertStrictSplit("c1ccccc1.*Cl |m:6:0.1.2.3.4.5|",
+                    "c1ccccc1", "*Cl");
+        assertStrictSplit("c1ccccc1.*Cl.n1ccccc1.*Br |m:6:0.1.2.3.4.5,14:8.9.10.11.12.13|",
+                    "c1ccccc1", "*Cl", "n1ccccc1", "*Br");
+    }
+
+    @Test
+    public void nonStrictSplittingMulticenterBonds() throws CDKException {
+        assertNonStrictSplit("c1ccccc1.*Cl |m:6:0.1.2.3.4.5|",
+                             "c1ccccc1.*Cl |m:6:0.1.2.3.4.5|");
+        assertNonStrictSplit("c1ccccc1.*Cl.n1ccccc1.*Br |m:6:0.1.2.3.4.5,14:8.9.10.11.12.13|",
+                             "c1ccccc1.*Cl |m:6:0.1.2.3.4.5|", "n1ccccc1.*Br |m:6:0.1.2.3.4.5|");
+    }
+
+    @Test
+    public void strictSplittingComponentGrouping() throws CDKException {
+        assertStrictSplit("c1ccccc1[O-].[Na+]>> |f:0.1|",
+                    "c1ccccc1[O-]", "[Na+]");
+        assertStrictSplit("c1ccccc1[O-].[Na+]>[K+].[K+].[O-]C(=O)[O-]> |f:0.1,2.3.4|",
+                    "c1ccccc1[O-]", "[Na+]", "[K+]", "[K+]", "[O-]C(=O)[O-]");
+    }
+
+    @Test
+    public void nonStrictSplittingComponentGrouping() throws CDKException {
+        assertNonStrictSplit("c1ccccc1[O-].[Na+]>> |f:0.1|",
+                             "c1ccccc1[O-].[Na+]");
+        assertNonStrictSplit("c1ccccc1[O-].[Na+]>[K+].[K+].[O-]C(=O)[O-]> |f:0.1,2.3.4|",
+                             "c1ccccc1[O-].[Na+]", "[K+].[K+].[O-]C(=O)[O-]");
+    }
 }

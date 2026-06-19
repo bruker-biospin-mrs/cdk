@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.bond;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -28,37 +28,36 @@ import org.openscience.cdk.qsar.result.DoubleResult;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
- * @cdk.module test-qsarbond
  */
-public class AtomicNumberDifferenceDescriptorTest extends BondDescriptorTest {
+class AtomicNumberDifferenceDescriptorTest extends BondDescriptorTest {
 
     /**
      *  Constructor for the MassNumberDifferenceDescriptorTest object
      *
      */
-    public AtomicNumberDifferenceDescriptorTest() {
+    AtomicNumberDifferenceDescriptorTest() {
 
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(AtomicNumberDifferenceDescriptor.class);
     }
 
     @Test
-    public void testDescriptor1() throws InvalidSmilesException {
+    void testDescriptor1() throws InvalidSmilesException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol1 = sp.parseSmiles("CC");
         double value = ((DoubleResult) descriptor.calculate(mol1.getBond(0), mol1).getValue()).doubleValue();
-        Assert.assertEquals(0, value, 0.0000);
+        Assertions.assertEquals(0, value, 0.0000);
     }
 
     @Test
-    public void testDescriptor2() throws InvalidSmilesException {
+    void testDescriptor2() throws InvalidSmilesException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol1 = sp.parseSmiles("CO");
         double value = ((DoubleResult) descriptor.calculate(mol1.getBond(0), mol1).getValue()).doubleValue();
-        Assert.assertEquals(2, value, 0.0000);
+        Assertions.assertEquals(2, value, 0.0000);
     }
 
 }

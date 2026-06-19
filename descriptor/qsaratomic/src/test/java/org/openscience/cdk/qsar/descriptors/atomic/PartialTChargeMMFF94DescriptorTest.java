@@ -18,15 +18,14 @@
  */
 package org.openscience.cdk.qsar.descriptors.atomic;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * See tests in MmffTest.
  *
- * @cdk.module test-qsaratomic
  * @cdk.bug 1627763
  */
-public class PartialTChargeMMFF94DescriptorTest extends AtomicDescriptorTest {
+class PartialTChargeMMFF94DescriptorTest extends AtomicDescriptorTest {
 
     /**
      * Constructor for the PartialTChargeMMFF94DescriptorTest object
@@ -36,10 +35,10 @@ public class PartialTChargeMMFF94DescriptorTest extends AtomicDescriptorTest {
      * 10.1002/(SICI)1096-987X(199604)17:5/6<520::AID-JCC2>3.0.CO;2-W
      *
      */
-    public PartialTChargeMMFF94DescriptorTest() {}
+    PartialTChargeMMFF94DescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(PartialTChargeMMFF94Descriptor.class);
     }
 }

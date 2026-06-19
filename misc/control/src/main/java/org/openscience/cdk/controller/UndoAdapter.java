@@ -29,12 +29,10 @@ import javax.swing.undo.UndoableEdit;
  * undoSupport which is receiving the undo/redo events.
  *
  * @author      tohel
- * @cdk.module  control
- * @cdk.githash
  */
 public class UndoAdapter implements UndoableEditListener {
 
-    private UndoManager undoManager;
+    private final UndoManager undoManager;
 
     /**
      * @param undoManager

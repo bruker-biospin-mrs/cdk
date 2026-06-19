@@ -24,8 +24,6 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import java.util.Objects;
 
 /**
- * @cdk.module  isomorphism
- * @cdk.githash
  */
 public class SymbolChargeIDQueryAtom extends QueryAtom implements IQueryAtom {
 
@@ -45,9 +43,9 @@ public class SymbolChargeIDQueryAtom extends QueryAtom implements IQueryAtom {
 
     @Override
     public boolean matches(IAtom atom) {
-        return this.getSymbol().equals(atom.getSymbol()) && Objects.equals(this.getFormalCharge(), atom.getFormalCharge())
+        return this.getAtomicNumber().equals(atom.getAtomicNumber()) && Objects.equals(this.getFormalCharge(), atom.getFormalCharge())
                && this.getID().equals(atom.getID());
-    };
+    }
 
     @Override
     public String toString() {

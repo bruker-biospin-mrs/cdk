@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.atomic;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.IAtomicDescriptor;
@@ -32,24 +32,23 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsaratomic
  */
-public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
+class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
 
-    IPAtomicHOSEDescriptor  descriptor;
-    private SmilesParser    sp      = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-    LonePairElectronChecker lpcheck = new LonePairElectronChecker();
+    private final IPAtomicHOSEDescriptor  descriptor;
+    private final SmilesParser    sp      = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+    private final LonePairElectronChecker lpcheck = new LonePairElectronChecker();
 
     /**
      *  Constructor for the IPAtomicHOSEDescriptorTest object
      *
      */
-    public IPAtomicHOSEDescriptorTest() {
+    IPAtomicHOSEDescriptorTest() {
         descriptor = new IPAtomicHOSEDescriptor();
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(IPAtomicHOSEDescriptor.class);
     }
 
@@ -57,9 +56,9 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
      *  A unit test for JUnit
      */
     @Test
-    public void testIPAtomicHOSEDescriptor() throws Exception {
+    void testIPAtomicHOSEDescriptor() throws Exception {
         IAtomicDescriptor descriptor = new IPAtomicHOSEDescriptor();
-        Assert.assertNotNull(descriptor);
+        Assertions.assertNotNull(descriptor);
     }
 
     /**
@@ -68,7 +67,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
      *  @cdk.inchi InChI=1/C3H7Cl/c1-2-3-4/h2-3H2,1H3
      */
     @Test
-    public void testIPDescriptor1() throws Exception {
+    void testIPDescriptor1() throws Exception {
 
         IAtomContainer mol = sp.parseSmiles("CCCCl");
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
@@ -78,7 +77,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol.getAtom(3), mol).getValue()).doubleValue();
         double resultAccordingNIST = 10.8;
 
-        Assert.assertEquals(resultAccordingNIST, result, 0.00001);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.00001);
     }
 
     /**
@@ -87,7 +86,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
      *  @cdk.inchi InChI=1/C3H7Cl/c1-3(2)4/h3H,1-2H3
      */
     @Test
-    public void testIPDescriptor2() throws Exception {
+    void testIPDescriptor2() throws Exception {
 
         IAtomContainer mol = sp.parseSmiles("CC(CC)Cl"); // not in db
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
@@ -97,7 +96,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol.getAtom(4), mol).getValue()).doubleValue();
         double resultAccordingNIST = 10.57; //value for CC(C)Cl
 
-        Assert.assertEquals(resultAccordingNIST, result, 0.00001);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.00001);
     }
 
     /**
@@ -106,7 +105,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
      *  @cdk.inchi InChI=1/C3H5Cl/c1-2-3-4/h2H,1,3H2
      */
     @Test
-    public void testNotDB() throws Exception {
+    void testNotDB() throws Exception {
 
         IAtomContainer mol = sp.parseSmiles("C=CCCl"); // not in db
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
@@ -116,7 +115,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol.getAtom(3), mol).getValue()).doubleValue();
         double resultAccordingNIST = 10.8; //value for CCCCl aprox.
 
-        Assert.assertEquals(resultAccordingNIST, result, 0.00001);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.00001);
     }
 
     /**
@@ -125,7 +124,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
      *  @cdk.inchi InChI=1/CH3F/c1-2/h1H3
      */
     @Test
-    public void testIPDescriptor_1() throws Exception {
+    void testIPDescriptor_1() throws Exception {
 
         IAtomContainer mol = sp.parseSmiles("C-Cl");
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
@@ -135,7 +134,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol.getAtom(1), mol).getValue()).doubleValue();
         double resultAccordingNIST = 11.26;
 
-        Assert.assertEquals(resultAccordingNIST, result, 0.42);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.42);
     }
 
     /**
@@ -143,7 +142,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
      *
      */
     @Test
-    public void testIPDescriptor_2() throws Exception {
+    void testIPDescriptor_2() throws Exception {
 
         IAtomContainer mol = sp.parseSmiles("C-C-Br");
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
@@ -153,7 +152,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol.getAtom(2), mol).getValue()).doubleValue();
         double resultAccordingNIST = 11.29;
 
-        Assert.assertEquals(resultAccordingNIST, result, 1.95);
+        Assertions.assertEquals(resultAccordingNIST, result, 1.95);
     }
 
     /**
@@ -161,7 +160,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
      *
      */
     @Test
-    public void testIPDescriptor_3() throws Exception {
+    void testIPDescriptor_3() throws Exception {
 
         IAtomContainer mol = sp.parseSmiles("C-C-C-I");
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
@@ -171,7 +170,7 @@ public class IPAtomicHOSEDescriptorTest extends AtomicDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol.getAtom(3), mol).getValue()).doubleValue();
         double resultAccordingNIST = 9.27;
 
-        Assert.assertEquals(resultAccordingNIST, result, 0.02);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.02);
     }
     //    /**
     //	 *  A unit test for JUnit with C-C-O

@@ -24,20 +24,9 @@ package org.openscience.cdk.tools.manipulator;
 
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.ReactionRole;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IAtomContainerSet;
-import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
-import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
-import org.openscience.cdk.interfaces.IElectronContainer;
-import org.openscience.cdk.interfaces.ILonePair;
-import org.openscience.cdk.interfaces.IMapping;
-import org.openscience.cdk.interfaces.IReaction;
-import org.openscience.cdk.interfaces.ISingleElectron;
-import org.openscience.cdk.interfaces.IStereoElement;
-import org.openscience.cdk.interfaces.ITetrahedralChirality;
+import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.stereo.ExtendedTetrahedral;
 
 import java.util.ArrayList;
@@ -47,102 +36,100 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.ToIntFunction;
 
 /**
- * @cdk.module standard
- * @cdk.githash
+ * Provides a variety of methods to manipulate and convert from/to {@link IReaction}.
  *
  * @see ChemModelManipulator
+ * @author uli-f
  */
 public class ReactionManipulator {
 
+    /**
+     * Returns the total number of atoms for all components of the given <code>reaction</code>.
+     * @param reaction the number of atoms is summed up for all components of this reaction
+     * @return total number of atoms for all {@link IAtomContainer} that are part of this reaction
+     */
     public static int getAtomCount(IReaction reaction) {
-        int count = 0;
-        IAtomContainerSet reactants = reaction.getReactants();
-        for (int i = 0; i < reactants.getAtomContainerCount(); i++) {
-            count += reactants.getAtomContainer(i).getAtomCount();
-        }
-        IAtomContainerSet agents = reaction.getAgents();
-        for (int i = 0; i < agents.getAtomContainerCount(); i++) {
-            count += agents.getAtomContainer(i).getAtomCount();
-        }
-        IAtomContainerSet products = reaction.getProducts();
-        for (int i = 0; i < products.getAtomContainerCount(); i++) {
-            count += products.getAtomContainer(i).getAtomCount();
-        }
-        return count;
+        return getCount(reaction, IAtomContainer::getAtomCount);
     }
 
+    /**
+     * Returns the total number of atoms for all components of the given <code>reaction</code>.
+     * @param reaction the number of atoms is summed up for all components of this reaction
+     * @return total number of atoms for all {@link IAtomContainer} that are part of this reaction
+     */
     public static int getBondCount(IReaction reaction) {
+        return getCount(reaction, IAtomContainer::getBondCount);
+    }
+
+    private static int getCount(IReaction reaction, ToIntFunction<IAtomContainer> chemObjectToIntFunction) {
         int count = 0;
         IAtomContainerSet reactants = reaction.getReactants();
         for (int i = 0; i < reactants.getAtomContainerCount(); i++) {
-            count += reactants.getAtomContainer(i).getBondCount();
+            count += chemObjectToIntFunction.applyAsInt(reactants.getAtomContainer(i));
         }
         IAtomContainerSet agents = reaction.getAgents();
         for (int i = 0; i < agents.getAtomContainerCount(); i++) {
-            count += agents.getAtomContainer(i).getBondCount();
+            count += chemObjectToIntFunction.applyAsInt(agents.getAtomContainer(i));
         }
         IAtomContainerSet products = reaction.getProducts();
         for (int i = 0; i < products.getAtomContainerCount(); i++) {
-            count += products.getAtomContainer(i).getBondCount();
+            count += chemObjectToIntFunction.applyAsInt(products.getAtomContainer(i));
         }
         return count;
     }
 
+    /**
+     * Removes the provided <code>atom</code> and its connected electron containers from the reaction.
+     * @param reaction reaction the atom is removed from
+     * @param atom atom that is removed
+     */
     public static void removeAtomAndConnectedElectronContainers(IReaction reaction, IAtom atom) {
-        IAtomContainerSet reactants = reaction.getReactants();
-        for (int i = 0; i < reactants.getAtomContainerCount(); i++) {
-            IAtomContainer mol = reactants.getAtomContainer(i);
-            if (mol.contains(atom)) {
-                mol.removeAtom(atom);
-            }
-        }
-        IAtomContainerSet agents = reaction.getReactants();
-        for (int i = 0; i < agents.getAtomContainerCount(); i++) {
-            IAtomContainer mol = agents.getAtomContainer(i);
-            if (mol.contains(atom)) {
-                mol.removeAtom(atom);
-            }
-        }
-        IAtomContainerSet products = reaction.getProducts();
-        for (int i = 0; i < products.getAtomContainerCount(); i++) {
-            IAtomContainer mol = products.getAtomContainer(i);
-            if (mol.contains(atom)) {
-                mol.removeAtom(atom);
-            }
-        }
+        removeIChemObject(reaction, atomContainer -> atomContainer.contains(atom), atomContainer -> atomContainer.removeAtom(atom));
     }
 
+    /**
+     * Removes the provided <code>electrons</code> from the reaction.
+     * @param reaction reaction the electron container is removed from
+     * @param electrons electron container that is removed
+     */
     public static void removeElectronContainer(IReaction reaction, IElectronContainer electrons) {
+        removeIChemObject(reaction, atomContainer -> atomContainer.contains(electrons), atomContainer -> atomContainer.removeElectronContainer(electrons));
+    }
+
+    private static void removeIChemObject(IReaction reaction, Predicate<IAtomContainer> containsChemObjectPredicate, Consumer<IAtomContainer> removeChemObjectConsumer) {
         IAtomContainerSet reactants = reaction.getReactants();
         for (int i = 0; i < reactants.getAtomContainerCount(); i++) {
             IAtomContainer mol = reactants.getAtomContainer(i);
-            if (mol.contains(electrons)) {
-                mol.removeElectronContainer(electrons);
+            if (containsChemObjectPredicate.test(mol)) {
+                removeChemObjectConsumer.accept(mol);
             }
         }
         IAtomContainerSet agents = reaction.getReactants();
         for (int i = 0; i < agents.getAtomContainerCount(); i++) {
             IAtomContainer mol = agents.getAtomContainer(i);
-            if (mol.contains(electrons)) {
-                mol.removeElectronContainer(electrons);
+            if (containsChemObjectPredicate.test(mol)) {
+                removeChemObjectConsumer.accept(mol);
             }
         }
         IAtomContainerSet products = reaction.getProducts();
         for (int i = 0; i < products.getAtomContainerCount(); i++) {
             IAtomContainer mol = products.getAtomContainer(i);
-            if (mol.contains(electrons)) {
-                mol.removeElectronContainer(electrons);
+            if (containsChemObjectPredicate.test(mol)) {
+                removeChemObjectConsumer.accept(mol);
             }
         }
     }
 
     /**
-     * Get all molecule of a {@link IReaction}: reactants + products.
+     * Returns all components of an {@link IReaction}, that is, reactants, agents and products.
      *
-     * @param reaction  The IReaction
-     * @return The IAtomContainerSet
+     * @param reaction all components of this reaction are returned
+     * @return IAtomContainerSet containing all components of the reaction provided as an argument
      */
     public static IAtomContainerSet getAllMolecules(IReaction reaction) {
         IAtomContainerSet moleculeSet = reaction.getBuilder().newInstance(IAtomContainerSet.class);
@@ -155,10 +142,10 @@ public class ReactionManipulator {
     }
 
     /**
-     * get all products of a IReaction
+     * Returns all products of an {@link IReaction}.
      *
-     * @param reaction  The IReaction
-     * @return The IAtomContainerSet
+     * @param reaction all products of this reaction are returned
+     * @return IAtomContainerSet containing all products of the reaction provided as an argument
      */
     public static IAtomContainerSet getAllProducts(IReaction reaction) {
         IAtomContainerSet moleculeSet = reaction.getBuilder().newInstance(IAtomContainerSet.class);
@@ -170,10 +157,10 @@ public class ReactionManipulator {
     }
 
     /**
-     * get all reactants of a IReaction
+     * Returns all reactants of an {@link IReaction}.
      *
-     * @param reaction  The IReaction
-     * @return The IAtomContainerSet
+     * @param reaction all reactants of this reaction are returned
+     * @return IAtomContainerSet containing all reactants of the reaction provided as an argument
      */
     public static IAtomContainerSet getAllReactants(IReaction reaction) {
         IAtomContainerSet moleculeSet = reaction.getBuilder().newInstance(IAtomContainerSet.class);
@@ -184,6 +171,12 @@ public class ReactionManipulator {
         return moleculeSet;
     }
 
+    /**
+     * Returns all agents of an {@link IReaction}.
+     *
+     * @param reaction all agents of this reaction are returned
+     * @return IAtomContainerSet containing all agents of the reaction provided as an argument
+     */
     public static IAtomContainerSet getAllAgents(IReaction reaction) {
         IAtomContainerSet moleculeSet = reaction.getBuilder().newInstance(IAtomContainerSet.class);
         IAtomContainerSet agents = reaction.getAgents();
@@ -194,44 +187,48 @@ public class ReactionManipulator {
     }
 
     /**
-     * Returns a new Reaction object which is the reverse of the given
-     * Reaction.
+     * Returns a new {@link IReaction} which is the reverse of the given reaction.
+     * The {@link IAtomContainer}s of the reversed reaction that is returned are
+     * the same that are part of the <code>reaction</code> provided as an argument.
      * @param reaction the reaction being considered
      * @return the reverse reaction
      */
     public static IReaction reverse(IReaction reaction) {
-        IReaction reversedReaction = reaction.getBuilder().newInstance(IReaction.class);
-        if (reaction.getDirection() == IReaction.Direction.BIDIRECTIONAL) {
-            reversedReaction.setDirection(IReaction.Direction.BIDIRECTIONAL);
-        } else if (reaction.getDirection() == IReaction.Direction.FORWARD) {
-            reversedReaction.setDirection(IReaction.Direction.BACKWARD);
-        } else if (reaction.getDirection() == IReaction.Direction.BACKWARD) {
-            reversedReaction.setDirection(IReaction.Direction.FORWARD);
+        IReaction reversedReaction = reaction.getBuilder().newReaction();
+
+        switch(reaction.getDirection()) {
+            case BIDIRECTIONAL: reversedReaction.setDirection(IReaction.Direction.BIDIRECTIONAL);
+            case FORWARD: reversedReaction.setDirection(IReaction.Direction.BACKWARD);
+            case BACKWARD: reversedReaction.setDirection(IReaction.Direction.FORWARD);
         }
+
         IAtomContainerSet reactants = reaction.getReactants();
         for (int i = 0; i < reactants.getAtomContainerCount(); i++) {
             double coefficient = reaction.getReactantCoefficient(reactants.getAtomContainer(i));
             reversedReaction.addProduct(reactants.getAtomContainer(i), coefficient);
         }
         IAtomContainerSet products = reaction.getProducts();
+
         for (int i = 0; i < products.getAtomContainerCount(); i++) {
             double coefficient = reaction.getProductCoefficient(products.getAtomContainer(i));
             reversedReaction.addReactant(products.getAtomContainer(i), coefficient);
         }
+
         return reversedReaction;
     }
 
     /**
-     * Returns all the AtomContainer's of a Reaction.
-     * @param reaction The reaction being considered
-     * @return a list of the IAtomContainer objects comprising the reaction
+     * Returns all {@link IAtomContainer IAtomContainers} of the given reaction.
+     *
+     * @param reaction the reaction whose <code>IAtomContainers</code> are returned
+     * @return list of <code>IAtomContainers</code> comprising the reaction
      */
     public static List<IAtomContainer> getAllAtomContainers(IReaction reaction) {
         return MoleculeSetManipulator.getAllAtomContainers(getAllMolecules(reaction));
     }
 
     public static List<String> getAllIDs(IReaction reaction) {
-        List<String> idList = new ArrayList<String>();
+        List<String> idList = new ArrayList<>();
         if (reaction.getID() != null) idList.add(reaction.getID());
         IAtomContainerSet reactants = reaction.getReactants();
         for (int i = 0; i < reactants.getAtomContainerCount(); i++) {
@@ -274,7 +271,7 @@ public class ReactionManipulator {
     }
 
     public static List<IChemObject> getAllChemObjects(IReaction reaction) {
-        ArrayList<IChemObject> list = new ArrayList<IChemObject>();
+        ArrayList<IChemObject> list = new ArrayList<>();
         list.add(reaction);
         IAtomContainerSet reactants = reaction.getReactants();
         for (int i = 0; i < reactants.getAtomContainerCount(); i++) {
@@ -288,17 +285,18 @@ public class ReactionManipulator {
     }
 
     /**
-     * get the IAtom which is mapped
+     * Returns the {@link IAtom} that is mapped.
      *
-     * @param reaction   The IReaction which contains the mapping
-     * @param chemObject The IChemObject which will be searched its mapped IChemObject
-     * @return           The mapped IChemObject
+     * @param reaction   reaction that contains the mapping
+     * @param chemObject IChemObject which will be searched for the mapped IChemObject
+     * @return           mapped IChemObject
      */
     public static IChemObject getMappedChemObject(IReaction reaction, IChemObject chemObject) {
         for (IMapping mapping : reaction.mappings()) {
             if (mapping.getChemObject(0).equals(chemObject)) {
                 return mapping.getChemObject(1);
-            } else if (mapping.getChemObject(1).equals(chemObject)) return mapping.getChemObject(0);
+            } else if (mapping.getChemObject(1).equals(chemObject))
+                return mapping.getChemObject(0);
         }
         return null;
     }
@@ -306,9 +304,9 @@ public class ReactionManipulator {
     /**
      * Assigns a reaction role and group id to all atoms in a molecule.
      *
-     * @param mol molecule
+     * @param mol the molecule whose atoms are assigned to a role and a group id.
      * @param role role to assign
-     * @param grpId group id
+     * @param grpId group id to assign
      */
     private static void assignRoleAndGrp(IAtomContainer mol, ReactionRole role, int grpId) {
         for (IAtom atom : mol.atoms()) {
@@ -318,10 +316,13 @@ public class ReactionManipulator {
     }
 
     /**
-     * <p>Converts a reaction to an 'inlined' reaction stored as a molecule. All
-     * reactants, agents, products are added to the molecule as disconnected
+     * Converts a reaction to an 'inlined' reaction stored as a molecule.
+     *
+     * <p>
+     * All reactants, agents, products are added to the molecule as disconnected
      * components with atoms flagged as to their role {@link ReactionRole} and
-     * component group.</p>
+     * component group.
+     * </p>
      * <p>
      * The inlined reaction, stored in a molecule can be converted back to an explicit
      * reaction with {@link #toReaction}. Data stored on the individual components (e.g.
@@ -356,7 +357,7 @@ public class ReactionManipulator {
     }
 
     /**
-     * <p>Converts an 'inlined' reaction stored in a molecule back to a reaction.</p>
+     * Converts an 'inlined' reaction stored in a molecule back to a reaction.
      *
      * @param mol molecule to convert
      * @return reaction
@@ -472,8 +473,8 @@ public class ReactionManipulator {
     }
 
     /**
-     * Collect the set of bonds that mapped in both a reactant and a product. The method uses
-     * the {@link CDKConstants#ATOM_ATOM_MAPPING} property of atoms.
+     * Collect the set of bonds that mapped in both a reactant and a product.
+     * The method uses the {@link CDKConstants#ATOM_ATOM_MAPPING} property of atoms.
      *
      * @param reaction reaction
      * @return mapped bonds
@@ -481,14 +482,20 @@ public class ReactionManipulator {
     public static Set<IBond> findMappedBonds(IReaction reaction) {
         Set<IBond> mapped = new HashSet<>();
 
+        List<IAtomContainer> leftSide = new ArrayList<>();
+        for (IAtomContainer mol : reaction.getReactants())
+            leftSide.add(mol);
+        for (IAtomContainer mol : reaction.getAgents())
+            leftSide.add(mol);
+
         // first we collect the occurrance of mapped bonds from reacants then products
         Set<IntTuple> mappedReactantBonds = new HashSet<>();
         Set<IntTuple> mappedProductBonds  = new HashSet<>();
-        for (IAtomContainer reactant : reaction.getReactants().atomContainers()) {
+        for (IAtomContainer reactant : leftSide) {
             for (IBond bond : reactant.bonds()) {
-                Integer begidx = bond.getBegin().getProperty(CDKConstants.ATOM_ATOM_MAPPING);
-                Integer endidx = bond.getEnd().getProperty(CDKConstants.ATOM_ATOM_MAPPING);
-                if (begidx != null && endidx != null)
+                int begidx = bond.getBegin().getMapIdx();
+                int endidx = bond.getEnd().getMapIdx();
+                if (begidx != 0 && endidx != 0)
                     mappedReactantBonds.add(new IntTuple(begidx, endidx));
             }
         }
@@ -496,11 +503,11 @@ public class ReactionManipulator {
         if (mappedReactantBonds.isEmpty())
             return Collections.emptySet();
 
-        for (IAtomContainer product : reaction.getProducts().atomContainers()) {
+        for (IAtomContainer product : reaction.getProducts()) {
             for (IBond bond : product.bonds()) {
-                Integer begidx = bond.getBegin().getProperty(CDKConstants.ATOM_ATOM_MAPPING);
-                Integer endidx = bond.getEnd().getProperty(CDKConstants.ATOM_ATOM_MAPPING);
-                if (begidx != null && endidx != null)
+                int begidx = bond.getBegin().getMapIdx();
+                int endidx = bond.getEnd().getMapIdx();
+                if (begidx != 0 && endidx != 0)
                     mappedProductBonds.add(new IntTuple(begidx, endidx));
             }
         }
@@ -509,22 +516,94 @@ public class ReactionManipulator {
             return Collections.emptySet();
 
         // repeat above but now store any that are different or unmapped as being mapped
-        for (IAtomContainer reactant : reaction.getReactants().atomContainers()) {
+        for (IAtomContainer reactant : leftSide) {
             for (IBond bond : reactant.bonds()) {
-                Integer begidx = bond.getBegin().getProperty(CDKConstants.ATOM_ATOM_MAPPING);
-                Integer endidx = bond.getEnd().getProperty(CDKConstants.ATOM_ATOM_MAPPING);
-                if (begidx != null && endidx != null && mappedProductBonds.contains(new IntTuple(begidx, endidx)))
+                int begidx = bond.getBegin().getMapIdx();
+                int endidx = bond.getEnd().getMapIdx();
+                if (begidx != 0 && endidx != 0 && mappedProductBonds.contains(new IntTuple(begidx, endidx)))
                     mapped.add(bond);
             }
         }
-        for (IAtomContainer product : reaction.getProducts().atomContainers()) {
+        for (IAtomContainer product : reaction.getProducts()) {
             for (IBond bond : product.bonds()) {
-                Integer begidx = bond.getBegin().getProperty(CDKConstants.ATOM_ATOM_MAPPING);
-                Integer endidx = bond.getEnd().getProperty(CDKConstants.ATOM_ATOM_MAPPING);
-                if (begidx != null && endidx != null && mappedReactantBonds.contains(new IntTuple(begidx, endidx)))
+                int begidx = bond.getBegin().getMapIdx();
+                int endidx = bond.getEnd().getMapIdx();
+                if (begidx != 0 && endidx != 0 && mappedReactantBonds.contains(new IntTuple(begidx, endidx)))
                     mapped.add(bond);
             }
         }
         return mapped;
     }
+
+    /**
+     * Convenience method to perceive atom types for all {@link IAtom IAtoms} of all components of the provided {@link IReaction}.
+     * This method uses the {@link CDKAtomTypeMatcher}. If the
+     * matcher finds a matching atom type, the <code>IAtom</code> will be configured
+     * to have the same properties as the <code>IAtomType</code>. If no matching atom
+     * type is found, no configuration is performed.
+     * <br>
+     * <b>This method overwrites existing values.</b>
+     *
+     * @param reaction the reaction whose atom types are to be perceived
+     * @throws CDKException thrown if an error is encountered when finding matching atom types
+     * @see AtomTypeManipulator#configure(IAtom, IAtomType)
+     */
+    public static void perceiveAtomTypesAndConfigureAtoms(IReaction reaction) throws CDKException {
+        if (reaction == null) {
+            return;
+        }
+
+        for (IAtomContainer atomContainer: getAllMolecules(reaction).atomContainers()) {
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(atomContainer);
+        }
+    }
+
+    /**
+     * Convenience method to perceive atom types for all {@link IAtom IAtoms} of all components of the provided {@link IReaction}.
+     * This method uses the {@link CDKAtomTypeMatcher}. If the
+     * matcher finds a matching atom type, the <code>IAtom</code> will be configured
+     * to have the same properties as the <code>IAtomType</code>. If no matching atom
+     * type is found, no configuration is performed.
+     * <br>
+     * <b>This method only sets <code>null</code> values.</b>
+     *
+     * @param reaction the reaction whose atom types are to be perceived
+     * @throws CDKException thrown if an error is encountered when finding matching atom types
+     * @see AtomTypeManipulator#configureUnsetProperties(IAtom, IAtomType)
+     */
+    public static void perceiveAtomTypesAndConfigureUnsetProperties(IReaction reaction) throws CDKException {
+        if (reaction == null) {
+            return;
+        }
+
+        for (IAtomContainer atomContainer: getAllMolecules(reaction).atomContainers()) {
+            AtomContainerManipulator.percieveAtomTypesAndConfigureUnsetProperties(atomContainer);
+        }
+    }
+
+    /**
+     * This method will reset all atom properties related to atom configuration to the value {@link CDKConstants#UNSET}.
+     * <br>
+     * This method reverses most of the effects of
+     * {@link #perceiveAtomTypesAndConfigureAtoms(org.openscience.cdk.interfaces.IReaction)}
+     * and after a call to this method all atoms will be "unconfigured".
+     * <br>
+     * Note that this method is not a complete reversal of {@link #perceiveAtomTypesAndConfigureAtoms(org.openscience.cdk.interfaces.IReaction)}
+     * since the atomic symbol of the atoms remain unchanged. Also, all flags that were set
+     * by the configuration method (such as {@link org.openscience.cdk.interfaces.IChemObject#HYDROGEN_BOND_ACCEPTOR} or
+     * {@link org.openscience.cdk.interfaces.IChemObject#AROMATIC}) will be set to False.
+     *
+     * @param reaction the reaction whose atoms confiuration properties are to be cleared
+     * @see #perceiveAtomTypesAndConfigureAtoms(org.openscience.cdk.interfaces.IReaction)
+     */
+    public static void clearAtomConfigurations(IReaction reaction) {
+        if (reaction == null) {
+            return;
+        }
+
+        for (IAtomContainer atomContainer: ReactionManipulator.getAllMolecules(reaction).atomContainers()) {
+            AtomContainerManipulator.clearAtomConfigurations(atomContainer);
+        }
+    }
+
 }

@@ -32,8 +32,6 @@ import org.openscience.cdk.io.setting.IOSetting;
  * Abstract class that {@link IRandomAccessChemObjectReader}'s can implement to
  * have it take care of basic stuff, like managing the ReaderListeners.
  *
- * @cdk.module  io
- * @cdk.githash
  */
 public abstract class DefaultRandomAccessChemObjectReader implements IRandomAccessChemObjectReader<IChemObject> {
 
@@ -42,7 +40,7 @@ public abstract class DefaultRandomAccessChemObjectReader implements IRandomAcce
     /**
      * Holder of reader event listeners.
      */
-    private List<IChemObjectIOListener> listenerList = new ArrayList<IChemObjectIOListener>();
+    private final List<IChemObjectIOListener> listenerList = new ArrayList<>();
 
     public void addChemObjectIOListener(IChemObjectIOListener listener) {
         listenerList.add(listener);
@@ -55,8 +53,7 @@ public abstract class DefaultRandomAccessChemObjectReader implements IRandomAcce
     /* Extra convenience methods */
 
     protected void fireIOSettingQuestion(IOSetting setting) {
-        for (int i = 0; i < listenerList.size(); ++i) {
-            IChemObjectIOListener listener = listenerList.get(i);
+        for (IChemObjectIOListener listener : listenerList) {
             listener.processIOSettingQuestion(setting);
         }
     }

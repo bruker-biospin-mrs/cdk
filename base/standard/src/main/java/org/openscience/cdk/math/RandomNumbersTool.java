@@ -30,8 +30,6 @@ import java.util.Random;
  * This class isn't supposed to be instantiated. You should use it by calling
  * its static methods.
  *
- * @cdk.module standard
- * @cdk.githash
  */
 public class RandomNumbersTool extends Random {
 
@@ -104,7 +102,7 @@ public class RandomNumbersTool extends Random {
      * @return a random integer between <code>lo</code> and <code>hi</code>.
      */
     public static int randomInt(int lo, int hi) {
-        return (Math.abs(random.nextInt()) % (hi - lo + 1)) + lo;
+        return lo + random.nextInt(1+hi-lo);
     }
 
     /**

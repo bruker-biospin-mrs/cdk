@@ -23,6 +23,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObject;
@@ -31,13 +34,9 @@ import org.openscience.cdk.io.formats.CDKOWLFormat;
 import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.libio.jena.Convertor;
 
-import com.hp.hpl.jena.rdf.model.Model;
-
 /**
  * Serializes the data model into CDK OWL.
  *
- * @cdk.module iordf
- * @cdk.githash
  */
 public class CDKOWLWriter extends DefaultChemObjectWriter {
 
@@ -92,8 +91,8 @@ public class CDKOWLWriter extends DefaultChemObjectWriter {
     public boolean accepts(Class<? extends IChemObject> classObject) {
         if (IAtomContainer.class.equals(classObject)) return true;
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (IAtomContainer.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (IAtomContainer.class.equals(anInterface)) return true;
         }
         Class superClass = classObject.getSuperclass();
         if (superClass != null) return this.accepts(superClass);
@@ -107,7 +106,7 @@ public class CDKOWLWriter extends DefaultChemObjectWriter {
             try {
                 writeMolecule((IAtomContainer) object);
             } catch (Exception ex) {
-                throw new CDKException("Error while writing HIN file: " + ex.getMessage(), ex);
+            	throw new CDKException("Error while writing CDK OWL file: " + ex.getMessage(), ex);
             }
         } else {
             throw new CDKException("CDKOWLWriter only supports output of IAtomContainer classes.");
@@ -116,7 +115,7 @@ public class CDKOWLWriter extends DefaultChemObjectWriter {
 
     private void writeMolecule(IAtomContainer mol) {
         Model model = Convertor.molecule2Model(mol);
-        model.write(output, "N3");
+        RDFDataMgr.write(output, model, Lang.RDFXML);
     }
 
 }

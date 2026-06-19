@@ -27,8 +27,6 @@ import java.util.Comparator;
 import org.openscience.cdk.interfaces.IRing;
 
 /**
- * @cdk.module standard
- * @cdk.githash
  */
 public class RingSizeComparator implements Comparator<IRing> {
 
@@ -37,7 +35,7 @@ public class RingSizeComparator implements Comparator<IRing> {
     /** Flag to denote that the set is order with the smallest ring first */
     public final static int SMALL_FIRST = 2;
 
-    int                     sortOrder   = SMALL_FIRST;
+    int                     sortOrder;
 
     /**
     * Constructs a new comparator to sort rings by size.

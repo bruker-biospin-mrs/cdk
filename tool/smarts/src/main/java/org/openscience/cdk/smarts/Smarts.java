@@ -37,16 +37,22 @@ import org.openscience.cdk.isomorphism.matchers.Expr;
 import org.openscience.cdk.isomorphism.matchers.QueryAtom;
 import org.openscience.cdk.isomorphism.matchers.QueryAtomContainer;
 import org.openscience.cdk.isomorphism.matchers.QueryBond;
+import org.openscience.cdk.sgroup.Sgroup;
+import org.openscience.cdk.sgroup.SgroupType;
 import org.openscience.cdk.stereo.DoubleBondStereochemistry;
+import org.openscience.cdk.stereo.Octahedral;
+import org.openscience.cdk.stereo.SquarePlanar;
 import org.openscience.cdk.stereo.TetrahedralChirality;
+import org.openscience.cdk.stereo.TrigonalBipyramidal;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
+import javax.vecmath.Point2d;
+import javax.vecmath.Point3d;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -95,6 +101,22 @@ import static org.openscience.cdk.isomorphism.matchers.Expr.Type.*;
  *         group 8</li>
  * </ul>
  * <br>
+ * In threaded environments error handling can be improved by using the
+ * {@link org.openscience.cdk.smarts.SmartsResult} return type. Other wise the
+ * error message is set on a shared variable which is access via
+ * {@link #getLastErrorMesg()}.
+ * <pre>
+ * {@code
+ * IAtomContainer mol = ...;
+ * SmartsResult res = Smarts.parseToResult(mol, "[aD3]a-a([aD3])[aD3]");
+ * if (res.ok()) {
+ *     String smarts = Smarts.generate(mol);
+ * } else {
+ *     System.err.println(res.getMessage());
+ * }
+ * }
+ * </pre>
+ * <br>
  * In addition to the flavors above CACTVS toolkit style ranges are supported.
  * For example <code>[D{2-4}]</code> means degree 2, 3, or 4. On writing such
  * ranges are converted to <code>[D2,D3,D4]</code>.
@@ -134,9 +156,9 @@ public final class Smarts {
 
 
     private static final class SmartsError {
-        private String str;
-        private int    pos;
-        private String mesg;
+        private final String str;
+        private final int    pos;
+        private final String mesg;
 
         public SmartsError(String str, int pos, String mesg) {
             this.str = str;
@@ -145,20 +167,22 @@ public final class Smarts {
         }
     }
 
-    public static ThreadLocal<SmartsError> lastError = new ThreadLocal<>();
+    private static SmartsError lastError = null;
 
     private static void setErrorMesg(String sma, int pos, String str) {
-        lastError.set(new SmartsError(sma, pos, str));
+        lastError = new SmartsError(sma, pos, str);
     }
 
     /**
      * Access the error message from previously parsed SMARTS (when
-     * {@link #parse}=false).
+     * {@link #parse}=false). <br>
+     * Note: This is not thread-safe, in threaded environments use
+     * {@link #parseToResult}
      *
      * @return the error message, or null if none
      */
     public static String getLastErrorMesg() {
-        SmartsError error = lastError.get();
+        SmartsError error = lastError;
         if (error != null)
             return error.mesg;
         return null;
@@ -166,12 +190,14 @@ public final class Smarts {
 
     /**
      * Access a display of the error position from previously parsed SMARTS
-     * (when {@link #parse}=false)
+     * (when {@link #parse}=false). <br>
+     * Note: This is not thread-safe, in threaded environments use
+     * {@link #parseToResult}.
      *
      * @return the error message, or null if none
      */
     public static String getLastErrorLocation() {
-        SmartsError error = lastError.get();
+        SmartsError error = lastError;
         if (error != null) {
             StringBuilder sb = new StringBuilder();
             sb.append(error.str);
@@ -187,8 +213,8 @@ public final class Smarts {
     }
 
     private static final class LocalNbrs {
-        List<IBond> bonds = new ArrayList<>(4);
-        boolean     isFirst;
+        final List<IBond> bonds = new ArrayList<>(4);
+        final boolean     isFirst;
 
         LocalNbrs(boolean first) {
             this.isFirst = first;
@@ -197,18 +223,21 @@ public final class Smarts {
 
     private static final class Parser {
         public  String         error;
-        private String         str;
-        private IAtomContainer mol;
-        private int            flav;
+        private final String         str;
+        private final IAtomContainer mol;
+        private final int            flav;
         private int            pos;
 
         private IAtom     prev;
         private QueryBond bond;
-        private Deque<IAtom>            stack   = new ArrayDeque<>();
-        private IBond                   rings[] = new IBond[100];
-        private Map<IAtom, LocalNbrs>   local   = new HashMap<>();
-        private Set<IAtom>              astereo = new HashSet<>();
-        private Set<IBond>              bstereo = new HashSet<>();
+        private final Deque<IAtom>            stack   = new ArrayDeque<>();
+        private final IBond[] rings = new IBond[100];
+        private final Map<IAtom, LocalNbrs>   local   = new HashMap<>();
+        private final Set<IAtom>              astereo = new HashSet<>();
+        private final Set<IBond>              bstereo = new HashSet<>();
+        private int[]                         aoffset = new int[32];
+        private int[]                         boffset = new int[32];
+        private int bondPos;
         private int numRingOpens;
         private ReactionRole role = ReactionRole.None;
         private int numComponents;
@@ -282,8 +311,9 @@ public final class Smarts {
             if (peek() == ':') {
                 next();
                 int num = nextUnsignedInt();
-                if (num < 0) {
+                if (num <= 0) {
                     pos = mark;
+                    error = "map idx should >0";
                     return false;
                 }
                 atom.setProperty(CDKConstants.ATOM_ATOM_MAPPING, num);
@@ -319,6 +349,45 @@ public final class Smarts {
             for (int i = lo + 1; i <= hi; i++)
                 expr.or(new Expr(type, i));
             return next() == '}';
+        }
+
+        private boolean parseGt(Expr expr) {
+            if (next() != '>')
+                return false;
+            int lo = nextUnsignedInt();
+            Expr.Type type = expr.type();
+
+            // adjusted types
+            switch (type) {
+                case HAS_IMPLICIT_HYDROGEN:
+                    type = IMPL_H_COUNT;
+                    break;
+            }
+
+            expr.setPrimitive(type, 0);
+            expr.negate();
+            for (int i = 1; i <= lo; i++)
+                expr.and(new Expr(type, i).negate());
+            return true;
+        }
+
+        private boolean parseLt(Expr expr) {
+            if (next() != '<')
+                return false;
+            int lo = nextUnsignedInt();
+            Expr.Type type = expr.type();
+
+            // adjusted types
+            switch (type) {
+                case HAS_IMPLICIT_HYDROGEN:
+                    type = IMPL_H_COUNT;
+                    break;
+            }
+
+            expr.setPrimitive(type, 0);
+            for (int i = 1; i < lo; i++)
+                expr.or(new Expr(type, i));
+            return true;
         }
 
         boolean parseAtomExpr(IAtom atom, Expr dest, char lastOp) {
@@ -449,9 +518,23 @@ public final class Smarts {
                                         expr = new Expr(HEAVY_DEGREE, 1);
                                     else
                                         expr = new Expr(DEGREE, 1);
-                                    // CACTVS style ranges D{0-2}
-                                    if (peek() == '{' && !parseRange(expr))
-                                        return false;
+                                    switch (peek()) {
+                                        case '{':
+                                            // CACTVS style ranges D{0-2}
+                                            if (!parseRange(expr))
+                                                return false;
+                                            break;
+                                        case '>':
+                                            // Lilly/CACTVS/NextMove inequalities
+                                            if (!parseGt(expr))
+                                                return false;
+                                            break;
+                                        case '<':
+                                            // Lilly/CACTVS/NextMove inequalities
+                                            if (!parseLt(expr))
+                                                return false;
+                                            break;
+                                    }
                                 } else {
                                     if (isFlavor(FLAVOR_CDK_LEGACY))
                                         expr = new Expr(HEAVY_DEGREE, num);
@@ -543,9 +626,23 @@ public final class Smarts {
                                 num = nextUnsignedInt();
                                 if (num < 0) {
                                     expr = new Expr(TOTAL_H_COUNT, 1);
-                                    // CACTVS style ranges H{0-2}
-                                    if (peek() == '{' && !parseRange(expr))
-                                        return false;
+                                    switch (peek()) {
+                                        case '{':
+                                            // CACTVS style ranges H{0-2}
+                                            if (!parseRange(expr))
+                                                return false;
+                                            break;
+                                        case '>':
+                                            // Lilly/CACTVS/NextMove inequalities
+                                            if (!parseGt(expr))
+                                                return false;
+                                            break;
+                                        case '<':
+                                            // Lilly/CACTVS/NextMove inequalities
+                                            if (!parseLt(expr))
+                                                return false;
+                                            break;
+                                    }
                                 } else
                                     expr = new Expr(TOTAL_H_COUNT, num);
                                 break;
@@ -732,11 +829,25 @@ public final class Smarts {
                                 num = nextUnsignedInt();
                                 if (num < 0) {
                                     expr = new Expr(Expr.Type.IS_IN_RING);
-                                    // CACTVS style ranges R{0-2}
-                                    if (peek() == '{') {
-                                        expr.setPrimitive(RING_COUNT, 0);
-                                        if (!parseRange(expr))
-                                            return false;
+                                    switch (peek()) {
+                                        case '{':
+                                            // CACTVS style ranges H{0-2}
+                                            expr.setPrimitive(RING_COUNT, 0);
+                                            if (!parseRange(expr))
+                                                return false;
+                                            break;
+                                        case '>':
+                                            // Lilly/CACTVS/NextMove inequalities
+                                            expr.setPrimitive(RING_COUNT, 0);
+                                            if (!parseGt(expr))
+                                                return false;
+                                            break;
+                                        case '<':
+                                            // Lilly/CACTVS/NextMove inequalities
+                                            expr.setPrimitive(RING_COUNT, 0);
+                                            if (!parseLt(expr))
+                                                return false;
+                                            break;
                                     }
                                 }
                                 else if (num == 0)
@@ -847,9 +958,23 @@ public final class Smarts {
                                 num = nextUnsignedInt();
                                 if (num < 0) {
                                     expr = new Expr(TOTAL_DEGREE, 1);
-                                    // CACTVS style ranges X{0-2}
-                                    if (peek() == '{' && !parseRange(expr))
-                                        return false;
+                                    switch (peek()) {
+                                        case '{':
+                                            // CACTVS style ranges X{0-2}
+                                            if (!parseRange(expr))
+                                                return false;
+                                            break;
+                                        case '>':
+                                            // Lilly/CACTVS/NextMove inequalities
+                                            if (!parseGt(expr))
+                                                return false;
+                                            break;
+                                        case '<':
+                                            // Lilly/CACTVS/NextMove inequalities
+                                            if (!parseLt(expr))
+                                                return false;
+                                            break;
+                                    }
                                 } else
                                     expr = new Expr(TOTAL_DEGREE, num);
                                 break;
@@ -983,8 +1108,23 @@ public final class Smarts {
                         if (num < 0) {
                             expr = new Expr(Expr.Type.VALENCE, 1);
                             // CACTVS style ranges v{0-2}
-                            if (peek() == '{' && !parseRange(expr))
-                                return false;
+                            switch (peek()) {
+                                case '{':
+                                    // CACTVS style ranges v{0-2}
+                                    if (!parseRange(expr))
+                                        return false;
+                                    break;
+                                case '>':
+                                    // Lilly/CACTVS/NextMove inequalities
+                                    if (!parseGt(expr))
+                                        return false;
+                                    break;
+                                case '<':
+                                    // Lilly/CACTVS/NextMove inequalities
+                                    if (!parseLt(expr))
+                                        return false;
+                                    break;
+                            }
                         } else
                             expr = new Expr(Expr.Type.VALENCE, num);
                         break;
@@ -992,9 +1132,23 @@ public final class Smarts {
                         num = nextUnsignedInt();
                         if (num < 0) {
                             expr = new Expr(Expr.Type.HAS_IMPLICIT_HYDROGEN);
-                            // CACTVS style ranges h{0-2}
-                            if (peek() == '{' && !parseRange(expr))
-                                return false;
+                            switch (peek()) {
+                                case '{':
+                                    // CACTVS style ranges h{0-2}
+                                    if (!parseRange(expr))
+                                        return false;
+                                    break;
+                                case '>':
+                                    // Lilly/CACTVS/NextMove inequalities
+                                    if (!parseGt(expr))
+                                        return false;
+                                    break;
+                                case '<':
+                                    // Lilly/CACTVS/NextMove inequalities
+                                    if (!parseLt(expr))
+                                        return false;
+                                    break;
+                            }
                         }
                         else
                             expr = new Expr(Expr.Type.IMPL_H_COUNT, num);
@@ -1003,11 +1157,25 @@ public final class Smarts {
                         num = nextUnsignedInt();
                         if (num < 0) {
                             expr = new Expr(Expr.Type.IS_IN_RING);
-                            // CACTVS style ranges D{0-2}
-                            if (peek() == '{') {
-                                expr.setPrimitive(RING_BOND_COUNT, 0);
-                                if (!parseRange(expr))
-                                    return false;
+                            switch (peek()) {
+                                case '{':
+                                    // CACTVS style ranges x{0-2}
+                                    expr.setPrimitive(RING_BOND_COUNT, 0);
+                                    if (!parseRange(expr))
+                                        return false;
+                                    break;
+                                case '>':
+                                    // Lilly/CACTVS/NextMove inequalities
+                                    expr.setPrimitive(RING_BOND_COUNT, 0);
+                                    if (!parseGt(expr))
+                                        return false;
+                                    break;
+                                case '<':
+                                    // Lilly/CACTVS/NextMove inequalities
+                                    expr.setPrimitive(RING_BOND_COUNT, 0);
+                                    if (!parseLt(expr))
+                                        return false;
+                                    break;
                             }
                         }
                         else if (num == 0)
@@ -1051,12 +1219,13 @@ public final class Smarts {
                         expr = new Expr(Expr.Type.HYBRIDISATION_NUMBER, num);
                         break;
                     case 'i':
-                        if (!isFlavor(FLAVOR_MOE | FLAVOR_CACTVS))
+                        if (!isFlavor(FLAVOR_MOE | FLAVOR_CACTVS | FLAVOR_LOOSE))
                             return false;
                         num = nextUnsignedInt();
                         if (num <= 0 || num > 8)
-                            return false;
-                        expr = new Expr(Expr.Type.INSATURATION, num);
+                            expr = new Expr(UNSATURATED);
+                        else
+                            expr = new Expr(Expr.Type.INSATURATION, num);
                         break;
                     case 'z':
                         if (!isFlavor(FLAVOR_CACTVS))
@@ -1112,7 +1281,27 @@ public final class Smarts {
                         num = IStereoElement.LEFT;
                         if (peek() == '@') {
                             next();
-                            num = IStereoElement.RIGHT;
+                            num = 2;
+                        } else if (nextIf("TH")) {
+                            if ((num = nextUnsignedInt()) < 0)
+                                return false;
+                            num |= IStereoElement.Tetrahedral;
+                        } else if (nextIf("AL")) {
+                            if ((num = nextUnsignedInt()) < 0)
+                                return false;
+                            num |= IStereoElement.Allenal;
+                        } else if (nextIf("SP")) {
+                            if ((num = nextUnsignedInt()) < 0)
+                                return false;
+                            num |= IStereoElement.SquarePlanar;
+                        } else if (nextIf("TB")) {
+                            if ((num = nextUnsignedInt()) < 0)
+                                return false;
+                            num |= IStereoElement.TrigonalBipyramidal;
+                        } else if (nextIf("OH")) {
+                            if ((num = nextUnsignedInt()) < 0)
+                                return false;
+                            num |= IStereoElement.Octahedral;
                         }
                         expr = new Expr(Expr.Type.STEREOCHEMISTRY, num);
                         // "or unspecified"
@@ -1181,7 +1370,8 @@ public final class Smarts {
                         if (!new Parser(submol, str.substring(beg, end - 1), flav).parse())
                             return false;
                         if (submol.getAtomCount() == 1) {
-                            expr = ((QueryAtom) submol.getAtom(0)).getExpression();
+                            expr = ((QueryAtom) AtomRef.deref(submol.getAtom(0)))
+                                    .getExpression();
                         } else {
                             expr = new Expr(Expr.Type.RECURSIVE, submol);
                         }
@@ -1191,10 +1381,11 @@ public final class Smarts {
                         if (expr == null)
                             return false;
                         num = nextUnsignedInt();
-                        if (num < 0)
+                        if (num <= 0) {
+                            error = "map idx should >0";
                             return false;
-                        if (num != 0)
-                            atom.setProperty(CDKConstants.ATOM_ATOM_MAPPING, num);
+                        }
+                        atom.setProperty(CDKConstants.ATOM_ATOM_MAPPING, num);
                         // should be add end of expr
                         if (lastOp != 0)
                             return peek() == ']';
@@ -1344,15 +1535,20 @@ public final class Smarts {
         }
 
         private boolean parseAtomExpr() {
+            int mark = pos-1;
             QueryAtom atom = new QueryAtom(mol.getBuilder());
+            atom.setProperty("cdk.smarts.iscomplex", true);
             Expr      expr = new Expr(Expr.Type.NONE);
             atom.setExpression(expr);
             if (!parseExplicitHydrogen(atom, expr) &&
                 !parseAtomExpr(atom, expr, '\0')) {
-                error = "Invalid atom expression";
+                if (error != null)
+                    error = "Invalid atom expression: " + error;
+                else
+                    error = "Invalid atom expression";
                 return false;
             }
-            append(atom);
+            append(atom, mark);
             return true;
         }
 
@@ -1411,7 +1607,13 @@ public final class Smarts {
             if (bond == null) {
                 bond = new QueryBond(null);
                 bond.setExpression(null);
+                bondPos = aoffset[mol.getAtomCount()-1];
             }
+
+            if (mol.getBondCount() == boffset.length)
+                boffset = Arrays.copyOf(boffset, boffset.length + (boffset.length>>>1));
+            boffset[mol.getBondCount()] = bondPos;
+
             bond.setAtom(prev, 0);
             rings[rnum] = addBond(prev, bond);
             numRingOpens++;
@@ -1433,6 +1635,10 @@ public final class Smarts {
                     return false;
                 }
                 this.bond = null;
+
+                if (mol.getBondCount() == boffset.length)
+                    boffset = Arrays.copyOf(boffset, boffset.length + (boffset.length>>>1));
+                boffset[mol.indexOf(bond)] = bondPos;
             } else if (openExpr == null) {
                 ((QueryBond) BondRef.deref(bond)).setExpression(new Expr(SINGLE_OR_AROMATIC));
             }
@@ -1569,10 +1775,96 @@ public final class Smarts {
             return null;
         }
 
+        private void collectStereoTypes(Set<Integer> types, Expr expr) {
+            while (true) {
+                switch (expr.type()){
+                    case STEREOCHEMISTRY:
+                        types.add(0xFF00 & expr.value());
+                        return;
+                    case AND:
+                    case OR:
+                        collectStereoTypes(types, expr.left());
+                        expr = expr.right();
+                        continue;
+                    case NOT:
+                        expr = expr.left();
+                        continue;
+                }
+                break;
+            }
+        }
+
+        private IAtom[] insertImplicitRefs(IAtom atom, Smarts.LocalNbrs nbrinfo, IAtom[] input, int degree, int required) {
+            if (degree == required)
+                return Arrays.<IAtom>copyOf(input, degree);
+            IAtom[] output = new IAtom[required];
+            int extra = required - degree;
+            int srcIdx = 0;
+            int dstIdx = 0;
+            int[] padded = new int[required];
+            if (!nbrinfo.isFirst)
+                output[dstIdx++] = input[srcIdx++];
+            while (extra-- > 0)
+                output[dstIdx++] = atom;
+            while (srcIdx < degree)
+                output[dstIdx++] = input[srcIdx++];
+            return output;
+        }
+
+        private void normalizeDegenerates(IStereoElement<IAtom, IAtom> elem, Expr expr) {
+            while (true) {
+                int type;
+                switch (expr.type()) {
+                    case STEREOCHEMISTRY:
+                        type = 0xFF00 & expr.value();
+                        if (type == IStereoElement.Octahedral) {
+                            elem.setConfigOrder(expr.value());
+                            Octahedral tmp = ((Octahedral)elem).normalize();
+                            int order = Octahedral.reorder(tmp.getCarriers(), elem
+                                    .getCarriers());
+                            expr.setPrimitive(Expr.Type.STEREOCHEMISTRY, 0x6100 | order);
+                            elem.setConfigOrder(0);
+                        } else if (type == IStereoElement.SquarePlanar) {
+                            int spOrder = expr.value() & 0xFF;
+                            if (spOrder == 1) {
+                                elem.setConfigOrder(1); // or 2
+                            } else if (spOrder == 2) {
+                                elem.setConfigOrder(8); // or 10
+                            } else if (spOrder == 3) {
+                                elem.setConfigOrder(4); // or 14
+                            }
+                            Octahedral tmp = ((Octahedral)elem).normalize();
+                            int order = Octahedral.reorder(tmp.getCarriers(), elem
+                                    .getCarriers());
+                            expr.setPrimitive(Expr.Type.STEREOCHEMISTRY, 0x6100 | order);
+                            elem.setConfigOrder(0);
+                        } else if (type == IStereoElement.TrigonalBipyramidal) {
+                            elem.setConfigOrder(expr.value());
+                            TrigonalBipyramidal tmp = ((TrigonalBipyramidal)elem).normalize();
+                            int order = TrigonalBipyramidal.reorder(tmp.getCarriers(), elem
+                                    .getCarriers());
+                            expr.setPrimitive(Expr.Type.STEREOCHEMISTRY, 0x5200 | order);
+                            elem.setConfigOrder(0);
+                        }
+                        return;
+                    case AND:
+                    case OR:
+                        normalizeDegenerates(elem, expr.left());
+                        expr = expr.right();
+                        continue;
+                    case NOT:
+                        expr = expr.left();
+                        continue;
+                }
+                break;
+            }
+        }
+
         // final check
         boolean finish() {
             // check for unclosed rings, components, and branches
-            if (numRingOpens != 0 || curComponentId != 0 || !stack.isEmpty()) {
+            if (numRingOpens != 0 || curComponentId != 0 ||
+                !stack.isEmpty() || bond != null) {
                 error = "Unclosed ring, component group, or branch";
                 return false;
             }
@@ -1584,7 +1876,7 @@ public final class Smarts {
                 markReactionRoles();
                 for (IAtom atom : mol.atoms()) {
                     ReactionRole role = atom.getProperty(CDKConstants.REACTION_ROLE);
-                    ((QueryAtom) atom).getExpression().and(
+                    ((QueryAtom) AtomRef.deref(atom)).getExpression().and(
                         new Expr(Expr.Type.REACTION_ROLE,
                                  role.ordinal())
                     );
@@ -1595,20 +1887,56 @@ public final class Smarts {
                 LocalNbrs nbrinfo = local.get(atom);
                 if (nbrinfo == null)
                     continue;
-                IAtom[] ligands = new IAtom[4];
+                IAtom[] ligands = new IAtom[6];
                 int     degree  = 0;
                 for (IBond bond : nbrinfo.bonds)
                     ligands[degree++] = bond.getOther(atom);
-                // add implicit neighbor, and move to correct position
-                if (degree == 3) {
-                    ligands[degree++] = atom;
-                    if (nbrinfo.isFirst)
-                        swap(ligands, 2, 3);
+
+                Expr expr = ((QueryAtom)atom).getExpression();
+                Set<Integer> types = new HashSet<>();
+                collectStereoTypes(types, expr);
+                if (types.isEmpty()) {
+                    this.error = "Missing stereochemistry type on a atom";
+                    return false;
                 }
-                if (degree == 4) {
-                    // Note the left and right is stored in the atom expression, we
-                    // only need the IStereoElement for the local ordering of neighbors
-                    mol.addStereoElement(new TetrahedralChirality(atom, ligands, 0));
+                if (types.size() > 1) {
+                    this.error = "Multiple stereochemistry types used on a single atom";
+                    return false;
+                }
+                int type = types.iterator().next();
+                if (type == 0) {
+                    if (degree == 3 || degree == 4)
+                        type = IStereoElement.Tetrahedral;
+                    else if (degree == 5)
+                        type = IStereoElement.TrigonalBipyramidal;
+                    else if (degree == 6)
+                        type = IStereoElement.Octahedral;
+                }
+
+                switch (type) {
+                    case IStereoElement.Tetrahedral:
+                        ligands = insertImplicitRefs(atom, nbrinfo, ligands, degree, 4);
+                        this.mol.addStereoElement((IStereoElement)new TetrahedralChirality(atom, ligands, 0));
+                        break;
+                    case IStereoElement.SquarePlanar:
+                        ligands = insertImplicitRefs(atom, nbrinfo, ligands, degree, 4);
+                        Octahedral spOctahedral = (new SquarePlanar(atom, ligands, 0)).asOctahedral();
+                        normalizeDegenerates((IStereoElement<IAtom, IAtom>)spOctahedral, expr);
+                        this.mol.addStereoElement((IStereoElement)spOctahedral);
+                        break;
+                    case IStereoElement.TrigonalBipyramidal:
+                        ligands = insertImplicitRefs(atom, nbrinfo, ligands, degree, 5);
+                        TrigonalBipyramidal tbpy = new TrigonalBipyramidal(atom, ligands, 0);
+                        normalizeDegenerates((IStereoElement<IAtom, IAtom>)tbpy, expr);
+                        this.mol.addStereoElement((IStereoElement)tbpy);
+                        break;
+                    case IStereoElement.Octahedral:
+                        ligands = insertImplicitRefs(atom, nbrinfo, ligands, degree, 6);
+                        Octahedral octahedral = new Octahedral(atom, ligands, 0);
+                        if (degree < 4)
+                            normalizeDegenerates((IStereoElement<IAtom, IAtom>)octahedral, expr);
+                        this.mol.addStereoElement((IStereoElement)octahedral);
+                        break;
                 }
             }
             // convert SMARTS up/down bond stereo to something we use to match
@@ -1656,26 +1984,33 @@ public final class Smarts {
                     Expr expr = ((QueryBond) BondRef.deref(bond)).getExpression();
                     expr = strip(expr, Expr.Type.STEREOCHEMISTRY);
                     if (expr == null)
-                        expr = new Expr(SINGLE_OR_AROMATIC);
+                        expr = new Expr(ORDER, 1);
                     else
-                        expr.and(new Expr(SINGLE_OR_AROMATIC));
+                        expr.and(new Expr(ORDER, 1));
                     ((QueryBond) bond).setExpression(expr);
                 }
             }
             return true;
         }
 
-        void append(IAtom atom) {
+        void append(IAtom atom, int inputPos) {
             if (curComponentId != 0)
                 atom.setProperty(CDKConstants.REACTION_GROUP, curComponentId);
+            if (mol.getAtomCount() == aoffset.length)
+                aoffset = Arrays.copyOf(aoffset, aoffset.length + (aoffset.length >>> 1));
+            aoffset[mol.getAtomCount()] = inputPos;
             mol.addAtom(atom);
             if (prev != null) {
                 if (bond == null) {
                     bond = new QueryBond(mol.getBuilder());
                     bond.setExpression(new Expr(SINGLE_OR_AROMATIC));
+                    bondPos = inputPos; // implicit bond is smae as the atom
                 }
                 bond.setAtom(prev, 0);
                 bond.setAtom(atom, 1);
+                if (mol.getBondCount() == boffset.length)
+                    boffset = Arrays.copyOf(boffset, boffset.length + (boffset.length>>>1));
+                boffset[mol.getBondCount()] = bondPos;
                 addBond(prev, bond);
                 addBond(atom, bond);
             } else
@@ -1684,10 +2019,14 @@ public final class Smarts {
             bond = null;
         }
 
-        void append(Expr expr) {
+        void append(Expr expr, int pos) {
             QueryAtom atom = new QueryAtom(mol.getBuilder());
             atom.setExpression(expr);
-            append(atom);
+            append(atom, pos);
+        }
+
+        void append(Expr expr) {
+            append(expr, pos-1);
         }
 
         private char peek() {
@@ -1701,11 +2040,20 @@ public final class Smarts {
             return '\0';
         }
 
+        private boolean nextIf(String prefix) {
+            if (this.pos < this.str.length() &&
+                    this.str.startsWith(prefix, this.pos)) {
+                this.pos += prefix.length();
+                return true;
+            }
+            return false;
+        }
+
         private static boolean isDigit(char c) {
             return c >= '0' && c <= '9';
         }
 
-        public boolean parse() {
+        boolean parse() {
             while (pos < str.length()) {
                 switch (str.charAt(pos++)) {
                     case '*':
@@ -1718,7 +2066,8 @@ public final class Smarts {
                         if (peek() == 'r') {
                             next();
                             append(new Expr(ELEMENT,
-                                            Elements.BROMINE.getAtomicNumber()));
+                                            Elements.BROMINE.getAtomicNumber()),
+                                   pos-2);
                         } else {
                             append(new Expr(ALIPHATIC_ELEMENT,
                                             Elements.BORON.getAtomicNumber()));
@@ -1728,7 +2077,8 @@ public final class Smarts {
                         if (peek() == 'l') {
                             next();
                             append(new Expr(ELEMENT,
-                                            Elements.CHLORINE.getAtomicNumber()));
+                                            Elements.CHLORINE.getAtomicNumber()),
+                                   pos-2);
                         } else {
                             append(new Expr(ALIPHATIC_ELEMENT,
                                             Elements.CARBON.getAtomicNumber()));
@@ -1804,7 +2154,10 @@ public final class Smarts {
                     case '!':
                     case '/':
                     case '\\':
+                        if (prev == null)
+                            return false;
                         unget();
+                        bondPos = pos;
                         if (!parseBondExpr())
                             return false;
                         break;
@@ -1863,11 +2216,12 @@ public final class Smarts {
 
                     case ' ':
                     case '\t':
+                        int mark = pos;
                         while (true) {
                             if (isTerminalChar(next()))
                                 break;
                         }
-                        mol.setTitle(str.substring(pos - 1));
+                        mol.setTitle(str.substring(mark, pos-1));
                         break;
                     case '\r':
                     case '\n':
@@ -2044,19 +2398,108 @@ public final class Smarts {
      *
      * @param mol the molecule to store the query in
      * @param smarts the SMARTS string
+     * @param flavor (optional) the SMARTS flavor, default is {@link Smarts#FLAVOR_LOOSE}.
+     * @see Expr
+     * @see org.openscience.cdk.isomorphism.matchers.IQueryAtom
+     * @see org.openscience.cdk.isomorphism.matchers.IQueryBond
+     * @return the result of the SMARTS
+     */
+    public static SmartsResult parseToResult(IAtomContainer mol,
+                                             String smarts,
+                                             int flavor) {
+        Parser state = new Parser(mol, smarts, flavor);
+        if (!state.parse()) {
+            return new SmartsResult(smarts, state.pos, state.error);
+        }
+        processCxSmarts(mol);
+        return new SmartsResult(smarts, state.aoffset, state.boffset);
+    }
+
+    /**
+     * Parse the provided SMARTS string appending query atom/bonds to the
+     * provided molecule. This method allows the flavor of SMARTS to specified
+     * that changes the meaning of queries.
+     *
+     * @param mol the molecule to store the query in
+     * @param smarts the SMARTS string
+     * @see Expr
+     * @see org.openscience.cdk.isomorphism.matchers.IQueryAtom
+     * @see org.openscience.cdk.isomorphism.matchers.IQueryBond
+     * @return the result of the SMARTS
+     */
+    public static SmartsResult parseToResult(IAtomContainer mol,
+                                             String smarts) {
+        return parseToResult(mol, smarts, FLAVOR_LOOSE);
+    }
+
+    private static void processCxSmarts(IAtomContainer mol) {
+
+        String title = mol.getTitle();
+
+        if (title == null ||
+                title.isEmpty() ||
+                title.charAt(0) != '|')
+            return;
+
+        CxSmartsState cxstate = new CxSmartsState();
+        if (CxSmartsParser.processCx(title, cxstate) < 0)
+            return;
+
+        // set 2D/3D atom-coordinates
+        if (cxstate.atomCoords != null) {
+            final int numAtoms = mol.getAtomCount();
+            final int numCoords = cxstate.atomCoords.size();
+            for (int i = 0; i < Math.min(numAtoms, numCoords); i++) {
+                double[] xyz = cxstate.atomCoords.get(i);
+                if (cxstate.coordFlag)
+                    mol.getAtom(i).setPoint3d(new Point3d(xyz));
+                else
+                    mol.getAtom(i).setPoint2d(new Point2d(xyz));
+            }
+        }
+
+        List<Sgroup> sgroups = new ArrayList<>();
+
+        // positional-variation
+        if (cxstate.positionVar != null) {
+            for (Map.Entry<Integer, List<Integer>> e : cxstate.positionVar.entrySet()) {
+                Sgroup sgroup = new Sgroup();
+                sgroup.setType(SgroupType.ExtMulticenter);
+                IAtom beg = mol.getAtom(e.getKey());
+                List<IBond> connectedBonds = mol.getConnectedBondsList(beg);
+                if (connectedBonds.isEmpty())
+                    continue; // possibly okay
+                sgroup.addAtom(beg);
+                sgroup.addBond(connectedBonds.get(0));
+                for (Integer endpt : e.getValue())
+                    sgroup.addAtom(mol.getAtom((endpt)));
+                sgroups.add(sgroup);
+            }
+        }
+
+        if (!sgroups.isEmpty())
+            mol.setProperty(CDKConstants.CTAB_SGROUPS, sgroups);
+    }
+
+    /**
+     * Parse the provided SMARTS string appending query atom/bonds to the
+     * provided molecule. This method allows the flavor of SMARTS to specified
+     * that changes the meaning of queries.
+     *
+     * @param mol the molecule to store the query in
+     * @param smarts the SMARTS string
      * @param flavor the SMARTS flavor (e.g. {@link Smarts#FLAVOR_LOOSE}.
      * @see Expr
      * @see org.openscience.cdk.isomorphism.matchers.IQueryAtom
      * @see org.openscience.cdk.isomorphism.matchers.IQueryBond
-     * @return whether the SMARTS was valid
+     * @return whether the SMARTS was valid, if invalid the
+     *         {@link #getLastErrorMesg()} is set.
      */
     public static boolean parse(IAtomContainer mol, String smarts, int flavor) {
-        Parser state = new Parser(mol, smarts, flavor);
-        if (!state.parse()) {
-            setErrorMesg(smarts, state.pos, state.error);
-            return false;
-        }
-        return true;
+        SmartsResult result = parseToResult(mol, smarts, flavor);
+        if (!result.ok())
+            setErrorMesg(smarts, result.getPosition(), result.getMessage());
+        return result.ok();
     }
 
     /**
@@ -2068,7 +2511,8 @@ public final class Smarts {
      * @see Expr
      * @see org.openscience.cdk.isomorphism.matchers.IQueryAtom
      * @see org.openscience.cdk.isomorphism.matchers.IQueryBond
-     * @return whether the SMARTS was valid
+     * @return whether the SMARTS was valid, if invalid the
+     *         {@link #getLastErrorMesg()} is set.
      */
     public static boolean parse(IAtomContainer mol, String smarts) {
         return parse(mol, smarts, FLAVOR_LOOSE);
@@ -2463,25 +2907,24 @@ public final class Smarts {
         }
 
         private void sort(List<IBond> bonds, final IBond prev) {
-            Collections.sort(bonds,
-                             new Comparator<IBond>() {
-                                 @Override
-                                 public int compare(IBond a, IBond b) {
-                                     if (a == prev)
-                                         return -1;
-                                     if (b == prev)
-                                         return +1;
-                                     if (isRingClose(a) && !isRingClose(b))
-                                         return -1;
-                                     if (!isRingClose(a) && isRingClose(b))
-                                         return +1;
-                                     if (isRingOpen(a) && !isRingOpen(b))
-                                         return -1;
-                                     if (!isRingOpen(a) && isRingOpen(b))
-                                         return +1;
-                                     return 0;
-                                 }
-                             });
+            bonds.sort(new Comparator<IBond>() {
+                @Override
+                public int compare(IBond a, IBond b) {
+                    if (a == prev)
+                        return -1;
+                    if (b == prev)
+                        return +1;
+                    if (isRingClose(a) && !isRingClose(b))
+                        return -1;
+                    if (!isRingClose(a) && isRingClose(b))
+                        return +1;
+                    if (isRingOpen(a) && !isRingOpen(b))
+                        return -1;
+                    if (!isRingOpen(a) && isRingOpen(b))
+                        return +1;
+                    return 0;
+                }
+            });
         }
 
         private void generateRecurAtom(StringBuilder sb,
@@ -2746,7 +3189,7 @@ public final class Smarts {
                         throw new IllegalArgumentException();
                     break;
                 default:
-                    throw new IllegalArgumentException();
+                    throw new IllegalArgumentException("Unsupported type" + expr.type());
             }
         }
 
@@ -2836,7 +3279,7 @@ public final class Smarts {
                         case BSTEREO_UPU: bdir = BSTEREO_DNU; break;
                     }
                 }
-                if (bexpr.isEmpty())
+                if (bexpr.isEmpty() || bexpr.equals("-"))
                     bexpr = bdir;
                 else
                     bexpr += ';' + bdir;
@@ -2881,6 +3324,8 @@ public final class Smarts {
                     return generateAtom(atom, expr.right());
                 if (expr.right().type() == Expr.Type.REACTION_ROLE)
                     return generateAtom(atom, expr.left());
+            } else if (expr.type() == REACTION_ROLE) {
+                return generateAtom(atom, new Expr(TRUE));
             }
 
             int mapidx = atom != null ? mapidx(atom) : 0;
@@ -2973,6 +3418,8 @@ public final class Smarts {
                 if (isRingClose(bond)) {
                     Integer rnum = rnums.get(bond);
                     sb.append(generate(bond.getOther(atom), ((QueryBond) BondRef.deref(bond))));
+                    if (rnum >= 10)
+                        sb.append('%');
                     sb.append(rnum);
                     rvisit[rnum] = false;
                     rnums.remove(bond);
@@ -2981,6 +3428,8 @@ public final class Smarts {
                 // ring open
                 else if (isRingOpen(bond)) {
                     int rnum = nextRingNum();
+                    if (rnum >= 10)
+                        sb.append('%');
                     sb.append(rnum);
                     rnums.put(bond, rnum);
                     rbonds.remove(bond);

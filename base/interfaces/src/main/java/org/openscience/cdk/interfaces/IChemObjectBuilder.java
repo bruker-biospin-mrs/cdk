@@ -23,8 +23,6 @@ package org.openscience.cdk.interfaces;
  * implementation.
  *
  * @author        egonw
- * @cdk.module    interfaces
- * @cdk.githash
  */
 public interface IChemObjectBuilder {
 
@@ -54,7 +52,7 @@ public interface IChemObjectBuilder {
 
     /**
      * Create a new bond using the default constructor. This method is considerably faster
-     * than the dynamic dispatch of {@code newInstance(IAtom.class)} and should be used for
+     * than the dynamic dispatch of {@code newInstance(IBond.class)} and should be used for
      * high throughput applications (e.g. IO).
      *
      * @return new bond
@@ -63,10 +61,31 @@ public interface IChemObjectBuilder {
 
     /**
      * Create a new atom container using the default constructor. This method is considerably faster
-     * than the dynamic dispatch of {@code newInstance(IAtom.class)} and should be used for
+     * than the dynamic dispatch of {@code newInstance(IAtomContainer.class)} and should be used for
      * high throughput applications (e.g. IO).
      *
      * @return the new atom container
      */
     IAtomContainer newAtomContainer();
+
+    /**
+     * Create a new reaction using the default constructor. This method is considerably faster
+     * than the dynamic dispatch of {@code newInstance(IReaction.class)} and should be used for
+     * high throughput applications (e.g. IO).
+     *
+     * @return the new reaction
+     */
+    IReaction newReaction();
+
+    /**
+     * This function is used to find an IChemObject builder using reflection. It
+     * first tries to create a SilentChemObjectBuilder and failing that a
+     * DefaultChemObjectBuilder. It should be used sparingly since APIs should
+     * require a builder is passed in.
+     *
+     * @return the IChemObject builder
+     */
+    static IChemObjectBuilder find() {
+        return ChemObjectBuilderCache.INSTANCE.get();
+    }
 }

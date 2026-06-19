@@ -22,84 +22,75 @@ package org.openscience.cdk.debug;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractPseudoAtomTest;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractPseudoAtomTest;
 import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IPseudoAtom;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugPseudoAtom}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugPseudoAtomTest extends AbstractPseudoAtomTest {
+class DebugPseudoAtomTest extends AbstractPseudoAtomTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugPseudoAtom();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugPseudoAtom::new);
     }
 
     @Test
-    public void testDebugPseudoAtom() {
+    void testDebugPseudoAtom() {
         IPseudoAtom a = new DebugPseudoAtom();
-        Assert.assertEquals("R", a.getSymbol());
-        Assert.assertNull(a.getPoint3d());
-        Assert.assertNull(a.getPoint2d());
-        Assert.assertNull(a.getFractionalPoint3d());
+        Assertions.assertEquals("R", a.getSymbol());
+        Assertions.assertNull(a.getPoint3d());
+        Assertions.assertNull(a.getPoint2d());
+        Assertions.assertNull(a.getFractionalPoint3d());
     }
 
     @Test
-    public void testDebugPseudoAtom_IElement() {
+    void testDebugPseudoAtom_IElement() {
         IElement element = newChemObject().getBuilder().newInstance(IElement.class);
         IPseudoAtom a = new DebugPseudoAtom(element);
-        Assert.assertEquals("R", a.getSymbol());
-        Assert.assertNull(a.getPoint3d());
-        Assert.assertNull(a.getPoint2d());
-        Assert.assertNull(a.getFractionalPoint3d());
+        Assertions.assertEquals("R", a.getSymbol());
+        Assertions.assertNull(a.getPoint3d());
+        Assertions.assertNull(a.getPoint2d());
+        Assertions.assertNull(a.getFractionalPoint3d());
     }
 
     @Test
-    public void testDebugPseudoAtom_String() {
+    void testDebugPseudoAtom_String() {
         String label = "Arg255";
         IPseudoAtom a = new DebugPseudoAtom(label);
-        Assert.assertEquals("R", a.getSymbol());
-        Assert.assertEquals(label, a.getLabel());
-        Assert.assertNull(a.getPoint3d());
-        Assert.assertNull(a.getPoint2d());
-        Assert.assertNull(a.getFractionalPoint3d());
+        Assertions.assertEquals("R", a.getSymbol());
+        Assertions.assertEquals(label, a.getLabel());
+        Assertions.assertNull(a.getPoint3d());
+        Assertions.assertNull(a.getPoint2d());
+        Assertions.assertNull(a.getFractionalPoint3d());
     }
 
     @Test
-    public void testDebugPseudoAtom_String_Point2d() {
+    void testDebugPseudoAtom_String_Point2d() {
         Point2d point = new Point2d(1.0, 2.0);
         String label = "Arg255";
         IPseudoAtom a = new DebugPseudoAtom(label, point);
-        Assert.assertEquals("R", a.getSymbol());
-        Assert.assertEquals(label, a.getLabel());
-        Assert.assertEquals(point, a.getPoint2d());
-        Assert.assertNull(a.getPoint3d());
-        Assert.assertNull(a.getFractionalPoint3d());
+        Assertions.assertEquals("R", a.getSymbol());
+        Assertions.assertEquals(label, a.getLabel());
+        Assertions.assertEquals(point, a.getPoint2d());
+        Assertions.assertNull(a.getPoint3d());
+        Assertions.assertNull(a.getFractionalPoint3d());
     }
 
     @Test
-    public void testDebugPseudoAtom_String_Point3d() {
+    void testDebugPseudoAtom_String_Point3d() {
         Point3d point = new Point3d(1.0, 2.0, 3.0);
         String label = "Arg255";
         IPseudoAtom a = new DebugPseudoAtom(label, point);
-        Assert.assertEquals("R", a.getSymbol());
-        Assert.assertEquals(label, a.getLabel());
-        Assert.assertEquals(point, a.getPoint3d());
-        Assert.assertNull(a.getPoint2d());
-        Assert.assertNull(a.getFractionalPoint3d());
+        Assertions.assertEquals("R", a.getSymbol());
+        Assertions.assertEquals(label, a.getLabel());
+        Assertions.assertEquals(point, a.getPoint3d());
+        Assertions.assertNull(a.getPoint2d());
+        Assertions.assertNull(a.getFractionalPoint3d());
     }
 }

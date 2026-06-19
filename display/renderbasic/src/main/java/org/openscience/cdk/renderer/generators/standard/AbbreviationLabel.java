@@ -91,10 +91,10 @@ final class AbbreviationLabel {
     //    OTHER DEALINGS IN THE SOFTWARE.
     //
     //    For more information, please refer to <http://unlicense.org/>
-    private final static String[] SYMBOL_LIST = new String[]{"acac", "Ace", "Acetyl", "Acyl", "Ad", "All", "Alloc", "Allyl", "Amyl", "AOC",
-                                                             "BDMS", "Benzoyl", "Benzyl", "Bn", "BOC", "Boc", "BOM", "bpy", "Bromo", "Bs", "Bu", "But", "Butyl", "Bz", "Bzl",
+    private final static String[] SYMBOL_LIST = new String[]{"acac", "amphos", "Ace", "Acetyl", "Acyl", "Ad", "All", "Alloc", "Allyl", "Amyl", "AOC",
+                                                             "BDMS", "Benzoyl", "Benzyl", "Bn", "BOC", "Boc", "BOM", "bpy", "Bromo", "Bs", "BPin", "Bpin", "Bu", "But", "Butyl", "Bz", "Bzl",
                                                              "Car", "Cbz", "Chloro", "CoA", "Cy",
-                                                             "dppf", "dppp", "dba", "D", "Dan", "Dansyl", "DEIPS", "DEM", "Dip", "Dmb", "DPA", "DTBMS",
+                                                             "dppf", "dppp", "dba", "dtbpf", "D", "Dan", "Dansyl", "DEIPS", "DEM", "Dip", "Dmb", "DPA", "DTBMS",
                                                              "EE", "EOM", "Et", "Ethyl",
                                                              "Fluoro", "FMOC", "Fmoc", "Formyl",
                                                              "Heptyl", "Hexyl",
@@ -104,12 +104,12 @@ final class AbbreviationLabel {
                                                              "Oct", "Octyl",
                                                              "PAB", "Pentyl", "Ph", "Phenyl", "Pivaloyl", "PMB", "Pro", "Propargyl", "Propyl", "Pv",
                                                              "R", "SEM",
-                                                             "T", "TBDMS", "Trt", "TBDPS", "TES", "Tf", "THP", "THPO", "TIPS", "TMS", "Tos", "Tol", "Tosyl", "Tr", "Troc",
+                                                             "T", "TBS", "TBDMS", "Trt", "TBDPS", "TES", "Tf", "THP", "THPO", "TIPS", "TMS", "Tos", "Tol", "Tosyl", "Tr", "Troc",
                                                              "Vinyl", "Voc", "Z"};
 
-    private static Trie PREFIX_TRIE = new Trie();
-    private static Trie ITAL_PREFIX_TRIE = new Trie();
-    private static Trie SYMBOL_TRIE = new Trie();
+    private static final Trie PREFIX_TRIE = new Trie();
+    private static final Trie ITAL_PREFIX_TRIE = new Trie();
+    private static final Trie SYMBOL_TRIE = new Trie();
 
     // build the tries on class init
     static {
@@ -124,10 +124,10 @@ final class AbbreviationLabel {
             insert(SYMBOL_TRIE, str, 0);
     }
 
-    static int STYLE_NORMAL    = 0;
-    static int STYLE_SUBSCRIPT = -1;
-    static int STYLE_SUPSCRIPT = +1;
-    static int STYLE_ITALIC    = 2;
+    static final int STYLE_NORMAL    = 0;
+    static final int STYLE_SUBSCRIPT = -1;
+    static final int STYLE_SUPSCRIPT = +1;
+    static final int STYLE_ITALIC    = 2;
 
     /**
      * A small class to help describe which parts of a string
@@ -191,9 +191,17 @@ final class AbbreviationLabel {
                 continue;
             }
 
-            if (c == '/' || c == '·') {
+            // separators
+            if (c == '/' || c == '·' || c == '.' || c == '•' || c == '=') {
                 tokens.add(Character.toString(c));
                 i++;
+
+                int beg = i;
+                while (i < label.length() && isDigit(label.charAt(i))) {
+                    i++;
+                }
+                if (i > beg)
+                    tokens.add(label.substring(beg, i));
                 continue;
             }
 
@@ -206,6 +214,16 @@ final class AbbreviationLabel {
 
             // a valid symbol token
             if ((last = findPrefix(SYMBOL_TRIE, label, i, -1)) > 0) {
+
+                // ambiguity handling, nButBu => nBut Bu vs nBu tBu
+                if (last + 1 < label.length() &&
+                    label.charAt(last-1) == 't' &&
+                    label.charAt(last) == 'B' &&
+                    label.charAt(last+1) == 'u') {
+                    // But => Bu
+                    last--;
+                }
+
                 i += (last - i);
                 // an optional number suffix e.g. O2 F3 Ph3 etc.
                 while (i < len && isDigit(label.charAt(i))) {
@@ -441,6 +459,6 @@ final class AbbreviationLabel {
      */
     private static final class Trie {
         String token;
-        Trie[] children = new Trie[128];
+        final Trie[] children = new Trie[128];
     }
 }

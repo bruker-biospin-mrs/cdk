@@ -48,8 +48,6 @@ import org.openscience.cdk.qsar.result.DoubleResult;
  *
  * @author      Miguel Rojas
  * @cdk.created 2006-04-15
- * @cdk.module  qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:partialSigmaCharge
  * @see GasteigerMarsiliPartialCharges
  */
@@ -57,7 +55,7 @@ public class PartialSigmaChargeDescriptor extends AbstractAtomicDescriptor {
 
     private static final String[]          NAMES = {"partialSigmaCharge"};
 
-    private GasteigerMarsiliPartialCharges peoe  = null;
+    private GasteigerMarsiliPartialCharges peoe;
     /**Number of maximum iterations*/
     private int                            maxIterations;
 

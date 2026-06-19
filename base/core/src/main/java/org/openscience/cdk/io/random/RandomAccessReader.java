@@ -30,6 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.StringReader;
+import java.util.NoSuchElementException;
 
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IChemFile;
@@ -52,18 +53,16 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Useful for very big files.
  *
  * @author Nina Jeliazkova &lt;nina@acad.bg&gt;
- * @cdk.module io
- * @cdk.githash
  */
 public abstract class RandomAccessReader extends DefaultRandomAccessChemObjectReader implements
         IRandomAccessChemObjectReader<IChemObject> {
 
-    protected static ILoggingTool     logger        = LoggingToolFactory.createLoggingTool(RandomAccessReader.class);
+    protected static final ILoggingTool     logger        = LoggingToolFactory.createLoggingTool(RandomAccessReader.class);
     protected RandomAccessFile        raFile;
     protected IOSetting[]             headerOptions = null;
     private final String              filename;
     protected ISimpleChemObjectReader chemObjectReader;
-    protected int                     indexVersion  = 1;
+    protected final int                     indexVersion  = 1;
     /*
      * index[record][0] - record offset in file index[record][1] - record length
      * index[record][2] - number of atoms (if available)
@@ -72,7 +71,7 @@ public abstract class RandomAccessReader extends DefaultRandomAccessChemObjectRe
     protected int                     records;
     protected int                     currentRecord = 0;
     protected byte[]                  b;
-    protected IChemObjectBuilder      builder;
+    protected final IChemObjectBuilder      builder;
     protected boolean                 indexCreated  = false;
 
     /**
@@ -180,100 +179,100 @@ public abstract class RandomAccessReader extends DefaultRandomAccessChemObjectRe
 
     protected synchronized void saveIndex(File file) throws Exception {
         if (records == 0) {
-            file.delete();
+            if (!file.delete())
+                LoggingToolFactory.createLoggingTool(RandomAccessReader.class)
+                                  .warn("Could not delete index file.");
             return;
         }
-        FileWriter out = new FileWriter(file);
-        out.write(Integer.toString(indexVersion));
-        out.write('\n');
-        out.write(filename);
-        out.write('\n');
-        out.write(Long.toString(raFile.length()));
-        out.write('\n');
-        out.write(Integer.toString(records));
-        out.write('\n');
-        for (int i = 0; i < records; i++) {
-            out.write(Long.toString(index[i][0]));
-            out.write('\t');
-            out.write(Long.toString(index[i][1]));
-            out.write('\t');
-            out.write(Long.toString(index[i][2]));
+        try (FileWriter out = new FileWriter(file)) {
+            out.write(Integer.toString(indexVersion));
+            out.write('\n');
+            out.write(filename);
+            out.write('\n');
+            out.write(Long.toString(raFile.length()));
+            out.write('\n');
+            out.write(Integer.toString(records));
+            out.write('\n');
+            for (int i = 0; i < records; i++) {
+                out.write(Long.toString(index[i][0]));
+                out.write('\t');
+                out.write(Long.toString(index[i][1]));
+                out.write('\t');
+                out.write(Long.toString(index[i][2]));
+                out.write('\n');
+            }
+            out.write(Integer.toString(records));
+            out.write('\n');
+            out.write(filename);
             out.write('\n');
         }
-        out.write(Integer.toString(records));
-        out.write('\n');
-        out.write(filename);
-        out.write('\n');
-        out.close();
     }
 
     protected synchronized void loadIndex(File file) throws Exception {
-        BufferedReader in = new BufferedReader(new FileReader(file));
-        String version = in.readLine();
-        try {
-            if (Integer.parseInt(version) != indexVersion) {
-                in.close();
-                throw new Exception("Expected index version " + indexVersion + " instead of " + version);
-            }
-        } catch (Exception x) {
-            in.close();
-            throw new Exception("Invalid index version " + version);
-        }
-        String fileIndexed = in.readLine();
-        if (!filename.equals(fileIndexed)) {
-            in.close();
-            throw new Exception("Index for " + fileIndexed + " found instead of " + filename + ". Creating new index.");
-        }
-        String line = in.readLine();
-        int fileLength = Integer.parseInt(line);
-        if (fileLength != raFile.length()) {
-            in.close();
-            throw new Exception("Index for file of size " + fileLength + " found instead of " + raFile.length());
-        }
-        line = in.readLine();
-        int indexLength = Integer.parseInt(line);
-        if (indexLength <= 0) {
-            in.close();
-            throw new Exception("Index of zero length! " + file.getAbsolutePath());
-        }
-        index = new long[indexLength][3];
-        records = 0;
-        int maxRecordLength = 0;
-        for (int i = 0; i < index.length; i++) {
-            line = in.readLine();
-            String[] result = line.split("\t");
-            for (int j = 0; j < 3; j++)
-                try {
-                    index[i][j] = Long.parseLong(result[j]);
-
-                } catch (Exception x) {
+        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
+            String version = in.readLine();
+            try {
+                if (Integer.parseInt(version) != indexVersion) {
                     in.close();
-                    throw new Exception("Error reading index! " + result[j], x);
+                    throw new Exception("Expected index version " + indexVersion + " instead of " + version);
                 }
+            } catch (Exception x) {
+                in.close();
+                throw new Exception("Invalid index version " + version);
+            }
+            String fileIndexed = in.readLine();
+            if (!filename.equals(fileIndexed)) {
+                in.close();
+                throw new Exception("Index for " + fileIndexed + " found instead of " + filename + ". Creating new index.");
+            }
+            String line = in.readLine();
+            int fileLength = Integer.parseInt(line);
+            if (fileLength != raFile.length()) {
+                in.close();
+                throw new Exception("Index for file of size " + fileLength + " found instead of " + raFile.length());
+            }
+            line = in.readLine();
+            int indexLength = Integer.parseInt(line);
+            if (indexLength <= 0) {
+                in.close();
+                throw new Exception("Index of zero length! " + file.getAbsolutePath());
+            }
+            index = new long[indexLength][3];
+            records = 0;
+            int maxRecordLength = 0;
+            for (int i = 0; i < index.length; i++) {
+                line = in.readLine();
+                String[] result = line.split("\t");
+                for (int j = 0; j < 3; j++)
+                    try {
+                        index[i][j] = Long.parseLong(result[j]);
 
-            if (maxRecordLength < index[records][1]) maxRecordLength = (int) index[records][1];
-            records++;
-        }
+                    } catch (Exception x) {
+                        in.close();
+                        throw new Exception("Error reading index! " + result[j], x);
+                    }
 
-        line = in.readLine();
-        int indexLength2 = Integer.parseInt(line);
-        if (indexLength2 <= 0) {
-            in.close();
-            throw new Exception("Index of zero lenght!");
-        }
-        if (indexLength2 != indexLength) {
-            in.close();
-            throw new Exception("Wrong index length!");
-        }
-        line = in.readLine();
-        if (!line.equals(filename)) {
-            in.close();
-            throw new Exception("Index for " + line + " found instead of " + filename);
-        }
-        in.close();
+                if (maxRecordLength < index[records][1]) maxRecordLength = (int) index[records][1];
+                records++;
+            }
 
-        b = new byte[maxRecordLength];
-        //fireFrameRead();
+            line = in.readLine();
+            int indexLength2 = Integer.parseInt(line);
+            if (indexLength2 <= 0) {
+                in.close();
+                throw new Exception("Index of zero lenght!");
+            }
+            if (indexLength2 != indexLength) {
+                in.close();
+                throw new Exception("Wrong index length!");
+            }
+            line = in.readLine();
+            if (!line.equals(filename)) {
+                in.close();
+                throw new Exception("Index for " + line + " found instead of " + filename);
+            }
+            b = new byte[maxRecordLength];
+        }
     }
 
     /**
@@ -292,13 +291,13 @@ public abstract class RandomAccessReader extends DefaultRandomAccessChemObjectRe
         indexCreated = false;
         long now = System.currentTimeMillis();
         int recordLength = 1000;
-        int maxRecords = 1;
+        int maxRecords;
         int maxRecordLength = 0;
         maxRecords = (int) raFile.length() / recordLength;
         if (maxRecords == 0) maxRecords = 1;
         index = new long[maxRecords][3];
 
-        String s = null;
+        String s;
         long start = 0;
         long end = 0;
         raFile.seek(0);
@@ -309,10 +308,17 @@ public abstract class RandomAccessReader extends DefaultRandomAccessChemObjectRe
             if (isRecordEnd(s)) {
                 //fireFrameRead();
                 if (records >= maxRecords) {
-                    index = resize(index,
-                            records
-                                    + (int) (records + (raFile.length() - records * raFile.getFilePointer())
-                                            / recordLength));
+                    if (recordLength == 0) {
+                        maxRecords = maxRecords + maxRecords>>>1;
+                    } else {
+                        // JWM it's not completely clear what this is doing,
+                        // I think it's estimating the avg record size to work
+                        // how many more there are
+                        maxRecords = records
+                                + (int) (records + (raFile.length() - records * raFile.getFilePointer())
+                                / recordLength);
+                    }
+                    index = resize(index, maxRecords);
                 }
                 end += 4;
                 index[records][0] = start;
@@ -321,7 +327,6 @@ public abstract class RandomAccessReader extends DefaultRandomAccessChemObjectRe
                 if (maxRecordLength < index[records][1]) maxRecordLength = (int) index[records][1];
                 records++;
                 recordLength += end - start;
-
                 start = raFile.getFilePointer();
             } else {
                 end = raFile.getFilePointer();
@@ -417,7 +422,7 @@ public abstract class RandomAccessReader extends DefaultRandomAccessChemObjectRe
             return readRecord(currentRecord + 1);
         } catch (Exception x) {
             logger.error(x);
-            return null;
+            throw new NoSuchElementException();
         }
     }
 
@@ -509,7 +514,7 @@ class RecordReaderEvent extends ReaderEvent {
      *
      */
     private static final long serialVersionUID = 572155905623474487L;
-    protected int             record           = 0;
+    protected int             record;
 
     public RecordReaderEvent(Object source, int record) {
         super(source);

@@ -65,15 +65,13 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  *@author         mfe4
  *@cdk.created    2004-11-03
- *@cdk.module     qsaratomic
- * @cdk.githash
  * @cdk.dictref   qsar-descriptors:atomicHardness
  */
 public class InductiveAtomicHardnessDescriptor extends AbstractAtomicDescriptor implements IAtomicDescriptor {
 
     private static final String[] NAMES   = {"indAtomHardnesss"};
 
-    private static ILoggingTool   logger  = LoggingToolFactory
+    private static final ILoggingTool   logger  = LoggingToolFactory
                                                   .createLoggingTool(InductiveAtomicHardnessDescriptor.class);
     private AtomTypeFactory       factory = null;
 
@@ -190,6 +188,8 @@ public class InductiveAtomicHardnessDescriptor extends AbstractAtomicDescriptor 
 
         atomicHardness = 2 * atomicHardness;
         atomicHardness = atomicHardness * 0.172;
+        if (atomicHardness == 0)
+            return getDummyDescriptorValue(new ArithmeticException("atomicHardness was 0 before division!"));
         atomicHardness = 1 / atomicHardness;
         return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new DoubleResult(
                 atomicHardness), NAMES);

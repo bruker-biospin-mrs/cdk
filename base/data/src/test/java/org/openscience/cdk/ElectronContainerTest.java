@@ -20,39 +20,30 @@
 
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IElectronContainer;
-import org.openscience.cdk.interfaces.AbstractElectronContainerTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractElectronContainerTest;
 
 /**
  * Checks the functionality of the {@link ElectronContainer} class.
  *
- * @cdk.module test-data
  *
  * @see org.openscience.cdk.ElectronContainer
  */
-public class ElectronContainerTest extends AbstractElectronContainerTest {
+class ElectronContainerTest extends AbstractElectronContainerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new ElectronContainer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(ElectronContainer::new);
     }
 
     @Test
-    public void testElectronContainer() {
+    void testElectronContainer() {
         IElectronContainer ec = new ElectronContainer();
-        Assert.assertNotNull(ec);
-        Assert.assertEquals(0, ec.getElectronCount().intValue());
+        Assertions.assertNotNull(ec);
+        Assertions.assertEquals(0, ec.getElectronCount().intValue());
     }
 
 }

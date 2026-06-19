@@ -24,8 +24,6 @@
 
 package org.openscience.cdk.aromaticity;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.config.AtomTypeFactory;
 import org.openscience.cdk.exception.NoSuchAtomTypeException;
@@ -36,9 +34,11 @@ import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.ringsearch.RingSearch;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.openscience.cdk.interfaces.IAtomType.Hybridization;
 
 /**
@@ -50,17 +50,32 @@ import static org.openscience.cdk.interfaces.IAtomType.Hybridization;
  * C=C1C(=C)C(=C)C(=C)C(=C)C1=C}) being considered aromatic.
  *
  * @author John May
- * @cdk.module standard
  */
 // mores tests in - org.openscience.cdk.aromaticity.ExocyclicAtomTypeModelTest
 final class AtomTypeModel extends ElectronDonation {
 
+    // JDK 9+ has Map.of() which is more concise
+    private static Map<String, Integer> typeToElectronContribMap() {
+        Map<String,Integer> map = new HashMap<>();
+        map.put("N.planar3", 2);
+        map.put("N.thioamide", 2);
+        map.put("N.minus.planar3", 2);
+        map.put("N.amide", 2);
+        map.put("N.sp3", 2);
+        map.put("S.2", 2);
+        map.put("S.3", 2);
+        map.put("P.ine", 2);
+        map.put("O.sp3", 2);
+        map.put("S.planar3", 2);
+        map.put("C.minus.planar", 2);
+        map.put("O.planar3", 2);
+        map.put("N.sp2.3", 1);
+        map.put("C.sp2", 1);
+        return Collections.unmodifiableMap(map);
+    }
+
     /** Predefined electron contribution for several atom types. */
-    private final static Map<String, Integer> TYPES = ImmutableMap.<String, Integer> builder().put("N.planar3", 2)
-                                                            .put("N.minus.planar3", 2).put("N.amide", 2).put("S.2", 2)
-                                                            .put("S.planar3", 2).put("C.minus.planar", 2)
-                                                            .put("O.planar3", 2).put("N.sp2.3", 1).put("C.sp2", 1)
-                                                            .build();
+    private final static Map<String, Integer> TYPES = typeToElectronContribMap();
 
     /** Allow exocyclic pi bonds. */
     private final boolean                     exocyclic;
@@ -79,14 +94,14 @@ final class AtomTypeModel extends ElectronDonation {
 
     /**{@inheritDoc} */
     @Override
-    int[] contribution(IAtomContainer container, RingSearch ringSearch) {
+    int[] contribution(IAtomContainer container) {
 
         final int nAtoms = container.getAtomCount();
         final int[] electrons = new int[nAtoms];
 
         Arrays.fill(electrons, -1);
 
-        final Map<IAtom, Integer> indexMap = Maps.newHashMapWithExpectedSize(nAtoms);
+        final Map<IAtom, Integer> indexMap = new HashMap<>(2*nAtoms);
 
         for (int i = 0; i < nAtoms; i++) {
 
@@ -94,11 +109,11 @@ final class AtomTypeModel extends ElectronDonation {
             indexMap.put(atom, i);
 
             // acyclic atom skipped
-            if (!ringSearch.cyclic(i)) continue;
+            if (!atom.isInRing()) continue;
 
             Hybridization hyb = atom.getHybridization();
 
-            checkNotNull(atom.getAtomTypeName(), "atom has unset atom type");
+            Objects.requireNonNull(atom.getAtomTypeName(), "atom has unset atom type");
 
             // atom has been assigned an atom type but we don't know the hybrid state,
             // typically for atom type 'X' (unknown)
@@ -110,7 +125,9 @@ final class AtomTypeModel extends ElectronDonation {
                     electrons[i] = electronsForAtomType(atom);
                     break;
                 case SP3:
-                    electrons[i] = lonePairCount(atom) > 0 ? 2 : -1;
+                    electrons[i] = electronsForAtomType(atom);
+                    if (electrons[i] == 0)
+                        electrons[i] = -1;
                     break;
             }
         }
@@ -131,7 +148,7 @@ final class AtomTypeModel extends ElectronDonation {
                 int u = indexMap.get(a1);
                 int v = indexMap.get(a2);
 
-                if (!ringSearch.cyclic(u, v)) {
+                if (!bond.isInRing()) {
 
                     // XXX: single exception - we could make this more general but
                     // for now this mirrors the existing behavior

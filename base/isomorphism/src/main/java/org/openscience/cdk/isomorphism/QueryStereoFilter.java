@@ -25,8 +25,6 @@
 
 package org.openscience.cdk.isomorphism;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Maps;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -37,9 +35,19 @@ import org.openscience.cdk.isomorphism.matchers.Expr;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
 import org.openscience.cdk.isomorphism.matchers.QueryAtom;
 import org.openscience.cdk.isomorphism.matchers.QueryBond;
+import org.openscience.cdk.stereo.Octahedral;
+import org.openscience.cdk.stereo.SquarePlanar;
+import org.openscience.cdk.stereo.TrigonalBipyramidal;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation;
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation.TOGETHER;
@@ -53,8 +61,6 @@ import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo.CLOCKW
  * Note: This class is internal and will be private in future.
  *
  * @author John May
- * @cdk.module smarts
- * @cdk.githash
  */
 final class QueryStereoFilter implements Predicate<int[]> {
 
@@ -72,6 +78,14 @@ final class QueryStereoFilter implements Predicate<int[]> {
 
     /** Indices of focus atoms of stereo elements. */
     private final int[]               queryStereoIndices, targetStereoIndices;
+
+    /**
+     * Indicates the stereo group config for a given atom idx, 0=unsed, 1=stored, -1=inverted.
+     * Initially all entries start as 0, if we hit a stereo-element in a group &1, &2, or1, or2
+     * then we check if we have already "set" the group, if not then we "set" the group to make
+     * the first element match, this means we may choose to flip the group to be the enantiomer.
+     */
+    private int[] groupConfigAdjust;
 
     /**
      * Create a predicate for checking mappings between a provided
@@ -107,15 +121,33 @@ final class QueryStereoFilter implements Predicate<int[]> {
      * @return the stereo chemistry is value
      */
     @Override
-    public boolean apply(final int[] mapping) {
+    public boolean test(final int[] mapping) {
+
+        // reset augment group config if it was initialised
+        if (groupConfigAdjust != null)
+            Arrays.fill(groupConfigAdjust, 0);
+
         for (final int u : queryStereoIndices) {
             switch (queryTypes[u]) {
                 case Tetrahedral:
-                    if (!checkTetrahedral(u, mapping)) return false;
+                    if (!checkTetrahedral(u, mapping))
+                        return false;
                     break;
                 case Geometric:
-                    if (!checkGeometric(u, otherIndex(u), mapping)) return false;
+                    if (!checkGeometric(u, otherIndex(u), mapping))
+                        return false;
                     break;
+                case Octahedral:
+                    if (!checkOctahedral(u, mapping))
+                        return false;
+                    break;
+                case TrigonalBipyramidal:
+                    if (!checkTrigonalBipyramidal(u, mapping))
+                        return false;
+                    break;
+                default:
+                    System.err.println("ERROR: Unhandled stereochemistry " + this.queryTypes[u]);
+                    return false;
             }
         }
         return true;
@@ -176,6 +208,41 @@ final class QueryStereoFilter implements Predicate<int[]> {
                      * permutationParity(vs)
                      * parity(targetElement.getStereo());
 
+        int groupInfo = targetElement.getGroupInfo();
+
+        if (groupInfo != 0) {
+            if (groupConfigAdjust == null)
+                groupConfigAdjust = new int[target.getAtomCount()];
+
+            // initialise the group
+            if (groupConfigAdjust[v] == 0) {
+
+                boolean leftOk = ((QueryAtom) queryAtom).getExpression().matches(targetAtom, IStereoElement.LEFT);
+                boolean rghtOk = ((QueryAtom) queryAtom).getExpression().matches(targetAtom, IStereoElement.RIGHT);
+
+                // Note: [C@,Si@@] can not happen since the target atom can't be both
+                // but [C;@,@@] can in which case we can't 'set' the group based on this
+                // element so wait till we find the next one
+                if (leftOk && rghtOk) {
+                    return true;
+                }
+
+                int adjust = 1;
+                if ((parity == -1 && !leftOk) || (parity == 1 && !rghtOk))
+                    adjust = -1;
+
+                for (int idx : targetStereoIndices) {
+                    if (targetElements[idx].getGroupInfo() == groupInfo) {
+                        groupConfigAdjust[idx] = adjust;
+                    }
+                }
+
+            }
+
+            // make the adjustment
+            parity *= groupConfigAdjust[v];
+        }
+
         if (parity < 0)
             return ((QueryAtom) queryAtom).getExpression()
                                           .matches(targetAtom, IStereoElement.LEFT);
@@ -185,6 +252,99 @@ final class QueryStereoFilter implements Predicate<int[]> {
         else
             return ((QueryAtom) queryAtom).getExpression()
                                           .matches(targetAtom, 0);
+    }
+
+    private boolean checkTrigonalBipyramidal(int u, int[] mapping) {
+        int v = mapping[u];
+        IAtom queryAtom = this.query.getAtom(u);
+        IAtom targetAtom = this.target.getAtom(v);
+        if (this.targetTypes[v] == null)
+            return ((QueryAtom) queryAtom).getExpression().matches(targetAtom, 0);
+        TrigonalBipyramidal queryElement = (TrigonalBipyramidal) this.queryElements[u];
+        IStereoElement<IAtom, IAtom> targetElement = this.targetElements[v];
+        Set<IAtom> mapped = new HashSet<>();
+        List<IAtom> requiredOrdering = new ArrayList<>();
+        for (IAtom atom : queryElement.getCarriers()) {
+            IAtom mappedAtom = this.target.getAtom(mapping[(Integer) this.queryMap.get(atom)]);
+            mapped.add(mappedAtom);
+            requiredOrdering.add(mappedAtom);
+        }
+        List<IAtom> currentOrdering = new ArrayList<>();
+        if (this.targetTypes[v] == Type.TrigonalBipyramidal) {
+            TrigonalBipyramidal trigonalBipyramidal = null;
+            if (targetElement instanceof TrigonalBipyramidal)
+                trigonalBipyramidal = ((TrigonalBipyramidal) targetElement).normalize();
+            if (trigonalBipyramidal == null)
+                return false;
+            for (IAtom atom : trigonalBipyramidal.getCarriers()) {
+                currentOrdering.add(mapped.contains(atom) ? atom : targetAtom);
+            }
+        } else if (this.targetTypes[v] == Type.Octahedral) {
+            // build a copy with only mapped atoms
+            for (IAtom atom : targetElement.getCarriers()) {
+                currentOrdering.add(mapped.contains(atom) ? atom : targetAtom);
+            }
+            Octahedral oc = new Octahedral(targetAtom,
+                                           currentOrdering.<IAtom>toArray(new IAtom[0]),
+                                           targetElement.getConfigOrder());
+            TrigonalBipyramidal tbpy = oc.asTrigonalBipyramidal();
+            if (tbpy == null)
+                return false;
+            currentOrdering = tbpy.getCarriers();
+        } else {
+            return false;
+        }
+        int cfg = TrigonalBipyramidal.reorder(requiredOrdering, currentOrdering);
+        if (cfg < 0)
+            return false;
+        cfg |= 0x5200;
+        return ((QueryAtom) queryAtom).getExpression().matches(targetAtom, cfg);
+    }
+
+    private boolean checkOctahedral(int u, int[] mapping) {
+        int v = mapping[u];
+        IAtom queryAtom = this.query.getAtom(u);
+        IAtom targetAtom = this.target.getAtom(v);
+        if (this.targetTypes[v] == null)
+            return ((QueryAtom) queryAtom).getExpression().matches(targetAtom, 0);
+        Octahedral queryElement = (Octahedral) this.queryElements[u];
+        IStereoElement<IAtom,IAtom> targetElement = this.targetElements[v];
+        Set<IAtom> mapped = new HashSet<>();
+        List<IAtom> requiredOrdering = new ArrayList<>();
+        List<IAtom> currentOrdering = new ArrayList<>();
+        for (IAtom atom : queryElement.getCarriers()) {
+            IAtom mappedAtom = this.target.getAtom(mapping[(Integer) this.queryMap.get(atom)]);
+            mapped.add(mappedAtom);
+            requiredOrdering.add(mappedAtom);
+        }
+        if (this.targetTypes[v] == Type.Octahedral) {
+            Octahedral octahedral = null;
+            if (targetElement instanceof Octahedral)
+                octahedral = ((Octahedral) targetElement).normalize();
+            if (octahedral == null)
+                return false;
+            for (IAtom atom : octahedral.getCarriers())
+                currentOrdering.add(mapped.contains(atom) ? atom : targetAtom);
+        } else if (this.targetTypes[v] == Type.TrigonalBipyramidal) {
+            // build a copy which only has the mapped atoms
+            for (IAtom atom : targetElement.getCarriers()) {
+                currentOrdering.add(mapped.contains(atom) ? atom : targetAtom);
+            }
+            TrigonalBipyramidal tbpy = new TrigonalBipyramidal(targetAtom,
+                                                               currentOrdering.<IAtom>toArray(new IAtom[0]),
+                                                               targetElement.getConfigOrder());
+            Octahedral oc = tbpy.asOctahedral();
+            if (oc == null)
+                return false;
+            currentOrdering = oc.getCarriers();
+        } else {
+            return false;
+        }
+        int cfg = Octahedral.reorder(requiredOrdering, currentOrdering);
+        if (cfg < 0)
+            return false;
+        cfg |= IStereoElement.Octahedral;
+        return ((QueryAtom) queryAtom).getExpression().matches(targetAtom, cfg);
     }
 
     /**
@@ -243,8 +403,8 @@ final class QueryStereoFilter implements Predicate<int[]> {
             IBond[] qbonds = queryElement.getBonds();
             IBond[] tbonds = targetElement.getBonds();
 
-            // bond is undirected so we need to ensure v1 is the first atom in the bond
-            // we also need to to swap the substituents later
+            // bond is undirected, so we need to ensure v1 is the first atom in the bond
+            // we also need to swap the substituents later
             if (!queryElement.getStereoBond().getBegin().equals(query.getAtom(u1)))
                 swap(qbonds, 0, 1);
             if (!targetElement.getStereoBond().getBegin().equals(target.getAtom(v1)))
@@ -259,7 +419,7 @@ final class QueryStereoFilter implements Predicate<int[]> {
             tbond = target.getBond(target.getAtom(v1), target.getAtom(v2));
         }
 
-        Expr expr = ((QueryBond)qbond).getExpression();
+        Expr expr = ((QueryBond) qbond).getExpression();
         return expr.matches(tbond, config);
     }
 
@@ -324,7 +484,7 @@ final class QueryStereoFilter implements Predicate<int[]> {
      * @return the index/lookup of atoms to the index they appear
      */
     private static Map<IAtom, Integer> indexAtoms(IAtomContainer container) {
-        Map<IAtom, Integer> map = Maps.newHashMapWithExpectedSize(container.getAtomCount());
+        Map<IAtom, Integer> map = new HashMap<>(2*container.getAtomCount());
         for (int i = 0; i < container.getAtomCount(); i++)
             map.put(container.getAtom(i), i);
         return map;
@@ -354,11 +514,37 @@ final class QueryStereoFilter implements Predicate<int[]> {
                 indices[nElements++] = idx;
             } else if (element instanceof IDoubleBondStereochemistry) {
                 IDoubleBondStereochemistry dbs = (IDoubleBondStereochemistry) element;
-                int idx1 = map.get(dbs.getStereoBond().getBegin());
-                int idx2 = map.get(dbs.getStereoBond().getEnd());
-                elements[idx2] = elements[idx1] = element;
-                types[idx1] = types[idx2] = Type.Geometric;
-                indices[nElements++] = idx1; // only visit the first atom
+                int idx1 = (Integer) map.get(dbs.getStereoBond().getBegin());
+                int idx2 = (Integer) map.get(dbs.getStereoBond().getEnd());
+                elements[idx1] = element;
+                elements[idx2] = element;
+                types[idx2] = Type.Geometric;
+                types[idx1] = Type.Geometric;
+                indices[nElements++] = idx1;
+                continue;
+            }
+            if (element instanceof Octahedral) {
+                Octahedral oc = (Octahedral) element;
+                int idx = (Integer) map.get(oc.getFocus());
+                elements[idx] = element;
+                types[idx] = Type.Octahedral;
+                indices[nElements++] = idx;
+                continue;
+            }
+            if (element instanceof SquarePlanar) {
+                Octahedral oc = ((SquarePlanar) element).asOctahedral();
+                int idx = (Integer) map.get(oc.getFocus());
+                elements[idx] = oc;
+                types[idx] = Type.Octahedral;
+                indices[nElements++] = idx;
+                continue;
+            }
+            if (element instanceof TrigonalBipyramidal) {
+                TrigonalBipyramidal tbpy = (TrigonalBipyramidal) element;
+                int idx = (Integer) map.get(tbpy.getFocus());
+                elements[idx] = tbpy;
+                types[idx] = Type.TrigonalBipyramidal;
+                indices[nElements++] = idx;
             }
         }
         return Arrays.copyOf(indices, nElements);
@@ -384,8 +570,17 @@ final class QueryStereoFilter implements Predicate<int[]> {
         return conformation == TOGETHER ? 1 : -1;
     }
 
-    // could be moved into the IStereoElement to allow faster introspection
-    private static enum Type {
-        Tetrahedral, Geometric
+    /**
+     * Backwards compatible method from when we used GUAVA predicates.
+     * @param ints atom index bijection
+     * @return true/false
+     * @see #test(int[])
+     */
+    public boolean apply(int[] ints) {
+        return test(ints);
+    }
+
+    enum Type {
+        Tetrahedral, Geometric, TrigonalBipyramidal, Octahedral;
     }
 }

@@ -23,36 +23,33 @@ package org.openscience.cdk.renderer.color;
 
 import java.awt.Color;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.PseudoAtom;
 import org.openscience.cdk.interfaces.IAtom;
 
-/**
- * @cdk.module test-render
- */
-public class CDK2DAtomColorsTest extends CDKTestCase {
+class CDK2DAtomColorsTest extends CDKTestCase {
 
     @Test
-    public void testGetAtomColor() {
+    void testGetAtomColor() {
         CDK2DAtomColors colors = new CDK2DAtomColors();
-        Assert.assertNotNull(colors);
+        Assertions.assertNotNull(colors);
         IAtom hydrogen = new Atom("H");
         hydrogen.setAtomicNumber(1);
-        Assert.assertEquals(new Color(0, 0, 0), colors.getAtomColor(hydrogen));
+        Assertions.assertEquals(new Color(0, 0, 0), colors.getAtomColor(hydrogen));
         IAtom helium = new Atom("He");
         helium.setAtomicNumber(2);
-        Assert.assertEquals(new Color(217, 255, 255), colors.getAtomColor(helium));
+        Assertions.assertEquals(new Color(217, 255, 255), colors.getAtomColor(helium));
     }
 
     @Test
-    public void testGetDefaultAtomColor() {
+    void testGetDefaultAtomColor() {
         CDK2DAtomColors colors = new CDK2DAtomColors();
 
-        Assert.assertNotNull(colors);
+        Assertions.assertNotNull(colors);
         IAtom imaginary = new PseudoAtom("Ix");
-        Assert.assertEquals(new Color(0, 0, 0), colors.getAtomColor(imaginary, Color.BLACK));
+        Assertions.assertEquals(new Color(0, 0, 0), colors.getAtomColor(imaginary, Color.BLACK));
     }
 }

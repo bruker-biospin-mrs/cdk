@@ -74,8 +74,6 @@ import org.openscience.cdk.io.formats.IResourceFormat;
  * <br><a href="http://www.msg.ameslab.gov/GAMESS/GAMESS.html">GAMESS</a> is a
  * quantum chemistry program by Gordon research group atIowa State University.
  *
- * @cdk.module  extra
- * @cdk.githash
  * @cdk.keyword Gamess
  * @cdk.keyword file format
  * @cdk.keyword output
@@ -107,6 +105,7 @@ public class GamessReader extends DefaultChemObjectReader {
      * Boolean constant used to specify that the coordinates are given in &Aring;ngstrom units.
      */
     public static final boolean ANGSTROM_UNIT    = false;
+    public static final String UNEXPECTED_END_OF_INPUT = "Unexpected end of input!";
 
     /**
      * The "BufferedReader" object used to read data from the "file system" file.
@@ -171,8 +170,8 @@ public class GamessReader extends DefaultChemObjectReader {
     public boolean accepts(Class<? extends IChemObject> classObject) {
         if (IChemFile.class.equals(classObject)) return true;
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (IChemFile.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (IChemFile.class.equals(anInterface)) return true;
         }
         Class superClass = classObject.getSuperclass();
         if (superClass != null) return this.accepts(superClass);
@@ -225,22 +224,28 @@ public class GamessReader extends DefaultChemObjectReader {
              * There are 2 types of coordinate sets: - bohr coordinates sets (if
              * statement) - angstr???m coordinates sets (else statement)
              */
-            if (currentReadLine.indexOf("COORDINATES (BOHR)") >= 0) {
+            if (currentReadLine.contains("COORDINATES (BOHR)")) {
 
                 /*
                  * The following line do no contain data, so it is ignored.
                  */
-                this.input.readLine();
+                String blank = this.input.readLine();
+                if (blank == null)
+                    throw new IOException(UNEXPECTED_END_OF_INPUT);
                 moleculeSet.addAtomContainer(this.readCoordinates(file.getBuilder().newInstance(IAtomContainer.class),
                         GamessReader.BOHR_UNIT));
                 //break; //<- stops when the first set of coordinates is found.
-            } else if (currentReadLine.indexOf(" COORDINATES OF ALL ATOMS ARE (ANGS)") >= 0) {
+            } else if (currentReadLine.contains(" COORDINATES OF ALL ATOMS ARE (ANGS)")) {
 
                 /*
                  * The following 2 lines do no contain data, so it are ignored.
                  */
-                this.input.readLine();
-                this.input.readLine();
+                String blank = this.input.readLine();
+                if (blank == null)
+                    throw new IOException(UNEXPECTED_END_OF_INPUT);
+                blank = this.input.readLine();
+                if (blank == null)
+                    throw new IOException(UNEXPECTED_END_OF_INPUT);
 
                 moleculeSet.addAtomContainer(this.readCoordinates(file.getBuilder().newInstance(IAtomContainer.class),
                         GamessReader.ANGSTROM_UNIT));
@@ -427,7 +432,7 @@ public class GamessReader extends DefaultChemObjectReader {
         if (coordinatesUnits == GamessReader.BOHR_UNIT) {
             return PhysicalConstants.BOHR_TO_ANGSTROM;
         } else { //condition is: (coordinatesUnits == GamessReader.ANGTROM_UNIT)
-            return (double) 1;
+            return 1;
         }
     }
 

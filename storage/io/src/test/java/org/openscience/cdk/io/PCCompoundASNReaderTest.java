@@ -25,65 +25,64 @@ package org.openscience.cdk.io;
 import java.io.InputStream;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.interfaces.IChemFile;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 
 /**
- * @cdk.module test-io
  */
-public class PCCompoundASNReaderTest extends SimpleChemObjectReaderTest {
+class PCCompoundASNReaderTest extends SimpleChemObjectReaderTest {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(PCCompoundASNReaderTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(PCCompoundASNReaderTest.class);
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        setSimpleChemObjectReader(new PCCompoundASNReader(), "data/asn/pubchem/cid1.asn");
+    @BeforeAll
+    static void setup() throws Exception {
+        setSimpleChemObjectReader(new PCCompoundASNReader(), "cid1.asn");
     }
 
     @Test
-    public void testAccepts() {
+    void testAccepts() {
         PCCompoundASNReader reader = new PCCompoundASNReader();
-        Assert.assertTrue(reader.accepts(ChemFile.class));
+        Assertions.assertTrue(reader.accepts(ChemFile.class));
     }
 
     @Test
-    public void testReading() throws Exception {
-        String filename = "data/asn/pubchem/cid1.asn";
+    void testReading() throws Exception {
+        String filename = "cid1.asn";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         PCCompoundASNReader reader = new PCCompoundASNReader(ins);
-        IChemFile cFile = (IChemFile) reader.read(new ChemFile());
+        IChemFile cFile = reader.read(new ChemFile());
         reader.close();
         List<IAtomContainer> containers = ChemFileManipulator.getAllAtomContainers(cFile);
-        Assert.assertEquals(1, containers.size());
-        Assert.assertTrue(containers.get(0) instanceof IAtomContainer);
+        Assertions.assertEquals(1, containers.size());
+        Assertions.assertTrue(containers.get(0) instanceof IAtomContainer);
         IAtomContainer molecule = containers.get(0);
-        Assert.assertNotNull(molecule);
+        Assertions.assertNotNull(molecule);
 
         // check atom stuff
-        Assert.assertEquals(31, molecule.getAtomCount());
-        Assert.assertNotNull(molecule.getAtom(3));
-        Assert.assertEquals("O", molecule.getAtom(3).getSymbol());
-        Assert.assertNotNull(molecule.getAtom(4));
-        Assert.assertEquals("N", molecule.getAtom(4).getSymbol());
+        Assertions.assertEquals(31, molecule.getAtomCount());
+        Assertions.assertNotNull(molecule.getAtom(3));
+        Assertions.assertEquals("O", molecule.getAtom(3).getSymbol());
+        Assertions.assertNotNull(molecule.getAtom(4));
+        Assertions.assertEquals("N", molecule.getAtom(4).getSymbol());
 
         // check bond stuff
-        Assert.assertEquals(30, molecule.getBondCount());
-        Assert.assertNotNull(molecule.getBond(3));
-        Assert.assertEquals(molecule.getAtom(2), molecule.getBond(3).getBegin());
-        Assert.assertEquals(molecule.getAtom(11), molecule.getBond(3).getEnd());
+        Assertions.assertEquals(30, molecule.getBondCount());
+        Assertions.assertNotNull(molecule.getBond(3));
+        Assertions.assertEquals(molecule.getAtom(2), molecule.getBond(3).getBegin());
+        Assertions.assertEquals(molecule.getAtom(11), molecule.getBond(3).getEnd());
 
         // some extracted props
-        Assert.assertEquals("InChI=1/C9H17NO4/c1-7(11)14-8(5-9(12)13)6-10(2,3)4/h8H,5-6H2,1-4H3",
-                molecule.getProperty(CDKConstants.INCHI));
-        Assert.assertEquals("CC(=O)OC(CC(=O)[O-])C[N+](C)(C)C", molecule.getProperty(CDKConstants.SMILES));
+        Assertions.assertEquals("InChI=1/C9H17NO4/c1-7(11)14-8(5-9(12)13)6-10(2,3)4/h8H,5-6H2,1-4H3", molecule.getProperty(CDKConstants.INCHI));
+        Assertions.assertEquals("CC(=O)OC(CC(=O)[O-])C[N+](C)(C)C", molecule.getProperty(CDKConstants.SMILES));
     }
 }

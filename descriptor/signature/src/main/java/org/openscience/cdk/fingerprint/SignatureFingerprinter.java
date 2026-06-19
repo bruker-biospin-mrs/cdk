@@ -36,13 +36,11 @@ import org.openscience.cdk.signature.AtomSignature;
 /**
  * An implementation of a {@link AtomSignature}-based fingerprint.
  *
- * @cdk.module  signature
  * @cdk.keyword fingerprint
- * @cdk.githash
  */
 public class SignatureFingerprinter extends AbstractFingerprinter implements IFingerprinter {
 
-    private int signatureDepth;
+    private final int signatureDepth;
 
     /**
      * Initialize the fingerprinter with a default signature depth of 1.
@@ -63,7 +61,7 @@ public class SignatureFingerprinter extends AbstractFingerprinter implements IFi
 
     @Override
     protected List<Map.Entry<String, String>> getParameters() {
-        return Collections.<Map.Entry<String,String>>singletonList(
+        return Collections.singletonList(
             new AbstractMap.SimpleImmutableEntry<>("signatureDepth", Integer.toString(signatureDepth))
         );
     }
@@ -75,7 +73,7 @@ public class SignatureFingerprinter extends AbstractFingerprinter implements IFi
 
     @Override
     public Map<String, Integer> getRawFingerprint(IAtomContainer atomContainer) throws CDKException {
-        Map<String, Integer> map = new HashMap<String, Integer>();
+        Map<String, Integer> map = new HashMap<>();
         for (IAtom atom : atomContainer.atoms()) {
             String signature = new AtomSignature(atom, signatureDepth, atomContainer).toCanonicalString();
             if (map.containsKey(signature)) {

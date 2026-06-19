@@ -24,6 +24,7 @@
 
 package org.openscience.cdk.stereo;
 
+import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.graph.GraphUtil;
 import org.openscience.cdk.interfaces.IAtom;
@@ -32,6 +33,8 @@ import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
+import org.openscience.cdk.tools.ILoggingTool;
+import org.openscience.cdk.tools.LoggingToolFactory;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
@@ -46,6 +49,8 @@ import java.util.Set;
 import static org.openscience.cdk.graph.GraphUtil.EdgeToBondMap;
 import static org.openscience.cdk.interfaces.IBond.Stereo.DOWN;
 import static org.openscience.cdk.interfaces.IBond.Stereo.DOWN_INVERTED;
+import static org.openscience.cdk.interfaces.IBond.Stereo.UP;
+import static org.openscience.cdk.interfaces.IBond.Stereo.UP_INVERTED;
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation;
 import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo;
 
@@ -76,9 +81,7 @@ import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo;
  * </pre></blockquote>
  *
  * @author John May
- * @cdk.module standard
  * @see Stereocenters
- * @cdk.githash
  */
 public abstract class StereoElementFactory {
 
@@ -91,13 +94,18 @@ public abstract class StereoElementFactory {
     /** A bond map for fast access to bond labels between two atom indices. */
     protected final EdgeToBondMap bondMap;
 
-    
+
     protected final Set<Projection> projections = EnumSet.noneOf(Projection.class);
+
+    protected boolean strict;
+
+    protected final ILoggingTool logger
+            = LoggingToolFactory.createLoggingTool(StereoElementFactory.class);
 
     /**
      * Verify if created stereochemistry are actually stereo-centres.
      */
-    private boolean check = false;
+    protected boolean check = false;
 
     /**
      * Internal constructor.
@@ -209,7 +217,7 @@ public abstract class StereoElementFactory {
             centers.checkSymmetry();
         }
 
-        List<IStereoElement> elements = new ArrayList<IStereoElement>();
+        List<IStereoElement> elements = new ArrayList<>();
 
         // projection recognition (note no action in constructors)
         FischerRecognition fischerRecon = new FischerRecognition(container, graph, bondMap, centers);
@@ -450,14 +458,14 @@ public abstract class StereoElementFactory {
 
     /**
      * Indicate that stereochemistry drawn as a certain projection should be
-     * interpreted. 
+     * interpreted.
      *
      * <pre>{@code
-     * StereoElementFactory factory = 
+     * StereoElementFactory factory =
      *   StereoElementFactory.using2DCoordinates(container)
      *                       .interpretProjections(Projection.Fischer, Projection.Haworth);
      * }</pre>
-     * 
+     *
      * @param projections types of projection
      * @return self
      * @see org.openscience.cdk.stereo.Projection
@@ -470,6 +478,21 @@ public abstract class StereoElementFactory {
 
     public StereoElementFactory checkSymmetry(boolean check) {
         this.check = check;
+        return this;
+    }
+
+    /**
+     * Enables stricter stereochemistry checking, specifically tetrahedral
+     * centres may not be created from inverse down wedges (i.e. Daylight
+     * style depictions). This also sets that all stereocentres are tested
+     * for asymmetry.
+     *
+     * @return stereo element factory.
+     */
+    public StereoElementFactory withStrictMode()
+    {
+        this.check = true;
+        this.strict = true;
         return this;
     }
 
@@ -544,16 +567,23 @@ public abstract class StereoElementFactory {
 
             if (hasUnspecifiedParity(focus)) return null;
 
+            if (check) {
+                if (!stereocenters.isStereocenter(v))
+                    return null;
+            }
+
             IAtom[] neighbors = new IAtom[4];
             int[] elevation = new int[4];
 
-            neighbors[3] = focus;
+            neighbors[3] = focus; // implicit neighbour if needed
 
             boolean nonplanar = false;
             int n = 0;
 
+            List<IBond> bonds = new ArrayList<>();
             for (int w : graph[v]) {
                 IBond bond = bondMap.get(v, w);
+                bonds.add(bond);
 
                 // wavy bond
                 if (isUnspecified(bond)) return null;
@@ -561,42 +591,57 @@ public abstract class StereoElementFactory {
                 neighbors[n] = container.getAtom(w);
                 elevation[n] = elevationOf(focus, bond);
 
-                if (elevation[n] != 0) nonplanar = true;
+                if (elevation[n] != 0)
+                    nonplanar = true;
 
                 n++;
             }
 
-            // too few/many neighbors
-            if (n < 3 || n > 4) return null;
+            // too few neighbors
+            if (n < 3) return null;
 
-            // TODO: verify valid wedge/hatch configurations using similar procedure
-            // to NonPlanarBonds in the cdk-sdg package.
+            if (strict) {
+                if (!verifyWedgePattern(focus, n, bonds))
+                    return null;
+            }
 
             // no up/down bonds present - check for inverted down/hatch
-            if (!nonplanar) {
+            if (!nonplanar && !strict) {
                 int[] ws = graph[v];
                 for (int i = 0; i < ws.length; i++) {
                     int w = ws[i];
                     IBond bond = bondMap.get(v, w);
 
                     // we have already previously checked whether 'v' is at the
-                    // 'point' and so these must be inverse (fat-end @
-                    // stereocenter) ala Daylight
-                    if (bond.getStereo() == DOWN || bond.getStereo() == DOWN_INVERTED) {
+                    // 'point' and so these must be inverse (fat-end of hatched
+                    // wedge is a stereocenter) ala Daylight
+                    if (bond.getDisplay() == IBond.Display.WedgedHashBegin || bond.getDisplay() == IBond.Display.WedgedHashEnd) {
 
                         // we stick to the 'point' end convention but can
                         // interpret if the bond isn't connected to another
                         // stereocenter - otherwise it's ambiguous!
-                        if (stereocenters.isStereocenter(w)) continue;
+                        if (stereocenters.stereocenterType(w) != Stereocenters.Stereocenter.Non) {
+                            stereocenters.checkSymmetry();
+                            if (stereocenters.isStereocenter(w)) {
+                                logger.error("Ambiguous down wedge bond between atom indexes ", w, " and ", v);
+                                return null;
+                            }
+                        }
 
+                        logger.warn("Inverse wedge bond used for stereo at atom index ", v);
                         elevation[i] = -1;
                         nonplanar = true;
                     }
+                    // stereo at the "fat-end" of the bold wedge?
+                    else if (bond.getDisplay() == IBond.Display.WedgeBegin || bond.getDisplay() == IBond.Display.WedgeEnd) {
+                        logger.warn("Ignoring inverted up wedge bond connected to atom idx=", w);
+                        return null;
+                    }
                 }
-
-                // still no bonds to use
-                if (!nonplanar) return null;
             }
+
+            // still no bonds to use
+            if (!nonplanar) return null;
 
             int parity = parity(focus, neighbors, elevation);
 
@@ -607,12 +652,122 @@ public abstract class StereoElementFactory {
             return new TetrahedralChirality(focus, neighbors, winding);
         }
 
+        private boolean isOkay(int a, int b) {
+            return a == 0 || b == 0 || a == b;
+        }
+
+        // check some obvious stereo chemistry errors, see the InChI
+        // technical manual "Definition of 2D drawing correctness"
+        private boolean verifyWedgePattern(IAtom focus, int n, List<IBond> bonds) {
+            bonds.sort(GeometryUtil.polarBondComparator(focus));
+            if (n == 3) {
+                double angle = getMaxSweep(focus, bonds);
+                double delta = angle - Math.PI;
+                double threshold = 0.01;
+                // largest angle between 2 neighbours is > 180 => wedges should
+                // alternate
+                if (delta > threshold) {
+                    int ref = 0;
+                    for (IBond bond : bonds) {
+                        int curr = elevationOf(focus, bond);
+                        if (!isOkay(ref, curr)) {
+                            logger.error("Invalid wedge pattern, up/down bonds should be mixed when there is an acute angle!");
+                            return false;
+                        } else
+                            ref = curr;
+                        ref = -ref;
+                    }
+                }
+                // larges angle between 2 neighbours is < 180 => all wedges
+                // should be the same
+                else if (delta < -threshold) {
+                    int ref = 0;
+                    for (IBond bond : bonds) {
+                        int curr = elevationOf(focus, bond);
+                        if (!isOkay(ref, curr)) {
+                            logger.error("Invalid wedge pattern, up/down bonds should be same when there is not an acute angle!");
+                            return false;
+                        } else
+                            ref = curr;
+                    }
+                } else {
+                    // 180-degrees, check where the wedge is
+                    if (bonds.size() != 3)
+                        throw new IllegalArgumentException("3 bonds only!");
+                    Vector2d v1 = toUnitVector(focus, bonds.get(0).getOther(focus));
+                    Vector2d v2 = toUnitVector(focus, bonds.get(1).getOther(focus));
+                    Vector2d v3 = toUnitVector(focus, bonds.get(2).getOther(focus));
+                    String ambiuousStereoMesg = "Ambiguous stereochemistry - 3 neighbours and two bonds are co-linear";
+                    if (Math.abs(signedAngle(v1,v2) - Math.PI) < threshold) {
+                        if (elevationOf(focus, bonds.get(0)) == 0 &&
+                            elevationOf(focus, bonds.get(1)) == 0 &&
+                            elevationOf(focus, bonds.get(2)) != 0) {
+                            logger.error(ambiuousStereoMesg);
+                            return false;
+                        }
+                    } else if (Math.abs(signedAngle(v2,v3) - Math.PI) < threshold) {
+                        if (elevationOf(focus, bonds.get(0)) != 0 &&
+                            elevationOf(focus, bonds.get(1)) == 0 &&
+                            elevationOf(focus, bonds.get(2)) == 0) {
+                            logger.error(ambiuousStereoMesg);
+                            return false;
+                        }
+                    } else if (Math.abs(signedAngle(v3,v1) - Math.PI) < threshold) {
+                        if (elevationOf(focus, bonds.get(0)) == 0 &&
+                            elevationOf(focus, bonds.get(1)) != 0 &&
+                            elevationOf(focus, bonds.get(2)) == 0) {
+                            logger.error(ambiuousStereoMesg);
+                            return false;
+                        }
+                    }
+                }
+            } else { // n == 4
+                int ref = 0;
+                for (IBond bond : bonds) {
+                    int curr = elevationOf(focus, bond);
+                    if (curr != 0) {
+                        if (ref != 0 && ref != curr) {
+                            logger.error("Badly drawn stereochemistry with 4 neighbours, up/down bonds should alternate!");
+                            return false;
+                        }
+                        else {
+                            ref = curr;
+                        }
+                    }
+                    ref = -ref; // flip for next check
+                }
+            }
+            return true;
+        }
+
+        private double signedAngle(Vector2d a, Vector2d b) {
+            double angle = Math.atan2(a.x*b.y-a.y*b.x, a.x*b.x+a.y*b.y);
+            return angle >= 0 ? (2*Math.PI)-angle : -angle;
+        }
+
+        private double max(double a, double b, double c) {
+            return Math.max(a, Math.max(b, c));
+        }
+
+        private double getMaxSweep(IAtom atom, List<IBond> bonds) {
+            if (bonds.size() != 3)
+                throw new IllegalArgumentException("3 bonds only!");
+            Vector2d v1 = toUnitVector(atom, bonds.get(0).getOther(atom));
+            Vector2d v2 = toUnitVector(atom, bonds.get(1).getOther(atom));
+            Vector2d v3 = toUnitVector(atom, bonds.get(2).getOther(atom));
+            return max(signedAngle(v1, v2),
+                       signedAngle(v2, v3),
+                       signedAngle(v3, v1));
+        }
+
         private static boolean isWedged(IBond bond) {
-            switch (bond.getStereo()) {
-                case UP:
-                case DOWN:
-                case UP_INVERTED:
-                case DOWN_INVERTED:
+            switch (bond.getDisplay()) {
+                case WedgeBegin:
+                case WedgeEnd:
+                case WedgedHashBegin:
+                case WedgedHashEnd:
+                case HollowWedgeBegin:
+                case HollowWedgeEnd:
                     return true;
                 default:
                     return false;
@@ -795,6 +950,7 @@ public abstract class StereoElementFactory {
                 if (w == v) continue;
                 if (bond.getOrder() != IBond.Order.SINGLE) continue;
                 if (isUnspecified(bond)) return null;
+                if (n == 2) return null;
                 neighbors[n] = container.getAtom(w);
                 elevation[n] = elevationOf(terminals[0], bond);
                 n++;
@@ -806,6 +962,7 @@ public abstract class StereoElementFactory {
                 IBond bond = bondMap.get(t1, w);
                 if (bond.getOrder() != IBond.Order.SINGLE) continue;
                 if (isUnspecified(bond)) return null;
+                if (n == 4) return null;
                 neighbors[n] = container.getAtom(w);
                 elevation[n] = elevationOf(terminals[1], bond);
                 n++;
@@ -833,7 +990,7 @@ public abstract class StereoElementFactory {
 
             IBond   focus    = dbs.get(dbs.size()/2);
             IBond[] carriers = new IBond[2];
-            int     config   = 0;
+            int     config;
 
             IAtom begAtom = dbs.get(0).getOther(getShared(dbs.get(0), dbs.get(1)));
             IAtom endAtom = dbs.get(dbs.size()-1).getOther(getShared(dbs.get(dbs.size()-1), dbs.get(dbs.size()-2)));
@@ -889,14 +1046,8 @@ public abstract class StereoElementFactory {
          * @return the bond has unspecified stereochemistry
          */
         private boolean isUnspecified(IBond bond) {
-            switch (bond.getStereo()) {
-                case UP_OR_DOWN:
-                case UP_OR_DOWN_INVERTED:
-                case E_OR_Z:
-                    return true;
-                default:
-                    return false;
-            }
+            return bond.getDisplay() == IBond.Display.Wavy ||
+                   bond.getDisplay() == IBond.Display.Crossed;
         }
 
         /**
@@ -962,6 +1113,12 @@ public abstract class StereoElementFactory {
             return new Point2d(v2d);
         }
 
+        private Vector2d toUnitVector(IAtom from, IAtom to) {
+            if (from.equals(to))
+                return new Vector2d(0, 0);
+            return new Vector2d(toUnitVector(from.getPoint2d(), to.getPoint2d()));
+        }
+
         /**
          * Compute the signed volume of the tetrahedron from the planar points
          * and elevations.
@@ -1017,14 +1174,16 @@ public abstract class StereoElementFactory {
          *         planar
          */
         private int elevationOf(IAtom focus, IBond bond) {
-            switch (bond.getStereo()) {
-                case UP:
+            switch (bond.getDisplay()) {
+                case WedgeBegin:
+                case HollowWedgeBegin:
                     return bond.getBegin().equals(focus) ? +1 : 0;
-                case UP_INVERTED:
+                case WedgeEnd:
+                case HollowWedgeEnd:
                     return bond.getEnd().equals(focus) ? +1 : 0;
-                case DOWN:
+                case WedgedHashBegin:
                     return bond.getBegin().equals(focus) ? -1 : 0;
-                case DOWN_INVERTED:
+                case WedgedHashEnd:
                     return bond.getEnd().equals(focus) ? -1 : 0;
             }
             return 0;
@@ -1079,9 +1238,6 @@ public abstract class StereoElementFactory {
 
             // too few/many neighbors
             if (n < 3 || n > 4) return null;
-
-            // TODO: verify valid wedge/hatch configurations using similar procedure
-            // to NonPlanarBonds in the cdk-sdg package
 
             int parity = parity(neighbors);
 
@@ -1209,6 +1365,9 @@ public abstract class StereoElementFactory {
 
             if (hasUnspecifiedParity(focus)) return null;
 
+            if (container.getConnectedBondsCount(focus) != 2)
+        	    return null;
+
             IAtom[] terminals = ExtendedTetrahedral.findTerminalAtoms(container, focus);
             IAtom[] neighbors = new IAtom[4];
 
@@ -1256,7 +1415,7 @@ public abstract class StereoElementFactory {
 
             IBond   focus    = dbs.get(dbs.size()/2);
             IBond[] carriers = new IBond[2];
-            int     config   = 0;
+            int     config;
 
             IAtom begAtom = dbs.get(0).getOther(getShared(dbs.get(0),
                                                           dbs.get(1)));

@@ -24,68 +24,66 @@
 
 package org.openscience.cdk.isomorphism;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author John May
- * @cdk.module test-isomorphism
  */
-public class CompatibilityMatrixTest {
+class CompatibilityMatrixTest {
 
     @Test
-    public void accessAndModify() throws Exception {
+    void accessAndModify() throws Exception {
         CompatibilityMatrix m = new CompatibilityMatrix(5, 5);
-        assertFalse(m.get(0, 1));
-        assertFalse(m.get(0, 4));
-        assertFalse(m.get(1, 0));
-        assertFalse(m.get(1, 3));
+        Assertions.assertFalse(m.get(0, 1));
+        Assertions.assertFalse(m.get(0, 4));
+        Assertions.assertFalse(m.get(1, 0));
+        Assertions.assertFalse(m.get(1, 3));
         m.set(0, 1);
         m.set(0, 4);
         m.set(1, 0);
         m.set(1, 3);
-        assertTrue(m.get(0, 1));
-        assertTrue(m.get(0, 4));
-        assertTrue(m.get(1, 0));
-        assertTrue(m.get(1, 3));
+        Assertions.assertTrue(m.get(0, 1));
+        Assertions.assertTrue(m.get(0, 4));
+        Assertions.assertTrue(m.get(1, 0));
+        Assertions.assertTrue(m.get(1, 3));
     }
 
     @Test
-    public void mark() throws Exception {
+    void mark() throws Exception {
         CompatibilityMatrix m = new CompatibilityMatrix(5, 5);
         m.set(0, 1);
         m.set(0, 2);
         m.set(0, 4);
         m.set(1, 0);
         m.set(1, 3);
-        assertTrue(m.get(0, 1));
-        assertTrue(m.get(0, 4));
+        Assertions.assertTrue(m.get(0, 1));
+        Assertions.assertTrue(m.get(0, 4));
         m.mark(0, 1, -1);
         m.mark(0, 4, -4);
         m.mark(1, 3, -6);
-        assertFalse(m.get(0, 1));
-        assertFalse(m.get(0, 4));
-        assertFalse(m.get(1, 3));
+        Assertions.assertFalse(m.get(0, 1));
+        Assertions.assertFalse(m.get(0, 4));
+        Assertions.assertFalse(m.get(1, 3));
         m.resetRows(0, -1);
-        assertTrue(m.get(0, 1));
-        assertFalse(m.get(0, 4));
-        assertFalse(m.get(1, 3));
+        Assertions.assertTrue(m.get(0, 1));
+        Assertions.assertFalse(m.get(0, 4));
+        Assertions.assertFalse(m.get(1, 3));
         m.resetRows(0, -4);
-        assertTrue(m.get(0, 1));
-        assertTrue(m.get(0, 4));
-        assertFalse(m.get(1, 3));
+        Assertions.assertTrue(m.get(0, 1));
+        Assertions.assertTrue(m.get(0, 4));
+        Assertions.assertFalse(m.get(1, 3));
         m.resetRows(0, -6);
-        assertTrue(m.get(0, 1));
-        assertTrue(m.get(0, 4));
-        assertTrue(m.get(1, 3));
+        Assertions.assertTrue(m.get(0, 1));
+        Assertions.assertTrue(m.get(0, 4));
+        Assertions.assertTrue(m.get(1, 3));
     }
 
     @Test
-    public void markRow() throws Exception {
+    void markRow() throws Exception {
         CompatibilityMatrix m = new CompatibilityMatrix(5, 5);
         m.set(0, 1);
         m.set(0, 2);
@@ -96,7 +94,7 @@ public class CompatibilityMatrixTest {
     }
 
     @Test
-    public void fix() throws Exception {
+    void fix() throws Exception {
         CompatibilityMatrix m = new CompatibilityMatrix(5, 5);
         m.set(0, 1);
         m.set(0, 2);

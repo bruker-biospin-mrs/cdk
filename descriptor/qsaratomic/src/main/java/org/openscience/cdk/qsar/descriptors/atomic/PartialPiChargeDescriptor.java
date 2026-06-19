@@ -51,8 +51,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  *
  * @author      Miguel Rojas
  * @cdk.created 2006-04-15
- * @cdk.module  qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:partialPiCharge
  * @see         GasteigerPEPEPartialCharges
  */
@@ -60,7 +58,7 @@ public class PartialPiChargeDescriptor extends AbstractAtomicDescriptor {
 
     private static final String[]       NAMES = {"pepe"};
 
-    private GasteigerPEPEPartialCharges pepe          = null;
+    private GasteigerPEPEPartialCharges pepe;
     /**Number of maximum iterations*/
     private int                         maxIterations = -1;
     /**Number of maximum resonance structures*/

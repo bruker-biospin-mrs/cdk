@@ -33,9 +33,7 @@ import org.openscience.cdk.math.IFunction;
  * This class handles a set of function for the GraphRenderer
  *
  * @author Stephan Michels &lt;stephan@vern.chem.tu-berlin.de&gt;
- * @cdk.githash
  * @cdk.created 2001-07-02
- * @cdk.module  qm
  */
 public class GraphRendererModel {
 
@@ -48,8 +46,8 @@ public class GraphRendererModel {
     private String          xtitle      = "X title";                 // Title of the x axis
     private String          ytitle      = "Y title";                 // Title of the y axis
 
-    private List<IFunction> functions   = new ArrayList<IFunction>();
-    private List<Color>     colors      = new ArrayList<Color>();
+    private final List<IFunction> functions   = new ArrayList<>();
+    private final List<Color>     colors      = new ArrayList<>();
 
     /** Paints the function normal */
     public final static int NORMAL      = 0;

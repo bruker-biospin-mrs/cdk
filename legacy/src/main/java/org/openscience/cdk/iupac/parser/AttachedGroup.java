@@ -20,14 +20,12 @@
 package org.openscience.cdk.iupac.parser;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * Holds data on a specific functional group or substituent.
  *
  * @author  Stephen Tomkinson
- * @cdk.githash
  * @cdk.require ant1.6
  */
 public class AttachedGroup {
@@ -35,7 +33,7 @@ public class AttachedGroup {
     /** The name of the group */
     private String      name      = "";
     /** The collection of locations the group is attached to */
-    private List<Token> locations = new ArrayList<Token>();
+    private List<Token> locations = new ArrayList<>();
     /** The length of the substituent chain */
     private int         length    = 0;
 
@@ -93,9 +91,7 @@ public class AttachedGroup {
     public String toString() {
         String returnString = name + ": ";
 
-        Iterator<Token> locationsIterator = locations.iterator();
-        while (locationsIterator.hasNext()) {
-            Token locationToken = locationsIterator.next();
+        for (Token locationToken : locations) {
             returnString += locationToken.image + " ";
         }
 

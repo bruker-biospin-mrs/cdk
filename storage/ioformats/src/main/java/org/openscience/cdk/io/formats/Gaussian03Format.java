@@ -23,8 +23,6 @@ import org.openscience.cdk.tools.DataFeatures;
 /**
  * See <a href="http://www.gaussian.com/g_ur/m_input.htm">here</a>.
  *
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class Gaussian03Format extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 
@@ -76,7 +74,7 @@ public class Gaussian03Format extends SimpleChemFormatMatcher implements IChemFo
     /** {@inheritDoc} */
     @Override
     public boolean matches(int lineNumber, String line) {
-        if (line.indexOf("Gaussian(R) 03") >= 0) {
+        if (line.contains("Gaussian(R) 03")) {
             return true;
         }
         return false;

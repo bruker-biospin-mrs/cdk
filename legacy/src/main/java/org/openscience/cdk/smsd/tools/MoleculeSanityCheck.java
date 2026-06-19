@@ -24,23 +24,22 @@
  */
 package org.openscience.cdk.smsd.tools;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
-import org.openscience.cdk.interfaces.IRing;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.ringsearch.AllRingsFinder;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.RingSetManipulator;
 
 /**
  * Class that cleans a molecule before MCS search.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -56,7 +55,7 @@ public class MoleculeSanityCheck {
     public static IAtomContainer checkAndCleanMolecule(IAtomContainer molecule) {
         boolean isMarkush = false;
         for (IAtom atom : molecule.atoms()) {
-            if (atom.getSymbol().equals("R")) {
+            if (atom.getAtomicNumber() == IElement.Wildcard) {
                 isMarkush = true;
                 break;
             }
@@ -96,12 +95,14 @@ public class MoleculeSanityCheck {
     public static void configure(IAtomContainer mol) {
         // need to find rings and aromaticity again since added H's
 
-        IRingSet ringSet = null;
+        final IRingSet ringSet;
         try {
             AllRingsFinder arf = new AllRingsFinder();
             ringSet = arf.findAllRings(mol);
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(MoleculeSanityCheck.class)
+                              .error("Could not find all rings in molecule:", e);
+            return;
         }
 
         try {
@@ -119,22 +120,20 @@ public class MoleculeSanityCheck {
             // determine largest ring that each atom is a part of
 
             for (int i = 0; i < mol.getAtomCount(); i++) {
-                mol.getAtom(i).setFlag(CDKConstants.ISAROMATIC, false);
-                jloop: for (int j = 0; j < ringSet.getAtomContainerCount(); j++) {
-                    //logger.debug(i+"\t"+j);
-                    IRing ring = (IRing) ringSet.getAtomContainer(j);
-                    if (!ring.getFlag(CDKConstants.ISAROMATIC)) {
-                        continue jloop;
+                mol.getAtom(i).setFlag(IChemObject.AROMATIC, false);
+                for (IAtomContainer ring : ringSet.atomContainers()) {
+                    if (!ring.getFlag(IChemObject.AROMATIC)) {
+                        continue;
                     }
                     boolean haveatom = ring.contains(mol.getAtom(i));
-                    //logger.debug("haveatom="+haveatom);
                     if (haveatom && ring.getAtomCount() == 6) {
-                        mol.getAtom(i).setFlag(CDKConstants.ISAROMATIC, true);
+                        mol.getAtom(i).setFlag(IChemObject.AROMATIC, true);
                     }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(MoleculeSanityCheck.class)
+                              .warn("Unexpected Error:", e);
         }
     }
 }

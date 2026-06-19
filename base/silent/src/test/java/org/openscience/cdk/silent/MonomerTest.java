@@ -19,36 +19,27 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IMonomer;
-import org.openscience.cdk.interfaces.AbstractMonomerTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractMonomerTest;
 
 /**
  * Checks the functionality of the {@link Monomer}.
  *
- * @cdk.module test-silent
  */
-public class MonomerTest extends AbstractMonomerTest {
+class MonomerTest extends AbstractMonomerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new Monomer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(Monomer::new);
     }
 
     @Test
-    public void testMonomer() {
+    void testMonomer() {
         IMonomer oMonomer = new Monomer();
-        Assert.assertNotNull(oMonomer);
+        Assertions.assertNotNull(oMonomer);
     }
 
     // Overwrite default methods: no notifications are expected!

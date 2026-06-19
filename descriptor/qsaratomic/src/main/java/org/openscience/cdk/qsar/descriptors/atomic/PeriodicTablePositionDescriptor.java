@@ -48,8 +48,6 @@ import java.util.Map;
  *
  *@author         mfe4
  *@cdk.created    2004-11-13
- *@cdk.module     qsaratomic
- * @cdk.githash
  *@cdk.dictref qsar-descriptors:period
  */
 public class PeriodicTablePositionDescriptor extends AbstractAtomicDescriptor implements IAtomicDescriptor {
@@ -62,7 +60,7 @@ public class PeriodicTablePositionDescriptor extends AbstractAtomicDescriptor im
      */
     public PeriodicTablePositionDescriptor() {
         if (periodicTable == null) {
-            periodicTable = new Hashtable<String, Integer>();
+            periodicTable = new Hashtable<>();
             periodicTable.put("H", 1);
             periodicTable.put("Li", 2);
             periodicTable.put("Be", 2);

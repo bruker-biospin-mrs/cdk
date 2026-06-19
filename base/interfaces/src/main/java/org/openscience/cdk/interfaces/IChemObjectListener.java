@@ -27,8 +27,6 @@ package org.openscience.cdk.interfaces;
  * such that they react appropriately to changes in the object they
  * are interested in.
  *
- * @cdk.module interfaces
- * @cdk.githash
  */
 public interface IChemObjectListener {
 
@@ -38,5 +36,5 @@ public interface IChemObjectListener {
      *
      * @param event  a ChemObjectChangeEvent object
      */
-    public void stateChanged(IChemObjectChangeEvent event);
+    void stateChanged(IChemObjectChangeEvent event);
 }

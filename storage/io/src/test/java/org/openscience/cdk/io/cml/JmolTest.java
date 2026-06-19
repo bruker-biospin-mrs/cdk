@@ -26,10 +26,10 @@ import java.io.InputStream;
 
 import javax.vecmath.Vector3d;
 
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
@@ -46,11 +46,10 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * in data/cmltest as found in the Jmol distribution
  * (<a href="http://www.jmol.org/">http://www.jmol.org/</a>).
  *
- * @cdk.module test-io
  */
-public class JmolTest extends CDKTestCase {
+class JmolTest extends CDKTestCase {
 
-    private ILoggingTool logger = LoggingToolFactory.createLoggingTool(JmolTest.class);
+    private final ILoggingTool logger = LoggingToolFactory.createLoggingTool(JmolTest.class);
 
     /**
      * Now come the actual tests...
@@ -61,130 +60,130 @@ public class JmolTest extends CDKTestCase {
      * <ul><li> &lt;crystal></li></ul>
      */
     @Test
-    public void testEstron() throws Exception {
-        String filename = "data/cml/estron.cml";
+    void testEstron() throws Exception {
+        String filename = "/org/openscience/cdk/io/estron.cml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CMLReader reader = new CMLReader(ins);
-        IChemFile chemFile = (IChemFile) reader.read(new org.openscience.cdk.ChemFile());
+        IChemFile chemFile = reader.read(new org.openscience.cdk.ChemFile());
         reader.close();
 
         // test the resulting ChemFile content
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(1, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(1, seq.getChemModelCount());
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
+        Assertions.assertNotNull(model);
 
         // test the molecule
         ICrystal crystal = model.getCrystal();
-        Assert.assertNotNull(crystal);
-        Assert.assertEquals(4 * 42, crystal.getAtomCount());
-        Assert.assertTrue(GeometryUtil.has3DCoordinates(crystal));
+        Assertions.assertNotNull(crystal);
+        Assertions.assertEquals(4 * 42, crystal.getAtomCount());
+        Assertions.assertTrue(GeometryUtil.has3DCoordinates(crystal));
         // test the cell axes
         Vector3d a = crystal.getA();
-        Assert.assertTrue(a.x != 0.0);
+        Assertions.assertTrue(a.x != 0.0);
         Vector3d b = crystal.getB();
-        Assert.assertTrue(b.y != 0.0);
+        Assertions.assertTrue(b.y != 0.0);
         Vector3d c = crystal.getC();
-        Assert.assertTrue(c.z != 0.0);
+        Assertions.assertTrue(c.z != 0.0);
     }
 
     /**
      * Special CML characteristics:
      * - Jmol Animation
      */
-    @Ignore("It is broken, but not used, AFAIK")
-    public void testAnimation() throws Exception {
+    @Disabled("It is broken, but not used, AFAIK")
+    void testAnimation() throws Exception {
         String filename = "data/cml/SN1_reaction.cml";
         logger.info("Testing: " + filename);
         InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
         CMLReader reader = new CMLReader(ins);
-        IChemFile chemFile = (IChemFile) reader.read(new org.openscience.cdk.ChemFile());
+        IChemFile chemFile = reader.read(new org.openscience.cdk.ChemFile());
         reader.close();
 
         // test the resulting ChemFile content
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(34, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(34, seq.getChemModelCount());
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
+        Assertions.assertNotNull(model);
         IAtomContainerSet som = model.getMoleculeSet();
-        Assert.assertNotNull(som);
-        Assert.assertEquals(1, som.getAtomContainerCount());
+        Assertions.assertNotNull(som);
+        Assertions.assertEquals(1, som.getAtomContainerCount());
 
         // test the molecule
         IAtomContainer mol = som.getAtomContainer(0);
-        Assert.assertNotNull(mol);
-        Assert.assertEquals(mol.getAtomCount(), 25);
-        Assert.assertTrue(GeometryUtil.has3DCoordinates(mol));
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(mol.getAtomCount(), 25);
+        Assertions.assertTrue(GeometryUtil.has3DCoordinates(mol));
     }
 
     /**
      * No special CML code, just regression test for Jmol releases
      */
     @Test
-    public void testMethanolTwo() throws Exception {
-        String filename = "data/cml/methanol2.cml";
+    void testMethanolTwo() throws Exception {
+        String filename = "methanol2.cml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CMLReader reader = new CMLReader(ins);
-        IChemFile chemFile = (IChemFile) reader.read(new org.openscience.cdk.ChemFile());
+        IChemFile chemFile = reader.read(new org.openscience.cdk.ChemFile());
         reader.close();
 
         // test the resulting ChemFile content
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         //logger.debug("NO sequences: " + chemFile.getChemSequenceCount());
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(1, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(1, seq.getChemModelCount());
         //logger.debug("NO models: " + seq.getChemModelCount());
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
-        Assert.assertEquals(1, model.getMoleculeSet().getAtomContainerCount());
+        Assertions.assertNotNull(model);
+        Assertions.assertEquals(1, model.getMoleculeSet().getAtomContainerCount());
 
         // test the molecule
         IAtomContainer mol = model.getMoleculeSet().getAtomContainer(0);
-        Assert.assertNotNull(mol);
-        Assert.assertEquals(mol.getAtomCount(), 6);
-        Assert.assertTrue(GeometryUtil.has3DCoordinates(mol));
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(mol.getAtomCount(), 6);
+        Assertions.assertTrue(GeometryUtil.has3DCoordinates(mol));
     }
 
     /**
      * No special CML code, just regression test for Jmol releases
      */
     @Test
-    public void testMethanolOne() throws Exception {
-        String filename = "data/cml/methanol1.cml";
+    void testMethanolOne() throws Exception {
+        String filename = "methanol1.cml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CMLReader reader = new CMLReader(ins);
-        IChemFile chemFile = (IChemFile) reader.read(new org.openscience.cdk.ChemFile());
+        IChemFile chemFile = reader.read(new org.openscience.cdk.ChemFile());
         reader.close();
 
         // test the resulting ChemFile content
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         //logger.debug("NO sequences: " + chemFile.getChemSequenceCount());
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(1, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(1, seq.getChemModelCount());
         //logger.debug("NO models: " + seq.getChemModelCount());
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
+        Assertions.assertNotNull(model);
         IAtomContainerSet som = model.getMoleculeSet();
-        Assert.assertEquals(1, som.getAtomContainerCount());
+        Assertions.assertEquals(1, som.getAtomContainerCount());
 
         // test the molecule
         IAtomContainer mol = som.getAtomContainer(0);
-        Assert.assertNotNull(mol);
-        Assert.assertEquals(mol.getAtomCount(), 6);
-        Assert.assertTrue(GeometryUtil.has3DCoordinates(mol));
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(mol.getAtomCount(), 6);
+        Assertions.assertTrue(GeometryUtil.has3DCoordinates(mol));
     }
 
 }

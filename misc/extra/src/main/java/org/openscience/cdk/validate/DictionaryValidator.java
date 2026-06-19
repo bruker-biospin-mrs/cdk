@@ -31,14 +31,13 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Validates the existence of references to dictionaries.
  *
  * @author   Egon Willighagen
- * @cdk.githash
  * @cdk.created  2003-03-28
  */
 public class DictionaryValidator extends AbstractValidator {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(DictionaryValidator.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(DictionaryValidator.class);
 
-    private DictionaryDatabase  db;
+    private final DictionaryDatabase  db;
 
     public DictionaryValidator(DictionaryDatabase db) {
         this.db = db;

@@ -30,16 +30,14 @@ import java.util.Map;
  * Sybyl scheme; using this approach it is possible to use the CDK atom type perception
  * algorithm and write the resulting atom types using the Sybyl atom type scheme.
  *
- * @cdk.module atomtype
- * @cdk.githash
  */
 public class AtomTypeMapper {
 
-    private static Map<String, AtomTypeMapper> mappers = new HashMap<String, AtomTypeMapper>();
+    private static final Map<String, AtomTypeMapper> mappers = new HashMap<>();
 
-    private String                             mappingFile;
+    private final String                             mappingFile;
 
-    private Map<String, String>                mappings;
+    private final Map<String, String>                mappings;
 
     private AtomTypeMapper(String mappingFile) {
         this.mappingFile = mappingFile;
@@ -56,8 +54,9 @@ public class AtomTypeMapper {
 
     /**
      * Instantiates an atom type to atom type mapping, based on the given mapping file.
-     * For example, the mapping file <code>org.openscience.cdk.config.data.cdk-sybyl-mappings.owl</code>
-     * which defines how CDK atom types are mapped to Sybyl atom types.
+     * For example, the mapping file <code>org/openscience/cdk/dict/data/cdk-sybyl-mappings.owl</code>
+     * which defines how CDK atom types are mapped to Sybyl atom types. <br>
+     * <b>Important! Make sure there is not a leading slash.</b>
      *
      * @param  mappingFile File name of the OWL file defining the atom type to atom type mappings.
      * @return             An instance of AtomTypeMapper for the given mapping file.

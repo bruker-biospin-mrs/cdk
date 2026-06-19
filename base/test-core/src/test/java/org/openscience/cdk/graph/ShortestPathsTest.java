@@ -23,13 +23,13 @@
  */
 package org.openscience.cdk.graph;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.silent.Atom;
-import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.silent.Bond;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.templates.TestMoleculeFactory;
@@ -37,65 +37,67 @@ import org.openscience.cdk.templates.TestMoleculeFactory;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * unit tests for ShortestPaths.
  * @author John May
- * @cdk.module test-core
  */
-public class ShortestPathsTest {
+class ShortestPathsTest {
 
     @Test
-    public void testConstructor_Container_Empty() {
+    void testConstructor_Container_Empty() {
 
-        ShortestPaths sp = new ShortestPaths(new AtomContainer(), new Atom());
+        ShortestPaths sp = new ShortestPaths(SilentChemObjectBuilder.getInstance().newAtomContainer(), new Atom());
 
-        assertArrayEquals(new int[0], sp.pathTo(1));
-        assertArrayEquals(new int[0][0], sp.pathsTo(1));
+        Assertions.assertArrayEquals(new int[0], sp.pathTo(1));
+        Assertions.assertArrayEquals(new int[0][0], sp.pathsTo(1));
         assertThat(sp.nPathsTo(1), is(0));
         assertThat(sp.distanceTo(1), is(Integer.MAX_VALUE));
 
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testConstructor_Container_Null() {
-        new ShortestPaths(null, new Atom());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testConstructor_Container_MissingAtom() {
-        new ShortestPaths(TestMoleculeFactory.makeBenzene(), new Atom());
+    @Test
+    void testConstructor_Container_Null() {
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {
+                                    new ShortestPaths(null, new Atom());
+                                });
     }
 
     @Test
-    public void testPathTo_Atom_Simple() {
+    void testConstructor_Container_MissingAtom() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    new ShortestPaths(TestMoleculeFactory.makeBenzene(), new Atom());
+                                });
+    }
+
+    @Test
+    void testPathTo_Atom_Simple() {
 
         IAtomContainer simple = simple();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[]{0, 1}, paths.pathTo(simple.getAtom(1)));
-        assertArrayEquals(new int[]{0, 1, 2}, paths.pathTo(simple.getAtom(2)));
-        assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(simple.getAtom(3)));
-        assertArrayEquals(new int[]{0, 1, 4}, paths.pathTo(simple.getAtom(4)));
+        Assertions.assertArrayEquals(new int[]{0, 1}, paths.pathTo(simple.getAtom(1)));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2}, paths.pathTo(simple.getAtom(2)));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(simple.getAtom(3)));
+        Assertions.assertArrayEquals(new int[]{0, 1, 4}, paths.pathTo(simple.getAtom(4)));
 
     }
 
     @Test
-    public void testPathTo_Int_Simple() {
+    void testPathTo_Int_Simple() {
 
         IAtomContainer simple = simple();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[]{0, 1}, paths.pathTo(1));
-        assertArrayEquals(new int[]{0, 1, 2}, paths.pathTo(2));
-        assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(3));
-        assertArrayEquals(new int[]{0, 1, 4}, paths.pathTo(4));
+        Assertions.assertArrayEquals(new int[]{0, 1}, paths.pathTo(1));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2}, paths.pathTo(2));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(3));
+        Assertions.assertArrayEquals(new int[]{0, 1, 4}, paths.pathTo(4));
 
     }
 
@@ -104,13 +106,13 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testPathTo_Atom_Benzene() {
+    void testPathTo_Atom_Benzene() {
 
         IAtomContainer simple = TestMoleculeFactory.makeBenzene();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(simple.getAtom(3)));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(simple.getAtom(3)));
 
     }
 
@@ -119,43 +121,43 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testPathTo_Int_Benzene() {
+    void testPathTo_Int_Benzene() {
 
         IAtomContainer simple = TestMoleculeFactory.makeBenzene();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(3));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(3));
 
     }
 
     @Test
-    public void testIsPrecedingPathTo() {
+    void testIsPrecedingPathTo() {
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
         int[][] graph = GraphUtil.toAdjList(benzene);
         int[] order = new int[]{0, 1, 2, 3, 4, 5};
         ShortestPaths paths = new ShortestPaths(graph, benzene, 0, order);
-        assertFalse(paths.isPrecedingPathTo(1));
-        assertFalse(paths.isPrecedingPathTo(2));
-        assertFalse(paths.isPrecedingPathTo(3));
-        assertFalse(paths.isPrecedingPathTo(4));
-        assertFalse(paths.isPrecedingPathTo(5));
+        Assertions.assertFalse(paths.isPrecedingPathTo(1));
+        Assertions.assertFalse(paths.isPrecedingPathTo(2));
+        Assertions.assertFalse(paths.isPrecedingPathTo(3));
+        Assertions.assertFalse(paths.isPrecedingPathTo(4));
+        Assertions.assertFalse(paths.isPrecedingPathTo(5));
 
         paths = new ShortestPaths(graph, benzene, 5, order);
-        assertTrue(paths.isPrecedingPathTo(4));
-        assertTrue(paths.isPrecedingPathTo(3));
-        assertTrue(paths.isPrecedingPathTo(2));
-        assertTrue(paths.isPrecedingPathTo(1));
-        assertTrue(paths.isPrecedingPathTo(0));
+        Assertions.assertTrue(paths.isPrecedingPathTo(4));
+        Assertions.assertTrue(paths.isPrecedingPathTo(3));
+        Assertions.assertTrue(paths.isPrecedingPathTo(2));
+        Assertions.assertTrue(paths.isPrecedingPathTo(1));
+        Assertions.assertTrue(paths.isPrecedingPathTo(0));
 
         paths = new ShortestPaths(graph, benzene, 4, order);
-        assertFalse(paths.isPrecedingPathTo(5));
-        assertTrue(paths.isPrecedingPathTo(3));
-        assertTrue(paths.isPrecedingPathTo(2));
-        assertTrue(paths.isPrecedingPathTo(1));
+        Assertions.assertFalse(paths.isPrecedingPathTo(5));
+        Assertions.assertTrue(paths.isPrecedingPathTo(3));
+        Assertions.assertTrue(paths.isPrecedingPathTo(2));
+        Assertions.assertTrue(paths.isPrecedingPathTo(1));
 
         // shortest path to 0 is 4,5,0...
-        assertFalse(paths.isPrecedingPathTo(0));
+        Assertions.assertFalse(paths.isPrecedingPathTo(0));
         //   1 - 2
         //  /     \
         // 0       3
@@ -164,11 +166,11 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testIsPrecedingPathTo_OutOfBounds() {
+    void testIsPrecedingPathTo_OutOfBounds() {
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
         ShortestPaths paths = new ShortestPaths(benzene, benzene.getAtom(0));
-        assertFalse(paths.isPrecedingPathTo(-1));
-        assertFalse(paths.isPrecedingPathTo(10));
+        Assertions.assertFalse(paths.isPrecedingPathTo(-1));
+        Assertions.assertFalse(paths.isPrecedingPathTo(10));
     }
 
     /**
@@ -176,10 +178,10 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testPathTo_Atom_Norbornane() {
+    void testPathTo_Atom_Norbornane() {
         IAtomContainer norbornane = norbornane();
         ShortestPaths paths = new ShortestPaths(norbornane, norbornane.getAtom(0));
-        assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(norbornane.getAtom(3)));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(norbornane.getAtom(3)));
     }
 
     /**
@@ -187,10 +189,10 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testPathTo_Int_Norbornane() {
+    void testPathTo_Int_Norbornane() {
         IAtomContainer norbornane = norbornane();
         ShortestPaths paths = new ShortestPaths(norbornane, norbornane.getAtom(0));
-        assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(3));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(3));
     }
 
     /**
@@ -198,10 +200,10 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testPathTo_Atom_Spiroundecane() {
+    void testPathTo_Atom_Spiroundecane() {
         IAtomContainer spiroundecane = spiroundecane();
         ShortestPaths paths = new ShortestPaths(spiroundecane, spiroundecane.getAtom(1));
-        assertArrayEquals(new int[]{1, 0, 5, 4, 6, 10, 9}, paths.pathTo(spiroundecane.getAtom(9)));
+        Assertions.assertArrayEquals(new int[]{1, 0, 5, 4, 6, 10, 9}, paths.pathTo(spiroundecane.getAtom(9)));
     }
 
     /**
@@ -209,10 +211,10 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testPathTo_Int_Spiroundecane() {
+    void testPathTo_Int_Spiroundecane() {
         IAtomContainer spiroundecane = spiroundecane();
         ShortestPaths paths = new ShortestPaths(spiroundecane, spiroundecane.getAtom(1));
-        assertArrayEquals(new int[]{1, 0, 5, 4, 6, 10, 9}, paths.pathTo(9));
+        Assertions.assertArrayEquals(new int[]{1, 0, 5, 4, 6, 10, 9}, paths.pathTo(9));
     }
 
     /**
@@ -220,7 +222,7 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testPathTo_Atom_Pentadecaspiro() {
+    void testPathTo_Atom_Pentadecaspiro() {
 
         //   3 - // ... //  - 4
         //  /        \ /         \
@@ -238,7 +240,7 @@ public class ShortestPathsTest {
                 58, 62, 80, 64, 60, 79, 56, 52, 77, 48, 44, 75, 40, 36, 73, 32, 28, 71, 24, 20, 69, 16, 12, 67, 8, 4, 1};
 
         int[] path = paths.pathTo(pentadecaspiro.getAtom(1));
-        assertArrayEquals(expected, path);
+        Assertions.assertArrayEquals(expected, path);
 
     }
 
@@ -247,7 +249,7 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testPathTo_Int_Pentadecaspiro() {
+    void testPathTo_Int_Pentadecaspiro() {
 
         //   3 - // ... //  - 4
         //  /        \ /         \
@@ -265,122 +267,122 @@ public class ShortestPathsTest {
                 58, 62, 80, 64, 60, 79, 56, 52, 77, 48, 44, 75, 40, 36, 73, 32, 28, 71, 24, 20, 69, 16, 12, 67, 8, 4, 1};
 
         int[] path = paths.pathTo(1);
-        assertArrayEquals(expected, path);
+        Assertions.assertArrayEquals(expected, path);
 
     }
 
     @Test
-    public void testPathTo_Int_OutOfBoundsIndex() {
+    void testPathTo_Int_OutOfBoundsIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new int[0], paths.pathTo(20));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(20));
     }
 
     @Test
-    public void testPathTo_Int_NegativeIndex() {
+    void testPathTo_Int_NegativeIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new int[0], paths.pathTo(-1));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(-1));
     }
 
     @Test
-    public void testPathTo_Atom_MissingAtom() {
+    void testPathTo_Atom_MissingAtom() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new int[0], paths.pathTo(new Atom("C")));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(new Atom("C")));
     }
 
     @Test
-    public void testPathTo_Atom_Null() {
+    void testPathTo_Atom_Null() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new int[0], paths.pathTo(null));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(null));
     }
 
     @Test
-    public void testPathTo_Atom_Disconnected() {
+    void testPathTo_Atom_Disconnected() {
 
         IAtomContainer simple = disconnected();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[]{0, 1}, paths.pathTo(simple.getAtom(1)));
-        assertArrayEquals(new int[]{0, 1, 2}, paths.pathTo(simple.getAtom(2)));
-        assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(simple.getAtom(3)));
-        assertArrayEquals(new int[]{0, 1, 4}, paths.pathTo(simple.getAtom(4)));
+        Assertions.assertArrayEquals(new int[]{0, 1}, paths.pathTo(simple.getAtom(1)));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2}, paths.pathTo(simple.getAtom(2)));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(simple.getAtom(3)));
+        Assertions.assertArrayEquals(new int[]{0, 1, 4}, paths.pathTo(simple.getAtom(4)));
 
         // disconnect fragment should return 0 length path
-        assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(5)));
-        assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(6)));
-        assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(7)));
-        assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(8)));
-        assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(9)));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(5)));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(6)));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(7)));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(8)));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(simple.getAtom(9)));
 
     }
 
     @Test
-    public void testPathTo_Int_Disconnected() {
+    void testPathTo_Int_Disconnected() {
 
         IAtomContainer simple = disconnected();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[]{0, 1}, paths.pathTo(1));
-        assertArrayEquals(new int[]{0, 1, 2}, paths.pathTo(2));
-        assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(3));
-        assertArrayEquals(new int[]{0, 1, 4}, paths.pathTo(4));
+        Assertions.assertArrayEquals(new int[]{0, 1}, paths.pathTo(1));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2}, paths.pathTo(2));
+        Assertions.assertArrayEquals(new int[]{0, 1, 2, 3}, paths.pathTo(3));
+        Assertions.assertArrayEquals(new int[]{0, 1, 4}, paths.pathTo(4));
 
         // disconnect fragment should return 0 length path
-        assertArrayEquals(new int[0], paths.pathTo(5));
-        assertArrayEquals(new int[0], paths.pathTo(6));
-        assertArrayEquals(new int[0], paths.pathTo(7));
-        assertArrayEquals(new int[0], paths.pathTo(8));
-        assertArrayEquals(new int[0], paths.pathTo(9));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(5));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(6));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(7));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(8));
+        Assertions.assertArrayEquals(new int[0], paths.pathTo(9));
 
     }
 
     @Test
-    public void testPathsTo_Atom_Simple() {
+    void testPathsTo_Atom_Simple() {
 
         IAtomContainer simple = simple();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[][]{{0, 1}}, paths.pathsTo(simple.getAtom(1)));
-        assertArrayEquals(new int[][]{{0, 1, 2}}, paths.pathsTo(simple.getAtom(2)));
-        assertArrayEquals(new int[][]{{0, 1, 2, 3}}, paths.pathsTo(simple.getAtom(3)));
-        assertArrayEquals(new int[][]{{0, 1, 4}}, paths.pathsTo(simple.getAtom(4)));
+        Assertions.assertArrayEquals(new int[][]{{0, 1}}, paths.pathsTo(simple.getAtom(1)));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 2}}, paths.pathsTo(simple.getAtom(2)));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 2, 3}}, paths.pathsTo(simple.getAtom(3)));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 4}}, paths.pathsTo(simple.getAtom(4)));
 
     }
 
     @Test
-    public void testPathsTo_Int_Simple() {
+    void testPathsTo_Int_Simple() {
 
         IAtomContainer simple = simple();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[][]{{0, 1}}, paths.pathsTo(1));
-        assertArrayEquals(new int[][]{{0, 1, 2}}, paths.pathsTo(2));
-        assertArrayEquals(new int[][]{{0, 1, 2, 3}}, paths.pathsTo(3));
-        assertArrayEquals(new int[][]{{0, 1, 4}}, paths.pathsTo(4));
+        Assertions.assertArrayEquals(new int[][]{{0, 1}}, paths.pathsTo(1));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 2}}, paths.pathsTo(2));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 2, 3}}, paths.pathsTo(3));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 4}}, paths.pathsTo(4));
 
     }
 
     @Test
-    public void testPathsTo_Atom_Benzene() {
+    void testPathsTo_Atom_Benzene() {
 
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
 
         ShortestPaths paths = new ShortestPaths(benzene, benzene.getAtom(0));
 
         int[][] expected = new int[][]{{0, 1, 2, 3}, {0, 5, 4, 3}};
-        assertArrayEquals(expected, paths.pathsTo(benzene.getAtom(3)));
+        Assertions.assertArrayEquals(expected, paths.pathsTo(benzene.getAtom(3)));
 
     }
 
     @Test
-    public void testPathsTo_Atom_Spiroundecane() {
+    void testPathsTo_Atom_Spiroundecane() {
 
         IAtomContainer spiroundecane = spiroundecane();
 
@@ -397,12 +399,12 @@ public class ShortestPathsTest {
         int[][] expected = new int[][]{{1, 0, 5, 4, 6, 10, 9}, {1, 2, 3, 4, 6, 10, 9}, {1, 0, 5, 4, 7, 8, 9},
                 {1, 2, 3, 4, 7, 8, 9}};
 
-        assertArrayEquals(expected, paths.pathsTo(spiroundecane.getAtom(9)));
+        Assertions.assertArrayEquals(expected, paths.pathsTo(spiroundecane.getAtom(9)));
 
     }
 
     @Test
-    public void testPathsTo_Int_Spiroundecane() {
+    void testPathsTo_Int_Spiroundecane() {
 
         IAtomContainer spiroundecane = spiroundecane();
 
@@ -419,40 +421,40 @@ public class ShortestPathsTest {
         int[][] expected = new int[][]{{1, 0, 5, 4, 6, 10, 9}, {1, 2, 3, 4, 6, 10, 9}, {1, 0, 5, 4, 7, 8, 9},
                 {1, 2, 3, 4, 7, 8, 9}};
 
-        assertArrayEquals(expected, paths.pathsTo(9));
+        Assertions.assertArrayEquals(expected, paths.pathsTo(9));
 
     }
 
     @Test
-    public void testPathsTo_Int_Benzene() {
+    void testPathsTo_Int_Benzene() {
 
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
 
         ShortestPaths paths = new ShortestPaths(benzene, benzene.getAtom(0));
 
         int[][] expected = new int[][]{{0, 1, 2, 3}, {0, 5, 4, 3}};
-        assertArrayEquals(expected, paths.pathsTo(3));
+        Assertions.assertArrayEquals(expected, paths.pathsTo(3));
 
     }
 
     @Test
-    public void testPathsTo_Atom_Norbornane() {
+    void testPathsTo_Atom_Norbornane() {
         IAtomContainer norbornane = norbornane();
         ShortestPaths paths = new ShortestPaths(norbornane, norbornane.getAtom(0));
         int[][] expected = new int[][]{{0, 1, 2, 3}, {0, 5, 4, 3}, {0, 6, 7, 3}};
-        assertArrayEquals(expected, paths.pathsTo(norbornane.getAtom(3)));
+        Assertions.assertArrayEquals(expected, paths.pathsTo(norbornane.getAtom(3)));
     }
 
     @Test
-    public void testPathsTo_Int_Norbornane() {
+    void testPathsTo_Int_Norbornane() {
         IAtomContainer norbornane = norbornane();
         ShortestPaths paths = new ShortestPaths(norbornane, norbornane.getAtom(0));
         int[][] expected = new int[][]{{0, 1, 2, 3}, {0, 5, 4, 3}, {0, 6, 7, 3}};
-        assertArrayEquals(expected, paths.pathsTo(3));
+        Assertions.assertArrayEquals(expected, paths.pathsTo(3));
     }
 
     @Test
-    public void testPathsTo_Atom_Pentadecaspiro() {
+    void testPathsTo_Atom_Pentadecaspiro() {
 
         //   3 - // ... //  - 4
         //  /        \ /         \
@@ -498,77 +500,77 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testPathsTo_Int_OutOfBoundsIndex() {
+    void testPathsTo_Int_OutOfBoundsIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new int[0][0], paths.pathsTo(20));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(20));
     }
 
     @Test
-    public void testPathsTo_Int_NegativeIndex() {
+    void testPathsTo_Int_NegativeIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new int[0][0], paths.pathsTo(-1));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(-1));
     }
 
     @Test
-    public void testPathsTo_Atom_MissingAtom() {
+    void testPathsTo_Atom_MissingAtom() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new int[0][0], paths.pathsTo(new Atom("C")));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(new Atom("C")));
     }
 
     @Test
-    public void testPathsTo_Atom_Null() {
+    void testPathsTo_Atom_Null() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new int[0][0], paths.pathsTo(null));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(null));
     }
 
     @Test
-    public void testPathsTo_Atom_Disconnected() {
+    void testPathsTo_Atom_Disconnected() {
 
         IAtomContainer simple = disconnected();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[][]{{0, 1}}, paths.pathsTo(simple.getAtom(1)));
-        assertArrayEquals(new int[][]{{0, 1, 2}}, paths.pathsTo(simple.getAtom(2)));
-        assertArrayEquals(new int[][]{{0, 1, 2, 3}}, paths.pathsTo(simple.getAtom(3)));
-        assertArrayEquals(new int[][]{{0, 1, 4}}, paths.pathsTo(simple.getAtom(4)));
+        Assertions.assertArrayEquals(new int[][]{{0, 1}}, paths.pathsTo(simple.getAtom(1)));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 2}}, paths.pathsTo(simple.getAtom(2)));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 2, 3}}, paths.pathsTo(simple.getAtom(3)));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 4}}, paths.pathsTo(simple.getAtom(4)));
 
         // disconnect fragment should return 0 length path
-        assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(5)));
-        assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(6)));
-        assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(7)));
-        assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(8)));
-        assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(9)));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(5)));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(6)));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(7)));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(8)));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(simple.getAtom(9)));
 
     }
 
     @Test
-    public void testPathsTo_Int_Disconnected() {
+    void testPathsTo_Int_Disconnected() {
 
         IAtomContainer simple = disconnected();
 
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
 
-        assertArrayEquals(new int[][]{{0, 1}}, paths.pathsTo(1));
-        assertArrayEquals(new int[][]{{0, 1, 2}}, paths.pathsTo(2));
-        assertArrayEquals(new int[][]{{0, 1, 2, 3}}, paths.pathsTo(3));
-        assertArrayEquals(new int[][]{{0, 1, 4}}, paths.pathsTo(4));
+        Assertions.assertArrayEquals(new int[][]{{0, 1}}, paths.pathsTo(1));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 2}}, paths.pathsTo(2));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 2, 3}}, paths.pathsTo(3));
+        Assertions.assertArrayEquals(new int[][]{{0, 1, 4}}, paths.pathsTo(4));
 
         // disconnect fragment should return 0 length path
-        assertArrayEquals(new int[0][0], paths.pathsTo(5));
-        assertArrayEquals(new int[0][0], paths.pathsTo(6));
-        assertArrayEquals(new int[0][0], paths.pathsTo(7));
-        assertArrayEquals(new int[0][0], paths.pathsTo(8));
-        assertArrayEquals(new int[0][0], paths.pathsTo(9));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(5));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(6));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(7));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(8));
+        Assertions.assertArrayEquals(new int[0][0], paths.pathsTo(9));
 
     }
 
     @Test
-    public void testAtomsTo_Atom_Simple() {
+    void testAtomsTo_Atom_Simple() {
 
         IAtomContainer simple = simple();
 
@@ -580,15 +582,15 @@ public class ShortestPathsTest {
         IAtom d = simple.getAtom(3);
         IAtom e = simple.getAtom(4);
 
-        assertArrayEquals(new IAtom[]{a, b}, paths.atomsTo(b));
-        assertArrayEquals(new IAtom[]{a, b, c}, paths.atomsTo(c));
-        assertArrayEquals(new IAtom[]{a, b, c, d}, paths.atomsTo(d));
-        assertArrayEquals(new IAtom[]{a, b, e}, paths.atomsTo(e));
+        Assertions.assertArrayEquals(new IAtom[]{a, b}, paths.atomsTo(b));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, c}, paths.atomsTo(c));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, c, d}, paths.atomsTo(d));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, e}, paths.atomsTo(e));
 
     }
 
     @Test
-    public void testAtomsTo_Int_Simple() {
+    void testAtomsTo_Int_Simple() {
 
         IAtomContainer simple = simple();
 
@@ -600,10 +602,10 @@ public class ShortestPathsTest {
         IAtom d = simple.getAtom(3);
         IAtom e = simple.getAtom(4);
 
-        assertArrayEquals(new IAtom[]{a, b}, paths.atomsTo(1));
-        assertArrayEquals(new IAtom[]{a, b, c}, paths.atomsTo(2));
-        assertArrayEquals(new IAtom[]{a, b, c, d}, paths.atomsTo(3));
-        assertArrayEquals(new IAtom[]{a, b, e}, paths.atomsTo(4));
+        Assertions.assertArrayEquals(new IAtom[]{a, b}, paths.atomsTo(1));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, c}, paths.atomsTo(2));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, c, d}, paths.atomsTo(3));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, e}, paths.atomsTo(4));
 
     }
 
@@ -612,7 +614,7 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testAtomsTo_Atom_Benzene() {
+    void testAtomsTo_Atom_Benzene() {
 
         IAtomContainer simple = TestMoleculeFactory.makeBenzene();
 
@@ -623,7 +625,7 @@ public class ShortestPathsTest {
 
         ShortestPaths paths = new ShortestPaths(simple, c1);
 
-        assertArrayEquals(new IAtom[]{c1, c2, c3, c4}, paths.atomsTo(c4));
+        Assertions.assertArrayEquals(new IAtom[]{c1, c2, c3, c4}, paths.atomsTo(c4));
 
     }
 
@@ -632,7 +634,7 @@ public class ShortestPathsTest {
      * returned via {@link ShortestPaths#pathTo(org.openscience.cdk.interfaces.IAtom)}
      */
     @Test
-    public void testAtomsTo_Int_Benzene() {
+    void testAtomsTo_Int_Benzene() {
 
         IAtomContainer simple = TestMoleculeFactory.makeBenzene();
 
@@ -643,12 +645,12 @@ public class ShortestPathsTest {
 
         ShortestPaths paths = new ShortestPaths(simple, c1);
 
-        assertArrayEquals(new IAtom[]{c1, c2, c3, c4}, paths.atomsTo(3));
+        Assertions.assertArrayEquals(new IAtom[]{c1, c2, c3, c4}, paths.atomsTo(3));
 
     }
 
     @Test
-    public void testAtomsTo_Atom_Disconnected() {
+    void testAtomsTo_Atom_Disconnected() {
 
         IAtomContainer simple = disconnected();
 
@@ -665,22 +667,22 @@ public class ShortestPathsTest {
         IAtom i = simple.getAtom(8);
         IAtom j = simple.getAtom(9);
 
-        assertArrayEquals(new IAtom[]{a, b}, paths.atomsTo(b));
-        assertArrayEquals(new IAtom[]{a, b, c}, paths.atomsTo(c));
-        assertArrayEquals(new IAtom[]{a, b, c, d}, paths.atomsTo(d));
-        assertArrayEquals(new IAtom[]{a, b, e}, paths.atomsTo(e));
+        Assertions.assertArrayEquals(new IAtom[]{a, b}, paths.atomsTo(b));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, c}, paths.atomsTo(c));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, c, d}, paths.atomsTo(d));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, e}, paths.atomsTo(e));
 
         // disconnect fragment should return 0 length path
-        assertArrayEquals(new IAtom[0], paths.atomsTo(f));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(g));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(h));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(i));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(j));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(f));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(g));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(h));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(i));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(j));
 
     }
 
     @Test
-    public void testAtomsTo_Int_Disconnected() {
+    void testAtomsTo_Int_Disconnected() {
 
         IAtomContainer simple = disconnected();
 
@@ -692,50 +694,50 @@ public class ShortestPathsTest {
         IAtom d = simple.getAtom(3);
         IAtom e = simple.getAtom(4);
 
-        assertArrayEquals(new IAtom[]{a, b}, paths.atomsTo(1));
-        assertArrayEquals(new IAtom[]{a, b, c}, paths.atomsTo(2));
-        assertArrayEquals(new IAtom[]{a, b, c, d}, paths.atomsTo(3));
-        assertArrayEquals(new IAtom[]{a, b, e}, paths.atomsTo(4));
+        Assertions.assertArrayEquals(new IAtom[]{a, b}, paths.atomsTo(1));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, c}, paths.atomsTo(2));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, c, d}, paths.atomsTo(3));
+        Assertions.assertArrayEquals(new IAtom[]{a, b, e}, paths.atomsTo(4));
 
         // disconnect fragment should return 0 length path
-        assertArrayEquals(new IAtom[0], paths.atomsTo(5));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(6));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(7));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(8));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(9));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(5));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(6));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(7));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(8));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(9));
 
     }
 
     @Test
-    public void testAtomsTo_Int_OutOfBoundsIndex() {
+    void testAtomsTo_Int_OutOfBoundsIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(20));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(20));
     }
 
     @Test
-    public void testAtomsTo_Int_NegativeIndex() {
+    void testAtomsTo_Int_NegativeIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(-1));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(-1));
     }
 
     @Test
-    public void testAtomsTo_Atom_MissingAtom() {
+    void testAtomsTo_Atom_MissingAtom() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(new Atom("C")));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(new Atom("C")));
     }
 
     @Test
-    public void testAtomsTo_Atom_Null() {
+    void testAtomsTo_Atom_Null() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
-        assertArrayEquals(new IAtom[0], paths.atomsTo(null));
+        Assertions.assertArrayEquals(new IAtom[0], paths.atomsTo(null));
     }
 
     @Test
-    public void testNPathsTo_Atom_Simple() {
+    void testNPathsTo_Atom_Simple() {
 
         IAtomContainer simple = simple();
 
@@ -750,7 +752,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testNPathsTo_Int_Simple() {
+    void testNPathsTo_Int_Simple() {
 
         IAtomContainer simple = simple();
 
@@ -764,35 +766,35 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testNPathsTo_Atom_MissingAtom() {
+    void testNPathsTo_Atom_MissingAtom() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
         assertThat(paths.nPathsTo(new Atom("C")), is(0));
     }
 
     @Test
-    public void testNPathsTo_Atom_Null() {
+    void testNPathsTo_Atom_Null() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
         assertThat(paths.nPathsTo(null), is(0));
     }
 
     @Test
-    public void testNPathsTo_Int_OutOfBoundIndex() {
+    void testNPathsTo_Int_OutOfBoundIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
         assertThat(paths.nPathsTo(20), is(0));
     }
 
     @Test
-    public void testNPathsTo_Int_NegativeIndex() {
+    void testNPathsTo_Int_NegativeIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
         assertThat(paths.nPathsTo(-1), is(0));
     }
 
     @Test
-    public void testNPathsTo_Atom_Disconnected() {
+    void testNPathsTo_Atom_Disconnected() {
 
         IAtomContainer container = disconnected();
 
@@ -813,7 +815,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testNPathsTo_Int_Disconnected() {
+    void testNPathsTo_Int_Disconnected() {
 
         IAtomContainer container = disconnected();
 
@@ -834,7 +836,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testNPathsTo_Atom_Benzene() {
+    void testNPathsTo_Atom_Benzene() {
 
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
 
@@ -850,7 +852,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testNPathsTo_Int_Benzene() {
+    void testNPathsTo_Int_Benzene() {
 
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
 
@@ -866,7 +868,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testNPathsTo_Atom_Norbornane() {
+    void testNPathsTo_Atom_Norbornane() {
 
         IAtomContainer norbornane = norbornane();
 
@@ -884,7 +886,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testNPathsTo_Int_Norbornane() {
+    void testNPathsTo_Int_Norbornane() {
 
         IAtomContainer norbornane = norbornane();
 
@@ -902,21 +904,21 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testNPathsTo_Atom_Spiroundecane() {
+    void testNPathsTo_Atom_Spiroundecane() {
         IAtomContainer spiroundecane = spiroundecane();
         ShortestPaths paths = new ShortestPaths(spiroundecane, spiroundecane.getAtom(1));
         assertThat(paths.nPathsTo(spiroundecane.getAtom(9)), is(4));
     }
 
     @Test
-    public void testNPathsTo_Int_Spiroundecane() {
+    void testNPathsTo_Int_Spiroundecane() {
         IAtomContainer spiroundecane = spiroundecane();
         ShortestPaths paths = new ShortestPaths(spiroundecane, spiroundecane.getAtom(1));
         assertThat(paths.nPathsTo(9), is(4));
     }
 
     @Test
-    public void testNPathsTo_Atom_Pentadecaspiro() {
+    void testNPathsTo_Atom_Pentadecaspiro() {
 
         //   3 - // ... //  - 4
         //  /        \ /         \
@@ -948,7 +950,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testNPathsTo_Int_Pentadecaspiro() {
+    void testNPathsTo_Int_Pentadecaspiro() {
         IAtomContainer pentadecaspiro = pentadecaspiro();
         ShortestPaths paths = new ShortestPaths(pentadecaspiro, pentadecaspiro.getAtom(0));
 
@@ -973,7 +975,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Atom_Simple() {
+    void testDistanceTo_Atom_Simple() {
 
         IAtomContainer simple = simple();
 
@@ -988,7 +990,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Int_Simple() {
+    void testDistanceTo_Int_Simple() {
 
         IAtomContainer simple = simple();
 
@@ -1003,35 +1005,35 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Atom_MissingAtom() {
+    void testDistanceTo_Atom_MissingAtom() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
         assertThat(paths.distanceTo(new Atom("C")), is(Integer.MAX_VALUE));
     }
 
     @Test
-    public void testDistanceTo_Atom_Null() {
+    void testDistanceTo_Atom_Null() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
         assertThat(paths.distanceTo(null), is(Integer.MAX_VALUE));
     }
 
     @Test
-    public void testDistanceTo_Int_OutOfBoundIndex() {
+    void testDistanceTo_Int_OutOfBoundIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
         assertThat(paths.distanceTo(20), is(Integer.MAX_VALUE));
     }
 
     @Test
-    public void testDistanceTo_Int_NegativeIndex() {
+    void testDistanceTo_Int_NegativeIndex() {
         IAtomContainer simple = simple();
         ShortestPaths paths = new ShortestPaths(simple, simple.getAtom(0));
         assertThat(paths.distanceTo(-1), is(Integer.MAX_VALUE));
     }
 
     @Test
-    public void testDistanceTo_Atom_Disconnected() {
+    void testDistanceTo_Atom_Disconnected() {
 
         IAtomContainer container = disconnected();
 
@@ -1052,7 +1054,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Int_Disconnected() {
+    void testDistanceTo_Int_Disconnected() {
 
         IAtomContainer container = disconnected();
 
@@ -1073,7 +1075,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Atom_Benzene() {
+    void testDistanceTo_Atom_Benzene() {
 
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
 
@@ -1089,7 +1091,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Int_Benzene() {
+    void testDistanceTo_Int_Benzene() {
 
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
 
@@ -1105,7 +1107,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Int_Benzene_limited() {
+    void testDistanceTo_Int_Benzene_limited() {
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
 
         ShortestPaths paths = new ShortestPaths(GraphUtil.toAdjList(benzene), benzene, 0, 2, null);
@@ -1119,7 +1121,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Atom_Spiroundecane() {
+    void testDistanceTo_Atom_Spiroundecane() {
         IAtomContainer spiroundecane = spiroundecane();
         ShortestPaths paths = new ShortestPaths(spiroundecane, spiroundecane.getAtom(1));
 
@@ -1147,7 +1149,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Int_Spiroundecane() {
+    void testDistanceTo_Int_Spiroundecane() {
         IAtomContainer spiroundecane = spiroundecane();
         ShortestPaths paths = new ShortestPaths(spiroundecane, spiroundecane.getAtom(1));
 
@@ -1175,7 +1177,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Atom_Pentadecaspiro() {
+    void testDistanceTo_Atom_Pentadecaspiro() {
 
         //   3 - // ... //  - 4
         //  /        \ /         \
@@ -1207,7 +1209,7 @@ public class ShortestPathsTest {
     }
 
     @Test
-    public void testDistanceTo_Int_Pentadecaspiro() {
+    void testDistanceTo_Int_Pentadecaspiro() {
         IAtomContainer pentadecaspiro = pentadecaspiro();
         ShortestPaths paths = new ShortestPaths(pentadecaspiro, pentadecaspiro.getAtom(0));
 
@@ -1245,7 +1247,7 @@ public class ShortestPathsTest {
      */
     private static IAtomContainer simple() {
 
-        IAtomContainer container = new AtomContainer();
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom a = new Atom("C");
         IAtom b = new Atom("C");
@@ -1324,8 +1326,8 @@ public class ShortestPathsTest {
      *
      * @cdk.inchi InChI=1S/C81H132/c1-3-7-67(8-4-1)11-15-69(16-12-67)19-23-71(24-20-69)27-31-73(32-28-71)35-39-75(40-36-73)43-47-77(48-44-75)51-55-79(56-52-77)59-63-81(64-60-79)65-61-80(62-66-81)57-53-78(54-58-80)49-45-76(46-50-78)41-37-74(38-42-76)33-29-72(30-34-74)25-21-70(22-26-72)17-13-68(14-18-70)9-5-2-6-10-68/h1-66H2
      */
-    public IAtomContainer pentadecaspiro() {
-        IAtomContainer mol = new AtomContainer();
+    IAtomContainer pentadecaspiro() {
+        IAtomContainer mol = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = new Atom("C");
         mol.addAtom(a1);
         IAtom a2 = new Atom("C");
@@ -1690,7 +1692,7 @@ public class ShortestPathsTest {
      */
     private static IAtomContainer spiroundecane() {
 
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = new Atom("C");
         mol.addAtom(a1);
         IAtom a2 = new Atom("C");

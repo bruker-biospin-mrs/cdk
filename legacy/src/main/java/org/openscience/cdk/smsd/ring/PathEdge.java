@@ -55,8 +55,6 @@ import org.openscience.cdk.interfaces.IAtom;
 
 /**
  *
- * @cdk.module smsd
- * @cdk.githash
  * @author Richard L. Apodaca &lt;rapodaca at metamolecular.com&gt; 2007-2009,
  *         Syed Asad Rahman &gt;asad@ebi.ac.uk&lt; 2009-2010
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
@@ -66,7 +64,7 @@ import org.openscience.cdk.interfaces.IAtom;
 @Deprecated
 public class PathEdge {
 
-    private List<IAtom> atoms;
+    private final List<IAtom> atoms;
 
     public PathEdge(List<IAtom> atoms) {
         this.atoms = atoms;
@@ -90,7 +88,7 @@ public class PathEdge {
 
     public PathEdge splice(PathEdge other) {
         IAtom intersection = getIntersection(other.atoms);
-        List<IAtom> newAtoms = new ArrayList<IAtom>(atoms);
+        List<IAtom> newAtoms = new ArrayList<>(atoms);
 
         if (atoms.get(0).equals(intersection)) {
             Collections.reverse(newAtoms);

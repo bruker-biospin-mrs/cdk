@@ -29,8 +29,6 @@ import java.util.BitSet;
  * Interface for bit fingerprint representations.
  *
  * @author jonalv
- * @cdk.module     core
- * @cdk.githash
  */
 public interface IBitFingerprint extends Serializable {
 
@@ -39,14 +37,14 @@ public interface IBitFingerprint extends Serializable {
      *
      * @return the number of true bits.
      */
-    public int cardinality();
+    int cardinality();
 
     /**
      * Returns the size of the fingerprint, i.e., the number of hash bins.
      *
      * @return the size of the fingerprint.
      */
-    public long size();
+    long size();
 
     /**
      * Performs a logical <b>AND</b> of the bits in this target bit set with
@@ -60,7 +58,7 @@ public interface IBitFingerprint extends Serializable {
      * @throws IllegalArgumentException if the two fingerprints are
      * not of same size
      */
-    public void and(IBitFingerprint fingerprint);
+    void and(IBitFingerprint fingerprint);
 
     /**
      * Performs a logical <b>OR</b> of the bits in this target bit set with
@@ -74,7 +72,7 @@ public interface IBitFingerprint extends Serializable {
      * @throws IllegalArgumentException if the two fingerprints are
      * not of same size
      */
-    public void or(IBitFingerprint fingerprint);
+    void or(IBitFingerprint fingerprint);
 
     /**
      * Returns the value of the bit with the specified index. The value
@@ -84,7 +82,7 @@ public interface IBitFingerprint extends Serializable {
      * @param index the index of the bit to return the value for
      * @return the value of the bit at <code>index</code>
      */
-    public boolean get(int index);
+    boolean get(int index);
 
     /**
      * Sets the bit at the specified index to the specified value.
@@ -92,7 +90,7 @@ public interface IBitFingerprint extends Serializable {
      * @param index the index of the bit to change
      * @param value the new value for the bit at position <code>index</code>
      */
-    public void set(int index, boolean value);
+    void set(int index, boolean value);
 
     /**
      * Returns a <code>BitSet</code> representation of the fingerprint.
@@ -100,18 +98,18 @@ public interface IBitFingerprint extends Serializable {
      *
      * @return the fingerprint as a <code>BitSet</code>
      */
-    public BitSet asBitSet();
+    BitSet asBitSet();
 
     /**
      * Sets the bit at the specified index to true.
      * @param i index
      */
-    public void set(int i);
+    void set(int i);
 
     /**
      * Returns a listing of the bits in the fingerprint that are set to true.
      *
      * @return listing of all bits that are set
      */
-    public int[] getSetbits();
+    int[] getSetbits();
 }

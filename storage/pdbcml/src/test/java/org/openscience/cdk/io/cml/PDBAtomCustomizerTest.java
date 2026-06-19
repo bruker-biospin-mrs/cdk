@@ -27,9 +27,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBioPolymer;
@@ -46,9 +46,8 @@ import org.openscience.cdk.protein.data.PDBPolymer;
 /**
  * TestCase for the {@link PDBAtomCustomizer} class.
  *
- * @cdk.module test-pdbcml
  */
-public class PDBAtomCustomizerTest extends CDKTestCase {
+class PDBAtomCustomizerTest extends CDKTestCase {
 
     /**
      * A roundtripping test to see of PDB atom customization works.
@@ -56,12 +55,12 @@ public class PDBAtomCustomizerTest extends CDKTestCase {
      * @cdk.bug 1085912
      */
     @Test
-    public void testSFBug1085912_1() throws Exception {
-        String filename_pdb = "data/pdb/1CKV.pdb";
-        InputStream ins1 = this.getClass().getClassLoader().getResourceAsStream(filename_pdb);
+    void testSFBug1085912_1() throws Exception {
+        String filename_pdb = "1CKV.pdb";
+        InputStream ins1 = this.getClass().getResourceAsStream(filename_pdb);
 
         ISimpleChemObjectReader reader = new PDBReader(ins1);
-        IChemFile chemFile1 = (IChemFile) reader.read(new ChemFile());
+        IChemFile chemFile1 = reader.read(new ChemFile());
         reader.close();
         IChemSequence seq1 = chemFile1.getChemSequence(0);
         IChemModel model1 = seq1.getChemModel(0);
@@ -79,7 +78,7 @@ public class PDBAtomCustomizerTest extends CDKTestCase {
         String cmlContent1 = writer.toString();
 
         CMLReader reader2 = new CMLReader(new ByteArrayInputStream(cmlContent1.getBytes()));
-        IChemFile chemFil2 = (IChemFile) reader2.read(new ChemFile());
+        IChemFile chemFil2 = reader2.read(new ChemFile());
         reader2.close();
         IChemSequence seq2 = chemFil2.getChemSequence(0);
         IChemModel model2 = seq2.getChemModel(0);
@@ -89,9 +88,9 @@ public class PDBAtomCustomizerTest extends CDKTestCase {
         int countmodel2 = model2.getMoleculeSet().getAtomContainerCount();
         int countpolymer2 = polymer2.getAtomCount();
 
-        Assert.assertEquals(countchemFile1, countchemFile2);
-        Assert.assertEquals(countmodel1, countmodel2);
-        Assert.assertEquals(countpolymer1, countpolymer2);
+        Assertions.assertEquals(countchemFile1, countchemFile2);
+        Assertions.assertEquals(countmodel1, countmodel2);
+        Assertions.assertEquals(countpolymer1, countpolymer2);
 
         writer = new StringWriter();
         cmlWriter = new CMLWriter(writer);
@@ -102,7 +101,7 @@ public class PDBAtomCustomizerTest extends CDKTestCase {
 
         String conte1 = cmlContent1.substring(0, 1000);
         String conte2 = cmlContent2.substring(0, 1000);
-        Assert.assertEquals(conte1, conte2);
+        Assertions.assertEquals(conte1, conte2);
     }
 
 }

@@ -47,8 +47,6 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  * </pre></blockquote>
  *
  * @author John May
- * @cdk.module hash
- * @cdk.githash
  * @see BasicAtomHashGenerator
  * @see ConjugatedAtomEncoder
  */
@@ -111,12 +109,13 @@ final class SeedGenerator extends AbstractHashGenerator implements AtomHashGener
 
         int n = container.getAtomCount();
         int m = n - suppressed.count(); // number of non-suppressed vertices
-        int seed = m > 1 ? 9803 % m : 1;
+        long seed = m > 1 ? 9803 % m : 1;
 
         long[] hashes = new long[n];
 
         for (int i = 0; i < n; i++) {
-            hashes[i] = distribute(seed * encoder.encode(container.getAtom(i), container));
+            int atomHash = encoder.encode(container.getAtom(i), container);
+            hashes[i] = distribute((seed * atomHash) & 0x7fffffff);
         }
         return hashes;
     }

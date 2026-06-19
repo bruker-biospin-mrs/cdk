@@ -24,12 +24,11 @@
 
 package org.openscience.cdk.hash.stereo;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
-import org.openscience.cdk.interfaces.IStereoElement;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -37,7 +36,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -46,12 +45,11 @@ import static org.mockito.Mockito.when;
  * example usage.
  *
  * @author John May
- * @cdk.module test-hash
  */
-public class DoubleBondElementEncoderFactoryTest {
+class DoubleBondElementEncoderFactoryTest {
 
     @Test
-    public void opposite() throws Exception {
+    void opposite() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(4);
@@ -81,7 +79,7 @@ public class DoubleBondElementEncoderFactoryTest {
         when(dbs.getStereoBond()).thenReturn(stereoBond);
         when(dbs.getBonds()).thenReturn(new IBond[]{left, right});
         when(dbs.getStereo()).thenReturn(IDoubleBondStereochemistry.Conformation.OPPOSITE);
-        when(container.stereoElements()).thenReturn(Collections.<IStereoElement> singleton(dbs));
+        when(container.stereoElements()).thenReturn(Collections.singleton(dbs));
 
         StereoEncoder encoder = new DoubleBondElementEncoderFactory().create(container, new int[][]{{1, 2}, {0, 3},
                 {0}, {1}});
@@ -90,7 +88,7 @@ public class DoubleBondElementEncoderFactoryTest {
     }
 
     @Test
-    public void together() throws Exception {
+    void together() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(4);
@@ -120,7 +118,7 @@ public class DoubleBondElementEncoderFactoryTest {
         when(dbs.getStereoBond()).thenReturn(stereoBond);
         when(dbs.getBonds()).thenReturn(new IBond[]{left, right});
         when(dbs.getStereo()).thenReturn(IDoubleBondStereochemistry.Conformation.TOGETHER);
-        when(container.stereoElements()).thenReturn(Collections.<IStereoElement> singleton(dbs));
+        when(container.stereoElements()).thenReturn(Collections.singleton(dbs));
 
         StereoEncoder encoder = new DoubleBondElementEncoderFactory().create(container, new int[][]{{1, 2}, {0, 3},
                 {0}, {1}});
@@ -132,14 +130,12 @@ public class DoubleBondElementEncoderFactoryTest {
         if (encoder instanceof MultiStereoEncoder) {
             return getGeometricParity(extractEncoders(encoder).get(0));
         } else if (encoder instanceof GeometryEncoder) {
-            Field field = null;
+            Field field;
             try {
                 field = encoder.getClass().getDeclaredField("geometric");
                 field.setAccessible(true);
                 return (GeometricParity) field.get(encoder);
-            } catch (NoSuchFieldException e) {
-                System.err.println(e.getMessage());
-            } catch (IllegalAccessException e) {
+            } catch (NoSuchFieldException | IllegalAccessException e) {
                 System.err.println(e.getMessage());
             }
         }
@@ -148,14 +144,12 @@ public class DoubleBondElementEncoderFactoryTest {
 
     private static List<StereoEncoder> extractEncoders(StereoEncoder encoder) {
         if (encoder instanceof MultiStereoEncoder) {
-            Field field = null;
+            Field field;
             try {
                 field = encoder.getClass().getDeclaredField("encoders");
                 field.setAccessible(true);
                 return (List<StereoEncoder>) field.get(encoder);
-            } catch (NoSuchFieldException e) {
-                System.err.println(e.getMessage());
-            } catch (IllegalAccessException e) {
+            } catch (NoSuchFieldException | IllegalAccessException e) {
                 System.err.println(e.getMessage());
             }
         }

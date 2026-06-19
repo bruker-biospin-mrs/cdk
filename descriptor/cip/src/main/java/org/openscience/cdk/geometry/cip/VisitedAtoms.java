@@ -31,21 +31,19 @@ import org.openscience.cdk.interfaces.IAtom;
  * Helper class for the {@link CIPTool} to keep track of which atoms have
  * already been visited.
  *
- * @cdk.module cip
- * @cdk.githash
  */
 public class VisitedAtoms {
 
     /**
      * {@link List} to hold the visited {@link IAtom}s.
      */
-    private List<IAtom> visitedItems;
+    private final List<IAtom> visitedItems;
 
     /**
      * Creates a new empty list of visited {@link IAtom}s.
      */
     public VisitedAtoms() {
-        visitedItems = new ArrayList<IAtom>();
+        visitedItems = new ArrayList<>();
     }
 
     /**

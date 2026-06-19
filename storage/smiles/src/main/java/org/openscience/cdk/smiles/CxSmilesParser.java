@@ -23,7 +23,13 @@
 
 package org.openscience.cdk.smiles;
 
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IStereoElement;
+
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -79,7 +85,7 @@ final class CxSmilesParser {
             } else {
                 iter.pos--; // push back
                 int beg = iter.pos;
-                int rollback = beg;
+                int rollback;
                 while (iter.hasNext()) {
 
                     if (iter.pos == beg && iter.curr() == '_' &&
@@ -130,7 +136,7 @@ final class CxSmilesParser {
         double fracPart = 0;
         int divisor = 1;
 
-        intPart = (double) processUnsignedInt(iter);
+        intPart = processUnsignedInt(iter);
         if (intPart < 0) intPart = 0;
         iter.nextIf('.');
 
@@ -215,8 +221,8 @@ final class CxSmilesParser {
 
     private static boolean processDataSgroups(CharIter iter, CxSmilesState state) {
 
-        if (state.dataSgroups == null)
-            state.dataSgroups = new ArrayList<>(4);
+        if (state.mysgroups == null)
+            state.mysgroups = new ArrayList<>(4);
 
         final List<Integer> atomset = new ArrayList<>();
         if (!processIntList(iter, COMMA_SEPARATOR, atomset))
@@ -227,7 +233,12 @@ final class CxSmilesParser {
         int beg = iter.pos;
         while (iter.hasNext() && !isSgroupDelim(iter.curr()))
             iter.next();
-        final String field = unescape(iter.substr(beg, iter.pos));
+        String field = unescape(iter.substr(beg, iter.pos));
+
+        // cdk.Arrow => cdk:Arrow to align with CDKConstants, ':' needs encoding
+        // in CXSMILES
+        if (field.startsWith("cdk."))
+            field = field.replace("cdk.", "cdk:");
 
         if (!iter.nextIf(':'))
             return false;
@@ -237,7 +248,7 @@ final class CxSmilesParser {
         final String value = unescape(iter.substr(beg, iter.pos));
 
         if (!iter.nextIf(':')) {
-            state.dataSgroups.add(new CxSmilesState.DataSgroup(atomset, field, value, "", "", ""));
+            state.mysgroups.add(new CxSmilesState.CxDataSgroup(atomset, field, value, "", "", ""));
             return true;
         }
 
@@ -247,7 +258,7 @@ final class CxSmilesParser {
         final String operator = unescape(iter.substr(beg, iter.pos));
 
         if (!iter.nextIf(':')) {
-            state.dataSgroups.add(new CxSmilesState.DataSgroup(atomset, field, value, operator, "", ""));
+            state.mysgroups.add(new CxSmilesState.CxDataSgroup(atomset, field, value, operator, "", ""));
             return true;
         }
 
@@ -257,7 +268,7 @@ final class CxSmilesParser {
         final String unit = unescape(iter.substr(beg, iter.pos));
 
         if (!iter.nextIf(':')) {
-            state.dataSgroups.add(new CxSmilesState.DataSgroup(atomset, field, value, operator, unit, ""));
+            state.mysgroups.add(new CxSmilesState.CxDataSgroup(atomset, field, value, operator, unit, ""));
             return true;
         }
 
@@ -266,7 +277,7 @@ final class CxSmilesParser {
             iter.next();
         final String tag = unescape(iter.substr(beg, iter.pos));
 
-        state.dataSgroups.add(new CxSmilesState.DataSgroup(atomset, field, value, operator, unit, tag));
+        state.mysgroups.add(new CxSmilesState.CxDataSgroup(atomset, field, value, operator, unit, tag));
 
         return true;
     }
@@ -279,8 +290,8 @@ final class CxSmilesParser {
      * @return parse was a success (or not)
      */
     private static boolean processPolymerSgroups(CharIter iter, CxSmilesState state) {
-        if (state.sgroups == null)
-            state.sgroups = new ArrayList<>();
+        if (state.mysgroups == null)
+            state.mysgroups = new ArrayList<>();
         int beg = iter.pos;
         while (iter.hasNext() && !isSgroupDelim(iter.curr()))
             iter.next();
@@ -292,38 +303,59 @@ final class CxSmilesParser {
             return false;
 
 
-        String subscript;
-        String supscript;
+        String subscript = "n";
+        String supscript = "";
 
-        if (!iter.nextIf(':'))
-            return false;
+        if (!iter.nextIf(':')) {
+            state.mysgroups.add(new CxSmilesState.CxPolymerSgroup(keyword, atomset, subscript, supscript));
+            return true;
+        }
 
         // "If the subscript equals the keyword of the Sgroup this field can be empty", ergo
         // if omitted it equals the keyword
         beg = iter.pos;
         while (iter.hasNext() && !isSgroupDelim(iter.curr()))
             iter.next();
+
         subscript = unescape(iter.substr(beg, iter.pos));
         if (subscript.isEmpty())
             subscript = keyword;
 
         // "In the superscript only connectivity and flip information is allowed.", default
-        // appears to be "eu" either/unspecified
-        if (!iter.nextIf(':'))
-            return false;
+        // appears to be "eu" either/unspecified for SRU
+        if (!iter.nextIf(':')) {
+            state.mysgroups.add(new CxSmilesState.CxPolymerSgroup(keyword, atomset, subscript, supscript));
+            return true;
+        }
+
         beg = iter.pos;
         while (iter.hasNext() && !isSgroupDelim(iter.curr()))
             iter.next();
         supscript = unescape(iter.substr(beg, iter.pos));
-        if (supscript.isEmpty())
-            supscript = "eu";
-
         if (iter.nextIf(',') || iter.curr() == '|') {
-            state.sgroups.add(new CxSmilesState.PolymerSgroup(keyword, atomset, subscript, supscript));
+            state.mysgroups.add(new CxSmilesState.CxPolymerSgroup(keyword, atomset, subscript, supscript));
             return true;
         }
         // not supported: crossing bond info (difficult to work out from doc) and bracket orientation
 
+        return false;
+    }
+
+    private static boolean processIntListMap(Map<Integer,List<Integer>> map, CharIter iter) {
+        while (iter.hasNext()) {
+            if (isDigit(iter.curr())) {
+                final int beg = processUnsignedInt(iter);
+                if (!iter.nextIf(':'))
+                    return false;
+                List<Integer> endpoints = new ArrayList<>(6);
+                if (!processIntList(iter, DOT_SEPARATOR, endpoints))
+                    return false;
+                iter.nextIf(',');
+                map.put(beg, endpoints);
+            } else {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -337,21 +369,79 @@ final class CxSmilesParser {
     private static boolean processPositionalVariation(CharIter iter, CxSmilesState state) {
         if (state.positionVar == null)
             state.positionVar = new TreeMap<>();
+        return processIntListMap(state.positionVar, iter);
+    }
+
+
+    /**
+     * Ligand ordering indicate attachments around R groups.
+     * @param iter the character iterator
+     * @param state the CX state
+     * @return parse was a success (or not)
+     */
+    private static boolean processLigandOrdering(CharIter iter, CxSmilesState state) {
+        if (state.ligandOrdering == null)
+            state.ligandOrdering = new TreeMap<>();
+        return processIntListMap(state.ligandOrdering, iter);
+    }
+
+    /**
+     * Link Nodes are used for repeats in query structures.
+     * @param iter the character iterator
+     * @param state the state
+     * @return the link node is valid or not
+     */
+    private static boolean processLinkNode(CharIter iter, CxSmilesState state) {
+        if (state.mysgroups == null)
+            state.mysgroups = new ArrayList<>();
+        boolean result = false;
+        while (iter.hasNext()) {
+            final int aidx = processUnsignedInt(iter);
+            if (aidx < 0)
+                return result;
+            if (!iter.nextIf(':'))
+                return false;
+            List<Integer> vals = new ArrayList<>(4);
+            if (!processIntList(iter, DOT_SEPARATOR, vals))
+                return false;
+            if (vals.size() < 2)
+                return false;
+            int lowerBound = vals.get(0);
+            int upperBound = vals.get(1);
+            CxSmilesState.CxPolymerSgroup sgroup = new CxSmilesState.CxPolymerSgroup("n",
+                                                                                     Collections.singletonList(aidx),
+                                                                                     lowerBound + "-" + upperBound,
+                                                                                     "ht");
+            for (int i = 2; i < vals.size(); i++) {
+                sgroup.bonds.add(vals.get(i));
+            }
+            state.mysgroups.add(sgroup);
+            result = true;
+
+            iter.nextIf(',');
+        }
+        return result;
+    }
+
+    private static boolean processWedges(CharIter iter, CxSmilesState state, IBond.Display display) {
+        boolean ok = false;
         while (iter.hasNext()) {
             if (isDigit(iter.curr())) {
-                final int beg = processUnsignedInt(iter);
-                if (!iter.nextIf(':'))
+                final int atmIdx = processUnsignedInt(iter);
+                if (!iter.nextIf('.'))
                     return false;
-                List<Integer> endpoints = new ArrayList<>(6);
-                if (!processIntList(iter, DOT_SEPARATOR, endpoints))
-                    return false;
+                final int bndIdx = processUnsignedInt(iter);
+                if (state.bondDisplay == null)
+                    state.bondDisplay = new ArrayList<>();
+                state.bondDisplay.add(new AbstractMap.SimpleImmutableEntry<>(new AbstractMap.SimpleImmutableEntry<>(atmIdx, bndIdx),
+                                                                             display));
+                ok = true;
                 iter.nextIf(',');
-                state.positionVar.put(beg, endpoints);
             } else {
                 return true;
             }
         }
-        return false;
+        return ok;
     }
 
     /**
@@ -417,7 +507,11 @@ final class CxSmilesParser {
 
         while (iter.hasNext()) {
             switch (iter.next()) {
-                case '$': // atom labels and values
+              case '|': // end of CX
+                // consume optional separators
+                if (!iter.nextIf(' ')) iter.nextIf('\t');
+                return iter.pos;
+              case '$': // atom labels and values
                     // dest is atom labels by default
                     Map<Integer, String> dest;
 
@@ -447,11 +541,38 @@ final class CxSmilesParser {
                             return -1;
                     }
                     break;
-                case 'r': // relative stereochemistry ignored
+                case '&': // &1, &2 etc
+                    if (!processStereoGrps(state, iter, IStereoElement.GRP_RAC))
+                        return -1;
+                    break;
+                case 'o': // o1, o2 etc
+                    if (!processStereoGrps(state, iter, IStereoElement.GRP_REL))
+                        return -1;
+                    break;
+                case 'a': // abs etc
+                    if (!processStereoGrps(state, iter, IStereoElement.GRP_ABS))
+                        return -1;
+                    break;
+                case 'h': // EPAM extensions, ha: and hb: for highlighting atoms/bonds
+                    if (iter.nextIf('a')) {
+                      if (!processEpamIndigoHighlight(state, iter,
+                                                      state.atomHighlight = new ArrayList<>()))
+                        return -1;
+                    } else if (iter.nextIf('b')) {
+                      if (!processEpamIndigoHighlight(state, iter,
+                                                      state.bongHighlight = new ArrayList<>()))
+                        return -1;
+                    } else
+                      return -1;
+                    break;
+
+                case 'r': // relative (actually racemic) stereochemistry ignored
                     if (iter.nextIf(':')) {
-                        if (!skipIntList(iter, COMMA_SEPARATOR))
+                        state.racemicFrags = new ArrayList<>();
+                        if (!processIntList(iter, ',', state.racemicFrags))
                             return -1;
                     } else {
+                        state.racemic = true;
                         if (!iter.nextIf(',') && iter.curr() != '|')
                             return -1;
                     }
@@ -475,6 +596,12 @@ final class CxSmilesParser {
                     }
                     else if (iter.nextIf("gD:")) {
                         if (!processDataSgroups(iter, state))
+                            return -1;
+                        if (iter.nextIf(','))
+                            break;
+                    }
+                    else if (iter.nextIf("gH:")) {
+                        if (!processSgroupsHierarchy(iter, state))
                             return -1;
                     }
                     else {
@@ -501,16 +628,162 @@ final class CxSmilesParser {
                         iter.nextIf(',');
                     }
                     break;
-                case '|': // end of CX
-                    // consume optional separators
-                    if (!iter.nextIf(' ')) iter.nextIf('\t');
-                    return iter.pos;
+                case 'L':
+                    // LO, Ligand Ordering
+                    if (iter.nextIf('O')) {
+                        if (!iter.nextIf(':'))
+                            return -1;
+                        if (!processLigandOrdering(iter, state))
+                            return -1;
+                    }
+                    // LN, Link Node
+                    else if (iter.nextIf('N')) {
+                        if (!iter.nextIf(':'))
+                            return -1;
+                        if (!processLinkNode(iter, state))
+                            return -1;
+                    } else {
+                        // LP, bond connected lone pair?
+                        return -1;
+                    }
+                    break;
+                case 'w': // wedges, wD and wU
+                    if (iter.nextIf('D')) {
+                        if (!iter.nextIf(':'))
+                            return -1;
+                        if (!processWedges(iter, state, IBond.Display.WedgeBegin))
+                            return -1;
+                    }
+                    else if (iter.nextIf('U')) {
+                        if (!iter.nextIf(':'))
+                            return -1;
+                        if (!processWedges(iter, state, IBond.Display.WedgedHashBegin))
+                            return -1;
+                    }
+                    break;
+                case 'R': // RG R-groups
+                    if (!iter.nextIf("G:"))
+                        return -1;
+                    if (state.rgrps == null)
+                        state.rgrps = new HashMap<>();
+                    if (!processRGroups(iter, state.rgrps))
+                        return -1;
+                    break;
                 default:
                     return -1;
             }
         }
 
         return -1;
+    }
+
+    private static boolean processRGroups(CharIter iter, Map<String,List<String>> rgrps) {
+
+        String lab = null;
+        StringBuilder sb = new StringBuilder();
+
+        while (iter.hasNext()) {
+            if (iter.nextIf('_')) {
+                sb.setLength(0);
+                while (iter.hasNext() && isAlphaNum(iter.curr()))
+                    sb.append(iter.next());
+                lab = sb.toString();
+                if (!iter.nextIf("="))
+                    return false;
+            } else if (iter.nextIf('{')) {
+                if (lab == null)
+                    return false;
+                sb.setLength(0);
+                int depth = 1;
+                while (iter.hasNext()) {
+                    char ch = iter.next();
+                    if (ch == '{')  depth++;
+                    else if (ch == '}') depth--;
+                    if (depth == 0)
+                        break;
+                    sb.append(ch);
+                }
+                if (depth != 0)
+                    return false;
+                iter.nextIf(',');
+                rgrps.computeIfAbsent(lab, k -> new ArrayList<>())
+                     .add(sb.toString());
+            } else {
+                break;
+            }
+        }
+
+        return !rgrps.isEmpty();
+    }
+
+    private static boolean processStereoGrps(CxSmilesState state, CharIter iter, int grp) {
+        if (grp != IStereoElement.GRP_ABS) {
+            int num = processUnsignedInt(iter);
+            if (num < 0)
+                return false; // no number found of &1, o1
+            grp |= num << IStereoElement.GRP_NUM_SHIFT;
+        }
+        if (!iter.nextIf(':'))
+            return false;
+        List<Integer> idxs = new ArrayList<>();
+        if (!processIntList(iter, ',', idxs))
+            return false;
+        if (state.stereoGrps == null)
+            state.stereoGrps = new HashMap<>();
+        for (Integer idx : idxs) {
+            state.stereoGrps.put(idx, grp);
+        }
+        return true;
+    }
+
+
+    // An EPAM Indigo extension, ha: / hb: for atom/bond highlights
+    private static boolean processEpamIndigoHighlight(CxSmilesState state, CharIter iter, List<Integer> dest) {
+      if (!iter.nextIf(':'))
+        return false;
+      return processIntList(iter, ',',dest);
+    }
+
+
+
+    private static boolean processSgroupsHierarchy(CharIter iter, CxSmilesState state) {
+        int nsgroups = 0;
+        if (state.mysgroups != null)
+            nsgroups += state.mysgroups.size();
+        if (nsgroups == 0)
+            return false; // may not be written yet
+        for (;;) {
+            int parent = processUnsignedInt(iter);
+            if (parent < 0)
+                return false;
+            if (!iter.nextIf(':'))
+                return false;
+            List<Integer> children = new ArrayList<>();
+            processIntList(iter, '.', children);
+            if (parent < state.mysgroups.size()) {
+                for (Integer child : children) {
+                    if (child < nsgroups) {
+                        state.mysgroups.get(parent).children
+                            .add(state.mysgroups.get(child));
+                    } else
+                        return false; // missing Sgroup
+                }
+            } else {
+                return false; // missing Sgroup
+            }
+            if (iter.curr() == '|')
+                return true;
+            if (!iter.nextIf(','))
+                return false;
+            if (!isDigit(iter.curr()))
+                return true;
+        }
+    }
+
+    private static boolean isAlphaNum(char c) {
+        return ((c >= 'A') && (c <= 'Z')) ||
+               ((c >= 'a') && (c <= 'z')) ||
+               isDigit(c);
     }
 
     private static boolean isDigit(char c) {

@@ -29,21 +29,18 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtom;
-import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
 import org.openscience.cdk.tools.manipulator.ReactionManipulator;
-
-import java.util.Map;
 
 /**
  * A structural pattern for finding an exact matching in a target compound.
  *
  * @author John May
- * @cdk.module isomorphism
  */
 public abstract class Pattern {
 
     /** Additional filters on results. */
     private boolean hasStereo, hasQueryStereo, hasCompGrp, hasRxnMap;
+    protected boolean hasVarAttach;
 
     void determineFilters(IAtomContainer query) {
         hasStereo  = query.stereoElements().iterator().hasNext();
@@ -60,10 +57,17 @@ public abstract class Pattern {
             if (hasRxnMap && hasCompGrp && hasQueryStereo)
                 break;
         }
+        hasVarAttach = VarAttachFilter.hasVariableAttachment(query);
     }
 
     Mappings filter(Mappings mappings, IAtomContainer query, IAtomContainer target) {
         // apply required post-match filters
+
+        // var attach needs to go first as it will set some extra parts in the
+        // mapping
+        if (hasVarAttach)
+            mappings = mappings.filter(new VarAttachFilter(query, target));
+
         if (hasStereo) {
             mappings = hasQueryStereo
                     ? mappings.filter(new QueryStereoFilter(query, target))
@@ -205,7 +209,7 @@ public abstract class Pattern {
      * @see VentoFoggia
      */
     public static Pattern findSubstructure(IAtomContainer query) {
-        return VentoFoggia.findSubstructure(query);
+        return DfPattern.findSubstructure(query);
     }
 
     /**

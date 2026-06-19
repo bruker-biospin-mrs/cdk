@@ -18,66 +18,65 @@
  */
 package org.openscience.cdk.charges;
 
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
- * @cdk.module  test-charges
  * @author      egonw
  * @cdk.created 2008-01-04
  */
-public class AtomTypeChargesTest extends CDKTestCase {
+class AtomTypeChargesTest extends CDKTestCase {
 
     /**
      * Tests the initial assignment of partial charges of
      * atom types matching the HOSE code for pOC atom types.
      */
-    @Ignore
+    @Disabled
     @Test
-    public void testCharges_pOC() throws Exception {
-        Assert.fail("Not tested yet");
+    void testCharges_pOC() throws Exception {
+        Assertions.fail("Not tested yet");
     }
 
     /**
      * Tests the initial assignment of partial charges of
      * atom types matching the HOSE code for pOP atom types.
      */
-    @Ignore
+    @Disabled
     @Test
-    public void testCharges_pOP() throws Exception {
-        Assert.fail("Not tested yet");
+    void testCharges_pOP() throws Exception {
+        Assertions.fail("Not tested yet");
     }
 
     /**
      * Tests the initial assignment of partial charges of
      * atom types matching the HOSE code for pOS atom types.
      */
-    @Ignore
+    @Disabled
     @Test
-    public void testCharges_pOS() throws Exception {
-        Assert.fail("Not tested yet");
+    void testCharges_pOS() throws Exception {
+        Assertions.fail("Not tested yet");
     }
 
     /**
      * Tests the initial assignment of partial charges of
      * atom types matching the HOSE code for p_p atom types.
      */
-    @Ignore
+    @Disabled
     @Test
-    public void testCharges_p_p() throws Exception {
-        Assert.fail("Not tested yet");
+    void testCharges_p_p() throws Exception {
+        Assertions.fail("Not tested yet");
     }
 
     /**
      * Tests the initial assignment of partial charges of
      * atom types matching the HOSE code for p_n atom types.
      */
-    @Ignore
+    @Disabled
     @Test
-    public void testCharges_p_n() throws Exception {
-        Assert.fail("Not tested yet");
+    void testCharges_p_n() throws Exception {
+        Assertions.fail("Not tested yet");
     }
 
 }

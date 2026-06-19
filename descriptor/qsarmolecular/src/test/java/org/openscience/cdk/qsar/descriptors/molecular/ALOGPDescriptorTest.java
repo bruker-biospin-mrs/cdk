@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Bond;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
@@ -32,26 +32,22 @@ import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 /**
- * Test suite for the alogp descriptor
- *
- * @cdk.module test-qsarmolecular
+ * Test suite for the alogp descriptor.
  */
-public class ALOGPDescriptorTest extends MolecularDescriptorTest {
+class ALOGPDescriptorTest extends MolecularDescriptorTest {
 
-    private CDKHydrogenAdder hydrogenAdder;
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(ALOGPDescriptor.class);
-        hydrogenAdder = CDKHydrogenAdder.getInstance(DefaultChemObjectBuilder.getInstance());
     }
 
     /**
-     * This test is actually testing 1-cholorpropane.
+     * TODO: This test is actually testing 1-cholorpropane.
+     *
      * @cdk.inchi InChI=1S/C3H7Cl/c1-2-3-4/h2-3H2,1H3
      */
     @Test
-    public void testChloroButane() throws Exception {
+    void testChloroButane() throws Exception {
         IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom c1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
         IAtom c2 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
@@ -66,11 +62,12 @@ public class ALOGPDescriptorTest extends MolecularDescriptorTest {
         mol.addBond(new Bond(c3, cl));
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
         CDKHydrogenAdder.getInstance(SilentChemObjectBuilder.getInstance())
+                //TODO: doesn't the descriptor need explicit hydrogens?
                         .addImplicitHydrogens(mol);
 
         DescriptorValue v = descriptor.calculate(mol);
-        Assert.assertEquals(1.719, ((DoubleArrayResult) v.getValue()).get(0), 0.01);
-        Assert.assertEquals(20.585, ((DoubleArrayResult) v.getValue()).get(2), 0.01);
+        Assertions.assertEquals(1.719, ((DoubleArrayResult) v.getValue()).get(0), 0.01);
+        Assertions.assertEquals(20.585, ((DoubleArrayResult) v.getValue()).get(2), 0.01);
     }
 
 }

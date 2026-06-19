@@ -43,8 +43,6 @@ import java.util.List;
  *
  * @author         miguelrojasch
  * @cdk.created    2008-02-10
- * @cdk.module     reaction
- * @cdk.githash
  */
 public class RadicalSiteIonizationMechanism implements IReactionMechanism {
 
@@ -79,7 +77,7 @@ public class RadicalSiteIonizationMechanism implements IReactionMechanism {
         IAtomContainer molecule = atomContainerSet.getAtomContainer(0);
         IAtomContainer reactantCloned;
         try {
-            reactantCloned = (IAtomContainer) molecule.clone();
+            reactantCloned = molecule.clone();
         } catch (CloneNotSupportedException e) {
             throw new CDKException("Could not clone IAtomContainer!", e);
         }
@@ -127,7 +125,7 @@ public class RadicalSiteIonizationMechanism implements IReactionMechanism {
 
         IAtomContainerSet moleculeSetP = ConnectivityChecker.partitionIntoMolecules(reactantCloned);
         for (int z = 0; z < moleculeSetP.getAtomContainerCount(); z++)
-            reaction.addProduct((IAtomContainer) moleculeSetP.getAtomContainer(z));
+            reaction.addProduct(moleculeSetP.getAtomContainer(z));
 
         return reaction;
     }

@@ -31,12 +31,12 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.math.Primes;
 
+import java.util.Objects;
+
 /**
  * This is used to hold the invariance numbers for the canonical labeling of
  * {@link IAtomContainer}s.
  *
- * @cdk.module standard
- * @cdk.githash
  */
 public class InvPair implements java.io.Serializable {
 
@@ -111,6 +111,11 @@ public class InvPair implements java.io.Serializable {
         }
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(last, curr);
+    }
+
     public void setLast(long newLast) {
         last = newLast;
     }
@@ -124,7 +129,7 @@ public class InvPair implements java.io.Serializable {
     }
 
     public void commit() {
-        atom.setProperty(CANONICAL_LABEL, Long.valueOf(curr));
+        atom.setProperty(CANONICAL_LABEL, curr);
     }
 
     /**

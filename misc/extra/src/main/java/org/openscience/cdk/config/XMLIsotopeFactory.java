@@ -20,7 +20,6 @@ package org.openscience.cdk.config;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 
 import org.openscience.cdk.config.isotopes.IsotopeReader;
@@ -46,8 +45,6 @@ import org.openscience.cdk.interfaces.IIsotope;
  *   Isotope major = factory.getMajorIsotope("H");
  * </pre>
  *
- * @cdk.module     extra
- * @cdk.githash
  *
  * @author     steinbeck
  * @cdk.created    2001-08-29
@@ -57,7 +54,7 @@ import org.openscience.cdk.interfaces.IIsotope;
 public class XMLIsotopeFactory extends IsotopeFactory {
 
     private static XMLIsotopeFactory ifac  = null;
-    private boolean                  debug = false;
+    private final boolean                  debug = false;
 
     /**
      * Private constructor for the IsotopeFactory object.

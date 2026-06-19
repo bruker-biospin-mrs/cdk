@@ -25,10 +25,10 @@ package org.openscience.cdk.libio.cml;
 
 import nu.xom.Document;
 import nu.xom.Serializer;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -38,23 +38,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * @cdk.module test-libiocml
  */
-public class ConvertorTest extends CDKTestCase {
+class ConvertorTest extends CDKTestCase {
 
     /**
      * @cdk.bug 1748257
      */
-    @Ignore("moved to MDMoleculeTest")
-    public void testBug1748257() {}
+    @Disabled("moved to MDMoleculeTest")
+    void testBug1748257() {}
 
     @Test
-    public void testCdkBondToCMLBond_Wedge() throws IOException {
+    void testCdkBondToCMLBond_Wedge() throws IOException {
 
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IBond bond = builder.newInstance(IBond.class);
         bond.setOrder(IBond.Order.SINGLE);
-        bond.setStereo(IBond.Stereo.UP);
+        bond.setDisplay(IBond.Display.WedgeBegin);
 
         Convertor convertor = new Convertor(true, null);
         CMLBond cmlBond = convertor.cdkBondToCMLBond(bond);
@@ -70,17 +69,17 @@ public class ConvertorTest extends CDKTestCase {
         String expected = "<bondStereo dictRef=\"cml:W\">W</bondStereo>";
         String actual = new String(out.toByteArray());
 
-        Assert.assertTrue(actual.contains(expected));
+        Assertions.assertTrue(actual.contains(expected));
 
     }
 
     @Test
-    public void testCdkBondToCMLBond_Hatch() throws IOException {
+    void testCdkBondToCMLBond_Hatch() throws IOException {
 
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IBond bond = builder.newInstance(IBond.class);
         bond.setOrder(IBond.Order.SINGLE);
-        bond.setStereo(IBond.Stereo.DOWN);
+        bond.setDisplay(IBond.Display.WedgedHashBegin);
 
         Convertor convertor = new Convertor(true, null);
         CMLBond cmlBond = convertor.cdkBondToCMLBond(bond);
@@ -96,7 +95,7 @@ public class ConvertorTest extends CDKTestCase {
         String expected = "<bondStereo dictRef=\"cml:H\">H</bondStereo>";
         String actual = new String(out.toByteArray());
 
-        Assert.assertTrue(actual.contains(expected));
+        Assertions.assertTrue(actual.contains(expected));
 
     }
 

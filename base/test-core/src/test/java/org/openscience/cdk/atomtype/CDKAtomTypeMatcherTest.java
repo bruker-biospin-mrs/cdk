@@ -23,16 +23,13 @@
 package org.openscience.cdk.atomtype;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.PseudoAtom;
 import org.openscience.cdk.Ring;
@@ -44,6 +41,7 @@ import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IAtomType.Hybridization;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IBond.Order;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.silent.AtomType;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
@@ -60,28 +58,27 @@ import static org.hamcrest.CoreMatchers.is;
  * explicit {@link IAtomContainer}s; test using data files
  * must be placed in {@link CDKAtomTypeMatcherFilesTest}.
  *
- * @cdk.module test-core
  */
-public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
+class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
 
-    private static Map<String, Integer> testedAtomTypes = new HashMap<String, Integer>();
+    private static final Map<String, Integer> testedAtomTypes = new HashMap<>();
 
     @Test
-    public void testGetInstance_IChemObjectBuilder() throws Exception {
+    void testGetInstance_IChemObjectBuilder() throws Exception {
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(DefaultChemObjectBuilder.getInstance());
-        Assert.assertNotNull(matcher);
+        Assertions.assertNotNull(matcher);
     }
 
     @Test
-    public void testGetInstance_IChemObjectBuilder_int() throws Exception {
+    void testGetInstance_IChemObjectBuilder_int() throws Exception {
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(DefaultChemObjectBuilder.getInstance(),
                 CDKAtomTypeMatcher.REQUIRE_EXPLICIT_HYDROGENS);
-        Assert.assertNotNull(matcher);
+        Assertions.assertNotNull(matcher);
     }
 
     @Test
-    public void testFindMatchingAtomType_IAtomContainer_IAtom() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testFindMatchingAtomType_IAtomContainer_IAtom() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         final IAtomType.Hybridization thisHybridization = IAtomType.Hybridization.SP3;
         atom.setHybridization(thisHybridization);
@@ -92,8 +89,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testFindMatchingAtomType_IAtomContainer() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testFindMatchingAtomType_IAtomContainer() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         final IAtomType.Hybridization thisHybridization = IAtomType.Hybridization.SP3;
         atom.setHybridization(thisHybridization);
@@ -104,13 +101,13 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         IAtomType[] types = matcher.findMatchingAtomTypes(mol);
         for (int i = 0; i < types.length; i++) {
             IAtomType type = matcher.findMatchingAtomType(mol, mol.getAtom(i));
-            Assert.assertEquals(type.getAtomTypeName(), types[i].getAtomTypeName());
+            Assertions.assertEquals(type.getAtomTypeName(), types[i].getAtomTypeName());
         }
     }
 
     @Test
-    public void testDummy() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testDummy() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new PseudoAtom("R");
         mol.addAtom(atom);
 
@@ -122,19 +119,19 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 2445178
      */
     @Test
-    public void testNonExistingType() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testNonExistingType() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom();
         mol.addAtom(atom);
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(DefaultChemObjectBuilder.getInstance());
         IAtomType type = matcher.findMatchingAtomType(mol, atom);
-        Assert.assertNotNull(type);
-        Assert.assertThat(type.getAtomTypeName(), is("X"));
+        Assertions.assertNotNull(type);
+        org.hamcrest.MatcherAssert.assertThat(type.getAtomTypeName(), is("X"));
     }
 
     @Test
-    public void testEthene() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testEthene() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("C");
         mol.addAtom(atom);
@@ -146,8 +143,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testEthyneKation() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testEthyneKation() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("C");
         atom2.setFormalCharge(+1);
@@ -160,8 +157,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testEthyneRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testEthyneRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("C");
         mol.addAtom(atom);
@@ -174,8 +171,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testImine() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testImine() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("N");
         mol.addAtom(atom);
@@ -187,8 +184,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testImineRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testImineRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("N");
         mol.addAtom(atom);
@@ -201,8 +198,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testEtheneRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testEtheneRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("C");
         mol.addAtom(atom);
@@ -215,8 +212,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testGuanineMethyl() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testGuanineMethyl() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom1 = new Atom("C");
         IAtom atom2 = new Atom("N");
         IAtom atom3 = new Atom("C");
@@ -261,8 +258,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPropyne() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPropyne() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("C");
         IAtom atom3 = new Atom("C");
@@ -277,8 +274,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testFormaldehyde() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testFormaldehyde() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("C");
         mol.addAtom(atom);
@@ -290,8 +287,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testCarboxylate() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testCarboxylate() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom1 = new Atom("C");
         IAtom atom2 = new Atom("O");
@@ -310,8 +307,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testFormaldehydeRadicalKation() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testFormaldehydeRadicalKation() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         atom.setFormalCharge(+1);
         IAtom atom2 = new Atom("C");
@@ -329,8 +326,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * partial filled implicit hydrogen counts.
      */
     @Test
-    public void testPartialMethane() throws Exception {
-        IAtomContainer methane = new AtomContainer();
+    void testPartialMethane() throws Exception {
+        IAtomContainer methane = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom carbon = new Atom("C");
         methane.addAtom(carbon);
 
@@ -351,8 +348,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethanol() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethanol() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("C");
         mol.addAtom(atom);
@@ -364,8 +361,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testLithiumMethanoxide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testLithiumMethanoxide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("C");
         IAtom atom3 = new Atom("Li");
@@ -380,8 +377,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHCN() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHCN() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("N");
         IAtom atom2 = new Atom("C");
         mol.addAtom(atom);
@@ -393,8 +390,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHNO2() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHNO2() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("N");
         IAtom atom2 = new Atom("O");
         IAtom atom3 = new Atom("O");
@@ -414,8 +411,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testNitromethane() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testNitromethane() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("N");
         IAtom atom2 = new Atom("O");
         IAtom atom3 = new Atom("O");
@@ -433,8 +430,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethylAmine() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethylAmine() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("N");
         IAtom atom2 = new Atom("C");
         mol.addAtom(atom);
@@ -446,8 +443,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethylAmineRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethylAmineRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("N");
         IAtom atom2 = new Atom("C");
         mol.addAtom(atom);
@@ -461,8 +458,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethyleneImine() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethyleneImine() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("N");
         IAtom atom2 = new Atom("C");
         mol.addAtom(atom);
@@ -474,8 +471,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testEthene_withHybridInfo() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testEthene_withHybridInfo() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("C");
         final IAtomType.Hybridization thisHybridization = IAtomType.Hybridization.SP2;
@@ -490,21 +487,21 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPiperidine() throws Exception {
+    void testPiperidine() throws Exception {
         IAtomContainer molecule = TestMoleculeFactory.makePiperidine();
         String[] expectedTypes = {"N.sp3", "C.sp3", "C.sp3", "C.sp3", "C.sp3", "C.sp3", "H"};
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testTetrahydropyran() throws Exception {
+    void testTetrahydropyran() throws Exception {
         IAtomContainer molecule = TestMoleculeFactory.makeTetrahydropyran();
         String[] expectedTypes = {"O.sp3", "C.sp3", "C.sp3", "C.sp3", "C.sp3", "C.sp3"};
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testS3() throws Exception {
+    void testS3() throws Exception {
         IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom s = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "S");
         IAtom o1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "O");
@@ -525,7 +522,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testH2S() throws Exception {
+    void testH2S() throws Exception {
         IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom s = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "S");
         IAtom h1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "H");
@@ -549,7 +546,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1/H2Se/h1H2
      */
     @Test
-    public void testH2Se() throws Exception {
+    void testH2Se() throws Exception {
         IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom se = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "Se");
         IAtom h1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "H");
@@ -573,7 +570,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1/H2Se/h1H2
      */
     @Test
-    public void testH2Se_oneImplH() throws Exception {
+    void testH2Se_oneImplH() throws Exception {
         IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom se = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "Se");
         se.setImplicitHydrogenCount(1);
@@ -593,7 +590,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1/H2Se/h1H2
      */
     @Test
-    public void testH2Se_twoImplH() throws Exception {
+    void testH2Se_twoImplH() throws Exception {
         IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom se = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "Se");
         se.setImplicitHydrogenCount(2);
@@ -604,7 +601,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSelenide() throws Exception {
+    void testSelenide() throws Exception {
         IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom se = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "Se");
         se.setImplicitHydrogenCount(0);
@@ -616,7 +613,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testH2S_Hybridization() throws Exception {
+    void testH2S_Hybridization() throws Exception {
         IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom s = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "S");
         s.setHybridization(Hybridization.SP3);
@@ -626,7 +623,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHS() throws Exception {
+    void testHS() throws Exception {
         IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom s = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "S");
         s.setFormalCharge(-1);
@@ -643,8 +640,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testDMSOCharged() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testDMSOCharged() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         atom.setFormalCharge(-1);
         IAtom atom2 = new Atom("S");
@@ -664,8 +661,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testDMSO() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testDMSO() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("S");
         IAtom atom3 = new Atom("C");
@@ -683,8 +680,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testDMSOO() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testDMSOO() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom1 = new Atom("O");
         IAtom atom2 = new Atom("S");
@@ -705,8 +702,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testStrioxide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testStrioxide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom1 = new Atom("O");
         IAtom atom2 = new Atom("S");
@@ -724,8 +721,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAmide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAmide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("C");
         IAtom atom3 = new Atom("N");
@@ -740,8 +737,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAmineOxide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAmineOxide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("N");
         IAtom atom3 = new Atom("C");
@@ -762,8 +759,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testThioAmide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testThioAmide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("S");
         IAtom atom2 = new Atom("C");
         IAtom atom3 = new Atom("N");
@@ -778,7 +775,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAdenine() throws Exception {
+    void testAdenine() throws Exception {
         IAtomContainer mol = TestMoleculeFactory.makeAdenine();
         String[] expectedTypes = {"C.sp2", "C.sp2", "C.sp2", "N.sp2", "N.sp2", "N.planar3", "N.sp2", "N.sp3", "C.sp2",
                 "C.sp2"};
@@ -786,8 +783,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAmide2() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAmide2() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom1 = new Atom("C");
         IAtom atom2 = new Atom("N");
@@ -805,8 +802,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAmide3() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAmide3() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom1 = new Atom("C");
         IAtom atom2 = new Atom("N");
@@ -827,8 +824,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testLactam() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testLactam() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom1 = new Atom("C");
         IAtom atom2 = new Atom("N");
@@ -853,8 +850,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testThioAcetone() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testThioAcetone() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("S");
         IAtom atom2 = new Atom("C");
         IAtom atom3 = new Atom("C");
@@ -872,8 +869,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSulphuricAcid() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testSulphuricAcid() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("S");
         IAtom atom3 = new Atom("O");
@@ -897,7 +894,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/CH4O2S2/c1-5(2,3)4/h1H3,(H,2,3,4)
      */
     @Test
-    public void testThioSulphonate() throws Exception {
+    void testThioSulphonate() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "S");
@@ -924,8 +921,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSulphuricAcid_Charged() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testSulphuricAcid_Charged() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("S");
         IAtom atom3 = new Atom("O");
@@ -949,8 +946,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSF6() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testSF6() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("F");
         IAtom atom2 = new Atom("S");
         IAtom atom3 = new Atom("F");
@@ -977,8 +974,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMnF4() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMnF4() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("F");
         IAtom atom2 = new Atom("Mn");
         IAtom atom3 = new Atom("F");
@@ -1000,8 +997,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testCrF6() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testCrF6() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("F");
         IAtom atom2 = new Atom("Cr");
         IAtom atom3 = new Atom("F");
@@ -1028,8 +1025,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testXeF4() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testXeF4() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("F");
         IAtom atom2 = new Atom("Xe");
         IAtom atom3 = new Atom("F");
@@ -1050,8 +1047,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPhosphate() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPhosphate() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("P");
         IAtom atom3 = new Atom("O");
@@ -1075,8 +1072,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1/C3H10OP/c1-5(2,3)4/h4H,1-3H3/q+1
      */
     @Test
-    public void testHydroxyTriMethylPhophanium() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHydroxyTriMethylPhophanium() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("P");
         atom2.setFormalCharge(+1);
@@ -1098,8 +1095,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPhosphateCharged() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPhosphateCharged() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         atom.setFormalCharge(-1);
         IAtom atom2 = new Atom("P");
@@ -1122,8 +1119,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPhosphorusTriradical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPhosphorusTriradical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("P");
         mol.addAtom(atom);
         mol.addSingleElectron(0);
@@ -1135,8 +1132,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAmmonia() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAmmonia() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         IAtom atom2 = new Atom("N");
         IAtom atom3 = new Atom("H");
@@ -1158,8 +1155,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testNitrogenRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testNitrogenRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         IAtom atom2 = new Atom("N");
         IAtom atom3 = new Atom("H");
@@ -1175,8 +1172,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testTMS() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testTMS() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("Si");
         IAtom atom3 = new Atom("C");
@@ -1197,8 +1194,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testTinCompound() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testTinCompound() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("Sn");
         IAtom atom3 = new Atom("C");
@@ -1219,8 +1216,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testArsenicPlus() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testArsenicPlus() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("As");
         atom2.setFormalCharge(+1);
@@ -1242,8 +1239,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPhosphine() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPhosphine() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         IAtom atom2 = new Atom("P");
         IAtom atom3 = new Atom("H");
@@ -1264,8 +1261,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/HO3P/c1-4(2)3/h(H-,1,2,3)/p+1
      */
     @Test
-    public void testPhosphorousAcid() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPhosphorousAcid() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IChemObjectBuilder builder = mol.getBuilder();
         IAtom a1 = builder.newInstance(IAtom.class, "P");
         a1.setFormalCharge(1);
@@ -1296,8 +1293,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testDiethylPhosphine() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testDiethylPhosphine() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("P");
         IAtom atom3 = new Atom("C");
@@ -1315,8 +1312,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1/C2H5P/c1-3-2/h1H2,2H3
      */
     @Test
-    public void testPhosphorCompound() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPhosphorCompound() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("P");
         IAtom atom3 = new Atom("C");
@@ -1331,8 +1328,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testCarbokation() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testCarbokation() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         IAtom atom2 = new Atom("C");
         atom2.setFormalCharge(+1);
@@ -1351,19 +1348,19 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testCarbokation_implicitHydrogen() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testCarbokation_implicitHydrogen() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom2 = new Atom("C");
         atom2.setFormalCharge(+1);
         mol.addAtom(atom2);
 
-        String[] expectedTypes = {"C.plus.sp2"}; // FIXME: compare with previous test... same compound!
+        String[] expectedTypes = {"C.plus.planar"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
     }
 
     @Test
-    public void testHydrogen() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHydrogen() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         mol.addAtom(atom);
 
@@ -1372,8 +1369,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHydroxyl() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHydroxyl() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         IAtom oxygen = new Atom("O");
         oxygen.setFormalCharge(-1);
@@ -1386,8 +1383,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHydroxyl2() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHydroxyl2() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom oxygen = new Atom("O");
         oxygen.setFormalCharge(-1);
         mol.addAtom(oxygen);
@@ -1397,8 +1394,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHydroxonium() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHydroxonium() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         IAtom atom1 = new Atom("H");
         IAtom atom2 = new Atom("H");
@@ -1417,8 +1414,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPositiveCarbonyl() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPositiveCarbonyl() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         IAtom atom1 = new Atom("H");
         IAtom atom2 = new Atom("H");
@@ -1440,8 +1437,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testProton() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testProton() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         atom.setFormalCharge(1);
         mol.addAtom(atom);
@@ -1451,8 +1448,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHalides() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHalides() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom = new Atom("Cl");
         atom.setFormalCharge(-1);
@@ -1460,21 +1457,21 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         String[] expectedTypes = {"Cl.minus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("F");
         atom.setFormalCharge(-1);
         mol.addAtom(atom);
         expectedTypes = new String[]{"F.minus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Br");
         atom.setFormalCharge(-1);
         mol.addAtom(atom);
         expectedTypes = new String[]{"Br.minus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("I");
         atom.setFormalCharge(-1);
         mol.addAtom(atom);
@@ -1483,8 +1480,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHalogens() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHalogens() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom = new Atom("Cl");
         IAtom hydrogen = new Atom("H");
@@ -1494,7 +1491,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         String[] expectedTypes = new String[]{"Cl", "H"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("I");
         mol.addAtom(atom);
         mol.addAtom(hydrogen);
@@ -1502,7 +1499,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         expectedTypes = new String[]{"I", "H"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Br");
         mol.addAtom(atom);
         mol.addAtom(hydrogen);
@@ -1510,7 +1507,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         expectedTypes = new String[]{"Br", "H"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("F");
         mol.addAtom(atom);
         mol.addAtom(hydrogen);
@@ -1520,8 +1517,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testFluorRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testFluorRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("F");
         mol.addAtom(atom);
         mol.addSingleElectron(0);
@@ -1531,8 +1528,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testChlorRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testChlorRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("Cl");
         mol.addAtom(atom);
         mol.addSingleElectron(0);
@@ -1542,8 +1539,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testBromRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testBromRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("Br");
         mol.addAtom(atom);
         mol.addSingleElectron(0);
@@ -1553,8 +1550,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testIodRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testIodRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("I");
         mol.addAtom(atom);
         mol.addSingleElectron(0);
@@ -1564,8 +1561,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testIMinusF2() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testIMinusF2() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("F");
         IAtom atom2 = new Atom("I");
         IAtom atom3 = new Atom("F");
@@ -1581,8 +1578,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHydride() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHydride() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         atom.setFormalCharge(-1);
         mol.addAtom(atom);
@@ -1592,8 +1589,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHydrogenRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHydrogenRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("H");
         mol.addAtom(atom);
         mol.addSingleElectron(0);
@@ -1603,8 +1600,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAzide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAzide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("N");
         atom2.setFormalCharge(-1);
@@ -1624,8 +1621,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAllene() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAllene() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom1 = new Atom("C");
         IAtom atom2 = new Atom("C");
         IAtom atom3 = new Atom("C");
@@ -1640,8 +1637,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAzide2() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAzide2() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("N");
         IAtom atom3 = new Atom("N");
@@ -1661,8 +1658,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMercuryComplex() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMercuryComplex() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom = new Atom("Hg");
         atom.setFormalCharge(-1);
@@ -1686,7 +1683,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Hg_2plus() throws Exception {
+    void test_Hg_2plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Hg");
@@ -1698,7 +1695,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Hg_plus() throws Exception {
+    void test_Hg_plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Hg");
@@ -1715,7 +1712,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Hg_metallic() throws Exception {
+    void test_Hg_metallic() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Hg");
@@ -1727,7 +1724,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Hg_1() throws Exception {
+    void test_Hg_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Hg");
@@ -1744,7 +1741,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Hg_2() throws Exception {
+    void test_Hg_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Hg");
@@ -1766,8 +1763,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPoloniumComplex() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPoloniumComplex() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom = new Atom("O");
         IAtom atom1 = new Atom("Po");
@@ -1785,8 +1782,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testStronglyBoundKations() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testStronglyBoundKations() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.addAtom(new Atom("O"));
         mol.getAtom(1).setFormalCharge(+1);
@@ -1800,21 +1797,21 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMetallics() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMetallics() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom = new Atom("W");
         mol.addAtom(atom);
         String[] expectedTypes = new String[]{"W.metallic"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("K");
         mol.addAtom(atom);
         expectedTypes = new String[]{"K.metallic"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Co");
         mol.addAtom(atom);
         expectedTypes = new String[]{"Co.metallic"};
@@ -1822,8 +1819,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSalts() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testSalts() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom = new Atom("Na");
         atom.setFormalCharge(+1);
@@ -1831,63 +1828,63 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         String[] expectedTypes = new String[]{"Na.plus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("K");
         atom.setFormalCharge(+1);
         mol.addAtom(atom);
         expectedTypes = new String[]{"K.plus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Ca");
         atom.setFormalCharge(+2);
         mol.addAtom(atom);
         expectedTypes = new String[]{"Ca.2plus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Mg");
         atom.setFormalCharge(+2);
         mol.addAtom(atom);
         expectedTypes = new String[]{"Mg.2plus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Ni");
         atom.setFormalCharge(+2);
         mol.addAtom(atom);
         expectedTypes = new String[]{"Ni.2plus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Pt");
         atom.setFormalCharge(+2);
         mol.addAtom(atom);
         expectedTypes = new String[]{"Pt.2plus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Co");
         atom.setFormalCharge(+2);
         mol.addAtom(atom);
         expectedTypes = new String[]{"Co.2plus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Co");
         atom.setFormalCharge(+3);
         mol.addAtom(atom);
         expectedTypes = new String[]{"Co.3plus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Cu");
         atom.setFormalCharge(+2);
         mol.addAtom(atom);
         expectedTypes = new String[]{"Cu.2plus"};
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atom = new Atom("Al");
         atom.setFormalCharge(+3);
         mol.addAtom(atom);
@@ -1896,7 +1893,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void fix_Ca_2() throws Exception {
+    void fix_Ca_2() throws Exception {
         String molName = "Ca_2";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -1919,7 +1916,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void fix_Ca_1() throws Exception {
+    void fix_Ca_1() throws Exception {
         String molName1 = "Ca_1";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -1937,8 +1934,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testCyclopentadienyl() throws Exception {
-        IAtomContainer cp = new AtomContainer();
+    void testCyclopentadienyl() throws Exception {
+        IAtomContainer cp = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         cp.addAtom(new Atom("C"));
         cp.getAtom(0).setHybridization(IAtomType.Hybridization.SP2);
         cp.getAtom(0).setImplicitHydrogenCount(1);
@@ -1967,8 +1964,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testFerrocene() throws Exception {
-        IAtomContainer ferrocene = new AtomContainer();
+    void testFerrocene() throws Exception {
+        IAtomContainer ferrocene = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         ferrocene.addAtom(new Atom("C"));
         ferrocene.addAtom(new Atom("C"));
         ferrocene.addAtom(new Atom("C"));
@@ -2000,8 +1997,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testFuran() throws Exception {
-        IAtomContainer furan = new AtomContainer();
+    void testFuran() throws Exception {
+        IAtomContainer furan = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         furan.addAtom(new Atom("C"));
         furan.addAtom(new Atom("C"));
         furan.addAtom(new Atom("C"));
@@ -2017,8 +2014,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPerchlorate() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPerchlorate() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("Cl");
         IAtom atom3 = new Atom("O");
@@ -2042,8 +2039,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * Gallium tetrahydroxide.
      */
     @Test
-    public void testGallate() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testGallate() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         atom.setFormalCharge(-1);
         IAtom atom2 = new Atom("Ga");
@@ -2068,8 +2065,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * Gallium trihydroxide.
      */
     @Test
-    public void testGallateCovalent() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testGallateCovalent() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("Ga");
         IAtom atom3 = new Atom("O");
@@ -2087,8 +2084,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPerchlorate_ChargedBonds() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPerchlorate_ChargedBonds() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("Cl");
         IAtom atom3 = new Atom("O");
@@ -2113,8 +2110,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testChlorate() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testChlorate() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("Cl");
         IAtom atom3 = new Atom("O");
@@ -2132,8 +2129,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testOxide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testOxide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         atom.setFormalCharge(-2);
         mol.addAtom(atom);
@@ -2143,7 +2140,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAzulene() throws Exception {
+    void testAzulene() throws Exception {
         IAtomContainer molecule = TestMoleculeFactory.makeAzulene();
         String[] expectedTypes = new String[]{"C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2",
                 "C.sp2", "C.sp2"};
@@ -2151,7 +2148,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testIndole() throws Exception {
+    void testIndole() throws Exception {
         String[] expectedTypes = {"C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "N.planar3"};
         IAtomContainer molecule = TestMoleculeFactory.makeIndole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
@@ -2161,7 +2158,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * Test for the structure in XLogPDescriptorTest.testno937().
      */
     @Test
-    public void testno937() throws Exception {
+    void testno937() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.planar3", "C.sp2", "N.sp2", "C.sp2", "C.sp3"};
         IAtomContainer molecule = TestMoleculeFactory.makePyrrole();
         molecule.getAtom(3).setSymbol("N");
@@ -2171,12 +2168,12 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testBenzene() throws Exception {
+    void testBenzene() throws Exception {
         String[] expectedTypes = {"C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2"};
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.add(new Ring(6, "C"));
         for (IBond bond : molecule.bonds()) {
-            bond.setFlag(CDKConstants.ISAROMATIC, true);
+            bond.setFlag(IChemObject.AROMATIC, true);
         }
         for (IAtom atom : molecule.atoms()) {
             atom.setImplicitHydrogenCount(1);
@@ -2185,13 +2182,13 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testBenzene_SingleOrDouble() throws Exception {
+    void testBenzene_SingleOrDouble() throws Exception {
         String[] expectedTypes = {"C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2"};
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         molecule.add(new Ring(6, "C"));
         for (IBond bond : molecule.bonds()) {
             bond.setOrder(IBond.Order.UNSET);
-            bond.setFlag(CDKConstants.SINGLE_OR_DOUBLE, true);
+            bond.setFlag(IChemObject.SINGLE_OR_DOUBLE, true);
         }
         for (IAtom atom : molecule.atoms()) {
             atom.setImplicitHydrogenCount(1);
@@ -2200,19 +2197,19 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPyrrole() throws Exception {
+    void testPyrrole() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.planar3", "C.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makePyrrole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testPyrrole_SingleOrDouble() throws Exception {
+    void testPyrrole_SingleOrDouble() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.planar3", "C.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makePyrrole();
         for (IBond bond : molecule.bonds()) {
             bond.setOrder(IBond.Order.UNSET);
-            bond.setFlag(CDKConstants.SINGLE_OR_DOUBLE, true);
+            bond.setFlag(IChemObject.SINGLE_OR_DOUBLE, true);
         }
         for (IAtom atom : molecule.atoms()) {
             atom.setImplicitHydrogenCount(1);
@@ -2221,56 +2218,56 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPyrroleAnion() throws Exception {
+    void testPyrroleAnion() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.minus.planar3", "C.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makePyrroleAnion();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testImidazole() throws Exception {
+    void testImidazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.planar3", "C.sp2", "N.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makeImidazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testPyrazole() throws Exception {
+    void testPyrazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.planar3", "N.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makePyrazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void test124Triazole() throws Exception {
+    void test124Triazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.planar3", "N.sp2", "C.sp2", "N.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.make124Triazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void test123Triazole() throws Exception {
+    void test123Triazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.planar3", "N.sp2", "N.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.make123Triazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testTetrazole() throws Exception {
+    void testTetrazole() throws Exception {
         String[] expectedTypes = {"N.sp2", "N.planar3", "N.sp2", "N.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makeTetrazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testOxazole() throws Exception {
+    void testOxazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "O.planar3", "C.sp2", "N.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makeOxazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testIsoxazole() throws Exception {
+    void testIsoxazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "O.planar3", "N.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makeIsoxazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
@@ -2279,48 +2276,48 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     // testThiazole can be found below...
 
     @Test
-    public void testIsothiazole() throws Exception {
+    void testIsothiazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "S.planar3", "N.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makeIsothiazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testThiadiazole() throws Exception {
+    void testThiadiazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "S.planar3", "C.sp2", "N.sp2", "N.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makeThiadiazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testOxadiazole() throws Exception {
+    void testOxadiazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "O.planar3", "C.sp2", "N.sp2", "N.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makeOxadiazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testPyridine() throws Exception {
+    void testPyridine() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makePyridine();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testPyridine_SingleOrDouble() throws Exception {
+    void testPyridine_SingleOrDouble() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makePyridine();
         for (IBond bond : molecule.bonds()) {
             bond.setOrder(IBond.Order.UNSET);
-            bond.setFlag(CDKConstants.SINGLE_OR_DOUBLE, true);
+            bond.setFlag(IChemObject.SINGLE_OR_DOUBLE, true);
         }
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testPyridineDirect() throws Exception {
+    void testPyridineDirect() throws Exception {
         String[] expectedTypes = {"N.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2"};
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("N"));
         mol.addAtom(new Atom("C"));
         mol.addBond(0, 1, IBond.Order.SINGLE);
@@ -2340,9 +2337,9 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 1957958
      */
     @Test
-    public void testPyridineWithSP2() throws Exception {
+    void testPyridineWithSP2() throws Exception {
         String[] expectedTypes = {"N.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2"};
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "N");
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "C");
         IAtom a3 = mol.getBuilder().newInstance(IAtom.class, "C");
@@ -2377,7 +2374,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 1879589
      */
     @Test
-    public void testChargedSulphurSpecies() throws Exception {
+    void testChargedSulphurSpecies() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.sp2", "C.sp2", "C.sp2", "S.plus", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makePyridine();
         molecule.getAtom(4).setSymbol("S");
@@ -2386,15 +2383,15 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPyridineOxide_Charged() throws Exception {
+    void testPyridineOxide_Charged() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.plus.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "O.minus"};
         IAtomContainer molecule = TestMoleculeFactory.makePyridineOxide();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testPyridineOxide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPyridineOxide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -2416,8 +2413,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPyridineOxide_SP2() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPyridineOxide_SP2() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.getAtom(0).setHybridization(Hybridization.SP2);
         mol.addAtom(new Atom("N")); // 1
@@ -2446,12 +2443,10 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPyridineOxideCharged_SP2() throws Exception {
+    void testPyridineOxideCharged_SP2() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.plus.sp2", "C.sp2", "C.sp2", "C.sp2", "C.sp2", "O.minus"};
         IAtomContainer molecule = TestMoleculeFactory.makePyridineOxide();
-        Iterator<IBond> bonds = molecule.bonds().iterator();
-        while (bonds.hasNext())
-            bonds.next().setOrder(Order.SINGLE);
+        for (IBond iBond : molecule.bonds()) iBond.setOrder(Order.SINGLE);
         for (int i = 0; i < 6; i++) {
             molecule.getAtom(i).setHybridization(IAtomType.Hybridization.SP2);
         }
@@ -2459,28 +2454,28 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPyrimidine() throws Exception {
+    void testPyrimidine() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.sp2", "C.sp2", "N.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makePyrimidine();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testPyridazine() throws Exception {
+    void testPyridazine() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.sp2", "N.sp2", "C.sp2", "C.sp2", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makePyridazine();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testTriazine() throws Exception {
+    void testTriazine() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.sp2", "C.sp2", "N.sp2", "C.sp2", "N.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makeTriazine();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
     }
 
     @Test
-    public void testThiazole() throws Exception {
+    void testThiazole() throws Exception {
         String[] expectedTypes = {"C.sp2", "N.sp2", "C.sp2", "S.planar3", "C.sp2"};
         IAtomContainer molecule = TestMoleculeFactory.makeThiazole();
         assertAtomTypes(testedAtomTypes, expectedTypes, molecule);
@@ -2492,9 +2487,9 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1/C2H6S2.Ni/c3-1-2-4;/h3-4H,1-2H2;/q;+2/p-2/fC2H4S2.Ni/h3-4h;/q-2;m
      */
     @Test
-    public void testNiCovalentlyBound() throws Exception {
+    void testNiCovalentlyBound() throws Exception {
         String[] expectedTypes = {"C.sp3", "C.sp3", "S.3", "Ni", "S.3"};
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.addAtom(new Atom("C"));
         mol.addBond(0, 1, IBond.Order.SINGLE);
@@ -2509,8 +2504,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHaloniumsF() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHaloniumsF() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom carbon1 = new Atom("C");
         IAtom carbon2 = new Atom("C");
@@ -2528,8 +2523,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHaloniumsCl() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHaloniumsCl() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom carbon1 = new Atom("C");
         IAtom carbon2 = new Atom("C");
@@ -2547,8 +2542,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHaloniumsBr() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHaloniumsBr() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom carbon1 = new Atom("C");
         IAtom carbon2 = new Atom("C");
@@ -2566,8 +2561,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testHaloniumsI() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testHaloniumsI() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom carbon1 = new Atom("C");
         IAtom carbon2 = new Atom("C");
@@ -2585,8 +2580,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testRearrangementCarbokation() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testRearrangementCarbokation() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom carbon1 = new Atom("C");
         carbon1.setFormalCharge(+1);
@@ -2604,8 +2599,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testChargedSpecies() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testChargedSpecies() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom1 = new Atom("C");
         atom1.setFormalCharge(-1);
@@ -2622,8 +2617,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
 
     //    [O+]=C-[C-]
     @Test
-    public void testChargedSpecies2() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testChargedSpecies2() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom1 = new Atom("O");
         atom1.setFormalCharge(1);
@@ -2643,8 +2638,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
 
     //    [C-]=C-C
     @Test
-    public void testChargedSpecies3() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testChargedSpecies3() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom1 = new Atom("C");
         atom1.setFormalCharge(-1);
@@ -2663,8 +2658,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
 
     // [C-]#[N+]C
     @Test
-    public void testIsonitrile() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testIsonitrile() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom atom1 = new Atom("C");
         IAtom atom2 = new Atom("N");
@@ -2684,8 +2679,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testNobleGases() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testNobleGases() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         mol.addAtom(new Atom("He"));
         mol.addAtom(new Atom("Ne"));
@@ -2699,8 +2694,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testZincChloride() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testZincChloride() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("Zn"));
         mol.addAtom(new Atom("Cl"));
         mol.addAtom(new Atom("Cl"));
@@ -2712,8 +2707,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testZinc() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testZinc() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("Zn"));
         mol.getAtom(0).setFormalCharge(+2);
 
@@ -2722,8 +2717,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSilicon() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testSilicon() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "Si");
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "O");
@@ -2797,8 +2792,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testScandium() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testScandium() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("Sc"));
         mol.getAtom(0).setFormalCharge(-3);
         mol.addAtom(new Atom("O"));
@@ -2832,8 +2827,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testVanadium() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testVanadium() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("V"));
         mol.getAtom(0).setFormalCharge(-3);
         mol.addAtom(new Atom("C"));
@@ -2867,8 +2862,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testTitanium() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testTitanium() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("Ti"));
         mol.getAtom(0).setFormalCharge(-3);
         mol.addAtom(new Atom("C"));
@@ -2902,8 +2897,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testBoronTetraFluoride() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testBoronTetraFluoride() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("B"));
         mol.getAtom(0).setFormalCharge(-1);
         mol.addAtom(new Atom("F"));
@@ -2920,8 +2915,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testBerylliumTetraFluoride() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testBerylliumTetraFluoride() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("Be"));
         mol.getAtom(0).setFormalCharge(-2);
         mol.addAtom(new Atom("F"));
@@ -2938,8 +2933,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testArsine() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testArsine() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("As"));
         mol.addAtom(new Atom("H"));
         mol.addAtom(new Atom("H"));
@@ -2953,8 +2948,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testBoron() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testBoron() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("B"));
         mol.addAtom(new Atom("H"));
         mol.addAtom(new Atom("H"));
@@ -2968,8 +2963,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testCarbonMonoxide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testCarbonMonoxide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.getAtom(0).setFormalCharge(-1);
         mol.addAtom(new Atom("O"));
@@ -2981,8 +2976,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testTitaniumFourCoordinate() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testTitaniumFourCoordinate() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("Ti"));
         mol.addAtom(new Atom("Cl"));
         mol.addBond(0, 1, IBond.Order.SINGLE);
@@ -3001,8 +2996,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 1872969
      */
     @Test
-    public void bug1872969() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void bug1872969() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.addAtom(new Atom("S"));
         mol.addAtom(new Atom("O"));
@@ -3026,10 +3021,10 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @throws Exception
      */
     @Test
-    public void testAllElementsRepresented() throws Exception {
+    void testAllElementsRepresented() throws Exception {
         AtomTypeFactory factory = AtomTypeFactory.getInstance("org/openscience/cdk/dict/data/cdk-atom-types.owl",
                 SilentChemObjectBuilder.getInstance());
-        Assert.assertTrue("Could not read the atom types", factory.getSize() != 0);
+        Assertions.assertTrue(factory.getSize() != 0, "Could not read the atom types");
         String errorMessage = "Elements without atom type(s) defined in the XML:";
         final int testUptoAtomicNumber = 36; // TODO: 92 ?
         int elementsMissingTypes = 0;
@@ -3041,20 +3036,20 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
                 elementsMissingTypes++;
             }
         }
-        Assert.assertEquals(errorMessage, 0, elementsMissingTypes);
+        Assertions.assertEquals(0, elementsMissingTypes, errorMessage);
     }
 
     @Test
-    public void testAssumeExplicitHydrogens() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAssumeExplicitHydrogens() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         CDKAtomTypeMatcher atm = CDKAtomTypeMatcher.getInstance(mol.getBuilder(),
                 CDKAtomTypeMatcher.REQUIRE_EXPLICIT_HYDROGENS);
 
         mol.addAtom(new Atom("O"));
         mol.getAtom(0).setFormalCharge(+1);
         IAtomType type = atm.findMatchingAtomType(mol, mol.getAtom(0));
-        Assert.assertNotNull(type);
-        Assert.assertThat(type.getAtomTypeName(), is("X"));
+        Assertions.assertNotNull(type);
+        org.hamcrest.MatcherAssert.assertThat(type.getAtomTypeName(), is("X"));
 
         for (int i = 0; i < 3; i++) {
             mol.addAtom(new Atom("H"));
@@ -3064,14 +3059,14 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testStructGenMatcher() throws Exception {
+    void testStructGenMatcher() throws Exception {
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(DefaultChemObjectBuilder.getInstance());
-        Assert.assertNotNull(matcher);
+        Assertions.assertNotNull(matcher);
     }
 
     @Test
-    public void testCarbonRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testCarbonRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("C");
         IAtom atom3 = new Atom("C");
@@ -3093,8 +3088,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 1382
      */
     @Test
-    public void testCarbonDiradical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testCarbonDiradical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         mol.addAtom(atom);
         mol.addSingleElectron(0);
@@ -3102,12 +3097,12 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
 
         IAtomTypeMatcher atm = getAtomTypeMatcher(mol.getBuilder());
         IAtomType foundType = atm.findMatchingAtomType(mol, atom);
-        Assert.assertEquals("X", foundType.getAtomTypeName());
+        Assertions.assertEquals("X", foundType.getAtomTypeName());
     }
 
     @Test
-    public void testEthoxyEthaneRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testEthoxyEthaneRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         IAtom atom2 = new Atom("C");
         IAtom atom3 = new Atom("C");
@@ -3124,8 +3119,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethylFluorRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethylFluorRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("F");
         mol.addAtom(atom);
@@ -3139,8 +3134,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethylChloroRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethylChloroRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("Cl");
         mol.addAtom(atom);
@@ -3154,8 +3149,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethylBromoRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethylBromoRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("Br");
         mol.addAtom(atom);
@@ -3169,8 +3164,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethylIodoRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethylIodoRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("I");
         mol.addAtom(atom);
@@ -3184,8 +3179,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethyleneFluorKation() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethyleneFluorKation() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("F");
         mol.addAtom(atom);
@@ -3198,8 +3193,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethyleneChlorKation() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethyleneChlorKation() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("Cl");
         mol.addAtom(atom);
@@ -3212,8 +3207,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethyleneBromKation() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethyleneBromKation() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("Br");
         mol.addAtom(atom);
@@ -3226,8 +3221,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethyleneIodKation() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethyleneIodKation() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("I");
         mol.addAtom(atom);
@@ -3240,8 +3235,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethanolRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethanolRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         IAtom atom2 = new Atom("O");
         mol.addAtom(atom);
@@ -3254,8 +3249,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testMethylMethylimineRadical() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testMethylMethylimineRadical() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("N");
         IAtom atom2 = new Atom("C");
         IAtom atom3 = new Atom("C");
@@ -3272,8 +3267,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testChargeSeparatedFluoroEthane() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testChargeSeparatedFluoroEthane() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("F");
         IAtom atom2 = new Atom("C");
         atom2.setFormalCharge(+1);
@@ -3293,8 +3288,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1/C2H7NS/c1-4(2)3/h3H,1-2H3
      */
     @Test
-    public void testSulphurCompound() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testSulphurCompound() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "S");
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "N");
@@ -3315,8 +3310,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testAluminumChloride() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAluminumChloride() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "Cl");
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "Cl");
@@ -3340,8 +3335,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1/C3H9NO/c1-4(2,3)5/h1-3H3
      */
     @Test
-    public void cid1145() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void cid1145() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "O");
         mol.addAtom(a1);
         a1.setFormalCharge(-1);
@@ -3405,8 +3400,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testChiPathFail() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testChiPathFail() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "C");
@@ -3432,7 +3427,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/C6H5IO/c8-7-6-4-2-1-3-5-6/h1-5H
      */
     @Test
-    public void testIodosobenzene() throws Exception {
+    void testIodosobenzene() throws Exception {
         IAtomContainer mol = TestMoleculeFactory.makeBenzene();
         IAtom iodine = mol.getBuilder().newInstance(IAtom.class, "I");
         IAtom oxygen = mol.getBuilder().newInstance(IAtom.class, "O");
@@ -3449,7 +3444,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/C6H5IO2/c8-7(9)6-4-2-1-3-5-6/h1-5H
      */
     @Test
-    public void testIodoxybenzene() throws Exception {
+    void testIodoxybenzene() throws Exception {
         IAtomContainer mol = TestMoleculeFactory.makeBenzene();
         IAtom iodine = mol.getBuilder().newInstance(IAtom.class, "I");
         IAtom oxygen1 = mol.getBuilder().newInstance(IAtom.class, "O");
@@ -3469,7 +3464,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/C7H7NOS/c8-7(10-9)6-4-2-1-3-5-6/h1-5H,8H2
      */
     @Test
-    public void testThiobenzamideSOxide() throws Exception {
+    void testThiobenzamideSOxide() throws Exception {
         IAtomContainer mol = TestMoleculeFactory.makeBenzene();
         IAtom carbon = mol.getBuilder().newInstance(IAtom.class, "C");
         IAtom sulphur = mol.getBuilder().newInstance(IAtom.class, "S");
@@ -3493,8 +3488,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/C4H10S/c1-5(2)3-4-5/h3-4H2,1-2H3
      */
     @Test
-    public void testDimethylThiirane() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testDimethylThiirane() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(mol.getBuilder().newInstance(IAtom.class, "C"));
         mol.addAtom(mol.getBuilder().newInstance(IAtom.class, "C"));
         mol.addAtom(mol.getBuilder().newInstance(IAtom.class, "C"));
@@ -3514,8 +3509,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi     InChI=1/C3H8S/c1-4(2)3/h1H2,2-3H3
      */
     @Test
-    public void testSulphonylLookalike() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testSulphonylLookalike() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(mol.getBuilder().newInstance(IAtom.class, "C"));
         mol.addAtom(mol.getBuilder().newInstance(IAtom.class, "C"));
         mol.addAtom(mol.getBuilder().newInstance(IAtom.class, "C"));
@@ -3529,8 +3524,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testNOxide() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testNOxide() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "C");
         IAtom a3 = mol.getBuilder().newInstance(IAtom.class, "N");
@@ -3553,8 +3548,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testGermaniumFourCoordinate() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testGermaniumFourCoordinate() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("Ge"));
         mol.addAtom(new Atom("Cl"));
         mol.addBond(0, 1, IBond.Order.SINGLE);
@@ -3570,8 +3565,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPlatinumFourCoordinate() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPlatinumFourCoordinate() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("Pt"));
         mol.addAtom(new Atom("Cl"));
         mol.addBond(0, 1, IBond.Order.SINGLE);
@@ -3587,8 +3582,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPlatinumSixCoordinate() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPlatinumSixCoordinate() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("Pt"));
         mol.addAtom(new Atom("Cl"));
         mol.addBond(0, 1, IBond.Order.SINGLE);
@@ -3611,8 +3606,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 2424511
      */
     @Test
-    public void testWeirdNitrogen() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testWeirdNitrogen() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.addAtom(new Atom("N"));
         mol.addAtom(new Atom("C"));
@@ -3630,8 +3625,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * Testing a nitrogen as found in this SMILES input: c1c2cc[nH]cc2nc1.
      */
     @Test
-    public void testAnotherNitrogen() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAnotherNitrogen() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.getAtom(0).setHybridization(Hybridization.SP2);
         mol.addAtom(new Atom("C"));
@@ -3671,8 +3666,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 3061263
      */
     @Test
-    public void testFormalChargeRepresentation() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testFormalChargeRepresentation() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("O");
         final IAtomType.Hybridization thisHybridization = IAtomType.Hybridization.SP3;
         atom.setHybridization(thisHybridization);
@@ -3680,7 +3675,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         String[] expectedTypes = {"O.minus"};
 
         // option one: Integer.valueOf()
-        atom.setFormalCharge(Integer.valueOf(-1));
+        atom.setFormalCharge(-1);
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
         // option one: autoboxing
@@ -3688,7 +3683,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
 
         // option one: new Integer()
-        atom.setFormalCharge(new Integer(-1));
+        atom.setFormalCharge(-1);
         assertAtomTypes(testedAtomTypes, expectedTypes, mol);
     }
 
@@ -3696,9 +3691,9 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 3190151
      */
     @Test
-    public void testP() throws Exception {
+    void testP() throws Exception {
         IAtom atomP = new Atom("P");
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(atomP);
         String[] expectedTypes = {"P.ine"};
 
@@ -3709,22 +3704,22 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 3190151
      */
     @Test
-    public void testPine() throws Exception {
+    void testPine() throws Exception {
         IAtom atomP = new Atom(Elements.PHOSPHORUS);
         IAtomType atomTypeP = new AtomType(Elements.PHOSPHORUS);
         AtomTypeManipulator.configure(atomP, atomTypeP);
 
         IAtomContainer ac = atomP.getBuilder().newInstance(IAtomContainer.class);
         ac.addAtom(atomP);
-        IAtomType type = null;
+        IAtomType type;
         for (IAtom atom : ac.atoms()) {
             type = CDKAtomTypeMatcher.getInstance(ac.getBuilder()).findMatchingAtomType(ac, atom);
-            Assert.assertNotNull(type);
+            Assertions.assertNotNull(type);
         }
     }
 
     @Test
-    public void test_S_sp3d1() throws Exception {
+    void test_S_sp3d1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "S");
@@ -3761,7 +3756,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_S_inyl_2() throws Exception {
+    void test_S_inyl_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "S");
@@ -3783,7 +3778,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_S_2minus() throws Exception {
+    void test_S_2minus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "S");
@@ -3795,7 +3790,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_S_sp3() throws Exception {
+    void test_S_sp3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "S");
@@ -3817,7 +3812,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_S_sp3_4() throws Exception {
+    void test_S_sp3_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "S");
@@ -3849,7 +3844,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_3plus() throws Exception {
+    void test_Co_3plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -3861,7 +3856,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_metallic() throws Exception {
+    void test_Co_metallic() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -3873,7 +3868,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_plus_6() throws Exception {
+    void test_Co_plus_6() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -3915,7 +3910,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_2plus() throws Exception {
+    void test_Co_2plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -3927,7 +3922,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_plus_2() throws Exception {
+    void test_Co_plus_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -3949,7 +3944,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_2() throws Exception {
+    void test_Co_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -3971,7 +3966,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_6() throws Exception {
+    void test_Co_6() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -4013,7 +4008,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_plus_4() throws Exception {
+    void test_Co_plus_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -4045,7 +4040,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_4() throws Exception {
+    void test_Co_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -4077,7 +4072,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_plus_5() throws Exception {
+    void test_Co_plus_5() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -4117,7 +4112,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.bug 3529082
      */
     @Test
-    public void test_Co_plus() throws Exception {
+    void test_Co_plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a2 = builder.newInstance(IAtom.class, "Co");
@@ -4129,7 +4124,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_plus_1() throws Exception {
+    void test_Co_plus_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -4146,7 +4141,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Co_1() throws Exception {
+    void test_Co_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Co");
@@ -4168,7 +4163,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/BrHO3/c2-1(3)4/h(H,2,3,4)
      */
     @Test
-    public void test_Br_3() throws Exception {
+    void test_Br_3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Br");
@@ -4195,7 +4190,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Zn_metallic() throws Exception {
+    void test_Zn_metallic() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Zn");
@@ -4207,7 +4202,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Zn_1() throws Exception {
+    void test_Zn_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Zn");
@@ -4229,7 +4224,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/4O.V/q;3*-1;
      */
     @Test
-    public void test_V_3minus_4() throws Exception {
+    void test_V_3minus_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "V");
@@ -4265,7 +4260,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/Al.6FH.3Na/h;6*1H;;;/q+3;;;;;;;3*+1/p-6
      */
     @Test
-    public void test_Al_3minus() throws Exception {
+    void test_Al_3minus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Al");
@@ -4307,7 +4302,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSe_sp3d1_4() throws Exception {
+    void testSe_sp3d1_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Se");
@@ -4339,7 +4334,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSe_sp3_4() throws Exception {
+    void testSe_sp3_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Se");
@@ -4371,7 +4366,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSe_sp2_2() throws Exception {
+    void testSe_sp2_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Se");
@@ -4393,7 +4388,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSe_1() throws Exception {
+    void testSe_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -4410,7 +4405,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSe_3() throws Exception {
+    void testSe_3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Se");
@@ -4432,7 +4427,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSe_sp3_3() throws Exception {
+    void testSe_sp3_3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -4459,7 +4454,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSe_4plus() throws Exception {
+    void testSe_4plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Se");
@@ -4471,7 +4466,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSe_plus_3() throws Exception {
+    void testSe_plus_3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -4498,7 +4493,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testSe_5() throws Exception {
+    void testSe_5() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Se");
@@ -4535,7 +4530,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Se_2() throws Exception {
+    void test_Se_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Se");
@@ -4551,7 +4546,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/H2Te/h1H2
      */
     @Test
-    public void testTellane() throws Exception {
+    void testTellane() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Te");
@@ -4576,7 +4571,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/C3H6P/c1-3-4-2/h3H,2H2,1H3/q+1
      */
     @Test
-    public void testPhosphanium() throws Exception {
+    void testPhosphanium() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "P");
@@ -4606,7 +4601,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/CHP/c1-2/h1H
      */
     @Test
-    public void testPhosphide() throws Exception {
+    void testPhosphide() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "P");
@@ -4628,7 +4623,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void testPentaMethylPhosphane() throws Exception {
+    void testPentaMethylPhosphane() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "P");
@@ -4665,7 +4660,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Sb_4() throws Exception {
+    void test_Sb_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -4697,7 +4692,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Sb_3() throws Exception {
+    void test_Sb_3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Sb");
@@ -4724,7 +4719,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_B_3plus() throws Exception {
+    void test_B_3plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "B");
@@ -4756,7 +4751,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Sr_2plus() throws Exception {
+    void test_Sr_2plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Sr");
@@ -4768,7 +4763,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Te_4plus() throws Exception {
+    void test_Te_4plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Te");
@@ -4780,7 +4775,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Be_neutral() throws Exception {
+    void test_Be_neutral() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Be");
@@ -4792,7 +4787,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cl_2() throws Exception {
+    void test_Cl_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cl");
@@ -4814,7 +4809,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_K_neutral() throws Exception {
+    void test_K_neutral() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "K");
@@ -4831,7 +4826,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Li_neutral() throws Exception {
+    void test_Li_neutral() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Li");
@@ -4843,7 +4838,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Li_plus() throws Exception {
+    void test_Li_plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Li");
@@ -4855,7 +4850,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_I_sp3d2_3() throws Exception {
+    void test_I_sp3d2_3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "I");
@@ -4891,8 +4886,8 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/CH2N2/c1-3-2/h1H2
      */
     @Test
-    public void testAzoCompound() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testAzoCompound() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "N");
         a1.setFormalCharge(1);
         mol.addAtom(a1);
@@ -4926,7 +4921,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/CH5O2P/c1-4(2)3/h4H,1H3,(H,2,3)
      */
     @Test
-    public void testMethylphosphinicAcid() throws Exception {
+    void testMethylphosphinicAcid() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "P");
@@ -4978,7 +4973,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Ti_2() throws Exception {
+    void test_Ti_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ti");
@@ -5000,7 +4995,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Ni_metallic() throws Exception {
+    void test_Ni_metallic() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ni");
@@ -5012,7 +5007,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Ni_plus() throws Exception {
+    void test_Ni_plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -5029,7 +5024,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Pb_1() throws Exception {
+    void test_Pb_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Pb");
@@ -5046,7 +5041,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Pb_2plus() throws Exception {
+    void test_Pb_2plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Pb");
@@ -5058,7 +5053,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Pb_neutral() throws Exception {
+    void test_Pb_neutral() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Pb");
@@ -5070,7 +5065,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Tl_neutral() throws Exception {
+    void test_Tl_neutral() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Tl");
@@ -5082,7 +5077,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Tl_1() throws Exception {
+    void test_Tl_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -5099,7 +5094,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Tl_plus() throws Exception {
+    void test_Tl_plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Tl");
@@ -5111,7 +5106,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Mg_neutral_2() throws Exception {
+    void test_Mg_neutral_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -5133,7 +5128,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Mg_neutral_4() throws Exception {
+    void test_Mg_neutral_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -5165,7 +5160,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Mg_neutral_1() throws Exception {
+    void test_Mg_neutral_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Mg");
@@ -5182,7 +5177,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Gd_3plus() throws Exception {
+    void test_Gd_3plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Gd");
@@ -5194,7 +5189,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Mo_4() throws Exception {
+    void test_Mo_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Mo");
@@ -5226,7 +5221,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Mo_metallic() throws Exception {
+    void test_Mo_metallic() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Mo");
@@ -5238,7 +5233,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Pt_2() throws Exception {
+    void test_Pt_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Pt");
@@ -5260,7 +5255,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Pt_2plus_4() throws Exception {
+    void test_Pt_2plus_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Pt");
@@ -5292,7 +5287,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cu_metallic() throws Exception {
+    void test_Cu_metallic() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cu");
@@ -5304,7 +5299,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cu_plus() throws Exception {
+    void test_Cu_plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cu");
@@ -5316,7 +5311,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cu_1() throws Exception {
+    void test_Cu_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cu");
@@ -5333,7 +5328,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Ra() throws Exception {
+    void test_Ra() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ra");
@@ -5345,7 +5340,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cr_neutral() throws Exception {
+    void test_Cr_neutral() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cr");
@@ -5357,7 +5352,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Rb_neutral() throws Exception {
+    void test_Rb_neutral() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Rb");
@@ -5369,7 +5364,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Rb_plus() throws Exception {
+    void test_Rb_plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Rb");
@@ -5381,7 +5376,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cr_4() throws Exception {
+    void test_Cr_4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cr");
@@ -5413,7 +5408,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cr_3plus() throws Exception {
+    void test_Cr_3plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cr");
@@ -5425,7 +5420,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cr_6plus() throws Exception {
+    void test_Cr_6plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cr");
@@ -5437,7 +5432,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Ba_2plus() throws Exception {
+    void test_Ba_2plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ba");
@@ -5449,7 +5444,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Au_1() throws Exception {
+    void test_Au_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -5466,7 +5461,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Ag_neutral() throws Exception {
+    void test_Ag_neutral() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ag");
@@ -5481,7 +5476,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * For example PubChem CID 3808730.
      */
     @Test
-    public void test_Ag_plus() throws Exception {
+    void test_Ag_plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ag");
@@ -5496,7 +5491,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * For example PubChem CID 139654.
      */
     @Test
-    public void test_Ag_covalent() throws Exception {
+    void test_Ag_covalent() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ag");
@@ -5510,7 +5505,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_In_3plus() throws Exception {
+    void test_In_3plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "In");
@@ -5522,7 +5517,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_In_3() throws Exception {
+    void test_In_3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "In");
@@ -5549,7 +5544,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_In_1() throws Exception {
+    void test_In_1() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "In");
@@ -5566,7 +5561,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_In() throws Exception {
+    void test_In() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "In");
@@ -5578,7 +5573,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cd_2plus() throws Exception {
+    void test_Cd_2plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cd");
@@ -5590,7 +5585,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cd_2() throws Exception {
+    void test_Cd_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cd");
@@ -5612,7 +5607,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Cd_metallic() throws Exception {
+    void test_Cd_metallic() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Cd");
@@ -5624,7 +5619,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Pu() throws Exception {
+    void test_Pu() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Pu");
@@ -5636,7 +5631,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Th() throws Exception {
+    void test_Th() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Th");
@@ -5648,7 +5643,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Ge_3() throws Exception {
+    void test_Ge_3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -5675,7 +5670,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Na_neutral() throws Exception {
+    void test_Na_neutral() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Na");
@@ -5687,7 +5682,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Mn_3plus() throws Exception {
+    void test_Mn_3plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Mn");
@@ -5699,7 +5694,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Mn_2() throws Exception {
+    void test_Mn_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Mn");
@@ -5721,7 +5716,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Mn_metallic() throws Exception {
+    void test_Mn_metallic() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Mn");
@@ -5733,7 +5728,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Si_2minus_6() throws Exception {
+    void test_Si_2minus_6() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Si");
@@ -5775,7 +5770,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Si_3() throws Exception {
+    void test_Si_3() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Si");
@@ -5802,7 +5797,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Si_2() throws Exception {
+    void test_Si_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Si");
@@ -5824,7 +5819,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_As_minus() throws Exception {
+    void test_As_minus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "As");
@@ -5866,7 +5861,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_As_3plus() throws Exception {
+    void test_As_3plus() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "As");
@@ -5878,7 +5873,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_As_2() throws Exception {
+    void test_As_2() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "C");
@@ -5900,7 +5895,29 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_As_5() throws Exception {
+    void test_As_planar3() throws Exception {
+        IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
+        IAtomContainer mol = builder.newInstance(IAtomContainer.class);
+        IAtom a1 = builder.newInstance(IAtom.class, "C");
+        a1.setFormalCharge(0);
+        mol.addAtom(a1);
+        IAtom a2 = builder.newInstance(IAtom.class, "As");
+        a2.setFormalCharge(0);
+        mol.addAtom(a2);
+        IAtom a3 = builder.newInstance(IAtom.class, "C");
+        a3.setFormalCharge(0);
+        mol.addAtom(a3);
+        IBond b1 = builder.newInstance(IBond.class, a1, a2, IBond.Order.SINGLE);
+        mol.addBond(b1);
+        IBond b2 = builder.newInstance(IBond.class, a2, a3, IBond.Order.SINGLE);
+        mol.addBond(b2);
+
+        String[] expectedTypes = {"C.sp3", "As.planar3", "C.sp3"};
+        assertAtomTypes(testedAtomTypes, expectedTypes, mol);
+    }
+
+    @Test
+    void test_As_5() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "As");
@@ -5932,7 +5949,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_metallic() throws Exception {
+    void test_Fe_metallic() throws Exception {
         String molName = "Fe_metallic";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -5944,7 +5961,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_plus() throws Exception {
+    void test_Fe_plus() throws Exception {
         String molName1 = "Fe_plus";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -5967,7 +5984,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_4() throws Exception {
+    void test_Fe_4() throws Exception {
         String molName2 = "Fe_4";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -5999,7 +6016,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_3minus() throws Exception {
+    void test_Fe_3minus() throws Exception {
         String molName3 = "Fe_3minus";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -6041,7 +6058,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_2plus() throws Exception {
+    void test_Fe_2plus() throws Exception {
         String molName4 = "Fe_2plus";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -6053,7 +6070,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_4minus() throws Exception {
+    void test_Fe_4minus() throws Exception {
         String molName5 = "Fe_4minus";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -6096,7 +6113,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_5() throws Exception {
+    void test_Fe_5() throws Exception {
         String molNameFe5 = "Fe_5";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -6133,7 +6150,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_6() throws Exception {
+    void test_Fe_6() throws Exception {
         String molName7 = "Fe_6";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -6175,7 +6192,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_2minus() throws Exception {
+    void test_Fe_2minus() throws Exception {
         String molName8 = "Fe_2minus";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -6217,7 +6234,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_3plus() throws Exception {
+    void test_Fe_3plus() throws Exception {
         String molName9 = "Fe_3plus";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -6229,7 +6246,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_2() throws Exception {
+    void test_Fe_2() throws Exception {
         String molNameA = "Fe_2";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -6251,7 +6268,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Fe_3() throws Exception {
+    void test_Fe_3() throws Exception {
         String molNameB = "Fe_3";
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
@@ -6281,7 +6298,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @cdk.inchi InChI=1S/C8H16S/c1-6-3-8-4-7(6)5-9(8)2/h6-9H,3-5H2,1-2H3/t6-,7-,8+/m0/s1
      */
     @Test
-    public void testSulphur4() throws Exception {
+    void testSulphur4() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "S");
@@ -6331,7 +6348,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * One of the ruthenium atom types in ruthenium red (CHEBI:34956).
      */
     @Test
-    public void test_Ru_3minus_6() throws Exception {
+    void test_Ru_3minus_6() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ru");
@@ -6376,7 +6393,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * One of the ruthenium atom types in ruthenium red (CHEBI:34956).
      */
     @Test
-    public void test_Ru_2minus_6() throws Exception {
+    void test_Ru_2minus_6() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ru");
@@ -6418,7 +6435,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Ru_10plus_6() throws Exception {
+    void test_Ru_10plus_6() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ru");
@@ -6460,7 +6477,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
     }
 
     @Test
-    public void test_Ru_6() throws Exception {
+    void test_Ru_6() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "Ru");
@@ -6506,7 +6523,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @throws Exception
      */
     @Test
-    public void test_n_planar3_sp2_aromaticity() throws Exception {
+    void test_n_planar3_sp2_aromaticity() throws Exception {
 
         IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
 
@@ -6520,15 +6537,15 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         IAtom c5 = builder.newInstance(IAtom.class, "C");
 
         IBond b1 = builder.newInstance(IBond.class, n1, c2, IBond.Order.SINGLE);
-        b1.setFlag(CDKConstants.ISAROMATIC, true);
+        b1.setFlag(IChemObject.AROMATIC, true);
         IBond b2 = builder.newInstance(IBond.class, c2, c3, IBond.Order.SINGLE);
-        b2.setFlag(CDKConstants.ISAROMATIC, true);
+        b2.setFlag(IChemObject.AROMATIC, true);
         IBond b3 = builder.newInstance(IBond.class, c3, c4, IBond.Order.SINGLE);
-        b3.setFlag(CDKConstants.ISAROMATIC, true);
+        b3.setFlag(IChemObject.AROMATIC, true);
         IBond b4 = builder.newInstance(IBond.class, c4, c5, IBond.Order.SINGLE);
-        b4.setFlag(CDKConstants.ISAROMATIC, true);
+        b4.setFlag(IChemObject.AROMATIC, true);
         IBond b5 = builder.newInstance(IBond.class, c5, n1, IBond.Order.SINGLE);
-        b5.setFlag(CDKConstants.ISAROMATIC, true);
+        b5.setFlag(IChemObject.AROMATIC, true);
 
         pyrrole.addAtom(n1);
         pyrrole.addAtom(c2);
@@ -6543,7 +6560,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
 
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(pyrrole);
 
-        Assert.assertEquals(pyrrole.getAtom(0).getHybridization().name(), "PLANAR3");
+        Assertions.assertEquals(pyrrole.getAtom(0).getHybridization().name(), "PLANAR3");
     }
 
     /**
@@ -6551,7 +6568,7 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
      * @throws Exception
      */
     @Test
-    public void test_n_planar3_sp2_aromaticity_explicitH() throws Exception {
+    void test_n_planar3_sp2_aromaticity_explicitH() throws Exception {
 
         IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
 
@@ -6565,15 +6582,15 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
         IAtom c5 = builder.newInstance(IAtom.class, "C");
 
         IBond b1 = builder.newInstance(IBond.class, n1, c2, IBond.Order.SINGLE);
-        b1.setFlag(CDKConstants.ISAROMATIC, true);
+        b1.setFlag(IChemObject.AROMATIC, true);
         IBond b2 = builder.newInstance(IBond.class, c2, c3, IBond.Order.SINGLE);
-        b2.setFlag(CDKConstants.ISAROMATIC, true);
+        b2.setFlag(IChemObject.AROMATIC, true);
         IBond b3 = builder.newInstance(IBond.class, c3, c4, IBond.Order.SINGLE);
-        b3.setFlag(CDKConstants.ISAROMATIC, true);
+        b3.setFlag(IChemObject.AROMATIC, true);
         IBond b4 = builder.newInstance(IBond.class, c4, c5, IBond.Order.SINGLE);
-        b4.setFlag(CDKConstants.ISAROMATIC, true);
+        b4.setFlag(IChemObject.AROMATIC, true);
         IBond b5 = builder.newInstance(IBond.class, c5, n1, IBond.Order.SINGLE);
-        b5.setFlag(CDKConstants.ISAROMATIC, true);
+        b5.setFlag(IChemObject.AROMATIC, true);
 
         pyrrole.addAtom(n1);
         pyrrole.addAtom(c2);
@@ -6605,11 +6622,11 @@ public class CDKAtomTypeMatcherTest extends AbstractCDKAtomTypeTest {
 
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(pyrrole);
 
-        Assert.assertEquals(pyrrole.getAtom(0).getHybridization().name(), "PLANAR3");
+        Assertions.assertEquals(pyrrole.getAtom(0).getHybridization().name(), "PLANAR3");
     }
 
-    @AfterClass
-    public static void testTestedAtomTypes() throws Exception {
+    @AfterAll
+    static void testTestedAtomTypes() throws Exception {
         countTestedAtomTypes(testedAtomTypes, factory);
     }
 

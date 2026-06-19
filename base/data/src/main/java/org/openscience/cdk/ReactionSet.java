@@ -20,6 +20,7 @@ package org.openscience.cdk;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.openscience.cdk.interfaces.IChemObjectChangeEvent;
 import org.openscience.cdk.interfaces.IChemObjectListener;
@@ -46,8 +47,6 @@ import org.openscience.cdk.interfaces.IReactionSet;
  * }
  * }</pre>
  *
- * @cdk.module data
- * @cdk.githash
  *
  * @cdk.keyword reaction
  */
@@ -136,13 +135,7 @@ public class ReactionSet extends ChemObject implements Serializable, IReactionSe
      */
     @Override
     public Iterable<IReaction> reactions() {
-        return new Iterable<IReaction>() {
-
-            @Override
-            public Iterator<IReaction> iterator() {
-                return new ReactionIterator();
-            }
-        };
+        return ReactionIterator::new;
     }
 
     /**
@@ -161,6 +154,8 @@ public class ReactionSet extends ChemObject implements Serializable, IReactionSe
 
         @Override
         public IReaction next() {
+            if (pointer >= reactionCount)
+                throw new NoSuchElementException();
             return reactions[pointer++];
         }
 
@@ -195,7 +190,7 @@ public class ReactionSet extends ChemObject implements Serializable, IReactionSe
 
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer(32);
+        StringBuilder buffer = new StringBuilder(32);
         buffer.append("ReactionSet(");
         buffer.append(this.hashCode());
         buffer.append(", R=").append(getReactionCount()).append(", ");
@@ -219,7 +214,7 @@ public class ReactionSet extends ChemObject implements Serializable, IReactionSe
         clone.reactionCount = this.reactionCount;
         clone.reactions = new IReaction[clone.reactionCount];
         for (int f = 0; f < clone.reactionCount; f++) {
-            clone.reactions[f] = (IReaction) ((IReaction) reactions[f]).clone();
+            clone.reactions[f] = (IReaction) reactions[f].clone();
         }
         return clone;
     }

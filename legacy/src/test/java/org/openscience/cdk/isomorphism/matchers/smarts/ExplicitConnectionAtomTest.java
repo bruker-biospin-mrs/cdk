@@ -24,30 +24,29 @@
 
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
  * @author John May
- * @cdk.module test-smarts
  */
-public class ExplicitConnectionAtomTest {
+class ExplicitConnectionAtomTest {
 
     @Test
-    public void matches() throws Exception {
+    void matches() throws Exception {
         ExplicitConnectionAtom matcher = new ExplicitConnectionAtom(2, mock(IChemObjectBuilder.class));
         IAtom atom = mock(IAtom.class);
         when(atom.getProperty(SMARTSAtomInvariants.KEY)).thenReturn(
-                new SMARTSAtomInvariants(mock(IAtomContainer.class), 0, 0, Collections.<Integer> emptySet(), 0, 0, // <- degree not used due to old CDK bug
+                new SMARTSAtomInvariants(mock(IAtomContainer.class), 0, 0, Collections.emptySet(), 0, 0, // <- degree not used due to old CDK bug
                         2, 0));
-        assertTrue(matcher.matches(atom));
+        Assertions.assertTrue(matcher.matches(atom));
     }
 }

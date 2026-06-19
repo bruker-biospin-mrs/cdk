@@ -24,6 +24,7 @@ import java.util.List;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomType.Hybridization;
 import org.openscience.cdk.tools.ILoggingTool;
@@ -36,8 +37,6 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  * @see AtomTypeReader
  *
- * @cdk.module core
- * @cdk.githash
  */
 public class AtomTypeHandler extends DefaultHandler {
 
@@ -57,7 +56,7 @@ public class AtomTypeHandler extends DefaultHandler {
     private final int                 SCALAR_PIBONDCOUNT           = 13;
     private final int                 SCALAR_LONEPAIRCOUNT         = 14;
 
-    private static ILoggingTool       logger                       = LoggingToolFactory
+    private static final ILoggingTool       logger                       = LoggingToolFactory
                                                                            .createLoggingTool(AtomTypeHandler.class);
     private String                    currentChars;
     private List<IAtomType>           atomTypes;
@@ -97,7 +96,7 @@ public class AtomTypeHandler extends DefaultHandler {
     /** {@inheritDoc} */
     @Override
     public void startDocument() {
-        atomTypes = new ArrayList<IAtomType>();
+        atomTypes = new ArrayList<>();
         scalarType = SCALAR_UNSET;
         atomType = null;
     }
@@ -113,7 +112,7 @@ public class AtomTypeHandler extends DefaultHandler {
         if ("atomType".equals(local)) {
             atomTypes.add(atomType);
         } else if ("scalar".equals(local)) {
-            currentChars.trim();
+            currentChars = currentChars.trim();
             try {
                 if (scalarType == SCALAR_BONDORDERSUM) {
                     atomType.setBondOrderSum(Double.parseDouble(currentChars));
@@ -148,9 +147,9 @@ public class AtomTypeHandler extends DefaultHandler {
                     }
                 } else if (scalarType == SCALAR_DA) {
                     if ("A".equals(currentChars)) {
-                        atomType.setFlag(CDKConstants.IS_HYDROGENBOND_ACCEPTOR, true);
+                        atomType.setFlag(IChemObject.HYDROGEN_BOND_ACCEPTOR, true);
                     } else if ("D".equals(currentChars)) {
-                        atomType.setFlag(CDKConstants.IS_HYDROGENBOND_DONOR, true);
+                        atomType.setFlag(IChemObject.HYDROGEN_BOND_DONOR, true);
                     } else {
                         logger.warn("Unrecognized H-bond donor/acceptor pattern in config file: ", currentChars);
                     }
@@ -161,7 +160,7 @@ public class AtomTypeHandler extends DefaultHandler {
                 } else if (scalarType == SCALAR_CHEMICALGROUPCONSTANT) {
                     atomType.setProperty(CDKConstants.CHEMICAL_GROUP_CONSTANT, Integer.valueOf(currentChars));
                 } else if (scalarType == SCALAR_ISAROMATIC) {
-                    atomType.setFlag(CDKConstants.ISAROMATIC, true);
+                    atomType.setFlag(IChemObject.AROMATIC, true);
                 } else if (scalarType == SCALAR_PIBONDCOUNT) {
                     atomType.setProperty(CDKConstants.PI_BOND_COUNT, Integer.valueOf(currentChars));
                 } else if (scalarType == SCALAR_LONEPAIRCOUNT) {
@@ -257,7 +256,7 @@ public class AtomTypeHandler extends DefaultHandler {
 
     /** {@inheritDoc} */
     @Override
-    public void characters(char chars[], int start, int length) {
+    public void characters(char[] chars, int start, int length) {
         logger.debug("character data");
         currentChars += new String(chars, start, length);
     }

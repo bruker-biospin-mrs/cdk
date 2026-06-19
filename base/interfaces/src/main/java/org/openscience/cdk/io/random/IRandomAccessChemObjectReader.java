@@ -30,16 +30,14 @@ import java.util.ListIterator;
  * Extension of {@link java.util.ListIterator}.
  *
  * @author Nina Jeliazkova &lt;nina@acad.bg&gt;
- * @cdk.module io
- * @cdk.githash
  */
 public interface IRandomAccessChemObjectReader<T> extends ListIterator<T> {
 
     T readRecord(int record) throws Exception;
 
-    public T first();
+    T first();
 
-    public T last();
+    T last();
 
-    public int size();
+    int size();
 }

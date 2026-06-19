@@ -29,8 +29,6 @@ import org.openscience.cdk.tools.manipulator.BondManipulator;
  * atomcontainer share a bond, the element i,j in the matrix is set to the
  * bond order value. Otherwise it is zero. See {@cdk.cite TRI92}.
  *
- * @cdk.module  standard
- * @cdk.githash
  * @cdk.keyword connection matrix
  * @cdk.dictref blue-obelisk:calculateConnectivityMatrix
  *
@@ -46,7 +44,7 @@ public class ConnectionMatrix implements IGraphMatrix {
      * @return           A connection matrix representing this AtomContainer
      */
     public static double[][] getMatrix(IAtomContainer container) {
-        IBond bond = null;
+        IBond bond;
         int indexAtom1;
         int indexAtom2;
         double[][] conMat = new double[container.getAtomCount()][container.getAtomCount()];
@@ -54,8 +52,8 @@ public class ConnectionMatrix implements IGraphMatrix {
             bond = container.getBond(f);
             indexAtom1 = container.indexOf(bond.getBegin());
             indexAtom2 = container.indexOf(bond.getEnd());
-            conMat[indexAtom1][indexAtom2] = BondManipulator.destroyBondOrder(bond.getOrder());
-            conMat[indexAtom2][indexAtom1] = BondManipulator.destroyBondOrder(bond.getOrder());
+            conMat[indexAtom1][indexAtom2] = bond.getOrder().numeric();
+            conMat[indexAtom2][indexAtom1] = bond.getOrder().numeric();
         }
         return conMat;
     }

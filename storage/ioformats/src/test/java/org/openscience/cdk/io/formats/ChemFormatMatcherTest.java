@@ -27,53 +27,52 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
-import com.google.common.io.CharStreams;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-ioformats
  */
-abstract public class ChemFormatMatcherTest extends ChemFormatTest {
+abstract class ChemFormatMatcherTest extends ChemFormatTest {
 
     private IChemFormatMatcher matcher;
 
-    public void setChemFormatMatcher(IChemFormatMatcher matcher) {
+    void setChemFormatMatcher(IChemFormatMatcher matcher) {
         super.setChemFormat(matcher);
         this.matcher = matcher;
     }
 
     @Test
-    public void testChemFormatMatcherSet() {
-        Assert.assertNotNull("You must use setChemFormatMatcher() to set the IChemFormatMatcher object.", matcher);
+    void testChemFormatMatcherSet() {
+        Assertions.assertNotNull(matcher, "You must use setChemFormatMatcher() to set the IChemFormatMatcher object.");
     }
 
-    protected boolean matches(String header) throws IOException {
+    boolean matches(String header) throws IOException {
         BufferedReader reader = new BufferedReader(new StringReader(header));
-        return matcher.matches(CharStreams.readLines(reader)).matched();
+        return matcher.matches(reader.lines().collect(Collectors.toList())).matched();
     }
 
     @Test
-    public void testMatches() throws Exception {
-        Assert.assertTrue(true);
+    void testMatches() throws Exception {
+        Assertions.assertTrue(true);
         // positive testing is done by the ReaderFactoryTest, and
         // negative tests are given below
     }
 
     @Test
-    public void testNoLines() {
-        Assert.assertFalse(matcher.matches(Collections.<String> emptyList()).matched());
+    void testNoLines() {
+        Assertions.assertFalse(matcher.matches(Collections.emptyList()).matched());
     }
 
     @Test
-    public void testMatchesEmptyString() {
-        Assert.assertFalse(matcher.matches(Arrays.asList("")).matched());
+    void testMatchesEmptyString() {
+        Assertions.assertFalse(matcher.matches(Arrays.asList("")).matched());
     }
 
     @Test
-    public void testMatchesLoremIpsum() {
-        Assert.assertFalse(matcher
+    void testMatchesLoremIpsum() {
+        Assertions.assertFalse(matcher
                 .matches(
                         Arrays.asList("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Etiam accumsan metus ut nulla."))
                 .matched());

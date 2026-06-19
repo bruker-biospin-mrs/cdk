@@ -51,15 +51,13 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  *
  * @author         Miguel Rojas Cherto
  * @cdk.created    2008-104-31
- * @cdk.module     qsaratomic
- * @cdk.githash
  * @see StabilizationCharges
  */
 public class StabilizationPlusChargeDescriptor extends AbstractAtomicDescriptor implements IAtomicDescriptor {
 
     private static final String[] NAMES = {"stabilPlusC"};
 
-    private StabilizationCharges stabil;
+    private final StabilizationCharges stabil;
 
     /**
      *  Constructor for the StabilizationPlusChargeDescriptor object
@@ -123,13 +121,10 @@ public class StabilizationPlusChargeDescriptor extends AbstractAtomicDescriptor 
         IAtomContainer clone;
         IAtom localAtom;
         try {
-            clone = (IAtomContainer) container.clone();
+            clone = container.clone();
             localAtom = clone.getAtom(container.indexOf(atom));
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(clone);
-        } catch (CDKException e) {
-            return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new DoubleResult(
-                    Double.NaN), NAMES, e);
-        } catch (CloneNotSupportedException e) {
+        } catch (CDKException | CloneNotSupportedException e) {
             return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new DoubleResult(
                     Double.NaN), NAMES, e);
         }

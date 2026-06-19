@@ -30,22 +30,20 @@ import java.util.List;
 
 /**
  * Class that handles atoms and assignes an integer lable to them.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
  */
 public class LabelContainer {
 
-    private List<String>          labelMap     = null;
+    private List<String>          labelMap;
     private int                   labelCounter = 0;
     private static LabelContainer instance     = null;
 
     protected LabelContainer() {
 
         // System.err.println("List Initialized");
-        labelMap = new ArrayList<String>();
+        labelMap = new ArrayList<>();
         labelMap.add(labelCounter++, "X");
         labelMap.add(labelCounter++, "R");
     }

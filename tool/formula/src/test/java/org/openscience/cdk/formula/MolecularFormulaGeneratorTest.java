@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.formula;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.config.IsotopeFactory;
 import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -28,14 +28,16 @@ import org.openscience.cdk.interfaces.IIsotope;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.interfaces.IMolecularFormulaSet;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
+
+import java.time.Duration;
 
 /**
  * Checks the functionality of the MolecularFormulaGenerator.
  *
- * @cdk.module test-formula
  */
-public class MolecularFormulaGeneratorTest extends CDKTestCase {
+class MolecularFormulaGeneratorTest extends CDKTestCase {
 
     private final IChemObjectBuilder builder = SilentChemObjectBuilder
             .getInstance();
@@ -44,7 +46,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * Test the getNextFormula() method
      */
     @Test
-    public void testGetNextFormula() throws Exception {
+    void testGetNextFormula() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -64,7 +66,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
         MolecularFormulaGenerator gen = new MolecularFormulaGenerator(builder,
                 minMass, maxMass, mfRange);
         IMolecularFormula f = gen.getNextFormula();
-        Assert.assertNotNull(f);
+        Assertions.assertNotNull(f);
 
     }
 
@@ -72,7 +74,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * Test the getAllFormulas() method
      */
     @Test
-    public void testGetAllFormulas() throws Exception {
+    void testGetAllFormulas() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -93,15 +95,15 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertNotEquals(0, mfSet.size());
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertNotEquals(0, mfSet.size());
     }
 
     /**
      * Test the getFinishedPercentage() method
      */
     @Test
-    public void testGetFinishedPercentage() throws Exception {
+    void testGetFinishedPercentage() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -125,18 +127,18 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
 
         // The initial value must be 0
         finishedPerc = gen.getFinishedPercentage();
-        Assert.assertEquals(0d, finishedPerc, 0.0001);
+        Assertions.assertEquals(0d, finishedPerc, 0.0001);
 
         // The value must increase after each generated formula
         while (gen.getNextFormula() != null) {
             finishedPerc = gen.getFinishedPercentage();
-            Assert.assertTrue(finishedPerc > lastFinishedPerc);
+            Assertions.assertTrue(finishedPerc > lastFinishedPerc);
             lastFinishedPerc = finishedPerc;
         }
 
         // The final value must be 1
         finishedPerc = gen.getFinishedPercentage();
-        Assert.assertEquals(1d, finishedPerc, 0.0001);
+        Assertions.assertEquals(1d, finishedPerc, 0.0001);
 
     }
 
@@ -144,76 +146,85 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * Test the cancel() method called from another thread. This test must
      * finish in 1000 ms.
      */
-    @Test(timeout = 1000)
-    public void testCancel() throws Exception {
+    @Test
+    void testCancel() throws Exception {
+        Assertions.assertTimeout(Duration.ofMillis(1000), () -> {
+            IsotopeFactory ifac = Isotopes.getInstance();
+            IIsotope c = ifac.getMajorIsotope("C");
+            IIsotope h = ifac.getMajorIsotope("H");
+            IIsotope n = ifac.getMajorIsotope("N");
+            IIsotope o = ifac.getMajorIsotope("O");
+            IIsotope p = ifac.getMajorIsotope("P");
+            IIsotope s = ifac.getMajorIsotope("S");
 
-        IsotopeFactory ifac = Isotopes.getInstance();
-        IIsotope c = ifac.getMajorIsotope("C");
-        IIsotope h = ifac.getMajorIsotope("H");
-        IIsotope n = ifac.getMajorIsotope("N");
-        IIsotope o = ifac.getMajorIsotope("O");
-        IIsotope p = ifac.getMajorIsotope("P");
-        IIsotope s = ifac.getMajorIsotope("S");
+            MolecularFormulaRange mfRange = new MolecularFormulaRange();
+            mfRange.addIsotope(c, 0, 1000);
+            mfRange.addIsotope(h, 0, 1000);
+            mfRange.addIsotope(o, 0, 1000);
+            mfRange.addIsotope(n, 0, 1000);
+            mfRange.addIsotope(p, 0, 1000);
+            mfRange.addIsotope(s, 0, 1000);
 
-        MolecularFormulaRange mfRange = new MolecularFormulaRange();
-        mfRange.addIsotope(c, 0, 1000);
-        mfRange.addIsotope(h, 0, 1000);
-        mfRange.addIsotope(o, 0, 1000);
-        mfRange.addIsotope(n, 0, 1000);
-        mfRange.addIsotope(p, 0, 1000);
-        mfRange.addIsotope(s, 0, 1000);
+            double minMass = 100000.0;
+            double maxMass = 100000.001;
 
-        double minMass = 100000.0;
-        double maxMass = 100000.001;
+            final MolecularFormulaGenerator gen = new MolecularFormulaGenerator(
+                    builder, minMass, maxMass, mfRange);
 
-        final MolecularFormulaGenerator gen = new MolecularFormulaGenerator(
-                builder, minMass, maxMass, mfRange);
-
-        Runnable cancelThread = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            Runnable cancelThread = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(5);
+                    } catch (InterruptedException e) {
+                        LoggingToolFactory.createLoggingTool(MolecularFormulaCheckerTest.class)
+                                          .warn("Thread Interrupted:", e);
+                        Thread.currentThread().interrupt();
+                    }
+                    gen.cancel();
                 }
-                gen.cancel();
-            }
-        };
-        new Thread(cancelThread).run();
+            };
+            new Thread(cancelThread).run();
 
-        // We will get stuck in the next method call until the cancel thread
-        // calls the cancel() method
-        gen.getAllFormulas();
+            // We will get stuck in the next method call until the cancel thread
+            // calls the cancel() method
+            gen.getAllFormulas();
 
-        // Next getNextFormula() call should return null
-        IMolecularFormula f = gen.getNextFormula();
-        Assert.assertNull(f);
+            // Next getNextFormula() call should return null
+            IMolecularFormula f = gen.getNextFormula();
+            Assertions.assertNull(f);
+        });
     }
 
     /**
      * Test empty molecular formula range
      *
      */
-    @Test(expected = IllegalArgumentException.class)
-    public void testEmptyMFRange() throws Exception {
-        new MolecularFormulaGenerator(builder, 0, 100,
-                new MolecularFormulaRange());
+    @Test
+    void testEmptyMFRange() throws Exception {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    new MolecularFormulaGenerator(builder, 0, 100,
+                                                                  new MolecularFormulaRange());
+                                });
     }
 
-    /**
+                                /**
      * Test negative mass
      */
-    @Test(expected = IllegalArgumentException.class)
-    public void testNegativeMass() throws Exception {
+    @Test
+    void testNegativeMass() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
 
         MolecularFormulaRange mfRange = new MolecularFormulaRange();
         mfRange.addIsotope(c, 0, 100);
-        new MolecularFormulaGenerator(builder, -20, -10,
-                new MolecularFormulaRange());
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    new MolecularFormulaGenerator(builder, -20, -10,
+                                                                  new MolecularFormulaRange());
+                                });
     }
 
     /**
@@ -221,7 +232,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      *
      */
     @Test
-    public void testMinCounts() throws Exception {
+    void testMinCounts() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -247,7 +258,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
         for (IMolecularFormula f : mfSet.molecularFormulas()) {
             for (IIsotope i : f.isotopes()) {
                 int count = f.getIsotopeCount(i);
-                Assert.assertTrue(count >= 5);
+                Assertions.assertTrue(count >= 5);
             }
         }
 
@@ -258,7 +269,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      *
      */
     @Test
-    public void testMaxCounts() throws Exception {
+    void testMaxCounts() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -284,7 +295,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
         for (IMolecularFormula f : mfSet.molecularFormulas()) {
             for (IIsotope i : f.isotopes()) {
                 int count = f.getIsotopeCount(i);
-                Assert.assertTrue(count <= 7);
+                Assertions.assertTrue(count <= 7);
             }
         }
     }
@@ -293,7 +304,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * Test to find a single carbon.
      */
     @Test
-    public void testSingleCarbon() throws Exception {
+    void testSingleCarbon() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -308,9 +319,9 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(1, mfSet.size());
-        Assert.assertEquals("C", MolecularFormulaManipulator.getString(mfSet
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(1, mfSet.size());
+        Assertions.assertEquals("C", MolecularFormulaManipulator.getString(mfSet
                 .getMolecularFormula(0)));
     }
 
@@ -318,7 +329,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * Test to find MF=C10000, MW=120000.0 using only carbons.
      */
     @Test
-    public void testCarbons() throws Exception {
+    void testCarbons() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -333,9 +344,9 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(1, mfSet.size());
-        Assert.assertEquals("C10000", MolecularFormulaManipulator
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(1, mfSet.size());
+        Assertions.assertEquals("C10000", MolecularFormulaManipulator
                 .getString(mfSet.getMolecularFormula(0)));
     }
 
@@ -343,7 +354,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * Test to find H2O in a range of 1-20.
      */
     @Test
-    public void testWater() throws Exception {
+    void testWater() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -368,7 +379,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
+        Assertions.assertNotNull(mfSet);
 
         boolean found = false;
         for (IMolecularFormula formula : mfSet.molecularFormulas()) {
@@ -378,14 +389,14 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 break;
             }
         }
-        Assert.assertTrue("The molecular formula H2O should be found", found);
+        Assertions.assertTrue(found, "The molecular formula H2O should be found");
     }
 
     /**
      * MolecularFormulaGenerator should use full enumeration method when smallest element has large weight
      */
     @Test
-    public void testUseFullEnumerationWhenNoHydrogen() throws Exception {
+    void testUseFullEnumerationWhenNoHydrogen() throws Exception {
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
         IIsotope n = ifac.getMajorIsotope("N");
@@ -397,7 +408,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
         mfRange.addIsotope(n, 0, 10);
 
         MolecularFormulaGenerator generator = new MolecularFormulaGenerator(builder, 1023.000, 1023.002, mfRange);
-        Assert.assertTrue("generator implementation should be instance of FullEnumerationFormulaGenerator", generator.formulaGenerator instanceof FullEnumerationFormulaGenerator);
+        Assertions.assertTrue(generator.formulaGenerator instanceof FullEnumerationFormulaGenerator, "generator implementation should be instance of FullEnumerationFormulaGenerator");
     }
 
     /**
@@ -405,7 +416,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * large as the smallest weight)
      */
     @Test
-    public void testUseFullEnumerationWhenSuperLargeMassDeviation() throws Exception {
+    void testUseFullEnumerationWhenSuperLargeMassDeviation() throws Exception {
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
         IIsotope h = ifac.getMajorIsotope("H");
@@ -419,7 +430,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
         mfRange.addIsotope(n, 0, 10);
 
         MolecularFormulaGenerator generator = new MolecularFormulaGenerator(builder, 13, 14, mfRange);
-        Assert.assertTrue("generator implementation should be instance of FullEnumerationFormulaGenerator", generator.formulaGenerator instanceof FullEnumerationFormulaGenerator);
+        Assertions.assertTrue(generator.formulaGenerator instanceof FullEnumerationFormulaGenerator, "generator implementation should be instance of FullEnumerationFormulaGenerator");
     }
 
 
@@ -428,7 +439,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * it as 32 bit integer with default blowup factor
      */
     @Test
-    public void testUseFullEnumerationWhenExceedIntegerSpace() throws Exception {
+    void testUseFullEnumerationWhenExceedIntegerSpace() throws Exception {
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
         IIsotope h = ifac.getMajorIsotope("H");
@@ -442,7 +453,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
         mfRange.addIsotope(n, 0, 10);
 
         MolecularFormulaGenerator generator = new MolecularFormulaGenerator(builder, 1300000, 1300000.1, mfRange);
-        Assert.assertTrue("generator implementation should be instance of FullEnumerationFormulaGenerator", generator.formulaGenerator instanceof FullEnumerationFormulaGenerator);
+        Assertions.assertTrue(generator.formulaGenerator instanceof FullEnumerationFormulaGenerator, "generator implementation should be instance of FullEnumerationFormulaGenerator");
     }
 
 
@@ -450,7 +461,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * MolecularFormulaGenerator should use Round Robin when using proper input
      */
     @Test
-    public void testUseRoundRobinWheneverPossible() throws Exception {
+    void testUseRoundRobinWheneverPossible() throws Exception {
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
         IIsotope h = ifac.getMajorIsotope("H");
@@ -464,14 +475,14 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
         mfRange.addIsotope(n, 0, 10);
 
         MolecularFormulaGenerator generator = new MolecularFormulaGenerator(builder, 230.002, 230.004, mfRange);
-        Assert.assertTrue("generator implementation should be instance of RoundRobinFormulaGenerator", generator.formulaGenerator instanceof RoundRobinFormulaGenerator);
+        Assertions.assertTrue(generator.formulaGenerator instanceof RoundRobinFormulaGenerator, "generator implementation should be instance of RoundRobinFormulaGenerator");
     }
 
     /**
      * Test to find MF=C5H11N2O, MW=115.08714
      */
     @Test
-    public void testSmallMass() throws Exception {
+    void testSmallMass() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -492,9 +503,9 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(1, mfSet.size());
-        Assert.assertEquals("C5H11N2O", MolecularFormulaManipulator
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(1, mfSet.size());
+        Assertions.assertEquals("C5H11N2O", MolecularFormulaManipulator
                 .getString(mfSet.getMolecularFormula(0)));
     }
 
@@ -503,7 +514,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * 
      */
     @Test
-    public void testMiddleMass() throws Exception {
+    void testMiddleMass() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -524,9 +535,9 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(1, mfSet.size());
-        Assert.assertEquals("C37H38N4O10", MolecularFormulaManipulator
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(1, mfSet.size());
+        Assertions.assertEquals("C37H38N4O10", MolecularFormulaManipulator
                 .getString(mfSet.getMolecularFormula(0)));
     }
 
@@ -535,7 +546,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      *
      */
     @Test
-    public void testHighMass() throws Exception {
+    void testHighMass() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -558,9 +569,9 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(1, mfSet.size());
-        Assert.assertEquals("C374H623N103O116S", MolecularFormulaManipulator
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(1, mfSet.size());
+        Assertions.assertEquals("C374H623N103O116S", MolecularFormulaManipulator
                 .getString(mfSet.getMolecularFormula(0)));
 
 
@@ -575,7 +586,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      *
      */
     @Test
-    public void testFormulaFoundInRange() throws Exception {
+    void testFormulaFoundInRange() throws Exception {
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
         IIsotope h = ifac.getMajorIsotope("H");
@@ -595,7 +606,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertEquals(48, mfSet.size());
+        Assertions.assertEquals(48, mfSet.size());
         boolean found = false;
         for (IMolecularFormula formula : mfSet.molecularFormulas()) {
             String mf = MolecularFormulaManipulator.getString(formula);
@@ -604,8 +615,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 break;
             }
         }
-        Assert.assertTrue("The molecular formula C4H11NO4 should be found",
-                found);
+        Assertions.assertTrue(found, "The molecular formula C4H11NO4 should be found");
     }
 
     /**
@@ -613,7 +623,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      *
      */
     @Test
-    public void testFormulaFoundInRange2() throws Exception {
+    void testFormulaFoundInRange2() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -634,7 +644,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertEquals(528, mfSet.size());
+        Assertions.assertEquals(528, mfSet.size());
         boolean found = false;
         for (IMolecularFormula formula : mfSet.molecularFormulas()) {
             String mf = MolecularFormulaManipulator.getString(formula);
@@ -643,8 +653,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 break;
             }
         }
-        Assert.assertTrue("The molecular formula C11H10NO2 should be found",
-                found);
+        Assertions.assertTrue(found, "The molecular formula C11H10NO2 should be found");
     }
 
     /**
@@ -653,7 +662,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      *
      */
     @Test
-    public void testCompoundWith7Elements() throws Exception {
+    void testCompoundWith7Elements() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -680,9 +689,9 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(1, mfSet.size());
-        Assert.assertEquals("C8H9Cl3NO2PS", MolecularFormulaManipulator
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(1, mfSet.size());
+        Assertions.assertEquals("C8H9Cl3NO2PS", MolecularFormulaManipulator
                 .getString(mfSet.getMolecularFormula(0)));
 
     }
@@ -691,7 +700,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * Test if C13 isotope-containing formula is found. MF=C(^12)3C(^13)H5
      */
     @Test
-    public void testDifferentIsotopes() throws Exception {
+    void testDifferentIsotopes() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -711,19 +720,19 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 minMass, maxMass, mfRange);
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(1, mfSet.size());
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(1, mfSet.size());
 
         IMolecularFormula trueFormula = new MolecularFormula(); // C3CH5
         trueFormula.addIsotope(c, 3);
         trueFormula.addIsotope(c13, 1);
         trueFormula.addIsotope(h, 5);
 
-        Assert.assertEquals(trueFormula.getIsotopeCount(), mfSet
+        Assertions.assertEquals(trueFormula.getIsotopeCount(), mfSet
                 .getMolecularFormula(0).getIsotopeCount());
-        Assert.assertEquals(trueFormula.getIsotopeCount(c), mfSet
+        Assertions.assertEquals(trueFormula.getIsotopeCount(c), mfSet
                 .getMolecularFormula(0).getIsotopeCount(c));
-        Assert.assertEquals(trueFormula.getIsotopeCount(c13), mfSet
+        Assertions.assertEquals(trueFormula.getIsotopeCount(c13), mfSet
                 .getMolecularFormula(0).getIsotopeCount(c13));
 
     }
@@ -733,7 +742,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * element counts
      */
     @Test
-    public void testFixedElementCounts() throws Exception {
+    void testFixedElementCounts() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -754,9 +763,9 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
 
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(1, mfSet.size());
-        Assert.assertEquals("C7H15N2O4", MolecularFormulaManipulator
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(1, mfSet.size());
+        Assertions.assertEquals("C7H15N2O4", MolecularFormulaManipulator
                 .getString(mfSet.getMolecularFormula(0)));
 
     }
@@ -766,7 +775,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * high
      */
     @Test
-    public void testMassRangeTooHigh() throws Exception {
+    void testMassRangeTooHigh() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -787,8 +796,8 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
 
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
 
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(0, mfSet.size());
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(0, mfSet.size());
 
     }
 
@@ -797,7 +806,7 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
      * low
      */
     @Test
-    public void testMassRangeTooLow() throws Exception {
+    void testMassRangeTooLow() throws Exception {
 
         IsotopeFactory ifac = Isotopes.getInstance();
         IIsotope c = ifac.getMajorIsotope("C");
@@ -817,8 +826,8 @@ public class MolecularFormulaGeneratorTest extends CDKTestCase {
                 massMin, massMax, mfRange);
 
         IMolecularFormulaSet mfSet = gen.getAllFormulas();
-        Assert.assertNotNull(mfSet);
-        Assert.assertEquals(0, mfSet.size());
+        Assertions.assertNotNull(mfSet);
+        Assertions.assertEquals(0, mfSet.size());
 
     }
 

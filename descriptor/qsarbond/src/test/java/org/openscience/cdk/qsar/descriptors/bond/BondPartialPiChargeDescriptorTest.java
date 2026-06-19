@@ -19,11 +19,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.bond;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.result.DoubleResult;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -31,20 +30,19 @@ import org.openscience.cdk.smiles.SmilesParser;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarbond
  */
-public class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
+class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
 
     /**
      *  Constructor for the BondPartialPiChargeDescriptorTest object
      *
      */
-    public BondPartialPiChargeDescriptorTest() {
+    BondPartialPiChargeDescriptorTest() {
 
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(BondPartialPiChargeDescriptor.class);
     }
 
@@ -53,7 +51,7 @@ public class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
      */
 
     @Test
-    public void testBondPiElectronegativityDescriptor() throws ClassNotFoundException, CDKException,
+    void testBondPiElectronegativityDescriptor() throws
             java.lang.Exception {
         descriptor = new BondPartialPiChargeDescriptor();
         double[] testResult = {0.0, 0.0};/*
@@ -69,7 +67,7 @@ public class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
 
         for (int i = 0; i < 2; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.01);
+            Assertions.assertEquals(testResult[i], result, 0.01);
         }
 
     }
@@ -78,7 +76,7 @@ public class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
      *  A unit test for JUnit with Allyl bromide
      */
     @Test
-    public void testBondPiElectronegativityDescriptor_Allyl_bromide() throws ClassNotFoundException, CDKException,
+    void testBondPiElectronegativityDescriptor_Allyl_bromide() throws
             java.lang.Exception {
         descriptor = new BondPartialPiChargeDescriptor();
         double[] testResult = {0.0022, 0.0011, 0.0011, 0.0011, 0.0011, 0.0, 0.0, 0.0}; /*
@@ -115,7 +113,7 @@ public class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
 
         for (int i = 0; i < 8; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.03);
+            Assertions.assertEquals(testResult[i], result, 0.03);
         }
     }
 
@@ -123,7 +121,7 @@ public class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
      *  A unit test for JUnit with Isopentyl iodide
      */
     @Test
-    public void testBondPiElectronegativityDescriptor_Isopentyl_iodide() throws ClassNotFoundException, CDKException,
+    void testBondPiElectronegativityDescriptor_Isopentyl_iodide() throws
             java.lang.Exception {
         descriptor = new BondPartialPiChargeDescriptor();
         double testResult = 0.0; /*
@@ -137,7 +135,7 @@ public class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
         addExplicitHydrogens(mol);
         for (int i = 0; i < 6; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult, result, 0.001);
+            Assertions.assertEquals(testResult, result, 0.001);
         }
     }
 
@@ -145,7 +143,7 @@ public class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
      *  A unit test for JUnit with Allyl mercaptan
      */
     @Test
-    public void testBondPiElectronegativityDescriptor_Allyl_mercaptan() throws ClassNotFoundException, CDKException,
+    void testBondPiElectronegativityDescriptor_Allyl_mercaptan() throws
             java.lang.Exception {
         descriptor = new BondPartialPiChargeDescriptor();
         double[] testResult = {0.0006, 0.0003, 0.0003, 0.0003, 0.0003, 0.0, 0.0, 0.0, 0.0}; /*
@@ -182,7 +180,7 @@ public class BondPartialPiChargeDescriptorTest extends BondDescriptorTest {
 
         for (int i = 0; i < 9; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.03);
+            Assertions.assertEquals(testResult[i], result, 0.03);
         }
     }
 }

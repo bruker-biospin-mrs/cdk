@@ -42,12 +42,15 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IBond.Order;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.ILonePair;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.ringsearch.AllRingsFinder;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 import org.openscience.cdk.tools.manipulator.RingSetManipulator;
@@ -57,8 +60,6 @@ import org.openscience.cdk.tools.manipulator.RingSetManipulator;
  * <p>This is an extension of CDK AtomContainer.
  * Some part of this code was taken from CDK source code and modified.</p>
  *
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -135,7 +136,8 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
             // srs = s.findEssentialRings();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(ExtAtomContainerManipulator.class)
+                              .warn("Unexpected Error:", e);
         }
 
         try {
@@ -151,7 +153,8 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
             // figure out which simple (non cycles) rings are aromatic:
             // HueckelAromaticityDetector.detectAromaticity(atomContainer, srs);
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(ExtAtomContainerManipulator.class)
+                              .warn("Unexpected Error:", e);
         }
 
         // only atoms in 6 membered rings are aromatic
@@ -159,12 +162,12 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
 
         for (int i = 0; i <= mol.getAtomCount() - 1; i++) {
 
-            mol.getAtom(i).setFlag(CDKConstants.ISAROMATIC, false);
+            mol.getAtom(i).setFlag(IChemObject.AROMATIC, false);
 
             jloop: for (int j = 0; j <= ringSet.getAtomContainerCount() - 1; j++) {
                 //logger.debug(i+"\t"+j);
                 IRing ring = (IRing) ringSet.getAtomContainer(j);
-                if (!ring.getFlag(CDKConstants.ISAROMATIC)) {
+                if (!ring.getFlag(IChemObject.AROMATIC)) {
                     continue jloop;
                 }
 
@@ -173,7 +176,7 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
                 //logger.debug("haveatom="+haveatom);
 
                 if (haveatom && ring.getAtomCount() == 6) {
-                    mol.getAtom(i).setFlag(CDKConstants.ISAROMATIC, true);
+                    mol.getAtom(i).setFlag(IChemObject.AROMATIC, true);
                 }
             }
         }
@@ -189,7 +192,7 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
         int hCount = 0;
         for (IAtom iAtom : atomContainer.getConnectedAtomsList(atom)) {
             IAtom connectedAtom = iAtom;
-            if (connectedAtom.getSymbol().equals("H")) {
+            if (connectedAtom.getAtomicNumber() == IElement.H) {
                 hCount++;
             }
         }
@@ -223,9 +226,9 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
      * is atom Hydrogen then its not removed.
      */
     public static IAtomContainer removeHydrogensExceptSingleAndPreserveAtomID(IAtomContainer atomContainer) {
-        Map<IAtom, IAtom> map = new HashMap<IAtom, IAtom>(); // maps original atoms to clones.
-        List<IAtom> remove = new ArrayList<IAtom>(); // lists removed Hs.
-        IAtomContainer mol = null;
+        Map<IAtom, IAtom> map = new HashMap<>(); // maps original atoms to clones.
+        List<IAtom> remove = new ArrayList<>(); // lists removed Hs.
+        IAtomContainer mol;
         if (atomContainer.getBondCount() > 0) {
             // Clone atoms except those to be removed.
             mol = atomContainer.getBuilder().newInstance(IAtomContainer.class);
@@ -233,25 +236,23 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
             for (int i = 0; i < count; i++) {
                 // Clone/remove this atom?
                 IAtom atom = atomContainer.getAtom(i);
-                if (!atom.getSymbol().equals("H")) {
+                if (atom.getAtomicNumber() != IElement.H) {
                     IAtom clonedAtom = null;
                     try {
-                        clonedAtom = (IAtom) atom.clone();
+                        clonedAtom = atom.clone();
+                        //added by Asad to preserve the Atom ID for atom mapping without Hydrogen
+                        clonedAtom.setID(atom.getID());
+                        clonedAtom.setFlags(atom.getFlags());
+                        int countH = 0;
+                        if (atom.getImplicitHydrogenCount() != null) {
+                            countH = atom.getImplicitHydrogenCount();
+                        }
+                        clonedAtom.setImplicitHydrogenCount(countH);
+                        mol.addAtom(clonedAtom);
+                        map.put(atom, clonedAtom);
                     } catch (CloneNotSupportedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                        throw new IllegalStateException("Atom could not be cloned", e);
                     }
-                    //added by Asad to preserve the Atom ID for atom mapping without Hydrogen
-                    clonedAtom.setID(atom.getID());
-                    clonedAtom.setFlags(atom.getFlags());
-                    int countH = 0;
-                    if (atom.getImplicitHydrogenCount() != null) {
-                        countH = atom.getImplicitHydrogenCount();
-                    }
-                    clonedAtom.setImplicitHydrogenCount(countH);
-                    mol.addAtom(clonedAtom);
-                    map.put(atom, clonedAtom);
-
                 } else {
                     remove.add(atom); // maintain list of removed H.
                 }
@@ -373,10 +374,10 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
             IAtom atom2 = atoms[indexJ];
 
             Order order = container.getBond(index).getOrder();
-            IBond.Stereo stereo = container.getBond(index).getStereo();
-            bonds[index] = new Bond(atom1, atom2, order, stereo);
+            bonds[index] = newAtomContainer.newBond(atom1, atom2, order);
+            bonds[index].setDisplay(container.getBond(index).getDisplay());
             if (container.getBond(index).getID() != null) {
-                bonds[index].setID(new String(container.getBond(index).getID()));
+                bonds[index].setID(container.getBond(index).getID());
             }
             newAtomContainer.addBond(bonds[index]);
 
@@ -432,15 +433,15 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
             {
                 IBond clone = null;
                 try {
-                    clone = (IBond) atomContainer.getBond(i).clone();
+                    clone = atomContainer.getBond(i).clone();
                 } catch (CloneNotSupportedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LoggingToolFactory.createLoggingTool(ExtAtomContainerManipulator.class)
+                                      .warn("Unexpected Error:", e);
                 }
                 assert clone != null;
                 clone.setAtoms(new IAtom[]{map.get(bond.getBegin()), map.get(bond.getEnd())});
                 clone.setOrder(atomContainer.getBond(i).getOrder());
-                clone.setStereo(atomContainer.getBond(i).getStereo());
+                clone.setDisplay(atomContainer.getBond(i).getDisplay());
                 mol.addBond(clone);
             }
         }
@@ -475,13 +476,13 @@ public class ExtAtomContainerManipulator extends AtomContainerManipulator {
 
     private static void setHydrogenCount(IAtomContainer container, int index, IAtom[] atoms) {
         if (container.getAtom(index).getImplicitHydrogenCount() != null) {
-            atoms[index].setImplicitHydrogenCount(Integer.valueOf(container.getAtom(index).getImplicitHydrogenCount()));
+            atoms[index].setImplicitHydrogenCount(container.getAtom(index).getImplicitHydrogenCount());
         }
     }
 
     private static void setCharge(IAtomContainer container, int index, IAtom[] atoms) {
         if (container.getAtom(index).getCharge() != null) {
-            atoms[index].setCharge(new Double(container.getAtom(index).getCharge()));
+            atoms[index].setCharge(container.getAtom(index).getCharge());
         }
     }
 }

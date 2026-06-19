@@ -30,10 +30,8 @@ import java.util.List;
  * Entry in a Dictionary.
  *
  * @author Egon Willighagen &lt;egonw@users.sf.net&gt;
- * @cdk.githash
  * @cdk.created  2003-08-23
  * @cdk.keyword  dictionary
- * @cdk.module   dict
  *
  * @see          Dictionary
  */
@@ -42,7 +40,7 @@ public class Entry {
     private String       className;
     private String       label;
     private String       identifier;
-    private List<String> descriptorInfo;
+    private final List<String> descriptorInfo;
     private String       definition;
     private String       description;
     private Object       rawContent;
@@ -50,7 +48,7 @@ public class Entry {
     public Entry(String identifier, String term) {
         this.identifier = identifier.toLowerCase();
         this.label = term;
-        this.descriptorInfo = new ArrayList<String>();
+        this.descriptorInfo = new ArrayList<>();
     }
 
     public Entry(String identifier) {

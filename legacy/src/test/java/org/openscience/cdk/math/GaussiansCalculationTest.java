@@ -37,13 +37,13 @@ import org.openscience.cdk.math.qm.ClosedShellJob;
 import org.openscience.cdk.math.qm.GaussiansBasis;
 import org.openscience.cdk.math.qm.Orbitals;
 import org.openscience.cdk.math.qm.SimpleBasisSet;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemModelManipulator;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.Iterator;
 
 import org.openscience.cdk.exception.CDKException;
 
@@ -52,16 +52,15 @@ import org.openscience.cdk.exception.CDKException;
  * This application takes a XYZ, CML or MDL mol file, calculates
  * orbitals and outputs them to STDOUT.
  *
- * @cdk.module test-qm
  *
  * @author Stephan Michels &lt;stephan@vern.chem.tu-berlin.de&gt;
  * @cdk.created 2001-06-09
  *
  * @cdk.keyword command line util
  */
-public class GaussiansCalculationTest {
+class GaussiansCalculationTest {
 
-    public GaussiansCalculationTest(String inFile) {
+    private GaussiansCalculationTest(String inFile) {
         try {
             ISimpleChemObjectReader reader;
             if (inFile.endsWith(".xyz")) {
@@ -78,9 +77,7 @@ public class GaussiansCalculationTest {
 
             IChemSequence chemSequence = chemFile.getChemSequence(0);
             IChemModel chemModel = chemSequence.getChemModel(0);
-            Iterator<IAtomContainer> containers = ChemModelManipulator.getAllAtomContainers(chemModel).iterator();
-            while (containers.hasNext()) {
-                IAtomContainer atomContainer = containers.next();
+            for (IAtomContainer atomContainer : ChemModelManipulator.getAllAtomContainers(chemModel)) {
                 IAtom[] atoms = AtomContainerManipulator.getAtomArray(atomContainer);
 
                 GaussiansBasis basis = new SimpleBasisSet(atoms);
@@ -88,15 +85,15 @@ public class GaussiansCalculationTest {
                 Orbitals orbitals = new Orbitals(basis);
 
                 int count_electrons = 0;
-                for (int i = 0; i < atoms.length; i++)
-                    count_electrons += atoms[i].getAtomicNumber();
+                for (IAtom atom : atoms) count_electrons += atom.getAtomicNumber();
                 orbitals.setCountElectrons(count_electrons);
 
                 ClosedShellJob job = new ClosedShellJob(orbitals);
                 orbitals = job.calculate();
             }
         } catch (FileNotFoundException | CDKException exc) {
-            exc.printStackTrace();
+            LoggingToolFactory.createLoggingTool(GaussiansCalculationTest.class)
+                              .warn("Unexpected Error:", exc);
         }
     }
 

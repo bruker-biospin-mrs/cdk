@@ -19,36 +19,27 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IReactionSet;
-import org.openscience.cdk.interfaces.AbstractReactionSetTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractReactionSetTest;
 
 /**
  * Checks the functionality of the {@link ReactionSet}.
  *
- * @cdk.module test-silent
  */
-public class ReactionSetTest extends AbstractReactionSetTest {
+class ReactionSetTest extends AbstractReactionSetTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new ReactionSet();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(ReactionSet::new);
     }
 
     @Test
-    public void testReactionSet() {
+    void testReactionSet() {
         IReactionSet rs = new ReactionSet();
-        Assert.assertNotNull(rs);
+        Assertions.assertNotNull(rs);
     }
 
     // Overwrite default methods: no notifications are expected!

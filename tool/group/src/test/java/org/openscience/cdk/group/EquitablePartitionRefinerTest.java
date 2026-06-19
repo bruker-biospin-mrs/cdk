@@ -24,17 +24,16 @@ package org.openscience.cdk.group;
 
 import java.util.Set;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * @author maclean
- * @cdk.module test-group
  */
 public class EquitablePartitionRefinerTest extends CDKTestCase {
 
-    public MockRefinable makeExampleTable() {
+    MockRefinable makeExampleTable() {
         int[][] table = new int[4][];
         table[0] = new int[]{1, 2};
         table[1] = new int[]{0, 3};
@@ -45,9 +44,9 @@ public class EquitablePartitionRefinerTest extends CDKTestCase {
 
     public class MockRefinable implements Refinable {
 
-        public int[][] connections;
+        final int[][] connections;
 
-        public MockRefinable(int[][] connections) {
+        MockRefinable(int[][] connections) {
             this.connections = connections;
         }
 
@@ -56,7 +55,7 @@ public class EquitablePartitionRefinerTest extends CDKTestCase {
             return connections.length;
         }
 
-        public int[] getConnectedIndices(int vertexI) {
+        int[] getConnectedIndices(int vertexI) {
             return connections[vertexI];
         }
 
@@ -89,18 +88,18 @@ public class EquitablePartitionRefinerTest extends CDKTestCase {
     }
 
     @Test
-    public void constructorTest() {
+    void constructorTest() {
         EquitablePartitionRefiner refiner = new EquitablePartitionRefiner(makeExampleTable());
-        Assert.assertNotNull(refiner);
+        Assertions.assertNotNull(refiner);
     }
 
     @Test
-    public void refineTest() {
+    void refineTest() {
         EquitablePartitionRefiner refiner = new EquitablePartitionRefiner(makeExampleTable());
         Partition coarser = Partition.fromString("[0|1,2,3]");
         Partition finer = refiner.refine(coarser);
         Partition expected = Partition.fromString("[0|1,2|3]");
-        Assert.assertEquals(expected, finer);
+        Assertions.assertEquals(expected, finer);
     }
 
 }

@@ -22,58 +22,55 @@
  */
 package org.openscience.cdk.smsd.helper;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.AtomContainer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.smsd.tools.MolHandler;
 
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
-public class MolHandlerTest {
+class MolHandlerTest {
 
     public MolHandlerTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     /**
      * Test of getMolecule method, of class MolHandler.
      */
     @Test
-    public void testGetMolecule() {
-        MolHandler instance = new MolHandler(new AtomContainer(), true, true);
+    void testGetMolecule() {
+        MolHandler instance = new MolHandler(DefaultChemObjectBuilder.getInstance().newAtomContainer(), true, true);
         IAtomContainer result = instance.getMolecule();
-        assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
     /**
      * Test of getRemoveHydrogenFlag method, of class MolHandler.
      */
     @Test
-    public void testGetRemoveHydrogenFlag() {
-        MolHandler instance = new MolHandler(new AtomContainer(), true, true);
+    void testGetRemoveHydrogenFlag() {
+        MolHandler instance = new MolHandler(DefaultChemObjectBuilder.getInstance().newAtomContainer(), true, true);
         boolean expResult = true;
         boolean result = instance.getRemoveHydrogenFlag();
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 }

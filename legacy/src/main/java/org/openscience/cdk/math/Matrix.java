@@ -29,18 +29,16 @@ import java.text.DecimalFormat;
  * This class contains a matrix.
  *
  * @author Stephan Michels &lt;stephan@vern.chem.tu-berlin.de&gt;
- * @cdk.githash
  * @cdk.created 2001-06-07
- * @cdk.module  qm
  */
 public class Matrix {
 
     // Attention! Variables are unprotected
     /** the content of this matrix **/
-    public double[][] matrix;
+    public final double[][] matrix;
 
     /** the number of rows of this matrix */
-    public int        rows;
+    public final int        rows;
     /** the number of columns of this matrix */
     public int        columns;
 
@@ -257,7 +255,7 @@ public class Matrix {
         DecimalFormat format = new DecimalFormat("00.0000");
         format.setPositivePrefix("+");
 
-        StringBuffer str = new StringBuffer();
+        StringBuilder str = new StringBuilder();
         for (i = 0; i < (rows - 1); i++) {
             for (j = 0; j < (columns - 1); j++)
                 if (Math.round(matrix[i][j] * 10000) != 0)
@@ -284,13 +282,13 @@ public class Matrix {
     /**
      * Diagonalize this matrix with the Jacobi algorithm.
      *
-     * @param nrot Count of max. rotations
+     * @param maxNumRot Count of max. rotations
      * @return Matrix m, with m^t * this * m = diagonal
      *
      * @cdk.keyword Jacobi algorithm
      * @cdk.keyword diagonalization
      */
-    public Matrix diagonalize(int nrot) {
+    public Matrix diagonalize(int maxNumRot) {
         Matrix m = duplicate();
         if (m.rows != m.columns)
 
@@ -321,7 +319,7 @@ public class Matrix {
             z[ip] = 0.0;
         }
 
-        nrot = 0;
+        int nrot = 0;
         for (i = 1; i <= 50; i++) {
             sm = 0.0;
             for (ip = 0; ip < n - 1; ip++) {
@@ -336,6 +334,9 @@ public class Matrix {
                 tresh = 0.2 * sm / (n * n);
             else
                 tresh = 0.0;
+
+            if (nrot > maxNumRot)
+                break;
 
             for (ip = 0; ip < n - 1; ip++) {
                 for (iq = ip + 1; iq < n; iq++) {

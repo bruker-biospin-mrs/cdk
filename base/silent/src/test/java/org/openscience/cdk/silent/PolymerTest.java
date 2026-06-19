@@ -19,37 +19,28 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractPolymerTest;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractPolymerTest;
 import org.openscience.cdk.interfaces.IPolymer;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link Polymer}.
  *
- * @cdk.module test-silent
  */
-public class PolymerTest extends AbstractPolymerTest {
+class PolymerTest extends AbstractPolymerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new Polymer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(Polymer::new);
     }
 
     @Test
-    public void testPolymer() {
+    void testPolymer() {
         IPolymer polymer = new Polymer();
-        Assert.assertNotNull(polymer);
-        Assert.assertTrue(polymer instanceof Polymer);
+        Assertions.assertNotNull(polymer);
+        Assertions.assertTrue(polymer instanceof Polymer);
     }
 
     // Overwrite default methods: no notifications are expected!

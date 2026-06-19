@@ -18,21 +18,20 @@
  */
 package org.openscience.cdk.reaction.type.parameters;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * Tests for ParameterReact implementations.
  *
- * @cdk.module test-reaction
  */
-public class ParameterReactTest extends CDKTestCase {
+class ParameterReactTest extends CDKTestCase {
 
     /**
      *  Constructor for the ParameterReactTest object.
      */
-    public ParameterReactTest() {
+    ParameterReactTest() {
         super();
     }
 
@@ -42,9 +41,9 @@ public class ParameterReactTest extends CDKTestCase {
      * @throws Exception
      */
     @Test
-    public void testParameterReact() {
+    void testParameterReact() {
         IParameterReact paramSet = new ParameterReact();
-        Assert.assertNotNull(paramSet);
+        Assertions.assertNotNull(paramSet);
     }
 
     /**
@@ -53,11 +52,11 @@ public class ParameterReactTest extends CDKTestCase {
      * @throws Exception
      */
     @Test
-    public void testSetParameter_boolean() {
+    void testSetParameter_boolean() {
         IParameterReact paramSet = new ParameterReact();
 
         paramSet.setParameter(Boolean.TRUE);
-        Assert.assertTrue(paramSet.isSetParameter());
+        Assertions.assertTrue(paramSet.isSetParameter());
 
     }
 
@@ -67,9 +66,9 @@ public class ParameterReactTest extends CDKTestCase {
      * @throws Exception
      */
     @Test
-    public void testIsSetParameter() {
+    void testIsSetParameter() {
         IParameterReact paramSet = new ParameterReact();
-        Assert.assertFalse(paramSet.isSetParameter());
+        Assertions.assertFalse(paramSet.isSetParameter());
     }
 
     /**
@@ -78,10 +77,10 @@ public class ParameterReactTest extends CDKTestCase {
      * @throws Exception
      */
     @Test
-    public void testSetValue_object() {
+    void testSetValue_object() {
         IParameterReact paramSet = new ParameterReact();
         paramSet.setValue(null);
-        Assert.assertNull(paramSet.getValue());
+        Assertions.assertNull(paramSet.getValue());
 
     }
 
@@ -91,9 +90,9 @@ public class ParameterReactTest extends CDKTestCase {
      * @throws Exception
      */
     @Test
-    public void testGetValue() {
+    void testGetValue() {
         IParameterReact paramSet = new ParameterReact();
         paramSet.setValue(new Object());
-        Assert.assertNotNull(paramSet.getValue());
+        Assertions.assertNotNull(paramSet.getValue());
     }
 }

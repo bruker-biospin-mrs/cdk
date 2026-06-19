@@ -34,7 +34,9 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
+
+import javax.xml.parsers.SAXParserFactory;
+
 
 /**
  * Dictionary with entries.
@@ -43,18 +45,16 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * DOM type thing.
  *
  * @author     Egon Willighagen
- * @cdk.githash
  * @cdk.created    2003-08-23
  * @cdk.keyword    dictionary
- * @cdk.module     dict
  */
 public class Dictionary {
 
-    private Map<String, Entry> entries;
+    private final Map<String, Entry> entries;
     private String             ownNS = null;
 
     public Dictionary() {
-        entries = new Hashtable<String, Entry>();
+        entries = new Hashtable<>();
     }
 
     public static Dictionary unmarshal(Reader reader) {
@@ -62,7 +62,10 @@ public class Dictionary {
         DictionaryHandler handler = new DictionaryHandler();
         XMLReader parser = null;
         try {
-            parser = XMLReaderFactory.createXMLReader();
+            SAXParserFactory factor = SAXParserFactory.newInstance();
+            factor.setNamespaceAware(true);
+            factor.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            parser = factor.newSAXParser().getXMLReader();
             logger.debug("Using " + parser);
         } catch (Exception e) {
             logger.error("Could not instantiate any JAXP parser!");
@@ -75,6 +78,7 @@ public class Dictionary {
                 return null;
             }
             parser.setFeature("http://xml.org/sax/features/validation", false);
+
             logger.debug("Deactivated validation");
         } catch (SAXException e) {
             logger.warn("Cannot deactivate validation.");
@@ -86,7 +90,7 @@ public class Dictionary {
             parser.parse(new InputSource(reader));
             dict = handler.getDictionary();
         } catch (IOException e) {
-            logger.error("IOException: " + e.toString());
+            logger.error("IOException: " + e);
             logger.debug(e);
         } catch (SAXException saxe) {
             logger.error("SAXException: " + saxe.getClass().getName());
@@ -105,7 +109,7 @@ public class Dictionary {
         Iterator<Entry> elements = entries.values().iterator();
         int counter = 0;
         while (elements.hasNext() && counter < size) {
-            entryArray[counter] = (Entry) elements.next();
+            entryArray[counter] = elements.next();
             counter++;
         }
         return entryArray;

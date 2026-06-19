@@ -24,22 +24,27 @@
 package org.openscience.cdk.smiles;
 
 import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
+import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IReaction;
+import org.openscience.cdk.interfaces.IStereoElement;
+import org.openscience.cdk.isomorphism.matchers.RGroupQueryManipulator;
+import org.openscience.cdk.renderer.selection.IChemObjectSelection;
 import org.openscience.cdk.sgroup.Sgroup;
 import org.openscience.cdk.sgroup.SgroupKey;
 import org.openscience.cdk.sgroup.SgroupType;
 import org.openscience.cdk.silent.Atom;
-import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.silent.PseudoAtom;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.stereo.Atropisomeric;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
@@ -47,15 +52,16 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class CxSmilesTest {
+class CxSmilesTest {
 
     private final SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
 
     @Test
-    public void fragmentGroupingReactants() throws InvalidSmilesException {
+    void fragmentGroupingReactants() throws InvalidSmilesException {
         IReaction reaction = smipar.parseReactionSmiles("CC1=NC2=C(O)C=CC=C2C=C1.CC(Cl)=O.[Al+3].[Cl-].[Cl-].[Cl-]>[O-][N+](=O)C1=CC=CC=C1>CC(=O)C1=C2C=CC(C)=NC2=C(O)C=C1 |f:2.3.4.5|");
         assertThat(reaction.getReactantCount(), is(3));
         assertThat(reaction.getAgents().getAtomContainerCount(), is(1));
@@ -65,7 +71,7 @@ public class CxSmilesTest {
 
     // grouping is invalid as we group 4 in two separate fragments
     @Test
-    public void fragmentGroupingInvalid() throws InvalidSmilesException {
+    void fragmentGroupingInvalid() throws InvalidSmilesException {
         IReaction reaction = smipar.parseReactionSmiles("CC1=NC2=C(O)C=CC=C2C=C1.CC(Cl)=O.[Al+3].[Cl-].[Cl-].[Cl-]>[O-][N+](=O)C1=CC=CC=C1>CC(=O)C1=C2C=CC(C)=NC2=C(O)C=C1 |f:2.3.4.5,4.6|");
         assertThat(reaction.getReactantCount(), is(6));
         assertThat(reaction.getAgents().getAtomContainerCount(), is(1));
@@ -74,7 +80,7 @@ public class CxSmilesTest {
     }
 
     @Test
-    public void fragmentGroupingAgents() throws InvalidSmilesException {
+    void fragmentGroupingAgents() throws InvalidSmilesException {
         IReaction reaction = smipar.parseReactionSmiles("CC1=NC2=C(O)C=CC=C2C=C1.CC(Cl)=O>[Al+3].[Cl-].[Cl-].[Cl-].[O-][N+](=O)C1=CC=CC=C1>CC(=O)C1=C2C=CC(C)=NC2=C(O)C=C1 |f:2.3.4.5|");
         assertThat(reaction.getReactantCount(), is(2));
         assertThat(reaction.getAgents().getAtomContainerCount(), is(2));
@@ -83,13 +89,13 @@ public class CxSmilesTest {
     }
 
     @Test
-    public void emptyCXSMILES() throws InvalidSmilesException {
+    void emptyCXSMILES() throws InvalidSmilesException {
         IReaction reaction = smipar.parseReactionSmiles("CC1=NC2=C(O)C=CC=C2C=C1.CC(Cl)=O>[Al+3].[Cl-].[Cl-].[Cl-].[O-][N+](=O)C1=CC=CC=C1>CC(=O)C1=C2C=CC(C)=NC2=C(O)C=C1 ||");
         assertThat(reaction.getProperty(CDKConstants.TITLE, String.class), is(""));
     }
 
     @Test
-    public void fragmentGroupingProducts() throws InvalidSmilesException {
+    void fragmentGroupingProducts() throws InvalidSmilesException {
         IReaction reaction = smipar.parseReactionSmiles("CC1=NC2=C(O)C=CC=C2C=C1.CC(Cl)=O>[O-][N+](=O)C1=CC=CC=C1>CC(=O)C1=C2C=CC(C)=NC2=C(O)C=C1.[Al+3].[Cl-].[Cl-].[Cl-] |f:3.4.5.6|");
         assertThat(reaction.getReactantCount(), is(2));
         assertThat(reaction.getAgents().getAtomContainerCount(), is(1));
@@ -98,42 +104,42 @@ public class CxSmilesTest {
     }
 
     @Test
-    public void nonCXSMILESLayer() throws InvalidSmilesException {
+    void nonCXSMILESLayer() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("c1ccccc1 |<benzene>|");
         assertNotNull(mol);
         assertThat(mol.getTitle(), is("|<benzene>|"));
     }
 
     @Test
-    public void truncatedCXSMILES() throws InvalidSmilesException {
+    void truncatedCXSMILES() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("c1ccccc1 |");
         assertNotNull(mol);
         assertThat(mol.getTitle(), is("|"));
     }
 
     @Test
-    public void correctTitle() throws InvalidSmilesException {
+    void correctTitle() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("c1ccccc1 |c:1,3,4| benzene");
         assertNotNull(mol);
         assertThat(mol.getTitle(), is("benzene"));
     }
 
     @Test
-    public void atomLabels() throws InvalidSmilesException {
+    void atomLabels() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("**.c1ccccc1CC |$R'$|");
         assertThat(mol.getAtom(0), is(instanceOf(IPseudoAtom.class)));
         assertThat(((IPseudoAtom) mol.getAtom(0)).getLabel(), is("R'"));
     }
 
     @Test
-    public void attachPoints() throws InvalidSmilesException {
+    void attachPoints() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("**.c1ccccc1CC |$;;;;;;;;;_AP1$|");
         assertThat(mol.getAtom(9), is(instanceOf(IPseudoAtom.class)));
         assertThat(((IPseudoAtom) mol.getAtom(9)).getAttachPointNum(), is(1));
     }
 
     @Test
-    public void positionalVariation() throws InvalidSmilesException {
+    void positionalVariation() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("**.c1ccccc1CC |m:1:2.3.4.5.6.7|");
         List<Sgroup> sgroups = mol.getProperty(CDKConstants.CTAB_SGROUPS);
         assertThat(sgroups.size(), is(1));
@@ -143,7 +149,7 @@ public class CxSmilesTest {
     }
 
     @Test
-    public void structuralRepeatUnit() throws InvalidSmilesException {
+    void structuralRepeatUnit() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("**.c1ccccc1CC |Sg:n:8:m:ht|");
         List<Sgroup> sgroups = mol.getProperty(CDKConstants.CTAB_SGROUPS);
         assertThat(sgroups.size(), is(1));
@@ -155,7 +161,7 @@ public class CxSmilesTest {
     }
 
     @Test
-    public void markushFragment() throws InvalidSmilesException {
+    void markushFragment() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("**.c1ccccc1CC |m:1:2.3.4.5.6.7,Sg:n:8:m:ht,$R';;;;;;;;;_AP1$|");
         List<Sgroup> sgroups = mol.getProperty(CDKConstants.CTAB_SGROUPS);
         // P-var and F-var
@@ -170,7 +176,7 @@ public class CxSmilesTest {
     }
 
     @Test
-    public void atomCoordinates2D() throws InvalidSmilesException {
+    void atomCoordinates2D() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("CCC |(0,1,;0,2,;0,3,)|");
         assertThat(mol.getAtom(0).getPoint2d(), is(new Point2d(0, 1)));
         assertThat(mol.getAtom(1).getPoint2d(), is(new Point2d(0, 2)));
@@ -178,7 +184,7 @@ public class CxSmilesTest {
     }
 
     @Test
-    public void atomCoordinates3D() throws InvalidSmilesException {
+    void atomCoordinates3D() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("CCC |(0,1,1;0,2,1;0,3,1)|");
         assertThat(mol.getAtom(0).getPoint3d(), is(new Point3d(0, 1, 1)));
         assertThat(mol.getAtom(1).getPoint3d(), is(new Point3d(0, 2, 1)));
@@ -186,27 +192,31 @@ public class CxSmilesTest {
     }
 
     @Test
-    public void atomValues() throws InvalidSmilesException {
+    void atomValues() throws InvalidSmilesException {
         IAtomContainer mol = smipar.parseSmiles("N1CN=CC1 |$_AV:HydDonor;;HydAcceptor$|");
         assertThat(mol.getAtom(0).getProperty(CDKConstants.COMMENT, String.class), is("HydDonor"));
         assertThat(mol.getAtom(2).getProperty(CDKConstants.COMMENT, String.class), is("HydAcceptor"));
     }
 
-    @Test public void monovalentRadical() throws Exception {
+    @Test
+    void monovalentRadical() throws Exception {
         IAtomContainer mol = smipar.parseSmiles("[N]1C=CC=C1 |c:1,3,^1:0|");
         assertThat(mol.getConnectedSingleElectronsCount(mol.getAtom(0)), is(1));
     }
 
-    @Test public void divalentRadical() throws Exception {
+    @Test
+    void divalentRadical() throws Exception {
         IAtomContainer mol = smipar.parseSmiles("[C]1C2=CC=CC=C2C2=CC=CC=C12 |c:3,5,10,t:1,8,12,^3:0|");
         assertThat(mol.getConnectedSingleElectronsCount(mol.getAtom(0)), is(2));
     }
 
-    @Test public void genericReaction() throws Exception {
+    @Test
+    void genericReaction() throws Exception {
         IReaction rxn = smipar.parseReactionSmiles("C1=CC(=CC=C1)C(CC(N)=O)=O.*C>C1(=CC=CC=C1)N.C*.C1=CC(=CC=C1)C=2C=C(C3=C(N2)C=CC=C3)O.C*.C*> |$;;;;;;;;;;;;R22;;;;;;;;;;;;;;;;;;;;;;;;;;;;;R22$,f:0.1,2.3,4.5.6,m:13:0.1.2.3.4.5,21:14.15.16.17.18.19,40:23.24.25.26.27.28,42:29.30.31.32.33.34.35.36.37.38|");
     }
 
-    @Test public void trailingAtomLabelSemiColonAndAtomValues() throws Exception {
+    @Test
+    void trailingAtomLabelSemiColonAndAtomValues() throws Exception {
         IAtomContainer mol = smipar.parseSmiles("[H]C1=C([H])N2C(=O)C(=C([O-])[N+](CC3=CN=C(Cl)S3)=C2C(C)=C1[H])C1=CC(*)=CC=C1.** |$;;;;;;;;;;;;;;;;;;;;;;;;;;R;;;;RA;$,$_AV:;;;;;;;;;;;;;;;;;;;;;;;;2;;;4;5;6;;$,c:1,18,22,29,31,t:7,12,14,26,m:31:29.28.27.25.24.23|");
         List<Sgroup> sgroups = mol.getProperty(CDKConstants.CTAB_SGROUPS);
         assertThat(mol.getAtom(26), is(instanceOf(IPseudoAtom.class)));
@@ -220,8 +230,9 @@ public class CxSmilesTest {
         assertThat(sgroups.size(), is(1));
     }
 
-    @Test public void generateLabelledSmiles() throws CDKException {
-        IAtomContainer mol = new AtomContainer();
+    @Test
+    void generateLabelledSmiles() throws CDKException {
+        IAtomContainer mol = SilentChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.getAtom(0).setImplicitHydrogenCount(3);
         mol.addAtom(new Atom("C"));
@@ -235,8 +246,9 @@ public class CxSmilesTest {
         assertThat(smi, is("CC* |$;;R1$|"));
     }
 
-    @Test public void generateCanonLabelledSmiles() throws CDKException {
-        IAtomContainer mol = new AtomContainer();
+    @Test
+    void generateCanonLabelledSmiles() throws CDKException {
+        IAtomContainer mol = SilentChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.getAtom(0).setImplicitHydrogenCount(3);
         mol.addAtom(new Atom("C"));
@@ -251,7 +263,8 @@ public class CxSmilesTest {
         assertThat(smi, is("*CC |$R1$|"));
     }
 
-    @Test public void roundTripMulticenter() throws CDKException {
+    @Test
+    void roundTripMulticenter() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("c1ccccc1.*Cl |m:6:0.1.2.3.4.5|");
@@ -261,7 +274,8 @@ public class CxSmilesTest {
         assertThat(smi, is("c1ccccc1.*Cl |m:6:0.1.2.3.4.5|"));
     }
 
-    @Test public void canonMulticenter() throws CDKException {
+    @Test
+    void canonMulticenter() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("c1ccccc1.*Cl |m:6:0.1.2.3.4.5|");
@@ -273,7 +287,8 @@ public class CxSmilesTest {
     }
 
 
-    @Test public void roundTripPEGn() throws CDKException {
+    @Test
+    void roundTripPEGn() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("CCCOCCO |Sg:n:1,2,3::ht|");
@@ -282,7 +297,8 @@ public class CxSmilesTest {
         assertThat(smi, is("CCCOCCO |Sg:n:1,2,3:n:ht|"));
     }
 
-    @Test public void canonPEGn() throws CDKException {
+    @Test
+    void canonPEGn() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("CCCOCCO |Sg:n:1,2,3::ht|");
@@ -292,7 +308,8 @@ public class CxSmilesTest {
         assertThat(smi, is("OCCOCCC |Sg:n:3,4,5:n:ht|"));
     }
 
-    @Test public void coordsEtOH() throws CDKException {
+    @Test
+    void coordsEtOH() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("CCO |(,,;1,1,;2,2,)|");
@@ -301,7 +318,8 @@ public class CxSmilesTest {
         assertThat(smi, is("CCO |(,,;1,1,;2,2,)|"));
     }
 
-    @Test public void canonCoordsEtOH() throws CDKException {
+    @Test
+    void canonCoordsEtOH() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("CCO |(,,;1,1,;2,2,)|");
@@ -311,7 +329,8 @@ public class CxSmilesTest {
         assertThat(smi, is("OCC |(2,2,;1,1,;,,)|"));
     }
 
-    @Test public void noCoordsOptEtOH() throws CDKException {
+    @Test
+    void noCoordsOptEtOH() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("CCO |(,,;1,1,;2,2,)|");
@@ -320,7 +339,8 @@ public class CxSmilesTest {
         assertThat(smi, is("CCO"));
     }
 
-    @Test public void noCoordsInEtOH() throws CDKException {
+    @Test
+    void noCoordsInEtOH() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("CCO");
@@ -329,7 +349,8 @@ public class CxSmilesTest {
         assertThat(smi, is("CCO"));
     }
 
-    @Test public void roundTripRadicals() throws CDKException {
+    @Test
+    void roundTripRadicals() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("[C]1C[CH][CH]OC1 |^1:2,3,^2:0|");
@@ -338,7 +359,8 @@ public class CxSmilesTest {
         assertThat(smi, is("[C]1C[CH][CH]OC1 |^1:2,3,^2:0|"));
     }
 
-    @Test public void canonRadicals() throws CDKException {
+    @Test
+    void canonRadicals() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("[C]1C[CH][CH]OC1 |^1:2,3,^2:0|");
@@ -348,7 +370,8 @@ public class CxSmilesTest {
         assertThat(smi, is("[C]1CO[CH][CH]C1 |^1:3,4,^2:0|"));
     }
 
-    @Test public void roundTripReactionAtomLabelsAndFragmentGroups() throws CDKException {
+    @Test
+    void roundTripReactionAtomLabelsAndFragmentGroups() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IReaction rxn = smipar.parseReactionSmiles("CC(C)c1ccccc1.ClC([*])=O>ClCCl.[Al+3].[Cl-].[Cl-].[Cl-]>CC(C)c1ccc(cc1)C([*])=O |$;;;;;;;;;;;R1;;;;;;;;;;;;;;;;;;;R1;$,f:3.4.5.6|");
@@ -358,7 +381,8 @@ public class CxSmilesTest {
                    is("CC(C)C1=CC=CC=C1.ClC(*)=O>ClCCl.[Al+3].[Cl-].[Cl-].[Cl-]>CC(C)C1=CC=C(C=C1)C(*)=O |f:3.4.5.6,$;;;;;;;;;;;R1;;;;;;;;;;;;;;;;;;;R1$|"));
     }
 
-    @Test public void canonicalReactionAtomLabelsAndFragmentGroups() throws CDKException {
+    @Test
+    void canonicalReactionAtomLabelsAndFragmentGroups() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IReaction rxn1 = smipar.parseReactionSmiles("CC(C)c1ccccc1.ClC([*])=O>[Al+3].[Cl-].[Cl-].[Cl-].ClCCl>CC(C)c1ccc(cc1)C([*])=O |$;;;;;;;;;;;R1;;;;;;;;;;;;;;;;;;;R1;$,f:2.3.4.5|");
@@ -370,7 +394,8 @@ public class CxSmilesTest {
                    is(smigen.create(rxn2)));
     }
 
-    @Test public void canonAtomLabels() throws CDKException {
+    @Test
+    void canonAtomLabels() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IAtomContainer mol = smipar.parseSmiles("c1ccccc1O |$_AV:0;1;2;3;4;5;6$|");
@@ -378,4 +403,281 @@ public class CxSmilesTest {
         assertThat(smigen.create(mol), is("OC=1C=CC=CC1 |$_AV:6;5;0;1;2;3;4$|"));
     }
 
+
+    @Test
+    void roundTripLigandOrdering() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("Cl[*](Br)I |$;_R1;;$,LO:1:0.2.3|");
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.CxSmiles);
+        assertThat(smigen.create(mol), is("Cl*(Br)I |$;R1$,LO:1:0.2.3|"));
+    }
+
+    @Test
+    void canonLigandOrdering() throws CDKException {
+        IChemObjectBuilder bldr   = SilentChemObjectBuilder.getInstance();
+        SmilesParser       smipar = new SmilesParser(bldr);
+        IAtomContainer     mol    = smipar.parseSmiles("Cl[*](I)Br |$;_R1;;$,LO:1:0.2.3|");
+        SmilesGenerator    smigen = new SmilesGenerator(SmiFlavor.Canonical | SmiFlavor.CxLigandOrder | SmiFlavor.CxAtomLabel);
+        assertThat(smigen.create(mol), is("Cl*(Br)I |$;R1$,LO:1:0.3.2|"));
+    }
+
+    @Test
+    void roundTripSgroupParents() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("CN1CCCCC1.CO.O |Sg:c:0,1,2,3,4,5,6::,Sg:c:7,8::,Sg:c:9::,Sg:mix:0,1,2,3,4,5,6,7,8,9::,Sg:mix:7,8,9::,SgH:3:4.0,4:2.1|");
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.CxSmiles);
+        assertThat(smigen.create(mol), is("CN1CCCCC1.CO.O |Sg:c:0,1,2,3,4,5,6:c:,Sg:c:7,8:c:,Sg:c:9:c:,Sg:mix:0,1,2,3,4,5,6,7,8,9:mix:,Sg:mix:7,8,9:mix:,SgH:3:0.4,4:1.2|"));
+    }
+
+
+    static Atropisomeric findAtropisomerStereo(IAtomContainer mol) {
+        for (IStereoElement<?,?> se : mol.stereoElements()) {
+            if (se.getConfigClass() == IStereoElement.Atropisomeric)
+                return (Atropisomeric)se;
+        }
+        return null;
+    }
+
+    @Test
+    void testRdkitAtropisomers_S_Binol() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("Oc1ccc2ccccc2c1-c1c(O)ccc2ccccc12 |wU:10.10|    (S)-(−)-1,1′-Bi(2-napthol)");
+        Atropisomeric at = findAtropisomerStereo(mol);
+        assertNotNull(at);
+        assertEquals(IStereoElement.LEFT, at.getConfigOrder());
+    }
+
+    @Test
+    void testRdkitAtropisomers_R_Binol() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("Oc1ccc2ccccc2c1-c1c(O)ccc2ccccc12 |wU:10.11|    (R)-(−)-1,1′-Bi(2-napthol)");
+        Atropisomeric at = findAtropisomerStereo(mol);
+        assertNotNull(at);
+        assertEquals(IStereoElement.RIGHT, at.getConfigOrder());
+    }
+
+    @Test
+    void testRdkitAtropisomers_R_Binol_Alt() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("Oc1ccc2ccccc2c1-c1c(O)ccc2ccccc12 |wD:10.10|    (R)-(−)-1,1′-Bi(2-napthol)");
+        Atropisomeric at = findAtropisomerStereo(mol);
+        assertNotNull(at);
+        assertEquals(IStereoElement.RIGHT, at.getConfigOrder());
+    }
+
+    @Test
+    void testRdkitAtropisomers_m_sotorasib() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("C=CC(=O)N1CCN(c2nc(=O)n(-c3c(C)ccnc3C(C)C)c3nc(-c4c(O)cccc4F)c(F)cc23)[C@@H](C)C1 |wU:12.23|    (m)-sotorasib");
+        Atropisomeric at = findAtropisomerStereo(mol);
+        assertNotNull(at);
+        assertEquals(IStereoElement.LEFT, at.getConfigOrder());
+    }
+
+    @Test
+    void testRdkitAtropisomers_p_sotorasib() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("C=CC(=O)N1CCN(c2nc(=O)n(-c3c(C)ccnc3C(C)C)c3nc(-c4c(O)cccc4F)c(F)cc23)[C@@H](C)C1 |wU:12.11|    (p)-sotorasib");
+        Atropisomeric at = findAtropisomerStereo(mol);
+        assertNotNull(at);
+        assertEquals(IStereoElement.RIGHT, at.getConfigOrder());
+    }
+
+    @Test
+    void testSimpleLinkNode() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("C1NCNC1 |LN:2:1.3|");
+        SmilesGenerator sg = new SmilesGenerator(SmiFlavor.Default);
+        Assertions.assertEquals("C1NCNC1 |Sg:n:2:1-3:ht|", sg.create(mol));
+    }
+
+    @Test
+    void testMultipleLinkNode() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("C1NCNC1 |LN:2:1.3,3:1.4|");
+        SmilesGenerator sg = new SmilesGenerator(SmiFlavor.Default);
+        Assertions.assertEquals("C1NCNC1 |Sg:n:2:1-3:ht,Sg:n:3:1-4:ht|", sg.create(mol));
+    }
+
+    @Test
+    void testLinkNodeAndMore() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("C1NCNC1 |LN:2:1.3,$R1$|");
+        SmilesGenerator sg = new SmilesGenerator(SmiFlavor.Default);
+        Assertions.assertEquals("*1NCNC1 |$R1$,Sg:n:2:1-3:ht|", sg.create(mol));
+    }
+
+    @Test
+    void testLinkNodeWithAttachedAtoms() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+
+        // xbonds are implied due to the ring bonds
+        IAtomContainer mol = smipar.parseSmiles("C1NC(O)NC1 |LN:2:1.3|");
+        SmilesGenerator sg = new SmilesGenerator(SmiFlavor.Default);
+        Assertions.assertEquals("C1NC(O)NC1 |Sg:n:2,3:1-3:ht|", sg.create(mol));
+
+        mol = smipar.parseSmiles("C1NC(O)NC1 |LN:2:1.3.1.3|");
+        Assertions.assertEquals("C1NC(O)NC1 |Sg:n:2,3:1-3:ht|", sg.create(mol));
+    }
+
+    @Test
+    void testTerseSgroup() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("C1NCNC1 |Sg:n:2|");
+        SmilesGenerator sg = new SmilesGenerator(SmiFlavor.Default);
+        Assertions.assertEquals("C1NCNC1 |Sg:n:2:n:|", sg.create(mol));
+    }
+
+
+    @Test
+    void testTerseSgroupDataParsingOnReactions() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IReaction rxn = smipar.parseReactionSmiles("C1=CC=CC=C1C(Br)C(=O)Cl>O=C(O)c1ccccc1O>C=1C=CC=C(C1)C(C(=O)OC=2C(=CC=CC2)C(O)=O)Br |SgD::solvent:DIPEA|");
+        List<Sgroup> sgroups = rxn.getProperty(CDKConstants.CTAB_SGROUPS);
+        Assertions.assertEquals(1, sgroups.size());
+        Assertions.assertEquals("DIPEA", sgroups.get(0).getValue(SgroupKey.Data));
+        SmilesGenerator sg = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols + SmiFlavor.CxDataSgroups);
+        Assertions.assertEquals("C1=CC=CC=C1C(Br)C(=O)Cl>O=C(O)c1ccccc1O>C=1C=CC=C(C1)C(C(=O)OC=2C(=CC=CC2)C(O)=O)Br |SgD::solvent:DIPEA::|",
+                                sg.create(rxn));
+    }
+
+
+    @Test
+    void testEpamHighlight() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        IAtomContainer mol = smipar.parseSmiles("C1NCNC1 |ha:0,1,3,hb:2,4|");
+        Assertions.assertNotNull(mol.getProperty(CDKConstants.SELECTION));
+        IChemObjectSelection selection = mol.getProperty(CDKConstants.SELECTION);
+        Assertions.assertEquals(3, selection.elements(IAtom.class).size());
+        Assertions.assertEquals(2, selection.elements(IBond.class).size());
+    }
+
+    @Test
+    public void testRgroupParsingExplAttach() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        IAtomContainer mol = smipar.parseSmiles("*c1ncc(*)cc1 |$R1;;;;;R2$,RG:_R1={Cl* |$;_AP1$|},{Br* |$;_AP1$|},{C(=O)(O)* |$;;;_AP1$|},_R2={O(C)* |$;;_AP1$|},{[N](#C)* |$;;_AP1$|}|");
+
+        String actual = smigen.create(RGroupQueryManipulator.toRgroupQuery(mol));
+        Assertions.assertEquals("*c1ncc(*)cc1 |$R1;;;;;R2$,RG:_R1={Cl* |$;_AP1$|},{Br* |$;_AP1$|},{C(=O)(O)* |$;;;_AP1$|},_R2={O(C)* |$;;_AP1$|},{[N](#C)* |$;;_AP1$|}|",
+                                actual);
+    }
+
+    // attachment points in Rgroups can be implied, when load the structure
+    // we make these explicit
+    @Test
+    public void testRgroupParsingImplAttach() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        IAtomContainer mol = smipar.parseSmiles("*c1ncc(*)cc1 |$R1;;;;;R2$,RG:_R1={Cl},{Br},{C(=O)O},_R2={OC},{N#C}|");
+
+        String actual = smigen.create(RGroupQueryManipulator.toRgroupQuery(mol));
+        Assertions.assertEquals("*c1ncc(*)cc1 |$R1;;;;;R2$,RG:_R1={Cl* |$;_AP1$|},{Br* |$;_AP1$|},{C(=O)(O)* |$;;;_AP1$|},_R2={O(C)* |$;;_AP1$|},{[N](#C)* |$;;_AP1$|}|",
+                                actual);
+    }
+
+    @Test
+    public void testRgroupParsingImplAttachLinker() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        IAtomContainer mol = smipar.parseSmiles("N*C=O |$;R1$,RG:_R1={O},{CCO}|");
+        // explicit attachment as added as well as 'ligand order' (LO) annotations
+        String actual = smigen.create(RGroupQueryManipulator.toRgroupQuery(mol));
+        Assertions.assertEquals("N*C=O |$;R1$,LO:1:0.2,RG:_R1={O(*)* |$;_AP1;_AP2$|},{C(CO)(*)* |$;;;_AP1;_AP2$|}|",
+                                actual);
+    }
+
+    @Test
+    public void testRgroupParsingExplAttachLinker() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        IAtomContainer mol = smipar.parseSmiles("N*C=O |$;R1$,LO:1:0.2,RG:_R1={O(*)* |$;_AP1;_AP2$|},{C(CO)(*)* |$;;;_AP1;_AP2$|}|");
+        // explicit attachment as added as well as 'ligand order' (LO) annotations
+        String actual = smigen.create(RGroupQueryManipulator.toRgroupQuery(mol));
+        Assertions.assertEquals("N*C=O |$;R1$,LO:1:0.2,RG:_R1={O(*)* |$;_AP1;_AP2$|},{C(CO)(*)* |$;;;_AP1;_AP2$|}|",
+                                actual);
+    }
+
+    @Test
+    public void testRgroupParsingExplAttachLinker2() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        IAtomContainer mol = smipar.parseSmiles("N*C=O |$;R1$,LO:1:2.0,RG:_R1={O(*)* |$;_AP1;_AP2$|},{C(CO)(*)* |$;;;_AP1;_AP2$|}|");
+        // explicit attachment as added as well as 'ligand order' (LO) annotations
+        String actual = smigen.create(RGroupQueryManipulator.toRgroupQuery(mol));
+        Assertions.assertEquals("N*C=O |$;R1$,LO:1:2.0,RG:_R1={O(*)* |$;_AP1;_AP2$|},{C(CO)(*)* |$;;;_AP1;_AP2$|}|",
+                                actual);
+    }
+
+    @Test
+    public void testRgroupComponentGrouping() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        IAtomContainer mol = smipar.parseSmiles("*c1ncccc1 |$R1$,RG:_R1={Cl},{Br},{C(=O)*.Cl |$;;R2$,RG:_R2={OC},{N}|}|");
+        // explicit attachment as added as well as 'ligand order' (LO) annotations
+        String actual = smigen.create(RGroupQueryManipulator.toRgroupQuery(mol));
+        Assertions.assertEquals("*c1ncccc1 |$R1$,RG:_R1={Cl* |$;_AP1$|},{Br* |$;_AP1$|},{C(=O)(*)*.Cl |$;;R2;_AP1$|},_R2={O(C)* |$;;_AP1$|},{N* |$;_AP1$|}|",
+                                actual);
+    }
+
+    @Test
+    public void testRgroupNesting() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        IAtomContainer mol = smipar.parseSmiles("*c1ncccc1 |$R1$,RG:_R1={Cl},{Br},{C(=O)* |$;;R2$,RG:_R2={OC},{N}|}|");
+        // explicit attachment as added as well as 'ligand order' (LO) annotations
+        String actual = smigen.create(RGroupQueryManipulator.toRgroupQuery(mol));
+        Assertions.assertEquals("*c1ncccc1 |$R1$,RG:_R1={Cl* |$;_AP1$|},{Br* |$;_AP1$|},{C(=O)(*)* |$;;R2;_AP1$|},_R2={O(C)* |$;;_AP1$|},{N* |$;_AP1$|}|",
+                                actual);
+    }
+
+    // in this case R2 is defined twice with different definitions, we
+    // rename one of them to R3 as it is loaded
+    @Test
+    public void testRgroupNesting2() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        IAtomContainer mol = smipar.parseSmiles("*c1ncccc1 |$R1$,RG:_R1={C(=O)* |$;;R2$,RG:_R2={OC},{N}|},{C(=N)* |$;;R2$,RG:_R2={OCC},{C(F)(F)F}|}|");
+        // explicit attachment as added as well as 'ligand order' (LO) annotations
+        String actual = smigen.create(RGroupQueryManipulator.toRgroupQuery(mol));
+        Assertions.assertEquals("*c1ncccc1 |$R1$,RG:_R1={C(=O)(*)* |$;;R2;_AP1$|},{C(=N)(*)* |$;;R3;_AP1$|},_R2={O(C)* |$;;_AP1$|},{N* |$;_AP1$|},_R3={O(CC)* |$;;;_AP1$|},{C(F)(F)(F)* |$;;;;_AP1$|}|",
+                                actual);
+    }
+
+    // in this case R2 is defined twice with different definitions, we
+    // rename one of them to R3 as it is loaded, and then another R3 is renamed
+    // to R4
+    @Test
+    public void testRgroupNesting3() throws CDKException {
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        SmilesParser smipar = new SmilesParser(bldr);
+        SmilesGenerator smigen = new SmilesGenerator(SmiFlavor.Default + SmiFlavor.UseAromaticSymbols);
+        IAtomContainer mol = smipar.parseSmiles("*c1ncccc1 |$R1$,RG:_R1={C(=O)* |$;;R2$,RG:_R2={OC},{N}|},{C(=N)* |$;;R2$,RG:_R2={OCC},{C(F)(F)F}|},{C(=CC)* |$;;;R3$,RG:_R3={NCC},{C(F)F}|}|");
+        // explicit attachment as added as well as 'ligand order' (LO) annotations
+        String actual = smigen.create(RGroupQueryManipulator.toRgroupQuery(mol));
+        Assertions.assertEquals("*c1ncccc1 |$R1$,RG:_R1={C(=O)(*)* |$;;R2;_AP1$|},{C(=N)(*)* |$;;R3;_AP1$|},{C(=CC)(*)* |$;;;R4;_AP1$|},_R2={O(C)* |$;;_AP1$|},{N* |$;_AP1$|},_R3={O(CC)* |$;;;_AP1$|},{C(F)(F)(F)* |$;;;;_AP1$|},_R4={N(CC)* |$;;;_AP1$|},{C(F)(F)* |$;;;_AP1$|}|",
+                                actual);
+    }
 }

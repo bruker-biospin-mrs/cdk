@@ -31,8 +31,6 @@ import org.openscience.cdk.interfaces.IAtomType;
  *
  * @author      egonw
  * @cdk.created 2006-09-22
- * @cdk.module  core
- * @cdk.githash
  *
  * @see         IAtomTypeMatcher
  */
@@ -48,5 +46,5 @@ public interface IAtomTypeGuesser {
      * @throws           CDKException when something went wrong with going through
      *                   the AtomType's
      */
-    public List<IAtomType> possibleAtomTypes(IAtomContainer container, IAtom atom) throws CDKException;
+    List<IAtomType> possibleAtomTypes(IAtomContainer container, IAtom atom) throws CDKException;
 }

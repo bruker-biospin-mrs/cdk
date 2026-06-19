@@ -33,6 +33,7 @@ import java.io.Serializable;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * Represents the idea of a chemical reaction. The reaction consists of
@@ -42,8 +43,6 @@ import java.util.Map;
  * and is not intended to represent reaction trajectories. Such can better
  * be represented with a ChemSequence.
  *
- * @cdk.module data
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;elw38@cam.ac.uk&gt;
  * @cdk.created 2003-02-13
@@ -61,7 +60,7 @@ public class Reaction extends ChemObject implements Serializable, IReaction, Clo
      */
     private static final long   serialVersionUID = -554752558363533678L;
 
-    protected int               growArraySize    = 3;
+    protected final int               growArraySize    = 3;
 
     protected IAtomContainerSet reactants;
     protected IAtomContainerSet products;
@@ -104,6 +103,16 @@ public class Reaction extends ChemObject implements Serializable, IReaction, Clo
     @Override
     public int getProductCount() {
         return products.getAtomContainerCount();
+    }
+
+    /**
+     * Returns the number of agents in this reaction.
+     *
+     * @return The number of agents in this reaction
+     */
+    @Override
+    public int getAgentCount() {
+        return agents.getAtomContainerCount();
     }
 
     /**
@@ -173,13 +182,7 @@ public class Reaction extends ChemObject implements Serializable, IReaction, Clo
      */
     @Override
     public Iterable<IMapping> mappings() {
-        return new Iterable<IMapping>() {
-
-            @Override
-            public Iterator<IMapping> iterator() {
-                return new MappingIterator();
-            }
-        };
+        return MappingIterator::new;
     }
 
     /**
@@ -197,6 +200,8 @@ public class Reaction extends ChemObject implements Serializable, IReaction, Clo
 
         @Override
         public IMapping next() {
+            if (pointer >= mappingCount)
+                throw new NoSuchElementException();
             return map[pointer++];
         }
 
@@ -476,7 +481,7 @@ public class Reaction extends ChemObject implements Serializable, IReaction, Clo
      */
     @Override
     public String toString() {
-        StringBuffer description = new StringBuffer(64);
+        StringBuilder description = new StringBuilder(64);
         description.append("Reaction(");
         description.append(getID());
         description.append(", #M:").append(mappingCount);
@@ -501,7 +506,7 @@ public class Reaction extends ChemObject implements Serializable, IReaction, Clo
         clone.products = (IAtomContainerSet) products.clone();
         // create a Map of corresponding atoms for molecules (key: original Atom,
         // value: clone Atom)
-        Map<IAtom, IAtom> atomatom = new Hashtable<IAtom, IAtom>();
+        Map<IAtom, IAtom> atomatom = new Hashtable<>();
         for (int i = 0; i < reactants.getAtomContainerCount(); ++i) {
             IAtomContainer mol = reactants.getAtomContainer(i);
             IAtomContainer mol2 = clone.reactants.getAtomContainer(i);

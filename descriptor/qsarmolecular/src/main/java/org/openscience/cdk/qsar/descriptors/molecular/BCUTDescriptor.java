@@ -18,7 +18,6 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.charges.GasteigerMarsiliPartialCharges;
 import org.openscience.cdk.charges.Polarizability;
@@ -27,6 +26,8 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.PathTools;
 import org.openscience.cdk.graph.matrix.AdjacencyMatrix;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IBond.Order;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
@@ -44,6 +45,8 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
+
+import java.util.Arrays;
 
 /**
  * Eigenvalue based descriptor noted for its utility in chemical diversity.
@@ -110,15 +113,13 @@ import Jama.Matrix;
  *
  * @author Rajarshi Guha
  * @cdk.created 2004-11-30
- * @cdk.module qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:BCUT
  * @cdk.keyword BCUT
  * @cdk.keyword descriptor
  */
 public class BCUTDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(BCUTDescriptor.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(BCUTDescriptor.class);
 
     // the number of negative & positive eigenvalues
     // to return for each class of BCUT descriptor
@@ -181,7 +182,7 @@ public class BCUTDescriptor extends AbstractMolecularDescriptor implements IMole
      */
     @Override
     public Object[] getParameters() {
-        Object params[] = new Object[3];
+        Object[] params = new Object[3];
         params[0] = this.nhigh;
         params[1] = this.nlow;
         params[2] = this.checkAromaticity;
@@ -254,36 +255,26 @@ public class BCUTDescriptor extends AbstractMolecularDescriptor implements IMole
 
             int natom = local.getAtomCount();
             double[][] matrix = new double[natom][natom];
-            for (int i = 0; i < natom; i++) {
-                for (int j = 0; j < natom; j++) {
-                    matrix[i][j] = 0.0;
-                }
-            }
+            for (int i = 0; i < natom; i++)
+                Arrays.fill(matrix[i], 0.001);
 
             /* set the off diagonal entries */
-            for (int i = 0; i < natom - 1; i++) {
-                for (int j = i + 1; j < natom; j++) {
-                    for (int k = 0; k < local.getBondCount(); k++) {
-                        IBond bond = local.getBond(k);
-                        if (bond.contains(local.getAtom(i)) && bond.contains(local.getAtom(j))) {
-                            if (bond.getFlag(CDKConstants.ISAROMATIC))
-                                matrix[i][j] = 0.15;
-                            else if (bond.getOrder() == Order.SINGLE)
-                                matrix[i][j] = 0.1;
-                            else if (bond.getOrder() == Order.DOUBLE)
-                                matrix[i][j] = 0.2;
-                            else if (bond.getOrder() == Order.TRIPLE) matrix[i][j] = 0.3;
-
-                            if (local.getConnectedBondsCount(i) == 1 || local.getConnectedBondsCount(j) == 1) {
-                                matrix[i][j] += 0.01;
-                            }
-                            matrix[j][i] = matrix[i][j];
-                        } else {
-                            matrix[i][j] = 0.001;
-                            matrix[j][i] = 0.001;
-                        }
-                    }
+            for (IBond bond : local.bonds()) {
+                int i = local.indexOf(bond.getBegin());
+                int j = local.indexOf(bond.getEnd());
+                if (bond.getFlag(IChemObject.AROMATIC))
+                    matrix[i][j] = 0.15;
+                else if (bond.getOrder() == Order.SINGLE)
+                    matrix[i][j] = 0.1;
+                else if (bond.getOrder() == Order.DOUBLE)
+                    matrix[i][j] = 0.2;
+                else if (bond.getOrder() == Order.TRIPLE) matrix[i][j] = 0.3;
+                // is terminal?
+                if (local.getConnectedBondsCount(i) == 1 ||
+                    local.getConnectedBondsCount(j) == 1) {
+                    matrix[i][j] += 0.01;
                 }
+                matrix[j][i] = matrix[i][j];
             }
 
             /* set the diagonal entries */
@@ -344,7 +335,7 @@ public class BCUTDescriptor extends AbstractMolecularDescriptor implements IMole
         // find number of heavy atoms
         int nheavy = 0;
         for (int i = 0; i < molecule.getAtomCount(); i++) {
-            if (!molecule.getAtom(i).getSymbol().equals("H")) nheavy++;
+            if (molecule.getAtom(i).getAtomicNumber() != IElement.H) nheavy++;
         }
 
         if (nheavy == 0) return getDummyDescriptorValue(new CDKException("No heavy atoms in the molecule"));
@@ -355,7 +346,7 @@ public class BCUTDescriptor extends AbstractMolecularDescriptor implements IMole
         counter = 0;
         try {
             for (int i = 0; i < molecule.getAtomCount(); i++) {
-                if (molecule.getAtom(i).getSymbol().equals("H")) continue;
+                if (molecule.getAtom(i).getAtomicNumber() == IElement.H) continue;
                 diagvalue[counter] = Isotopes.getInstance().getMajorIsotope(molecule.getAtom(i).getSymbol())
                         .getExactMass();
                 counter++;
@@ -392,7 +383,7 @@ public class BCUTDescriptor extends AbstractMolecularDescriptor implements IMole
         }
         counter = 0;
         for (int i = 0; i < molecule.getAtomCount(); i++) {
-            if (molecule.getAtom(i).getSymbol().equals("H")) continue;
+            if (molecule.getAtom(i).getAtomicNumber() == IElement.H) continue;
             diagvalue[counter] = molecule.getAtom(i).getCharge();
             counter++;
         }
@@ -409,7 +400,7 @@ public class BCUTDescriptor extends AbstractMolecularDescriptor implements IMole
         Polarizability pol = new Polarizability();
         counter = 0;
         for (int i = 0; i < molecule.getAtomCount(); i++) {
-            if (molecule.getAtom(i).getSymbol().equals("H")) continue;
+            if (molecule.getAtom(i).getAtomicNumber() == IElement.H) continue;
             diagvalue[counter] = pol.calculateGHEffectiveAtomPolarizability(molecule, molecule.getAtom(i), false,
                     topoDistance);
             counter++;

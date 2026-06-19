@@ -30,8 +30,6 @@ import org.xml.sax.Attributes;
  * This interface describes the procedures classes must implement to be plugable
  * into the CMLHandler. Most procedures reflect those in SAX2.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
  **/
@@ -45,7 +43,7 @@ public interface ICMLModule {
 
     void endElement(CMLStack xpath, String uri, String local, String raw);
 
-    void characterData(CMLStack xpath, char ch[], int start, int length);
+    void characterData(CMLStack xpath, char[] ch, int start, int length);
 
     IChemFile returnChemFile();
 

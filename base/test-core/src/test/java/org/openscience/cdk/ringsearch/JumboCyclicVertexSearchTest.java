@@ -22,30 +22,27 @@
  */
 package org.openscience.cdk.ringsearch;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.BitSet;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author John May
- * @cdk.module test-core
  */
-public class JumboCyclicVertexSearchTest {
+class JumboCyclicVertexSearchTest {
 
     @Test
-    public void testEmpty() {
+    void testEmpty() {
         CyclicVertexSearch search = new JumboCyclicVertexSearch(new int[0][0]);
-        assertNotNull(search);
+        Assertions.assertNotNull(search);
     }
 
     @Test
-    public void testCyclic() {
+    void testCyclic() {
         // cyclohexane like
         int[][] g = new int[][]{{5, 1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 0}};
         CyclicVertexSearch search = new JumboCyclicVertexSearch(g);
@@ -53,29 +50,29 @@ public class JumboCyclicVertexSearchTest {
     }
 
     @Test
-    public void testCyclic_Int() {
+    void testCyclic_Int() {
         // cyclohexane like
         int[][] g = new int[][]{{5, 1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 0}};
         CyclicVertexSearch search = new JumboCyclicVertexSearch(g);
         for (int v = 0; v < g.length; v++)
-            assertTrue(search.cyclic(v));
+            Assertions.assertTrue(search.cyclic(v));
     }
 
     @Test
-    public void testCyclic_IntInt() {
+    void testCyclic_IntInt() {
         int[][] g = new int[][]{{5, 1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 0, 6}, {5}};
         CyclicVertexSearch search = new JumboCyclicVertexSearch(g);
-        assertTrue(search.cyclic(0, 1));
-        assertTrue(search.cyclic(1, 2));
-        assertTrue(search.cyclic(2, 3));
-        assertTrue(search.cyclic(3, 4));
-        assertTrue(search.cyclic(4, 5));
-        assertTrue(search.cyclic(5, 0));
-        assertFalse(search.cyclic(5, 6));
+        Assertions.assertTrue(search.cyclic(0, 1));
+        Assertions.assertTrue(search.cyclic(1, 2));
+        Assertions.assertTrue(search.cyclic(2, 3));
+        Assertions.assertTrue(search.cyclic(3, 4));
+        Assertions.assertTrue(search.cyclic(4, 5));
+        Assertions.assertTrue(search.cyclic(5, 0));
+        Assertions.assertFalse(search.cyclic(5, 6));
     }
 
     @Test
-    public void vertexColor() {
+    void vertexColor() {
         // medium size spiro cyclo hexane like
         int[][] g = new int[][]{{1, 5}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {0, 4, 7, 8}, {7, 10}, {5, 6}, {5, 9}, {8, 10},
                 {6, 9, 12, 13}, {12, 15}, {10, 11}, {10, 14}, {13, 15}, {11, 14, 17, 18}, {17, 20}, {15, 16}, {15, 19},
@@ -90,7 +87,7 @@ public class JumboCyclicVertexSearchTest {
     }
 
     @Test
-    public void testIsolated() {
+    void testIsolated() {
         // cyclohexane like
         int[][] g = new int[][]{{5, 1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 0}};
         CyclicVertexSearch search = new JumboCyclicVertexSearch(g);
@@ -98,14 +95,14 @@ public class JumboCyclicVertexSearchTest {
     }
 
     @Test
-    public void testIsolated_NonCyclic() {
+    void testIsolated_NonCyclic() {
         int[][] g = new int[][]{{1}, {0, 2}, {1, 3}, {2, 4}, {3}};
         CyclicVertexSearch search = new JumboCyclicVertexSearch(g);
         assertThat(search.cyclic(), is(new int[0]));
     }
 
     @Test
-    public void testIsolated_Empty() {
+    void testIsolated_Empty() {
         CyclicVertexSearch search = new JumboCyclicVertexSearch(new int[0][0]);
         assertThat(search.cyclic(), is(new int[0]));
         assertThat(search.isolated(), is(new int[0][0]));
@@ -116,7 +113,7 @@ public class JumboCyclicVertexSearchTest {
      * C1CCC2(CC1)CCCCC2
      */
     @Test
-    public void testIsolated_Spiro() {
+    void testIsolated_Spiro() {
         // spiro cyclo hexane like
         int[][] g = new int[][]{{1, 5}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {0, 4, 7, 8}, {7, 10}, {5, 6}, {5, 9}, {8, 10},
                 {6, 9}};
@@ -131,7 +128,7 @@ public class JumboCyclicVertexSearchTest {
      * C1CCC2(CC1)CCC1(CC2)CCC2(CC1)CCC1(CC2)CCC2(CC1)CCC1(CC2)CCC2(CCC3(CCC4(CCC5(CCC6(CCCCC6)CC5)CC4)CC3)CC2)CC1
      */
     @Test
-    public void testIsolated_SpiroMedium() {
+    void testIsolated_SpiroMedium() {
         // medium size spiro cyclo hexane like
         int[][] g = new int[][]{{1, 5}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {0, 4, 7, 8}, {7, 10}, {5, 6}, {5, 9}, {8, 10},
                 {6, 9, 12, 13}, {12, 15}, {10, 11}, {10, 14}, {13, 15}, {11, 14, 17, 18}, {17, 20}, {15, 16}, {15, 19},
@@ -159,7 +156,7 @@ public class JumboCyclicVertexSearchTest {
     }
 
     @Test
-    public void testIsolated_Biphenyl() {
+    void testIsolated_Biphenyl() {
         // biphenyl like
         int[][] g = new int[][]{{5, 1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 0, 6}, {11, 7, 5}, {6, 8}, {7, 9}, {8, 10},
                 {9, 11}, {10, 7}};
@@ -175,7 +172,7 @@ public class JumboCyclicVertexSearchTest {
      * C(C1CCCCC1)C1CCCCC1
      */
     @Test
-    public void testIsolated_BenzylBenzene() {
+    void testIsolated_BenzylBenzene() {
         // benzylbenzene like
         int[][] g = new int[][]{{1, 5}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {0, 4, 12}, {7, 11}, {6, 8}, {7, 9, 12},
                 {8, 10}, {9, 11}, {6, 10}, {8, 5}};
@@ -187,7 +184,7 @@ public class JumboCyclicVertexSearchTest {
     }
 
     @Test
-    public void testIsolatedFragments() {
+    void testIsolatedFragments() {
         // two disconnected cyclohexanes
         int[][] g = new int[][]{{5, 1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 0}, {11, 7}, {6, 8}, {7, 9}, {8, 10},
                 {9, 11}, {10, 7}};
@@ -203,7 +200,7 @@ public class JumboCyclicVertexSearchTest {
      * C1CC2CCC1CC2
      */
     @Test
-    public void testFused() {
+    void testFused() {
         int[][] g = new int[][]{{1, 5, 6}, {0, 2}, {1, 3}, {2, 4, 7}, {3, 5}, {0, 4}, {0, 7}, {6, 3}};
         CyclicVertexSearch search = new JumboCyclicVertexSearch(g);
         int[][] isolated = search.isolated();
@@ -218,7 +215,7 @@ public class JumboCyclicVertexSearchTest {
      * have a (non cyclic) edge which connects them C1CC2(CCC1CC2)C12CCC(CC1)CC2
      */
     @Test
-    public void testFused_BiocycloEdgeLinked() {
+    void testFused_BiocycloEdgeLinked() {
         // biocyclooctanylbiocylooctane like
         int[][] g = new int[][]{{1, 5, 6}, {0, 2}, {1, 3}, {2, 4, 7, 8}, {3, 5}, {0, 4}, {0, 7}, {6, 3},
                 {9, 13, 14, 3}, {8, 10}, {9, 11}, {10, 12, 15}, {11, 13}, {8, 12}, {8, 15}, {11, 14}};
@@ -237,7 +234,7 @@ public class JumboCyclicVertexSearchTest {
      * cyclic vertex which is adjacent to both C(C12CCC(CC1)CC2)C12CCC(CC1)CC2
      */
     @Test
-    public void testFused_BiocycloVertexLinked() {
+    void testFused_BiocycloVertexLinked() {
         // biocyclooctanylbiocylooctane like
         int[][] g = new int[][]{{1, 5}, {0, 2}, {1, 3, 6, 16}, {2, 4}, {3, 5}, {4, 0, 7}, {2, 7}, {6, 5}, {9, 13},
                 {8, 10}, {9, 11, 14}, {10, 12}, {11, 13}, {12, 8, 15, 16}, {10, 15}, {14, 13}, {13, 2}};
@@ -254,7 +251,7 @@ public class JumboCyclicVertexSearchTest {
      * C1CCC2CCCCC2C1
      */
     @Test
-    public void testFused_Orthofused() {
+    void testFused_Orthofused() {
         // napthalene like
         int[][] g = new int[][]{{1, 5}, {0, 2}, {1, 3}, {2, 4}, {3, 5, 7}, {0, 6, 4}, {5, 9}, {4, 8}, {7, 9}, {6, 8}};
         CyclicVertexSearch search = new JumboCyclicVertexSearch(g);
@@ -269,7 +266,7 @@ public class JumboCyclicVertexSearchTest {
      * C1CCC2CC3CCCCC3CC2C1
      */
     @Test
-    public void testFused_Biorthofused() {
+    void testFused_Biorthofused() {
         // 3 fused rings
         int[][] g = new int[][]{{1, 5}, {0, 2, 10}, {3, 13, 1}, {2, 4}, {3, 5, 7}, {0, 6, 4}, {5, 9}, {4, 8}, {7, 9},
                 {6, 8}, {1, 11}, {10, 12}, {11, 13}, {2, 12}};
@@ -285,7 +282,7 @@ public class JumboCyclicVertexSearchTest {
      * C1CC23CCC4(CC2)CCC2(CCCC5(CCCC6(CCC7(CCCC8(CCC9(CC8)CCC8(CCCC%10(CCCC%11(CCC(C1)(CC%11)C3)C%10)C8)CC9)C7)CC6)C5)C2)CC4
      */
     @Test
-    public void testFused_Cylclophane() {
+    void testFused_Cylclophane() {
         // medium size spiro cyclophane
         int[][] g = new int[][]{{1, 5}, {0, 2}, {1, 3, 50, 46}, {2, 4}, {3, 5}, {0, 4, 7, 8}, {7, 10}, {5, 6}, {5, 9},
                 {8, 10}, {6, 9, 12, 13}, {12, 15}, {10, 11}, {10, 14}, {13, 15, 16, 17}, {11, 14}, {14, 20}, {14, 18},
@@ -306,7 +303,7 @@ public class JumboCyclicVertexSearchTest {
      * CHEBI:33128
      */
     @Test
-    public void testFused_Fullerene() {
+    void testFused_Fullerene() {
         int[][] g = new int[][]{{1, 4, 8}, {0, 2, 11}, {1, 3, 14}, {2, 4, 17}, {3, 0, 5}, {4, 6, 19}, {5, 7, 21},
                 {6, 8, 24}, {7, 0, 9}, {8, 10, 25}, {9, 11, 28}, {10, 1, 12}, {11, 13, 29}, {12, 14, 32}, {13, 2, 15},
                 {14, 16, 33}, {15, 17, 36}, {16, 3, 18}, {17, 19, 37}, {18, 5, 20}, {19, 21, 39}, {20, 6, 22},
@@ -325,7 +322,7 @@ public class JumboCyclicVertexSearchTest {
     }
 
     @Test
-    public void testToArray() throws Exception {
+    void testToArray() throws Exception {
         BitSet s = new BitSet();
         s.set(0);
         s.set(6);
@@ -333,13 +330,13 @@ public class JumboCyclicVertexSearchTest {
     }
 
     @Test
-    public void testToArray_Empty() throws Exception {
+    void testToArray_Empty() throws Exception {
         BitSet empty = new BitSet();
         assertThat(JumboCyclicVertexSearch.toArray(empty), is(new int[0]));
     }
 
     @Test
-    public void testXor() throws Exception {
+    void testXor() throws Exception {
         BitSet s = new BitSet();
         BitSet t = new BitSet();
 
@@ -350,22 +347,22 @@ public class JumboCyclicVertexSearchTest {
 
         BitSet u = JumboCyclicVertexSearch.xor(s, t);
 
-        assertTrue(s.get(0));
-        assertTrue(s.get(1));
-        assertFalse(s.get(2));
+        Assertions.assertTrue(s.get(0));
+        Assertions.assertTrue(s.get(1));
+        Assertions.assertFalse(s.get(2));
 
-        assertFalse(t.get(0));
-        assertTrue(t.get(1));
-        assertTrue(t.get(2));
+        Assertions.assertFalse(t.get(0));
+        Assertions.assertTrue(t.get(1));
+        Assertions.assertTrue(t.get(2));
 
-        assertTrue(u.get(0));
-        assertFalse(u.get(1));
-        assertTrue(u.get(2));
+        Assertions.assertTrue(u.get(0));
+        Assertions.assertFalse(u.get(1));
+        Assertions.assertTrue(u.get(2));
 
     }
 
     @Test
-    public void testAnd() throws Exception {
+    void testAnd() throws Exception {
 
         BitSet s = new BitSet();
         BitSet t = new BitSet();
@@ -377,27 +374,27 @@ public class JumboCyclicVertexSearchTest {
 
         BitSet u = JumboCyclicVertexSearch.and(s, t);
 
-        assertTrue(s.get(0));
-        assertTrue(s.get(1));
-        assertFalse(s.get(2));
+        Assertions.assertTrue(s.get(0));
+        Assertions.assertTrue(s.get(1));
+        Assertions.assertFalse(s.get(2));
 
-        assertFalse(t.get(0));
-        assertTrue(t.get(1));
-        assertTrue(t.get(2));
+        Assertions.assertFalse(t.get(0));
+        Assertions.assertTrue(t.get(1));
+        Assertions.assertTrue(t.get(2));
 
-        assertFalse(u.get(0));
-        assertTrue(u.get(1));
-        assertFalse(u.get(2));
+        Assertions.assertFalse(u.get(0));
+        Assertions.assertTrue(u.get(1));
+        Assertions.assertFalse(u.get(2));
 
     }
 
     @Test
-    public void testCopy() throws Exception {
+    void testCopy() throws Exception {
         BitSet set = new BitSet();
         set.set(5);
         BitSet cpy = JumboCyclicVertexSearch.copy(set);
-        assertTrue(cpy.get(5));
+        Assertions.assertTrue(cpy.get(5));
         set.set(6);
-        assertFalse(cpy.get(6));
+        Assertions.assertFalse(cpy.get(6));
     }
 }

@@ -18,9 +18,8 @@
  */
 package org.openscience.cdk.reaction.type;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKConstants;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.SingleElectron;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
@@ -29,6 +28,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.reaction.IReactionProcess;
@@ -36,6 +36,7 @@ import org.openscience.cdk.reaction.ReactionProcessTest;
 import org.openscience.cdk.reaction.type.parameters.IParameterReact;
 import org.openscience.cdk.reaction.type.parameters.SetReactionCenter;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ReactionManipulator;
 
@@ -46,16 +47,15 @@ import java.util.List;
 /**
  * TestSuite that runs a test for the RadicalSiteHrAlphaReaction.
  *
- * @cdk.module test-reaction
  */
 public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
 
-    private IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+    private final IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
 
     /**
      *  The JUnit setup method
      */
-    public RadicalSiteHrAlphaReactionTest() throws Exception {
+    RadicalSiteHrAlphaReactionTest() throws Exception {
         setReaction(RadicalSiteHrAlphaReaction.class);
     }
 
@@ -63,16 +63,16 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
      *  The JUnit setup method
      */
     @Test
-    public void testRadicalSiteHrAlphaReaction() throws Exception {
+    void testRadicalSiteHrAlphaReaction() throws Exception {
         IReactionProcess type = new RadicalSiteHrAlphaReaction();
-        Assert.assertNotNull(type);
+        Assertions.assertNotNull(type);
     }
 
     /**
      * A unit test suite for JUnit. Reaction:
      * Automatic search of the center active.
      *
-     * @return    The test suite
+     *
      */
     @Test
     @Override
@@ -85,15 +85,15 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
         /* initiate */
         makeSureAtomTypesAreRecognized(molecule);
 
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.FALSE);
         paramList.add(param);
         type.setParameterList(paramList);
         IReactionSet setOfReactions = type.initiate(setOfReactants, null);
 
-        Assert.assertEquals(5, setOfReactions.getReactionCount());
-        Assert.assertEquals(1, setOfReactions.getReaction(0).getProductCount());
+        Assertions.assertEquals(5, setOfReactions.getReactionCount());
+        Assertions.assertEquals(1, setOfReactions.getReaction(0).getProductCount());
 
         IAtomContainer product = setOfReactions.getReaction(2).getProducts().getAtomContainer(0);
         IAtomContainer molecule2 = getExpectedProducts().getAtomContainer(0);
@@ -125,7 +125,8 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
         try {
             addExplicitHydrogens(molecule);
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(getClass())
+                              .error("Unexpected Error:", e);
         }
 
         molecule.getAtom(2).setFormalCharge(0);
@@ -135,7 +136,8 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(molecule);
             makeSureAtomTypesAreRecognized(molecule);
         } catch (CDKException e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(getClass())
+                              .error("Unexpected Error:", e);
         }
         setOfReactants.addAtomContainer(molecule);
         return setOfReactants;
@@ -164,7 +166,8 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
         try {
             addExplicitHydrogens(molecule);
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(getClass())
+                              .error("Unexpected Error:", e);
         }
 
         molecule.getAtom(0).setFormalCharge(0);
@@ -174,7 +177,8 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(molecule);
             makeSureAtomTypesAreRecognized(molecule);
         } catch (CDKException e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(getClass())
+                              .error("Unexpected Error:", e);
         }
         setOfProducts.addAtomContainer(molecule);
         return setOfProducts;
@@ -183,22 +187,22 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testCDKConstants_REACTIVE_CENTER() throws Exception {
+    void testCDKConstants_REACTIVE_CENTER() throws Exception {
         IReactionProcess type = new RadicalSiteHrAlphaReaction();
 
         IAtomContainerSet setOfReactants = getExampleReactants();
         IAtomContainer molecule = setOfReactants.getAtomContainer(0);
 
         /* manually put the reactive center */
-        molecule.getAtom(0).setFlag(CDKConstants.REACTIVE_CENTER, true);
-        molecule.getAtom(2).setFlag(CDKConstants.REACTIVE_CENTER, true);
-        molecule.getAtom(6).setFlag(CDKConstants.REACTIVE_CENTER, true);
-        molecule.getBond(5).setFlag(CDKConstants.REACTIVE_CENTER, true);
+        molecule.getAtom(0).setFlag(IChemObject.REACTIVE_CENTER, true);
+        molecule.getAtom(2).setFlag(IChemObject.REACTIVE_CENTER, true);
+        molecule.getAtom(6).setFlag(IChemObject.REACTIVE_CENTER, true);
+        molecule.getBond(5).setFlag(IChemObject.REACTIVE_CENTER, true);
 
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.TRUE);
         paramList.add(param);
@@ -207,33 +211,33 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
         /* initiate */
         IReactionSet setOfReactions = type.initiate(setOfReactants, null);
 
-        Assert.assertEquals(1, setOfReactions.getReactionCount());
+        Assertions.assertEquals(1, setOfReactions.getReactionCount());
 
         IAtomContainer reactant = setOfReactions.getReaction(0).getReactants().getAtomContainer(0);
-        Assert.assertTrue(molecule.getAtom(2).getFlag(CDKConstants.REACTIVE_CENTER));
-        Assert.assertTrue(reactant.getAtom(2).getFlag(CDKConstants.REACTIVE_CENTER));
-        Assert.assertTrue(molecule.getAtom(0).getFlag(CDKConstants.REACTIVE_CENTER));
-        Assert.assertTrue(reactant.getAtom(0).getFlag(CDKConstants.REACTIVE_CENTER));
-        Assert.assertTrue(molecule.getAtom(6).getFlag(CDKConstants.REACTIVE_CENTER));
-        Assert.assertTrue(reactant.getAtom(6).getFlag(CDKConstants.REACTIVE_CENTER));
-        Assert.assertTrue(molecule.getBond(5).getFlag(CDKConstants.REACTIVE_CENTER));
-        Assert.assertTrue(reactant.getBond(5).getFlag(CDKConstants.REACTIVE_CENTER));
+        Assertions.assertTrue(molecule.getAtom(2).getFlag(IChemObject.REACTIVE_CENTER));
+        Assertions.assertTrue(reactant.getAtom(2).getFlag(IChemObject.REACTIVE_CENTER));
+        Assertions.assertTrue(molecule.getAtom(0).getFlag(IChemObject.REACTIVE_CENTER));
+        Assertions.assertTrue(reactant.getAtom(0).getFlag(IChemObject.REACTIVE_CENTER));
+        Assertions.assertTrue(molecule.getAtom(6).getFlag(IChemObject.REACTIVE_CENTER));
+        Assertions.assertTrue(reactant.getAtom(6).getFlag(IChemObject.REACTIVE_CENTER));
+        Assertions.assertTrue(molecule.getBond(5).getFlag(IChemObject.REACTIVE_CENTER));
+        Assertions.assertTrue(reactant.getBond(5).getFlag(IChemObject.REACTIVE_CENTER));
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testMapping() throws Exception {
+    void testMapping() throws Exception {
         IReactionProcess type = new RadicalSiteHrAlphaReaction();
 
         IAtomContainerSet setOfReactants = getExampleReactants();
         IAtomContainer molecule = setOfReactants.getAtomContainer(0);
 
         /* automatic search of the center active */
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.FALSE);
         paramList.add(param);
@@ -244,16 +248,16 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
 
         IAtomContainer product = setOfReactions.getReaction(2).getProducts().getAtomContainer(0);
 
-        Assert.assertEquals(19, setOfReactions.getReaction(2).getMappingCount());
+        Assertions.assertEquals(19, setOfReactions.getReaction(2).getMappingCount());
         IAtom mappedProductA1 = (IAtom) ReactionManipulator.getMappedChemObject(setOfReactions.getReaction(2),
                 molecule.getAtom(0));
-        Assert.assertEquals(mappedProductA1, product.getAtom(0));
+        Assertions.assertEquals(mappedProductA1, product.getAtom(0));
         IAtom mappedProductA2 = (IAtom) ReactionManipulator.getMappedChemObject(setOfReactions.getReaction(2),
                 molecule.getAtom(6));
-        Assert.assertEquals(mappedProductA2, product.getAtom(6));
+        Assertions.assertEquals(mappedProductA2, product.getAtom(6));
         IAtom mappedProductA3 = (IAtom) ReactionManipulator.getMappedChemObject(setOfReactions.getReaction(2),
                 molecule.getAtom(2));
-        Assert.assertEquals(mappedProductA3, product.getAtom(2));
+        Assertions.assertEquals(mappedProductA3, product.getAtom(2));
     }
 
     /**
@@ -268,7 +272,7 @@ public class RadicalSiteHrAlphaReactionTest extends ReactionProcessTest {
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(molecule.getBuilder());
         while (atoms.hasNext()) {
             IAtom nextAtom = atoms.next();
-            Assert.assertNotNull("Missing atom type for: " + nextAtom, matcher.findMatchingAtomType(molecule, nextAtom));
+            Assertions.assertNotNull(matcher.findMatchingAtomType(molecule, nextAtom), "Missing atom type for: " + nextAtom);
         }
     }
 

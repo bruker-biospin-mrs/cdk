@@ -21,30 +21,30 @@
 
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.result.DoubleResult;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
-public class FractionalCSP3DescriptorTest extends MolecularDescriptorTest {
-    public FractionalCSP3DescriptorTest() {}
+class FractionalCSP3DescriptorTest extends MolecularDescriptorTest {
+    FractionalCSP3DescriptorTest() {}
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(FractionalCSP3Descriptor.class);
     }
     
     static class SmilesValue {
-        public SmilesValue(String smiles, double value) {
+        SmilesValue(String smiles, double value) {
             this.smiles = smiles;
             this.value = value;
         }
-        public String smiles;
-        public double value;
+        final String smiles;
+        final double value;
     }
     
     private static final SmilesValue[] table = new SmilesValue[] {
@@ -58,12 +58,12 @@ public class FractionalCSP3DescriptorTest extends MolecularDescriptorTest {
     };
     
     @Test
-    public void testFractionalCSP3Descriptor() throws CDKException {
+    void testFractionalCSP3Descriptor() throws CDKException {
         SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
         for (SmilesValue e: table) {
             IAtomContainer mol = sp.parseSmiles(e.smiles);
             DoubleResult result = (DoubleResult)descriptor.calculate(mol).getValue();
-            Assert.assertEquals(e.value, result.doubleValue(), 0.01);
+            Assertions.assertEquals(e.value, result.doubleValue(), 0.01);
         }
     }
 }

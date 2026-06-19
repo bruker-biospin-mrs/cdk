@@ -40,7 +40,6 @@ import static org.openscience.cdk.graph.GraphUtil.EdgeToBondMap;
  * rather and avoids storing/copying the matrix between states.
  *
  * @author John May
- * @cdk.module isomorphism
  */
 final class UllmannState extends State {
 
@@ -63,7 +62,7 @@ final class UllmannState extends State {
     private final BondMatcher   bondMatcher;
 
     /** Indicates a vertex is unmapped. */
-    private static int          UNMAPPED = -1;
+    private static final int          UNMAPPED = -1;
 
     /**
      * Create a state for matching subgraphs using the Ullmann refinement

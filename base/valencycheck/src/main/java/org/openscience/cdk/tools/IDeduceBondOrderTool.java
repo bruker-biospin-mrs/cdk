@@ -32,11 +32,9 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  *
  * @author      Egon Willighagen
  * @cdk.created 2006-08-16
- * @cdk.module  valencycheck
- * @cdk.githash
  */
 public interface IDeduceBondOrderTool {
 
-    public void saturate(IAtomContainer ac) throws CDKException;
+    void saturate(IAtomContainer ac) throws CDKException;
 
 }

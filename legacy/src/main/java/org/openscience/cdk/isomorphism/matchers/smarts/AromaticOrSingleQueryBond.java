@@ -18,7 +18,6 @@
  */
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtom;
@@ -26,8 +25,6 @@ import org.openscience.cdk.isomorphism.matchers.IQueryAtom;
 /**
  * This matches an aromatic or a single bond, used when no bond is specified between an atom.
  *
- * @cdk.module  smarts
- * @cdk.githash
  * @cdk.keyword SMARTS
  */
 @Deprecated

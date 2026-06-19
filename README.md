@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/cdk/cdk.svg?branch=master)](https://travis-ci.org/cdk/cdk)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.openscience.cdk/cdk/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.openscience.cdk/cdk)
+[![Maven Central Version](https://img.shields.io/maven-central/v/org.openscience.cdk/cdk-bundle)](https://mvnrepository.com/artifact/org.openscience.cdk/cdk-bundle) [![build](https://github.com/cdk/cdk/actions/workflows/maven.yml/badge.svg)](https://github.com/cdk/cdk/actions/workflows/maven.yml) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=cdk&metric=bugs)](https://sonarcloud.io/summary/overall?id=cdk)
+
 
 # The Chemistry Development Kit (CDK)
  
-Copyright &copy; 1997-2018 The CDK Development Team
+Copyright &copy; 1997-2025 The CDK Development Team
 
 License: LGPL v2, see LICENSE.txt
 
@@ -38,22 +38,24 @@ You can also download a pre-built library JAR from [releases](https://github.com
 Include the main JAR on the Java classpath when compiling and running your code:
 
 ```bash
-$ javac -cp cdk-2.2.jar MyClass.java
-$ java -cp cdk-2.2.jar:. MyClass
+$ javac -cp cdk-2.11.jar MyClass.java
+$ java -cp cdk-2.11.jar:. MyClass
 ```
 
-If you are using Maven, you can use the **uber** ``cdk-bundle``, note it is much more efficient to use include
-the modules you need:
+If you are using Maven, you can use the **uber** ``cdk-bundle`` to grab 
+everything, note it is much more efficient to use include the modules you need:
 
 ```xml
 <dependency>
   <artifactId>cdk-bundle</artifactId>
   <groupId>org.openscience.cdk</groupId>
-  <version>2.2</version>
+  <version>2.11</version>
 </dependency>
 ```
 
-If you are a Python user, the Cinfony project provides access via [Jython](http://www.redbrick.dcu.ie/~noel/CDKJython.html). Noel O'Boyle's [Cinfony](http://cinfony.github.io/) provides a wrapper around the CDK and over toolkits exposing core functionality as a consistent API. 
+If you are a Python user, the Cinfony project provides access via [Jython](http://www.redbrick.dcu.ie/~noel/CDKJython.html).
+Noel O'Boyle's [Cinfony](http://cinfony.github.io/) provides a wrapper around the CDK and over toolkits exposing core
+functionality as a consistent API. `ScyJava` can also be used, as explain in [ChemPyFormatics](https://cdk.github.io/chempyformatics/).
 
 Further details on building the project in integrated development environments (IDEs) are available on the wiki:
  * [Building the CDK](https://github.com/cdk/cdk/wiki/Building-CDK)
@@ -62,14 +64,3 @@ Further details on building the project in integrated development environments (
 ## Getting Help
 
 The [Toolkit-Rosetta Wiki Page](https://github.com/cdk/cdk/wiki/Toolkit-Rosetta) provides some examples for common tasks. If you need help using the CDK and have questions please use the user mailing list, [``cdk-user@lists.sf.net``](mailto:cdk-user@lists.sf.net) (**you must [subscribe here]( https://sourceforge.net/projects/cdk/lists/cdk-user) first to post**).
- 
-## Acknowledgments
-
-![YourKit Logo](https://www.yourkit.com/images/yklogo.png)
-
-The CDK developers use YourKit to profile and optimise code.
-
-YourKit supports open source projects with its full-featured Java Profiler.
-YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/index.jsp">YourKit Java Profiler</a>
-and <a href="https://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET Profiler</a>,
-innovative and intelligent tools for profiling Java and .NET applications.

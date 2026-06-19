@@ -24,88 +24,88 @@ package org.openscience.cdk.io;
 
 import java.io.InputStream;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.interfaces.IChemModel;
 import org.openscience.cdk.interfaces.IChemSequence;
 import org.openscience.cdk.interfaces.ICrystal;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 
 /**
  * TestCase for the reading Cerius<sup>2</sup> Polymorph Predictor files using a test file.
  *
- * @cdk.module test-io
  *
  * @see org.openscience.cdk.io.PMPReader
  */
-public class PMPReaderTest extends SimpleChemObjectReaderTest {
+class PMPReaderTest extends SimpleChemObjectReaderTest {
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        setSimpleChemObjectReader(new PMPReader(), "data/pmp/aceticacid.pmp");
+    @BeforeAll
+    static void setup() throws Exception {
+        setSimpleChemObjectReader(new PMPReader(), "aceticacid.pmp");
     }
 
     @Test
-    public void testAccepts() {
+    void testAccepts() {
         PMPReader reader = new PMPReader();
-        Assert.assertTrue(reader.accepts(ChemFile.class));
+        Assertions.assertTrue(reader.accepts(ChemFile.class));
     }
 
     @Test
-    public void testAceticAcid() throws Exception {
-        String filename = "data/pmp/aceticacid.pmp";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testAceticAcid() throws Exception {
+        String filename = "aceticacid.pmp";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         PMPReader reader = new PMPReader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         reader.close();
 
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(1, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(1, seq.getChemModelCount());
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
+        Assertions.assertNotNull(model);
 
         ICrystal crystal = model.getCrystal();
-        Assert.assertNotNull(crystal);
-        Assert.assertEquals(32, crystal.getAtomCount());
-        Assert.assertEquals(28, crystal.getBondCount());
+        Assertions.assertNotNull(crystal);
+        Assertions.assertEquals(32, crystal.getAtomCount());
+        Assertions.assertEquals(28, crystal.getBondCount());
 
-        Assert.assertEquals("O", crystal.getAtom(6).getSymbol());
-        Assert.assertEquals(1.4921997, crystal.getAtom(6).getPoint3d().x, 0.00001);
-        Assert.assertEquals("O", crystal.getAtom(7).getSymbol());
-        Assert.assertEquals(1.4922556, crystal.getAtom(7).getPoint3d().x, 0.00001);
+        Assertions.assertEquals("O", crystal.getAtom(6).getSymbol());
+        Assertions.assertEquals(1.4921997, crystal.getAtom(6).getPoint3d().x, 0.00001);
+        Assertions.assertEquals("O", crystal.getAtom(7).getSymbol());
+        Assertions.assertEquals(1.4922556, crystal.getAtom(7).getPoint3d().x, 0.00001);
     }
 
     @Test
-    public void testTwoAceticAcid() throws Exception {
-        String filename = "data/pmp/two_aceticacid.pmp";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testTwoAceticAcid() throws Exception {
+        String filename = "two_aceticacid.pmp";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         PMPReader reader = new PMPReader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         reader.close();
 
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(2, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(2, seq.getChemModelCount());
 
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
+        Assertions.assertNotNull(model);
         ICrystal crystal = model.getCrystal();
-        Assert.assertNotNull(crystal);
-        Assert.assertEquals(32, crystal.getAtomCount());
-        Assert.assertEquals(28, crystal.getBondCount());
+        Assertions.assertNotNull(crystal);
+        Assertions.assertEquals(32, crystal.getAtomCount());
+        Assertions.assertEquals(28, crystal.getBondCount());
 
         model = seq.getChemModel(1);
-        Assert.assertNotNull(model);
+        Assertions.assertNotNull(model);
         crystal = model.getCrystal();
-        Assert.assertNotNull(crystal);
-        Assert.assertEquals(32, crystal.getAtomCount());
-        Assert.assertEquals(28, crystal.getBondCount());
+        Assertions.assertNotNull(crystal);
+        Assertions.assertEquals(32, crystal.getAtomCount());
+        Assertions.assertEquals(28, crystal.getBondCount());
     }
 }

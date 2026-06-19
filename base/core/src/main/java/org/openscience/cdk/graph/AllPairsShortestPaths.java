@@ -71,8 +71,6 @@ import java.util.Map;
  * </pre></blockquote>
  *
  * @author John May
- * @cdk.module core
- * @cdk.githash
  * @see ShortestPaths
  */
 public final class AllPairsShortestPaths {
@@ -547,7 +545,7 @@ public final class AllPairsShortestPaths {
 
                                                                  @Override
                                                                  public void addBond(int atom1, int atom2,
-                                                                         IBond.Order order) {
+                                                                         IBond.Order order, IBond.Display display) {
 
                                                                  }
 
@@ -724,6 +722,26 @@ public final class AllPairsShortestPaths {
                                                                  @Override
                                                                  public void setTitle(String title) {
 
+                                                                 }
+
+                                                                 @Override
+                                                                 public void set(int flags) {
+
+                                                                 }
+
+                                                                 @Override
+                                                                 public void clear(int flags) {
+
+                                                                 }
+
+                                                                 @Override
+                                                                 public boolean is(int flags) {
+                                                                     return false;
+                                                                 }
+
+                                                                 @Override
+                                                                 public int flags() {
+                                                                     return 0;
                                                                  }
     };
 

@@ -30,10 +30,9 @@ import java.util.Map;
 
 import javax.vecmath.Point2d;
 
-import org.junit.Assert;
-
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.renderer.color.IAtomColorer;
@@ -55,18 +54,17 @@ import org.openscience.cdk.renderer.generators.BasicAtomGenerator.ShowExplicitHy
 import org.openscience.cdk.validate.ProblemMarker;
 
 /**
- * @cdk.module test-renderextra
  */
 public class ExtendedAtomGeneratorTest extends BasicAtomGeneratorTest {
 
     private ExtendedAtomGenerator generator;
 
     @Override
-    public Rectangle getCustomCanvas() {
+    protected Rectangle getCustomCanvas() {
         return null;
     }
 
-    @Before
+    @BeforeEach
     @Override
     public void setup() {
         super.setup();
@@ -77,39 +75,39 @@ public class ExtendedAtomGeneratorTest extends BasicAtomGeneratorTest {
 
     @Test
     @Override
-    public void generateElementTest() {
+    void generateElementTest() {
         IAtom atom = super.builder.newInstance(IAtom.class, "C");
         atom.setPoint2d(new Point2d(2, 3));
         atom.setImplicitHydrogenCount(0);
         int alignment = 1;
         AtomSymbolElement element = generator.generateElement(atom, alignment, model);
-        Assert.assertEquals(atom.getPoint2d().x, element.xCoord, 0.1);
-        Assert.assertEquals(atom.getPoint2d().y, element.yCoord, 0.1);
-        Assert.assertEquals(atom.getSymbol(), element.text);
-        Assert.assertEquals((int) atom.getFormalCharge(), element.formalCharge);
-        Assert.assertEquals((int) atom.getImplicitHydrogenCount(), element.hydrogenCount);
-        Assert.assertEquals(alignment, element.alignment);
-        Assert.assertEquals(generator.getAtomColor(atom, model), element.color);
+        Assertions.assertEquals(atom.getPoint2d().x, element.xCoord, 0.1);
+        Assertions.assertEquals(atom.getPoint2d().y, element.yCoord, 0.1);
+        Assertions.assertEquals(atom.getSymbol(), element.text);
+        Assertions.assertEquals((int) atom.getFormalCharge(), element.formalCharge);
+        Assertions.assertEquals((int) atom.getImplicitHydrogenCount(), element.hydrogenCount);
+        Assertions.assertEquals(alignment, element.alignment);
+        Assertions.assertEquals(generator.getAtomColor(atom, model), element.color);
     }
 
     @Test
     @Override
-    public void hasCoordinatesTest() {
+    void hasCoordinatesTest() {
         IAtom atomWithCoordinates = super.builder.newInstance(IAtom.class);
         atomWithCoordinates.setPoint2d(new Point2d(0, 0));
-        Assert.assertTrue(generator.hasCoordinates(atomWithCoordinates));
+        Assertions.assertTrue(generator.hasCoordinates(atomWithCoordinates));
 
         IAtom atomWithoutCoordinates = super.builder.newInstance(IAtom.class);
         atomWithoutCoordinates.setPoint2d(null);
-        Assert.assertFalse(generator.hasCoordinates(atomWithoutCoordinates));
+        Assertions.assertFalse(generator.hasCoordinates(atomWithoutCoordinates));
 
         IAtom nullAtom = null;
-        Assert.assertFalse(generator.hasCoordinates(nullAtom));
+        Assertions.assertFalse(generator.hasCoordinates(nullAtom));
     }
 
     @Test
     @Override
-    public void canDrawTest() {
+    void canDrawTest() {
         IAtom drawableCAtom = super.builder.newInstance(IAtom.class, "C");
         drawableCAtom.setPoint2d(new Point2d(0, 0));
 
@@ -121,31 +119,31 @@ public class ExtendedAtomGeneratorTest extends BasicAtomGeneratorTest {
         model.set(KekuleStructure.class, true);
         model.set(ShowExplicitHydrogens.class, true);
 
-        Assert.assertTrue(generator.canDraw(drawableCAtom, dummyContainer, model));
-        Assert.assertTrue(generator.canDraw(drawableHAtom, dummyContainer, model));
+        Assertions.assertTrue(generator.canDraw(drawableCAtom, dummyContainer, model));
+        Assertions.assertTrue(generator.canDraw(drawableHAtom, dummyContainer, model));
     }
 
     @Test
     @Override
-    public void invisibleHydrogenTest() {
+    void invisibleHydrogenTest() {
         IAtom hydrogen = super.builder.newInstance(IAtom.class, "H");
         model.set(ShowExplicitHydrogens.class, false);
-        Assert.assertTrue(generator.invisibleHydrogen(hydrogen, model));
+        Assertions.assertTrue(generator.invisibleHydrogen(hydrogen, model));
 
         model.set(ShowExplicitHydrogens.class, true);
-        Assert.assertFalse(generator.invisibleHydrogen(hydrogen, model));
+        Assertions.assertFalse(generator.invisibleHydrogen(hydrogen, model));
 
         IAtom nonHydrogen = super.builder.newInstance(IAtom.class, "C");
         model.set(ShowExplicitHydrogens.class, false);
-        Assert.assertFalse(generator.invisibleHydrogen(nonHydrogen, model));
+        Assertions.assertFalse(generator.invisibleHydrogen(nonHydrogen, model));
 
         model.set(ShowExplicitHydrogens.class, true);
-        Assert.assertFalse(generator.invisibleHydrogen(nonHydrogen, model));
+        Assertions.assertFalse(generator.invisibleHydrogen(nonHydrogen, model));
     }
 
     @Test
     @Override
-    public void invisibleCarbonTest() {
+    void invisibleCarbonTest() {
         // NOTE : just testing the element symbol here, see showCarbonTest
         // for the full range of possibilities...
         IAtom carbon = super.builder.newInstance(IAtom.class, "C");
@@ -154,90 +152,90 @@ public class ExtendedAtomGeneratorTest extends BasicAtomGeneratorTest {
         // we force the issue by making isKekule=true
         model.set(KekuleStructure.class, true);
 
-        Assert.assertFalse(generator.invisibleCarbon(carbon, dummyContainer, model));
+        Assertions.assertFalse(generator.invisibleCarbon(carbon, dummyContainer, model));
     }
 
     @Test
     @Override
-    public void showCarbon_KekuleTest() {
+    void showCarbon_KekuleTest() {
         IAtomContainer atomContainer = super.makeCCC();
         IAtom carbon = atomContainer.getAtom(1);
 
         model.set(KekuleStructure.class, true);
-        Assert.assertTrue(generator.showCarbon(carbon, atomContainer, model));
+        Assertions.assertTrue(generator.showCarbon(carbon, atomContainer, model));
     }
 
     @Test
     @Override
-    public void showCarbon_FormalChargeTest() {
+    void showCarbon_FormalChargeTest() {
         IAtomContainer atomContainer = super.makeCCC();
         IAtom carbon = atomContainer.getAtom(1);
 
         carbon.setFormalCharge(1);
-        Assert.assertTrue(generator.showCarbon(carbon, atomContainer, model));
+        Assertions.assertTrue(generator.showCarbon(carbon, atomContainer, model));
     }
 
     @Test
     @Override
-    public void showCarbon_SingleCarbonTest() {
+    void showCarbon_SingleCarbonTest() {
         IAtomContainer atomContainer = super.makeSingleAtom("C");
         IAtom carbon = atomContainer.getAtom(0);
 
-        Assert.assertTrue(generator.showCarbon(carbon, atomContainer, model));
+        Assertions.assertTrue(generator.showCarbon(carbon, atomContainer, model));
     }
 
     @Test
     @Override
-    public void showCarbon_ShowEndCarbonsTest() {
+    void showCarbon_ShowEndCarbonsTest() {
         IAtomContainer atomContainer = super.makeCCC();
         IAtom carbon = atomContainer.getAtom(0);
         model.set(ShowEndCarbons.class, true);
-        Assert.assertTrue(generator.showCarbon(carbon, atomContainer, model));
+        Assertions.assertTrue(generator.showCarbon(carbon, atomContainer, model));
     }
 
     @Test
     @Override
-    public void showCarbon_ErrorMarker() {
+    void showCarbon_ErrorMarker() {
         IAtomContainer atomContainer = super.makeCCC();
         IAtom carbon = atomContainer.getAtom(1);
         ProblemMarker.markWithError(carbon);
-        Assert.assertTrue(generator.showCarbon(carbon, atomContainer, model));
+        Assertions.assertTrue(generator.showCarbon(carbon, atomContainer, model));
     }
 
     @Test
     @Override
-    public void showCarbon_ConnectedSingleElectrons() {
+    void showCarbon_ConnectedSingleElectrons() {
         IAtomContainer atomContainer = super.makeCCC();
         IAtom carbon = atomContainer.getAtom(1);
         atomContainer.addSingleElectron(1);
-        Assert.assertTrue(generator.showCarbon(carbon, atomContainer, model));
+        Assertions.assertTrue(generator.showCarbon(carbon, atomContainer, model));
     }
 
     @Test
     @Override
-    public void ovalShapeTest() {
+    void ovalShapeTest() {
         IAtomContainer singleAtom = makeSingleAtom();
         model.set(CompactShape.class, Shape.OVAL);
         model.set(CompactAtom.class, true);
         List<IRenderingElement> elements = getAllSimpleElements(generator, singleAtom);
-        Assert.assertEquals(1, elements.size());
-        Assert.assertEquals(OvalElement.class, elements.get(0).getClass());
+        Assertions.assertEquals(1, elements.size());
+        Assertions.assertEquals(OvalElement.class, elements.get(0).getClass());
     }
 
     @Test
     @Override
-    public void squareShapeTest() {
+    void squareShapeTest() {
         IAtomContainer singleAtom = makeSingleAtom();
         model.set(CompactShape.class, Shape.SQUARE);
         model.set(CompactAtom.class, true);
         List<IRenderingElement> elements = getAllSimpleElements(generator, singleAtom);
-        Assert.assertEquals(1, elements.size());
-        Assert.assertEquals(RectangleElement.class, elements.get(0).getClass());
+        Assertions.assertEquals(1, elements.size());
+        Assertions.assertEquals(RectangleElement.class, elements.get(0).getClass());
     }
 
     @Test
     @Override
-    public void getAtomColorTest() {
+    void getAtomColorTest() {
         Color testColor = Color.RED;
         IAtomContainer singleAtom = makeSingleAtom("O");
         model.set(AtomColor.class, testColor);
@@ -245,16 +243,16 @@ public class ExtendedAtomGeneratorTest extends BasicAtomGeneratorTest {
         generator.getAtomColor(singleAtom.getAtom(0), model);
 
         List<IRenderingElement> elements = getAllSimpleElements(generator, singleAtom);
-        Assert.assertEquals(1, elements.size());
+        Assertions.assertEquals(1, elements.size());
         TextGroupElement element = ((TextGroupElement) elements.get(0));
-        Assert.assertEquals(testColor, element.color);
+        Assertions.assertEquals(testColor, element.color);
     }
 
     @Test
     @Override
-    public void atomColorerTest() {
+    void atomColorerTest() {
         IAtomContainer cnop = makeSNOPSquare();
-        final Map<String, Color> colorMap = new HashMap<String, Color>();
+        final Map<String, Color> colorMap = new HashMap<>();
         colorMap.put("S", Color.YELLOW);
         colorMap.put("N", Color.BLUE);
         colorMap.put("O", Color.RED);
@@ -283,77 +281,77 @@ public class ExtendedAtomGeneratorTest extends BasicAtomGeneratorTest {
         };
         model.set(AtomColorer.class, atomColorer);
         List<IRenderingElement> elements = getAllSimpleElements(generator, cnop);
-        Assert.assertEquals(4, elements.size());
+        Assertions.assertEquals(4, elements.size());
         for (IRenderingElement element : elements) {
             TextGroupElement symbolElement = (TextGroupElement) element;
             String symbol = symbolElement.text;
-            Assert.assertTrue(colorMap.containsKey(symbol));
-            Assert.assertEquals(colorMap.get(symbol), symbolElement.color);
+            Assertions.assertTrue(colorMap.containsKey(symbol));
+            Assertions.assertEquals(colorMap.get(symbol), symbolElement.color);
         }
     }
 
     @Test
     @Override
-    public void colorByTypeTest() {
+    void colorByTypeTest() {
         IAtomContainer snop = makeSNOPSquare();
         model.set(ColorByType.class, false);
         List<IRenderingElement> elements = getAllSimpleElements(generator, snop);
         Color defaultColor = model.getDefault(AtomColor.class);
         for (IRenderingElement element : elements) {
             TextGroupElement symbolElement = (TextGroupElement) element;
-            Assert.assertEquals(defaultColor, symbolElement.color);
+            Assertions.assertEquals(defaultColor, symbolElement.color);
         }
     }
 
     @Test
     @Override
-    public void showExplicitHydrogensTest() {
+    void showExplicitHydrogensTest() {
         IAtomContainer methane = makeMethane();
         // don't generate elements for hydrogens
         model.set(ShowExplicitHydrogens.class, false);
         List<IRenderingElement> carbonOnly = getAllSimpleElements(generator, methane);
-        Assert.assertEquals(1, carbonOnly.size());
+        Assertions.assertEquals(1, carbonOnly.size());
 
         // do generate elements for hydrogens
         model.set(ShowExplicitHydrogens.class, true);
         List<IRenderingElement> carbonPlusHydrogen = getAllSimpleElements(generator, methane);
-        Assert.assertEquals(5, carbonPlusHydrogen.size());
+        Assertions.assertEquals(5, carbonPlusHydrogen.size());
     }
 
     @Test
     @Override
-    public void kekuleTest() {
+    void kekuleTest() {
         IAtomContainer singleBond = makeSingleBond();
         model.set(KekuleStructure.class, true);
-        Assert.assertEquals(2, getAllSimpleElements(generator, singleBond).size());
+        Assertions.assertEquals(2, getAllSimpleElements(generator, singleBond).size());
         model.set(KekuleStructure.class, false);
-        Assert.assertEquals(0, getAllSimpleElements(generator, singleBond).size());
+        Assertions.assertEquals(0, getAllSimpleElements(generator, singleBond).size());
     }
 
     @Test
     @Override
-    public void showEndCarbonsTest() {
+    void showEndCarbonsTest() {
         IAtomContainer singleBond = makeCCC();
         model.set(ShowEndCarbons.class, true);
-        Assert.assertEquals(2, getAllSimpleElements(generator, singleBond).size());
+        Assertions.assertEquals(2, getAllSimpleElements(generator, singleBond).size());
         model.set(ShowEndCarbons.class, false);
-        Assert.assertEquals(0, getAllSimpleElements(generator, singleBond).size());
+        Assertions.assertEquals(0, getAllSimpleElements(generator, singleBond).size());
     }
 
     @Test
     @Override
-    public void testSingleAtom() {
+    void testSingleAtom() {
         IAtomContainer singleAtom = makeSingleAtom();
 
         // nothing should be made
         IRenderingElement root = generator.generate(singleAtom, singleAtom.getAtom(0), model);
         List<IRenderingElement> elements = elementUtil.getAllSimpleElements(root);
-        Assert.assertEquals(1, elements.size());
+        Assertions.assertEquals(1, elements.size());
     }
 
     @Test
     @Override
-    public void testSingleBond() {
+    void testSingleBond() {
         IAtomContainer container = makeSingleBond();
         model.set(CompactAtom.class, true);
         model.set(CompactShape.class, Shape.OVAL);
@@ -362,32 +360,32 @@ public class ExtendedAtomGeneratorTest extends BasicAtomGeneratorTest {
         // generate the single line element
         IRenderingElement root = generator.generate(container, model);
         List<IRenderingElement> elements = elementUtil.getAllSimpleElements(root);
-        Assert.assertEquals(2, elements.size());
+        Assertions.assertEquals(2, elements.size());
 
         // test that the endpoints are distinct
         OvalElement ovalA = (OvalElement) elements.get(0);
         OvalElement ovalB = (OvalElement) elements.get(1);
-        Assert.assertNotSame(0, distance(ovalA.xCoord, ovalA.yCoord, ovalB.xCoord, ovalB.yCoord));
+        Assertions.assertNotSame(0, distance(ovalA.xCoord, ovalA.yCoord, ovalB.xCoord, ovalB.yCoord));
     }
 
     @Test
     @Override
-    public void testSquare() {
+    void testSquare() {
         IAtomContainer square = makeSquare();
         model.set(KekuleStructure.class, true);
 
         // generate all four atoms
         IRenderingElement root = generator.generate(square, model);
         List<IRenderingElement> elements = elementUtil.getAllSimpleElements(root);
-        Assert.assertEquals(4, elements.size());
+        Assertions.assertEquals(4, elements.size());
 
         // test that the center is at the origin
-        Assert.assertEquals(new Point2d(0, 0), center(elements));
+        Assertions.assertEquals(new Point2d(0, 0), center(elements));
     }
 
     @Test
     @Override
-    public void getParametersTest() {
+    void getParametersTest() {
         List<IGeneratorParameter<?>> parameters = generator.getParameters();
         containsParameterType(parameters, AtomColor.class);
         containsParameterType(parameters, AtomColorer.class);

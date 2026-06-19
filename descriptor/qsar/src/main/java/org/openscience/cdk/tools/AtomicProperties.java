@@ -33,24 +33,24 @@ import java.util.Map;
  * polarizability.
  *
  * @author     Todd Martin
- * @cdk.module qsar
- * @cdk.githash
  */
 public class AtomicProperties {
 
     private static AtomicProperties ap                  = null;
 
-    private Map<String, Double>     htMass              = new Hashtable<String, Double>();
-    private Map<String, Double>     htVdWVolume         = new Hashtable<String, Double>();
-    private Map<String, Double>     htElectronegativity = new Hashtable<String, Double>();
-    private Map<String, Double>     htPolarizability    = new Hashtable<String, Double>();
+    private final Map<String, Double>     htMass              = new Hashtable<>();
+    private final Map<String, Double>     htVdWVolume         = new Hashtable<>();
+    private final Map<String, Double>     htElectronegativity = new Hashtable<>();
+    private final Map<String, Double>     htPolarizability    = new Hashtable<>();
 
     private AtomicProperties() throws IOException {
 
         String configFile = "org/openscience/cdk/config/data/whim_weights.txt";
         InputStream ins = this.getClass().getClassLoader().getResourceAsStream(configFile);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(ins));
-        bufferedReader.readLine(); // header
+        String header = bufferedReader.readLine();
+        if (header == null) // header
+            throw new IOException("Expected header, but reached end of input");
 
         String Line;
         while (true) {

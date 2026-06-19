@@ -18,10 +18,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -35,8 +35,6 @@ import org.openscience.cdk.qsar.result.IDescriptorResult;
  * <p>Prediction of logP based on the number of carbon and hetero atoms. The
  * implemented equation was proposed in {@cdk.cite Mannhold2009}.
  *
- * @cdk.module     qsarmolecular
- * @cdk.githash
  * @cdk.dictref    qsar-descriptors:mannholdLogP
  *
  * @cdk.keyword LogP
@@ -104,9 +102,9 @@ public class MannholdLogPDescriptor extends AbstractMolecularDescriptor implemen
      */
     @Override
     public DescriptorValue calculate(IAtomContainer atomContainer) {
-        IAtomContainer ac = null;
+        IAtomContainer ac;
         try {
-            ac = (IAtomContainer) atomContainer.clone();
+            ac = atomContainer.clone();
         } catch (CloneNotSupportedException e) {
             return getDummyDescriptorValue(e);
         }
@@ -114,8 +112,8 @@ public class MannholdLogPDescriptor extends AbstractMolecularDescriptor implemen
         int carbonCount = 0;
         int heteroCount = 0;
         for (IAtom atom : ac.atoms()) {
-            if (!Elements.HYDROGEN.getSymbol().equals(atom.getSymbol())) {
-                if (Elements.CARBON.getSymbol().equals(atom.getSymbol())) {
+            if (atom.getAtomicNumber() != IElement.H) {
+                if (atom.getAtomicNumber() == IElement.C) {
                     carbonCount++;
                 } else {
                     heteroCount++;

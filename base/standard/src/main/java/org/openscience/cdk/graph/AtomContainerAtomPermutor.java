@@ -40,8 +40,6 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  * @author maclean
  * @cdk.created 2009-09-09
  * @cdk.keyword permutation
- * @cdk.module standard
- * @cdk.githash
  */
 public class AtomContainerAtomPermutor extends AtomContainerPermutor {
 
@@ -64,7 +62,7 @@ public class AtomContainerAtomPermutor extends AtomContainerPermutor {
     @Override
     public IAtomContainer containerFromPermutation(int[] permutation) {
         try {
-            IAtomContainer permutedContainer = (IAtomContainer) atomContainer.clone();
+            IAtomContainer permutedContainer = atomContainer.clone();
             IAtom[] atoms = new IAtom[atomContainer.getAtomCount()];
             for (int i = 0; i < atomContainer.getAtomCount(); i++) {
                 atoms[permutation[i]] = permutedContainer.getAtom(i);

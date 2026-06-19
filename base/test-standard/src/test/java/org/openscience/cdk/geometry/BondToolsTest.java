@@ -19,11 +19,12 @@
 package org.openscience.cdk.geometry;
 
 import java.io.InputStream;
-import java.util.Iterator;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IElement;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.config.AtomTypeFactory;
@@ -31,225 +32,224 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.io.MDLV2000Reader;
-import org.openscience.cdk.io.XYZReader;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
-/**
- * @cdk.module test-standard
- */
-public class BondToolsTest extends CDKTestCase {
+import javax.vecmath.Point3d;
 
-    public BondToolsTest() {
+/**
+ */
+class BondToolsTest extends CDKTestCase {
+
+    BondToolsTest() {
         super();
     }
 
     @Test
-    public void testIsValidDoubleBondConfiguration_IAtomContainer_IBond() throws Exception {
-        String filename = "data/mdl/testdoublebondconfig.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testIsValidDoubleBondConfiguration_IAtomContainer_IBond() throws Exception {
+        String filename = "testdoublebondconfig.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertTrue(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(0)));
-        Assert.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(1)));
-        Assert.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(2)));
-        Assert.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(3)));
-        Assert.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(4)));
-        Assert.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(5)));
-        Assert.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(6)));
-        Assert.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(7)));
+        Assertions.assertTrue(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(0)));
+        Assertions.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(1)));
+        Assertions.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(2)));
+        Assertions.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(3)));
+        Assertions.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(4)));
+        Assertions.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(5)));
+        Assertions.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(6)));
+        Assertions.assertFalse(BondTools.isValidDoubleBondConfiguration(mol, mol.getBond(7)));
     }
 
     @Test
-    public void testIsCisTrans_IAtom_IAtom_IAtom_IAtom_IAtomContainer() throws Exception {
-        String filename = "data/mdl/testdoublebondconfig.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testIsCisTrans_IAtom_IAtom_IAtom_IAtom_IAtomContainer() throws Exception {
+        String filename = "testdoublebondconfig.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertFalse(BondTools.isCisTrans(mol.getAtom(2), mol.getAtom(0), mol.getAtom(1), mol.getAtom(4), mol));
+        Assertions.assertFalse(BondTools.isCisTrans(mol.getAtom(2), mol.getAtom(0), mol.getAtom(1), mol.getAtom(4), mol));
     }
 
     @Test
-    public void testIsLeft_IAtom_IAtom_IAtom() throws Exception {
-        String filename = "data/mdl/testdoublebondconfig.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testIsLeft_IAtom_IAtom_IAtom() throws Exception {
+        String filename = "testdoublebondconfig.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertFalse(BondTools.isLeft(mol.getAtom(1), mol.getAtom(0), mol.getAtom(2)));
+        Assertions.assertFalse(BondTools.isLeft(mol.getAtom(1), mol.getAtom(0), mol.getAtom(2)));
     }
 
     @Test
-    public void testGiveAngleBothMethods_IAtom_IAtom_IAtom_boolean() throws Exception {
-        String filename = "data/mdl/testdoublebondconfig.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testGiveAngleBothMethods_IAtom_IAtom_IAtom_boolean() throws Exception {
+        String filename = "testdoublebondconfig.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertEquals(2.0943946986086157,
-                BondTools.giveAngleBothMethods(mol.getAtom(0), mol.getAtom(2), mol.getAtom(3), true), 0.2);
-        Assert.assertEquals(2.0943946986086157,
-                BondTools.giveAngleBothMethods(mol.getAtom(0), mol.getAtom(2), mol.getAtom(3), false), 0.2);
+        Assertions.assertEquals(2.0943946986086157, BondTools.giveAngleBothMethods(mol.getAtom(0), mol.getAtom(2), mol.getAtom(3), true), 0.2);
+        Assertions.assertEquals(2.0943946986086157, BondTools.giveAngleBothMethods(mol.getAtom(0), mol.getAtom(2), mol.getAtom(3), false), 0.2);
     }
 
     /**
-     * Make sure the the rebonding is working.
+     * Make sure the rebonding is working.
      */
     @Test
-    public void testCloseEnoughToBond_IAtom_IAtom_double() throws Exception {
-        String filename = "data/xyz/viagra.xyz";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
-        XYZReader reader = new XYZReader(ins);
-        AtomTypeFactory atf = AtomTypeFactory.getInstance("org/openscience/cdk/config/data/jmol_atomtypes.txt",
-                SilentChemObjectBuilder.getInstance());
-        ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
-        IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Iterator<IAtom> atoms = mol.atoms().iterator();
-        while (atoms.hasNext()) {
-            atf.configure(atoms.next());
-        }
-        Assert.assertTrue(BondTools.closeEnoughToBond(mol.getAtom(0), mol.getAtom(1), 1));
-        Assert.assertFalse(BondTools.closeEnoughToBond(mol.getAtom(0), mol.getAtom(8), 1));
+    void testCloseEnoughToBond_IAtom_IAtom_double() throws Exception {
+        // file: viagra.xyz atom (0,1,2,8)
+        IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+
+        IAtom a = builder.newAtom(); // atom 0
+        IAtom b = builder.newAtom(); // atom 1
+        IAtom c = builder.newAtom(); // atom 8
+        a.setCovalentRadius(0.75);
+        a.setPoint3d(new Point3d(-3.4932, -1.895, 0.1795));
+        b.setCovalentRadius(0.77);
+        b.setPoint3d(new Point3d(-4.9343, -1.8728, 0.3721));
+        c.setCovalentRadius(0.78);
+        c.setPoint3d(new Point3d(-3.0459, -1.5296, 2.7325));
+
+
+        Assertions.assertTrue(BondTools.closeEnoughToBond(a, b, 1));
+        Assertions.assertFalse(BondTools.closeEnoughToBond(a, c, 1));
     }
 
     @Test
-    public void testGiveAngleBothMethods_Point2d_Point2d_Point2d_boolean() throws Exception {
-        String filename = "data/mdl/testdoublebondconfig.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testGiveAngleBothMethods_Point2d_Point2d_Point2d_boolean() throws Exception {
+        String filename = "testdoublebondconfig.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertEquals(2.0943946986086157, BondTools.giveAngleBothMethods(mol.getAtom(0).getPoint2d(), mol
+        Assertions.assertEquals(2.0943946986086157, BondTools.giveAngleBothMethods(mol.getAtom(0).getPoint2d(), mol
                 .getAtom(2).getPoint2d(), mol.getAtom(3).getPoint2d(), true), 0.2);
-        Assert.assertEquals(2.0943946986086157, BondTools.giveAngleBothMethods(mol.getAtom(0).getPoint2d(), mol
+        Assertions.assertEquals(2.0943946986086157, BondTools.giveAngleBothMethods(mol.getAtom(0).getPoint2d(), mol
                 .getAtom(2).getPoint2d(), mol.getAtom(3).getPoint2d(), false), 0.2);
     }
 
     @Test
-    public void testIsTetrahedral_IAtomContainer_IAtom_boolean() throws Exception {
-        String filename = "data/mdl/tetrahedral_1.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testIsTetrahedral_IAtomContainer_IAtom_boolean() throws Exception {
+        String filename = "tetrahedral_1.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertEquals(BondTools.isTetrahedral(mol, mol.getAtom(0), true), 1);
-        Assert.assertEquals(BondTools.isTetrahedral(mol, mol.getAtom(1), true), 0);
-        filename = "data/mdl/tetrahedral_1_lazy.mol";
-        ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        Assertions.assertEquals(BondTools.isTetrahedral(mol, mol.getAtom(0), true), 1);
+        Assertions.assertEquals(BondTools.isTetrahedral(mol, mol.getAtom(1), true), 0);
+        filename = "tetrahedral_1_lazy.mol";
+        ins = this.getClass().getResourceAsStream(filename);
         reader = new MDLV2000Reader(ins);
         chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertEquals(BondTools.isTetrahedral(mol, mol.getAtom(0), true), 0);
-        Assert.assertEquals(BondTools.isTetrahedral(mol, mol.getAtom(0), false), 3);
+        Assertions.assertEquals(BondTools.isTetrahedral(mol, mol.getAtom(0), true), 0);
+        Assertions.assertEquals(BondTools.isTetrahedral(mol, mol.getAtom(0), false), 3);
     }
 
     @Test
-    public void testIsTrigonalBipyramidalOrOctahedral_IAtomContainer_IAtom() throws Exception {
-        String filename = "data/mdl/trigonal_bipyramidal.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testIsTrigonalBipyramidalOrOctahedral_IAtomContainer_IAtom() throws Exception {
+        String filename = "trigonal_bipyramidal.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertEquals(BondTools.isTrigonalBipyramidalOrOctahedral(mol, mol.getAtom(0)), 1);
-        Assert.assertEquals(BondTools.isTrigonalBipyramidalOrOctahedral(mol, mol.getAtom(1)), 0);
+        Assertions.assertEquals(BondTools.isTrigonalBipyramidalOrOctahedral(mol, mol.getAtom(0)), 1);
+        Assertions.assertEquals(BondTools.isTrigonalBipyramidalOrOctahedral(mol, mol.getAtom(1)), 0);
     }
 
     @Test
-    public void testIsStereo_IAtomContainer_IAtom() throws Exception {
-        String filename = "data/mdl/trigonal_bipyramidal.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testIsStereo_IAtomContainer_IAtom() throws Exception {
+        String filename = "trigonal_bipyramidal.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertTrue(BondTools.isStereo(mol, mol.getAtom(0)));
-        Assert.assertFalse(BondTools.isStereo(mol, mol.getAtom(1)));
+        Assertions.assertTrue(BondTools.isStereo(mol, mol.getAtom(0)));
+        Assertions.assertFalse(BondTools.isStereo(mol, mol.getAtom(1)));
     }
 
     @Test
-    public void testIsStereo_IAtomContainer_IAtom_forinvalid() throws Exception {
-        String filename = "data/mdl/trigonal_bipyramidal.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testIsStereo_IAtomContainer_IAtom_forinvalid() throws Exception {
+        String filename = "trigonal_bipyramidal.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
         for (int i = 1; i < 6; i++) {
             mol.getAtom(i).setSymbol("C");
         }
-        Assert.assertFalse(BondTools.isStereo(mol, mol.getAtom(0)));
-        Assert.assertFalse(BondTools.isStereo(mol, mol.getAtom(1)));
+        Assertions.assertFalse(BondTools.isStereo(mol, mol.getAtom(0)));
+        Assertions.assertFalse(BondTools.isStereo(mol, mol.getAtom(1)));
     }
 
     @Test
-    public void testIsSquarePlanar_IAtomContainer_IAtom() throws Exception {
-        String filename = "data/mdl/squareplanar.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testIsSquarePlanar_IAtomContainer_IAtom() throws Exception {
+        String filename = "squareplanar.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertTrue(BondTools.isSquarePlanar(mol, mol.getAtom(0)));
-        Assert.assertFalse(BondTools.isSquarePlanar(mol, mol.getAtom(1)));
+        Assertions.assertTrue(BondTools.isSquarePlanar(mol, mol.getAtom(0)));
+        Assertions.assertFalse(BondTools.isSquarePlanar(mol, mol.getAtom(1)));
     }
 
     @Test
-    public void testStereosAreOpposite_IAtomContainer_IAtom() throws Exception {
-        String filename = "data/mdl/squareplanar.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testStereosAreOpposite_IAtomContainer_IAtom() throws Exception {
+        String filename = "squareplanar.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertFalse(BondTools.stereosAreOpposite(mol, mol.getAtom(0)));
-        filename = "data/mdl/tetrahedral_with_four_wedges.mol";
-        ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        Assertions.assertFalse(BondTools.stereosAreOpposite(mol, mol.getAtom(0)));
+        filename = "tetrahedral_with_four_wedges.mol";
+        ins = this.getClass().getResourceAsStream(filename);
         reader = new MDLV2000Reader(ins);
         chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertTrue(BondTools.stereosAreOpposite(mol, mol.getAtom(0)));
+        Assertions.assertTrue(BondTools.stereosAreOpposite(mol, mol.getAtom(0)));
     }
 
     @Test
-    public void testMakeUpDownBonds_IAtomContainer() throws Exception {
-        String filename = "data/mdl/tetrahedral_2_lazy.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testMakeUpDownBonds_IAtomContainer() throws Exception {
+        String filename = "tetrahedral_2_lazy.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
         BondTools.makeUpDownBonds(mol);
-        Assert.assertEquals(IBond.Stereo.DOWN, mol.getBond(3).getStereo());
+        Assertions.assertEquals(IBond.Display.Down, mol.getBond(3).getDisplay());
     }
 
     @Test
-    public void testGiveAngle_IAtom_IAtom_IAtom() throws Exception {
-        String filename = "data/mdl/testdoublebondconfig.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testGiveAngle_IAtom_IAtom_IAtom() throws Exception {
+        String filename = "testdoublebondconfig.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertEquals(2.0943946986086157, BondTools.giveAngle(mol.getAtom(0), mol.getAtom(2), mol.getAtom(3)),
-                0.2);
+        Assertions.assertEquals(2.0943946986086157, BondTools.giveAngle(mol.getAtom(0), mol.getAtom(2), mol.getAtom(3)), 0.2);
     }
 
     @Test
-    public void testGiveAngleFromMiddle_IAtom_IAtom_IAtom() throws Exception {
-        String filename = "data/mdl/testdoublebondconfig.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testGiveAngleFromMiddle_IAtom_IAtom_IAtom() throws Exception {
+        String filename = "testdoublebondconfig.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertEquals(2.0943946986086157,
-                BondTools.giveAngleFromMiddle(mol.getAtom(0), mol.getAtom(2), mol.getAtom(3)), 0.2);
+        Assertions.assertEquals(2.0943946986086157, BondTools.giveAngleFromMiddle(mol.getAtom(0), mol.getAtom(2), mol.getAtom(3)), 0.2);
     }
 
     /**
      * @cdk.bug 2831420
      */
     @Test
-    public void testBug2831420() throws Exception {
-        String filename = "data/mdl/bug2831420.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testBug2831420() throws Exception {
+        String filename = "bug2831420.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer mol = chemFile.getChemSequence(0).getChemModel(0).getMoleculeSet().getAtomContainer(0);
-        Assert.assertTrue(BondTools.isStereo(mol, mol.getAtom(5)));
+        Assertions.assertTrue(BondTools.isStereo(mol, mol.getAtom(5)));
     }
 }

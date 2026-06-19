@@ -20,6 +20,7 @@ package org.openscience.cdk.interfaces;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
+import java.util.Objects;
 
 /**
  * Implements the concept of a covalent bond between two or more atoms. A bond is
@@ -27,8 +28,6 @@ import javax.vecmath.Point3d;
  * type filter text
  *
  * @author egonw
- * @cdk.module interfaces
- * @cdk.githash
  * @cdk.created 2005-08-24
  * @cdk.keyword bond
  * @cdk.keyword atom
@@ -44,7 +43,7 @@ public interface IBond extends IElectronContainer {
 
         private final Integer bondedElectronPairs;
 
-        private Order(Integer bondedElectronPairs) {
+        Order(Integer bondedElectronPairs) {
             this.bondedElectronPairs = bondedElectronPairs;
         }
 
@@ -76,6 +75,7 @@ public interface IBond extends IElectronContainer {
      * The first atom in the IBond (index = 0) is the <i>start</i> atom, while
      * the second atom (index = 1) is the <i>end</i> atom.
      */
+    @Deprecated
     enum Stereo {
         /**
          * A bond for which there is no stereochemistry.
@@ -129,6 +129,105 @@ public interface IBond extends IElectronContainer {
          * by the 2D and/or 3D coordinates.
          */
         E_Z_BY_COORDINATES
+    }
+
+    /**
+     * Bond display style, controlling how bonds appear in a 2D depiction.
+     */
+    enum Display {
+        /** A solid line (default). */
+        Solid,
+        /** A dashed line. */
+        Dash,
+        /** A hashed line (bold dashed). */
+        Hash,
+        /** A bold line. */
+        Bold,
+        /**
+         * A wavy line, this is used for undefined stereochemistry, it is
+         * undirected.
+         */
+        Wavy,
+        /**
+         * A crossed double bond to indicate unknown configuration.
+         */
+        Crossed,
+        /** A dotted line. */
+        Dot,
+        /**
+         * Display as a hashed wedge, with the narrow end
+         * towards the begin atom of the bond ({@link IBond#getBegin()}).
+         */
+        WedgedHashBegin,
+        /**
+         * Display as a hashed wedge, with the narrow end
+         * towards the end atom of the bond ({@link IBond#getEnd()}).
+         */
+        WedgedHashEnd,
+        /**
+         * Display as a bold wedge, with the narrow end
+         * towards the begin atom of the bond ({@link IBond#getBegin()}).
+         */
+        WedgeBegin,
+        /**
+         * Display as a bold wedge, with the narrow end
+         * towards the end atom of the bond ({@link IBond#getEnd()}).
+         */
+        WedgeEnd,
+        /**
+         * Display as a hollow wedge, with the narrow end
+         * towards the begin atom of the bond ({@link IBond#getBegin()}).
+         */
+        HollowWedgeBegin,
+        /**
+         * Display as a hollow wedge, with the narrow end
+         * towards the end atom of the bond ({@link IBond#getEnd()}).
+         */
+        HollowWedgeEnd,
+        /**
+         * Display as an arrow (e.g. co-ordination bond), the arrow points
+         * to the begin ({@link IBond#getBegin()}) atom.
+         */
+        ArrowBeg,
+        /**
+         * Display as an arrow (e.g. co-ordination bond), the arrow points
+         * to the end ({@link IBond#getEnd()}) atom.
+         */
+        ArrowEnd;
+
+        /**
+         * A (normal) bond is stored as two atoms, 'begin' and 'end'. Some bond
+         * displays are directed towards the begin or end atom. This method
+         * allows you to obtain the 'flipped' display if one exists.
+         * {@link #WedgeBegin} becomes {@link #WedgeEnd},
+         * {@link #WedgedHashBegin} becomes {@link #WedgedHashEnd}, etc..
+         *
+         *
+         * @return the flipped bond display
+         */
+        public Display flip() {
+            switch (this) {
+                case WedgeBegin: return WedgeEnd;
+                case WedgeEnd: return WedgeBegin;
+                case WedgedHashBegin: return WedgedHashEnd;
+                case WedgedHashEnd: return WedgedHashBegin;
+                case HollowWedgeBegin: return HollowWedgeEnd;
+                case HollowWedgeEnd: return HollowWedgeBegin;
+                case ArrowBeg: return ArrowEnd;
+                case ArrowEnd: return ArrowBeg;
+                default: return this;
+            }
+        }
+
+        /**
+         * Convenience name for bold wedge, narrow end at begin atom.
+         */
+        public static final IBond.Display Up = Display.WedgeBegin;
+
+        /**
+         * Convenience name for hashed wedge bond, narrow end at begin atom.
+         */
+        public static final IBond.Display Down = Display.WedgedHashBegin;
     }
 
     /**
@@ -231,7 +330,28 @@ public interface IBond extends IElectronContainer {
      * @param atom The atom to be tested if it participates in this bond
      * @return true if the atom participates in this bond
      */
-    boolean contains(IAtom atom);
+    default boolean contains(IAtom atom) {
+        for (int i = 0; i < getAtomCount(); i++) {
+            if (Objects.equals(getAtom(i), atom)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get the connected atom between two bonds.
+     * @param other the other bond (not nullable)
+     * @return the common atom or null if none in common
+     */
+    default IAtom getConnectedAtom(IBond other) {
+        for (int i = 0; i < getAtomCount(); i++) {
+            final IAtom atom = getAtom(i);
+            if (other.contains(atom))
+                return atom;
+        }
+        return null;
+    }
 
     /**
      * Sets an Atom in this bond.
@@ -266,16 +386,32 @@ public interface IBond extends IElectronContainer {
      *
      * @return The stereo descriptor for this bond
      * @see #setStereo
+     * @deprecated use {@link #getDisplay}
      */
     IBond.Stereo getStereo();
 
     /**
-     * Sets the stereo descriptor for this bond.
+     * Sets the stereo descriptor for this bond. Note this function will
+     * also modify the bond display style.
      *
      * @param stereo The stereo descriptor to be assigned to this bond.
      * @see #getStereo
+     * @see #setDisplay(Display)
+     * @deprecated use {@link #setDisplay}
      */
     void setStereo(IBond.Stereo stereo);
+
+    /**
+     * Access the bond display style.
+     * @return the bond display
+     */
+    IBond.Display getDisplay();
+
+    /**
+     * Set the bond display style.
+     * @param display the display
+     */
+    void setDisplay(IBond.Display display);
 
     /**
      * Returns the geometric 2D center of the bond.

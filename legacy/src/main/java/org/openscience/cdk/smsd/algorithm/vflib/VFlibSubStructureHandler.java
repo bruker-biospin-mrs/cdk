@@ -57,8 +57,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * This class should only be used to report if a query
  * graph is a substructure of the target graph.
  *
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -85,12 +83,12 @@ public class VFlibSubStructureHandler extends AbstractSubGraph implements IMCSBa
      * Constructor for an extended VF Algorithm for the MCS search
      */
     public VFlibSubStructureHandler() {
-        allAtomMCS = new ArrayList<Map<IAtom, IAtom>>();
-        allAtomMCSCopy = new ArrayList<Map<IAtom, IAtom>>();
-        atomsMCS = new HashMap<IAtom, IAtom>();
-        firstMCS = new TreeMap<Integer, Integer>();
-        allMCS = new ArrayList<Map<Integer, Integer>>();
-        allMCSCopy = new ArrayList<Map<Integer, Integer>>();
+        allAtomMCS = new ArrayList<>();
+        allAtomMCSCopy = new ArrayList<>();
+        atomsMCS = new HashMap<>();
+        firstMCS = new TreeMap<>();
+        allMCS = new ArrayList<>();
+        allMCSCopy = new ArrayList<>();
     }
 
     private void setFirstMappings() {
@@ -102,10 +100,7 @@ public class VFlibSubStructureHandler extends AbstractSubGraph implements IMCSBa
 
     private boolean mcgregorFlag() {
         int commonAtomCount = checkCommonAtomCount(getReactantMol(), getProductMol());
-        if (commonAtomCount > vfMCSSize && commonAtomCount > vfMCSSize) {
-            return true;
-        }
-        return false;
+        return commonAtomCount > vfMCSSize;
     }
 
     /** {@inheritDoc}
@@ -166,7 +161,7 @@ public class VFlibSubStructureHandler extends AbstractSubGraph implements IMCSBa
     }
 
     private int checkCommonAtomCount(IAtomContainer reactantMolecule, IAtomContainer productMolecule) {
-        ArrayList<String> atoms = new ArrayList<String>();
+        ArrayList<String> atoms = new ArrayList<>();
         for (int i = 0; i < reactantMolecule.getAtomCount(); i++) {
             atoms.add(reactantMolecule.getAtom(i).getSymbol());
         }
@@ -183,9 +178,9 @@ public class VFlibSubStructureHandler extends AbstractSubGraph implements IMCSBa
 
     private void searchVFMappings() {
         //        System.out.println("searchVFMappings ");
-        IQuery query = null;
-        IMapper mapper = null;
-        vfLibSolutions = new ArrayList<Map<INode, IAtom>>();
+        IQuery query;
+        IMapper mapper;
+        vfLibSolutions = new ArrayList<>();
         if (queryMol != null) {
             query = new QueryCompiler(queryMol).compile();
             mapper = new VFMapper(query);
@@ -222,8 +217,8 @@ public class VFlibSubStructureHandler extends AbstractSubGraph implements IMCSBa
     private void setVFMappings(boolean ronp, IQuery query) {
         int counter = 0;
         for (Map<INode, IAtom> solution : vfLibSolutions) {
-            Map<IAtom, IAtom> atomatomMapping = new HashMap<IAtom, IAtom>();
-            Map<Integer, Integer> indexindexMapping = new TreeMap<Integer, Integer>();
+            Map<IAtom, IAtom> atomatomMapping = new HashMap<>();
+            Map<Integer, Integer> indexindexMapping = new TreeMap<>();
             if (solution.size() > vfMCSSize) {
                 this.vfMCSSize = solution.size();
                 allAtomMCSCopy.clear();
@@ -231,8 +226,8 @@ public class VFlibSubStructureHandler extends AbstractSubGraph implements IMCSBa
                 counter = 0;
             }
             for (Map.Entry<INode, IAtom> mapping : solution.entrySet()) {
-                IAtom qAtom = null;
-                IAtom tAtom = null;
+                IAtom qAtom;
+                IAtom tAtom;
                 if (ronp) {
                     qAtom = query.getAtom(mapping.getKey());
                     tAtom = mapping.getValue();
@@ -240,8 +235,8 @@ public class VFlibSubStructureHandler extends AbstractSubGraph implements IMCSBa
                     tAtom = query.getAtom(mapping.getKey());
                     qAtom = mapping.getValue();
                 }
-                Integer qIndex = Integer.valueOf(getReactantMol().indexOf(qAtom));
-                Integer tIndex = Integer.valueOf(getProductMol().indexOf(tAtom));
+                Integer qIndex = getReactantMol().indexOf(qAtom);
+                Integer tIndex = getProductMol().indexOf(tAtom);
                 if (qIndex != -1 && tIndex != -1) {
                     atomatomMapping.put(qAtom, tAtom);
                     indexindexMapping.put(qIndex, tIndex);

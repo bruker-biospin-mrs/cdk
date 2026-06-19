@@ -24,11 +24,10 @@ package org.openscience.cdk.group;
 
 /**
  * @author maclean
- * @cdk.module group
  */
 class IntegerInvariant implements Invariant {
     
-    private Integer value;
+    private final Integer value;
     
     public IntegerInvariant(Integer value) {
         this.value = value;

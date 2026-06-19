@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.Bond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -30,27 +30,26 @@ import static org.mockito.Mockito.mock;
 /**
  * Checks the functionality of the IsomorphismTester
  *
- * @cdk.module test-smarts
  */
-public class AnyOrderQueryBondTest extends CDKTestCase {
+class AnyOrderQueryBondTest extends CDKTestCase {
 
     /**
      * @cdk.bug 1305
      */
     @Test
-    public void testMatches() {
+    void testMatches() {
         IBond testBond = null;
         AnyOrderQueryBond matcher = new AnyOrderQueryBond(mock(IChemObjectBuilder.class));
-        Assert.assertFalse(matcher.matches(testBond));
+        Assertions.assertFalse(matcher.matches(testBond));
     }
 
     @Test
-    public void testAnyOrder() {
+    void testAnyOrder() {
         AnyOrderQueryBond matcher = new AnyOrderQueryBond(mock(IChemObjectBuilder.class));
         IBond testBond = new Bond();
         for (IBond.Order order : IBond.Order.values()) {
             testBond.setOrder(order);
-            Assert.assertTrue(matcher.matches(testBond));
+            Assertions.assertTrue(matcher.matches(testBond));
         }
     }
 }

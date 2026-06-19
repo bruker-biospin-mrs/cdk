@@ -22,75 +22,67 @@ package org.openscience.cdk.debug;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractAtomTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractAtomTest;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IElement;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugAtom}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugAtomTest extends AbstractAtomTest {
+class DebugAtomTest extends AbstractAtomTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugAtom();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugAtom::new);
     }
 
     @Test
-    public void testDebugAtom() {
+    void testDebugAtom() {
         IAtom a = new DebugAtom();
-        Assert.assertNotNull(a);
+        Assertions.assertNotNull(a);
     }
 
     @Test
-    public void testDebugAtom_IElement() {
+    void testDebugAtom_IElement() {
         IChemObject object = newChemObject();
         IElement element = object.getBuilder().newInstance(IElement.class);
         IAtom a = new DebugAtom(element);
-        Assert.assertNotNull(a);
+        Assertions.assertNotNull(a);
     }
 
     @Test
-    public void testDebugAtom_String() {
+    void testDebugAtom_String() {
         IAtom a = new DebugAtom("C");
-        Assert.assertEquals("C", a.getSymbol());
-        Assert.assertNull(a.getPoint2d());
-        Assert.assertNull(a.getPoint3d());
-        Assert.assertNull(a.getFractionalPoint3d());
+        Assertions.assertEquals("C", a.getSymbol());
+        Assertions.assertNull(a.getPoint2d());
+        Assertions.assertNull(a.getPoint3d());
+        Assertions.assertNull(a.getFractionalPoint3d());
     }
 
     @Test
-    public void testDebugAtom_String_Point3d() {
+    void testDebugAtom_String_Point3d() {
         Point3d point3d = new Point3d(1.0, 2.0, 3.0);
 
         IAtom a = new DebugAtom("C", point3d);
-        Assert.assertEquals("C", a.getSymbol());
-        Assert.assertEquals(point3d, a.getPoint3d());
-        Assert.assertNull(a.getPoint2d());
-        Assert.assertNull(a.getFractionalPoint3d());
+        Assertions.assertEquals("C", a.getSymbol());
+        Assertions.assertEquals(point3d, a.getPoint3d());
+        Assertions.assertNull(a.getPoint2d());
+        Assertions.assertNull(a.getFractionalPoint3d());
     }
 
     @Test
-    public void testDebugAtom_String_Point2d() {
+    void testDebugAtom_String_Point2d() {
         Point2d point2d = new Point2d(1.0, 2.0);
 
         IAtom a = new DebugAtom("C", point2d);
-        Assert.assertEquals("C", a.getSymbol());
-        Assert.assertEquals(point2d, a.getPoint2d());
-        Assert.assertNull(a.getPoint3d());
-        Assert.assertNull(a.getFractionalPoint3d());
+        Assertions.assertEquals("C", a.getSymbol());
+        Assertions.assertEquals(point2d, a.getPoint2d());
+        Assertions.assertNull(a.getPoint3d());
+        Assertions.assertNull(a.getFractionalPoint3d());
     }
 }

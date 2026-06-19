@@ -18,68 +18,64 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractAtomContainerTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractAtomContainerTest;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.ILonePair;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link AtomContainer}.
  *
- * @cdk.module test-silent
  */
-public class AtomContainerTest extends AbstractAtomContainerTest {
+class AtomContainerTest extends AbstractAtomContainerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new AtomContainer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(AtomContainer::new);
     }
 
     @Test
-    public void testAtomContainer_int_int_int_int() {
+    void testAtomContainer_int_int_int_int() {
         // create an empty container with predefined
         // array lengths
         IAtomContainer ac = new AtomContainer(5, 6, 1, 2);
 
-        Assert.assertEquals(0, ac.getAtomCount());
-        Assert.assertEquals(0, ac.getElectronContainerCount());
+        Assertions.assertEquals(0, ac.getAtomCount());
+        Assertions.assertEquals(0, ac.getElectronContainerCount());
 
         // test whether the ElectronContainer is correctly initialized
-        ac.addBond(ac.getBuilder().newInstance(IBond.class, ac.getBuilder().newInstance(IAtom.class, "C"),
-                ac.getBuilder().newInstance(IAtom.class, "C"), IBond.Order.DOUBLE));
+        IAtom a1 = ac.newAtom();
+        IAtom a2 = ac.newAtom();
+        ac.addBond(ac.getBuilder().newInstance(IBond.class,
+                                               a1,
+                                               a2, IBond.Order.DOUBLE));
         ac.addLonePair(ac.getBuilder().newInstance(ILonePair.class, ac.getBuilder().newInstance(IAtom.class, "N")));
     }
 
     @Test
-    public void testAtomContainer() {
+    void testAtomContainer() {
         // create an empty container with in the constructor defined array lengths
         IAtomContainer container = new AtomContainer();
 
-        Assert.assertEquals(0, container.getAtomCount());
-        Assert.assertEquals(0, container.getBondCount());
+        Assertions.assertEquals(0, container.getAtomCount());
+        Assertions.assertEquals(0, container.getBondCount());
 
         // test whether the ElectronContainer is correctly initialized
+        IAtom a1 = container.newAtom();
+        IAtom a2 = container.newAtom();
         container.addBond(container.getBuilder().newInstance(IBond.class,
-                container.getBuilder().newInstance(IAtom.class, "C"),
-                container.getBuilder().newInstance(IAtom.class, "C"), IBond.Order.DOUBLE));
+                                               a1,
+                                               a2, IBond.Order.DOUBLE));
         container.addLonePair(container.getBuilder().newInstance(ILonePair.class,
                 container.getBuilder().newInstance(IAtom.class, "N")));
     }
 
     @Test
-    public void testAtomContainer_IAtomContainer() {
+    void testAtomContainer_IAtomContainer() {
         IAtomContainer acetone = newChemObject().getBuilder().newInstance(IAtomContainer.class);
         IAtom c1 = acetone.getBuilder().newInstance(IAtom.class, "C");
         IAtom c2 = acetone.getBuilder().newInstance(IAtom.class, "C");
@@ -97,8 +93,8 @@ public class AtomContainerTest extends AbstractAtomContainerTest {
         acetone.addBond(b3);
 
         IAtomContainer container = new AtomContainer(acetone);
-        Assert.assertEquals(4, container.getAtomCount());
-        Assert.assertEquals(3, container.getBondCount());
+        Assertions.assertEquals(4, container.getAtomCount());
+        Assertions.assertEquals(3, container.getBondCount());
     }
 
     // Overwrite default methods: no notifications are expected!

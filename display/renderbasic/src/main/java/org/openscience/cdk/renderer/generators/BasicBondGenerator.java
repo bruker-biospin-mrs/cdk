@@ -35,6 +35,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.renderer.RendererModel;
@@ -56,8 +57,6 @@ import org.openscience.cdk.tools.manipulator.RingSetManipulator;
  * Generator for elements from bonds. Only two-atom bonds are supported
  * by this generator.
  *
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public class BasicBondGenerator implements IGenerator<IAtomContainer> {
 
@@ -75,7 +74,7 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Double> bondWidth = new BondWidth();
+    private final IGeneratorParameter<Double> bondWidth = new BondWidth();
 
     /**
      * The gap between double and triple bond lines on the screen.
@@ -90,7 +89,7 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Double> bondDistance = new BondDistance();
+    private final IGeneratorParameter<Double> bondDistance = new BondDistance();
 
     /**
      * The color to draw bonds if not other color is given.
@@ -105,7 +104,7 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Color> defaultBondColor = new DefaultBondColor();
+    private final IGeneratorParameter<Color> defaultBondColor = new DefaultBondColor();
 
     /**
      * The width on screen of the fat end of a wedge bond.
@@ -120,7 +119,7 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Double> wedgeWidth = new WedgeWidth();
+    private final IGeneratorParameter<Double> wedgeWidth = new WedgeWidth();
 
     /**
      * The proportion to move in towards the ring center.
@@ -135,9 +134,9 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Double> ringCenterProportion = new TowardsRingCenterProportion();
+    private final IGeneratorParameter<Double> ringCenterProportion = new TowardsRingCenterProportion();
 
-    private ILoggingTool                logger               = LoggingToolFactory
+    private final ILoggingTool                logger               = LoggingToolFactory
                                                                      .createLoggingTool(BasicBondGenerator.class);
 
     /**
@@ -159,12 +158,12 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
     /**
      * The ideal ring size for the given center proportion.
      */
-    private int                         IDEAL_RINGSIZE       = 6;
+    private final int                         IDEAL_RINGSIZE       = 6;
 
     /**
      * The minimum ring size factor to ensure a minimum gap.
      */
-    private double                      MIN_RINGSIZE_FACTOR  = 2.5;
+    private final double                      MIN_RINGSIZE_FACTOR  = 2.5;
 
     /**
      * An empty constructor necessary for reflection.
@@ -315,7 +314,7 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
         Point2d point2 = bond.getEnd().getPoint2d();
         Color color = this.getColorForBond(bond, model);
         double bondWidth = this.getWidthForBond(bond, model);
-        double bondDistance = (Double) model.get(BondDistance.class) / model.getParameter(Scale.class).getValue();
+        double bondDistance = model.get(BondDistance.class) / model.getParameter(Scale.class).getValue();
         if (type == IBond.Order.SINGLE) {
             return new LineElement(point1.x, point1.y, point2.x, point2.y, bondWidth, color);
         } else {
@@ -425,14 +424,13 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
 
     private IRenderingElement generateStereoElement(IBond bond, RendererModel model) {
 
-        IBond.Stereo stereo = bond.getStereo();
+        IBond.Display stereo = bond.getDisplay();
         WedgeLineElement.TYPE type = WedgeLineElement.TYPE.WEDGED;
         Direction dir = Direction.toSecond;
-        if (stereo == IBond.Stereo.DOWN || stereo == IBond.Stereo.DOWN_INVERTED) type = WedgeLineElement.TYPE.DASHED;
-        if (stereo == IBond.Stereo.UP_OR_DOWN || stereo == IBond.Stereo.UP_OR_DOWN_INVERTED)
+        if (stereo == IBond.Display.WedgedHashBegin || stereo == IBond.Display.WedgedHashEnd) type = WedgeLineElement.TYPE.DASHED;
+        if (stereo == IBond.Display.Wavy)
             type = WedgeLineElement.TYPE.INDIFF;
-        if (stereo == IBond.Stereo.DOWN_INVERTED || stereo == IBond.Stereo.UP_INVERTED
-                || stereo == IBond.Stereo.UP_OR_DOWN_INVERTED) dir = Direction.toFirst;
+        if (stereo == IBond.Display.WedgedHashEnd || stereo == IBond.Display.WedgeEnd) dir = Direction.toFirst;
 
         IRenderingElement base = generateBondElement(bond, IBond.Order.SINGLE, model);
         return new WedgeLineElement((LineElement) base, type, dir, getColorForBond(bond, model));
@@ -465,8 +463,8 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
      * @return true if the bond has stero information
      */
     private boolean isStereoBond(IBond bond) {
-        return bond.getStereo() != IBond.Stereo.NONE && bond.getStereo() != (IBond.Stereo) CDKConstants.UNSET
-                && bond.getStereo() != IBond.Stereo.E_Z_BY_COORDINATES;
+        return bond.getDisplay() != IBond.Display.Solid &&
+               bond.getDisplay() != null;
     }
 
     /**
@@ -478,7 +476,7 @@ public class BasicBondGenerator implements IGenerator<IAtomContainer> {
     protected boolean bindsHydrogen(IBond bond) {
         for (int i = 0; i < bond.getAtomCount(); i++) {
             IAtom atom = bond.getAtom(i);
-            if ("H".equals(atom.getSymbol())) return true;
+            if (atom.getAtomicNumber() == IElement.H) return true;
         }
         return false;
     }

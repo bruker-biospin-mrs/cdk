@@ -20,11 +20,11 @@
  */
 package org.openscience.cdk.smiles;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.interfaces.IAtom;
@@ -33,95 +33,99 @@ import org.openscience.cdk.interfaces.IAtomType.Hybridization;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IBond.Order;
 import org.openscience.cdk.silent.Atom;
-import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.silent.Bond;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+
+import java.time.Duration;
 
 /**
  *
  * @author         Rajarshi Guha
  * @cdk.created    2006-09-18
- * @cdk.module     test-smiles
  */
-public class FixBondOrdersToolTest extends CDKTestCase {
+class FixBondOrdersToolTest extends CDKTestCase {
 
     private static FixBondOrdersTool fbot;
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         fbot = new FixBondOrdersTool();
     }
 
     @Test
-    public void testConstructors() {
+    void testConstructors() {
         // basically: just test that no exception is thrown
-        Assert.assertNotNull(new FixBondOrdersTool());
+        Assertions.assertNotNull(new FixBondOrdersTool());
     }
 
     @Test
-    public void testInterruption() {
+    void testInterruption() {
         fbot.setInterrupted(false);
-        Assert.assertFalse(fbot.isInterrupted());
+        Assertions.assertFalse(fbot.isInterrupted());
         fbot.setInterrupted(true);
-        Assert.assertTrue(fbot.isInterrupted());
+        Assertions.assertTrue(fbot.isInterrupted());
         fbot.setInterrupted(false);
     }
 
-    @Test(timeout = 1000)
-    public void testPyrrole() throws Exception {
-        String smiles = "c2ccc3n([H])c1ccccc1c3(c2)";
-        SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-        smilesParser.kekulise(false);
-        IAtomContainer molecule = smilesParser.parseSmiles(smiles);
-        AtomContainerManipulator.setSingleOrDoubleFlags(molecule);
-        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(molecule);
+    @Test
+    void testPyrrole() throws Exception {
+        Assertions.assertTimeout(Duration.ofMillis(500), () -> {
+            String smiles = "c2ccc3n([H])c1ccccc1c3(c2)";
+            SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+            smilesParser.kekulise(false);
+            IAtomContainer molecule = smilesParser.parseSmiles(smiles);
+            AtomContainerManipulator.setSingleOrDoubleFlags(molecule);
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(molecule);
 
-        molecule = fbot.kekuliseAromaticRings(molecule);
-        Assert.assertNotNull(molecule);
+            molecule = fbot.kekuliseAromaticRings(molecule);
+            Assertions.assertNotNull(molecule);
 
-        molecule = (IAtomContainer) AtomContainerManipulator.removeHydrogens(molecule);
-        int doubleBondCount = 0;
-        for (int i = 0; i < molecule.getBondCount(); i++) {
-            IBond bond = molecule.getBond(i);
-            Assert.assertTrue(bond.getFlag(CDKConstants.ISAROMATIC));
-            if (bond.getOrder() == Order.DOUBLE) doubleBondCount++;
-        }
-        Assert.assertEquals(6, doubleBondCount);
-    }
-
-    @Test(timeout = 1000)
-    public void testPyrrole_Silent() throws Exception {
-        String smiles = "c2ccc3n([H])c1ccccc1c3(c2)";
-        SmilesParser smilesParser = new SmilesParser(SilentChemObjectBuilder.getInstance());
-        smilesParser.kekulise(false);
-        IAtomContainer molecule = smilesParser.parseSmiles(smiles);
-        AtomContainerManipulator.setSingleOrDoubleFlags(molecule);
-        AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(molecule);
-
-        molecule = fbot.kekuliseAromaticRings(molecule);
-        Assert.assertNotNull(molecule);
-        molecule = (IAtomContainer) AtomContainerManipulator.removeHydrogens(molecule);
-        int doubleBondCount = 0;
-        for (int i = 0; i < molecule.getBondCount(); i++) {
-            IBond bond = molecule.getBond(i);
-            Assert.assertTrue(bond.getFlag(CDKConstants.ISAROMATIC));
-            if (bond.getOrder() == Order.DOUBLE) doubleBondCount++;
-        }
-        Assert.assertEquals(6, doubleBondCount);
+            molecule = AtomContainerManipulator.removeHydrogens(molecule);
+            int doubleBondCount = 0;
+            for (int i = 0; i < molecule.getBondCount(); i++) {
+                IBond bond = molecule.getBond(i);
+                Assertions.assertTrue(bond.getFlag(IChemObject.AROMATIC));
+                if (bond.getOrder() == Order.DOUBLE) doubleBondCount++;
+            }
+            Assertions.assertEquals(6, doubleBondCount);
+        });
     }
 
     @Test
-    public void testLargeRingSystem() throws Exception {
+    void testPyrrole_Silent() throws Exception {
+        Assertions.assertTimeout(Duration.ofMillis(500), () -> {
+            String smiles = "c2ccc3n([H])c1ccccc1c3(c2)";
+            SmilesParser smilesParser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+            smilesParser.kekulise(false);
+            IAtomContainer molecule = smilesParser.parseSmiles(smiles);
+            AtomContainerManipulator.setSingleOrDoubleFlags(molecule);
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(molecule);
+
+            molecule = fbot.kekuliseAromaticRings(molecule);
+            Assertions.assertNotNull(molecule);
+            molecule = AtomContainerManipulator.removeHydrogens(molecule);
+            int doubleBondCount = 0;
+            for (int i = 0; i < molecule.getBondCount(); i++) {
+                IBond bond = molecule.getBond(i);
+                Assertions.assertTrue(bond.getFlag(IChemObject.AROMATIC));
+                if (bond.getOrder() == Order.DOUBLE) doubleBondCount++;
+            }
+            Assertions.assertEquals(6, doubleBondCount);
+        });
+    }
+
+    @Test
+    void testLargeRingSystem() throws Exception {
         String smiles = "O=C1Oc6ccccc6(C(O)C1C5c2ccccc2CC(c3ccc(cc3)c4ccccc4)C5)";
         SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer molecule = smilesParser.parseSmiles(smiles);
 
         molecule = fbot.kekuliseAromaticRings(molecule);
-        Assert.assertNotNull(molecule);
+        Assertions.assertNotNull(molecule);
 
-        molecule = (IAtomContainer) AtomContainerManipulator.removeHydrogens(molecule);
-        Assert.assertEquals(34, molecule.getAtomCount());
+        molecule = AtomContainerManipulator.removeHydrogens(molecule);
+        Assertions.assertEquals(34, molecule.getAtomCount());
 
         // we should have 14 double bonds
         int doubleBondCount = 0;
@@ -129,23 +133,23 @@ public class FixBondOrdersToolTest extends CDKTestCase {
             IBond bond = molecule.getBond(i);
             if (bond.getOrder() == Order.DOUBLE) doubleBondCount++;
         }
-        Assert.assertEquals(13, doubleBondCount);
+        Assertions.assertEquals(13, doubleBondCount);
     }
 
     /**
      * @cdk.bug 3506770
      */
     @Test
-    public void testLargeBioclipseUseCase() throws Exception {
+    void testLargeBioclipseUseCase() throws Exception {
         String smiles = "COc1ccc2[C@@H]3[C@H](COc2c1)C(C)(C)OC4=C3C(=O)C(=O)C5=C4OC(C)(C)[C@@H]6COc7cc(OC)ccc7[C@H]56";
         SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer molecule = smilesParser.parseSmiles(smiles);
 
         molecule = fbot.kekuliseAromaticRings(molecule);
-        Assert.assertNotNull(molecule);
+        Assertions.assertNotNull(molecule);
 
-        molecule = (IAtomContainer) AtomContainerManipulator.removeHydrogens(molecule);
-        Assert.assertEquals(40, molecule.getAtomCount());
+        molecule = AtomContainerManipulator.removeHydrogens(molecule);
+        Assertions.assertEquals(40, molecule.getAtomCount());
 
         // we should have 14 double bonds
         int doubleBondCount = 0;
@@ -153,15 +157,15 @@ public class FixBondOrdersToolTest extends CDKTestCase {
             IBond bond = molecule.getBond(i);
             if (bond.getOrder() == Order.DOUBLE) doubleBondCount++;
         }
-        Assert.assertEquals(10, doubleBondCount);
+        Assertions.assertEquals(10, doubleBondCount);
     }
 
     /**
      * @cdk.inchi InChI=1/C4H5N/c1-2-4-5-3-1/h1-5H
      */
     @Test
-    public void xtestPyrrole() throws Exception {
-        IAtomContainer enol = new AtomContainer();
+    void xtestPyrrole() throws Exception {
+        IAtomContainer enol = SilentChemObjectBuilder.getInstance().newAtomContainer();
 
         // atom block
         IAtom atom1 = new Atom(Elements.CARBON);
@@ -199,20 +203,20 @@ public class FixBondOrdersToolTest extends CDKTestCase {
 
         // now have the algorithm have a go at it
         enol = fbot.kekuliseAromaticRings(enol);
-        Assert.assertNotNull(enol);
+        Assertions.assertNotNull(enol);
         //Assert.assertTrue(fbot.isOK(enol));
 
         // now check whether it did the right thing
-        Assert.assertEquals(Order.DOUBLE, enol.getBond(0).getOrder());;
-        Assert.assertEquals(Order.SINGLE, enol.getBond(1).getOrder());;
-        Assert.assertEquals(Order.DOUBLE, enol.getBond(2).getOrder());;
-        Assert.assertEquals(Order.SINGLE, enol.getBond(3).getOrder());;
-        Assert.assertEquals(Order.SINGLE, enol.getBond(4).getOrder());;
+        Assertions.assertEquals(Order.DOUBLE, enol.getBond(0).getOrder());
+        Assertions.assertEquals(Order.SINGLE, enol.getBond(1).getOrder());
+        Assertions.assertEquals(Order.DOUBLE, enol.getBond(2).getOrder());
+        Assertions.assertEquals(Order.SINGLE, enol.getBond(3).getOrder());
+        Assertions.assertEquals(Order.SINGLE, enol.getBond(4).getOrder());
     }
 
     @Test
-    public void xtestPyridine() throws Exception {
-        IAtomContainer enol = new AtomContainer();
+    void xtestPyridine() throws Exception {
+        IAtomContainer enol = SilentChemObjectBuilder.getInstance().newAtomContainer();
 
         // atom block
         IAtom atom1 = new Atom(Elements.CARBON);
@@ -254,26 +258,26 @@ public class FixBondOrdersToolTest extends CDKTestCase {
 
         // now have the algorithm have a go at it
         enol = fbot.kekuliseAromaticRings(enol);
-        Assert.assertNotNull(enol);
+        Assertions.assertNotNull(enol);
         // Assert.assertTrue(dbst.isOK(enol));
 
         // now check whether it did the right thing
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(0).getOrder().numeric()
                 + enol.getBond(5).getOrder().numeric()); // around atom1
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(0).getOrder().numeric()
                 + enol.getBond(1).getOrder().numeric()); // around atom2
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(1).getOrder().numeric()
                 + enol.getBond(2).getOrder().numeric()); // around atom3
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(2).getOrder().numeric()
                 + enol.getBond(3).getOrder().numeric()); // around atom4
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(3).getOrder().numeric()
                 + enol.getBond(4).getOrder().numeric()); // around atom5
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(4).getOrder().numeric()
                 + enol.getBond(5).getOrder().numeric()); // around atom6
     }
@@ -283,8 +287,8 @@ public class FixBondOrdersToolTest extends CDKTestCase {
      * @cdk.bug   1931262
      */
     @Test
-    public void xtestBenzene() throws Exception {
-        IAtomContainer enol = new AtomContainer();
+    void xtestBenzene() throws Exception {
+        IAtomContainer enol = SilentChemObjectBuilder.getInstance().newAtomContainer();
 
         // atom block
         IAtom atom1 = new Atom(Elements.CARBON);
@@ -326,26 +330,26 @@ public class FixBondOrdersToolTest extends CDKTestCase {
 
         // now have the algorithm have a go at it
         enol = fbot.kekuliseAromaticRings(enol);
-        Assert.assertNotNull(enol);
+        Assertions.assertNotNull(enol);
         //Assert.assertTrue(dbst.isOK(enol));
 
         // now check whether it did the right thing
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(0).getOrder().numeric()
                 + enol.getBond(5).getOrder().numeric()); // around atom1
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(0).getOrder().numeric()
                 + enol.getBond(1).getOrder().numeric()); // around atom2
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(1).getOrder().numeric()
                 + enol.getBond(2).getOrder().numeric()); // around atom3
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(2).getOrder().numeric()
                 + enol.getBond(3).getOrder().numeric()); // around atom4
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(3).getOrder().numeric()
                 + enol.getBond(4).getOrder().numeric()); // around atom5
-        Assert.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
+        Assertions.assertEquals(Order.SINGLE.numeric() + Order.DOUBLE.numeric(), enol
                 .getBond(4).getOrder().numeric()
                 + enol.getBond(5).getOrder().numeric()); // around atom6
     }
@@ -354,14 +358,15 @@ public class FixBondOrdersToolTest extends CDKTestCase {
      * Just to ensure it doesn't throw exceptions
      * @throws Exception
      */
-    @Test(timeout = 1000)
-    public void testAcyclic() throws Exception {
-        String smiles = "CCCCCCC";
-        SmilesParser smilesParser = new SmilesParser(SilentChemObjectBuilder.getInstance());
-        IAtomContainer molecule = smilesParser.parseSmiles(smiles);
+    @Test
+    void testAcyclic() throws Exception {
+        Assertions.assertTimeout(Duration.ofMillis(500), () -> {
+            String smiles = "CCCCCCC";
+            SmilesParser smilesParser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+            IAtomContainer molecule = smilesParser.parseSmiles(smiles);
 
-        molecule = fbot.kekuliseAromaticRings(molecule);
-        Assert.assertNotNull(molecule);
-
+            molecule = fbot.kekuliseAromaticRings(molecule);
+            Assertions.assertNotNull(molecule);
+        });
     }
 }

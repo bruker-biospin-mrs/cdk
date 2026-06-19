@@ -23,15 +23,20 @@ package org.openscience.cdk.modeling.builder3d;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.vecmath.Point3d;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.config.Isotopes;
@@ -39,44 +44,36 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.io.MDLV2000Reader;
-import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
 
 /**
  * Tests for AtomPlacer3D
  *
- * @cdk.module test-builder3d
- * @cdk.githash
  */
-public class AtomPlacer3DTest extends CDKTestCase {
+class AtomPlacer3DTest extends CDKTestCase {
 
-    boolean standAlone = false;
+    private boolean standAlone = false;
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() throws Exception {}
+    @BeforeEach
+    void setUp() throws Exception {}
 
-    @After
-    public void tearDown() throws Exception {}
+    @AfterEach
+    void tearDown() throws Exception {}
 
     /**
      *  Sets the standAlone attribute
      *
      *@param  standAlone  The new standAlone value
      */
-    public void setStandAlone(boolean standAlone) {
+    void setStandAlone(boolean standAlone) {
         this.standAlone = standAlone;
     }
 
@@ -87,7 +84,7 @@ public class AtomPlacer3DTest extends CDKTestCase {
      * @return the created test molecule
      */
     private IAtomContainer makeAlphaPinene() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = SilentChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.addAtom(new Atom("C"));
         mol.addAtom(new Atom("C"));
@@ -119,7 +116,7 @@ public class AtomPlacer3DTest extends CDKTestCase {
     }
 
     private IAtomContainer makeMethaneWithExplicitHydrogens() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = SilentChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C"));
         mol.addAtom(new Atom("H"));
         mol.addAtom(new Atom("H"));
@@ -135,25 +132,25 @@ public class AtomPlacer3DTest extends CDKTestCase {
     }
 
     @Test
-    public void testAllHeavyAtomsPlaced_IAtomContainer() {
+    void testAllHeavyAtomsPlaced_IAtomContainer() {
         IAtomContainer ac = makeAlphaPinene();
-        Assert.assertFalse(new AtomPlacer3D().allHeavyAtomsPlaced(ac));
+        Assertions.assertFalse(new AtomPlacer3D().allHeavyAtomsPlaced(ac));
         for (IAtom atom : ac.atoms()) {
-            atom.setFlag(CDKConstants.ISPLACED, true);
+            atom.setFlag(IChemObject.PLACED, true);
         }
-        Assert.assertTrue(new AtomPlacer3D().allHeavyAtomsPlaced(ac));
+        Assertions.assertTrue(new AtomPlacer3D().allHeavyAtomsPlaced(ac));
     }
 
     @Test
-    public void testFindHeavyAtomsInChain_IAtomContainer_IAtomContainer() throws Exception {
-        String filename = "data/mdl/allmol232.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testFindHeavyAtomsInChain_IAtomContainer_IAtomContainer() throws Exception {
+        String filename = "allmol232.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         // TODO: shk3-cleanuptests: best to use the STRICT IO mode here
         MDLV2000Reader reader = new MDLV2000Reader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         reader.close();
         List<IAtomContainer> containersList = ChemFileManipulator.getAllAtomContainers(chemFile);
-        IAtomContainer ac = new AtomContainer(containersList.get(0));
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newInstance(IAtomContainer.class, containersList.get(0));
         addExplicitHydrogens(ac);
         IAtomContainer chain = ac.getBuilder().newInstance(IAtomContainer.class);
         for (int i = 16; i < 25; i++) {
@@ -162,15 +159,15 @@ public class AtomPlacer3DTest extends CDKTestCase {
         chain.addAtom(ac.getAtom(29));
         chain.addAtom(ac.getAtom(30));
         int[] result = new AtomPlacer3D().findHeavyAtomsInChain(ac, chain);
-        Assert.assertEquals(16, result[0]);
-        Assert.assertEquals(11, result[1]);
+        Assertions.assertEquals(16, result[0]);
+        Assertions.assertEquals(11, result[1]);
     }
 
     @Test
-    public void testNumberOfUnplacedHeavyAtoms_IAtomContainer() {
+    void testNumberOfUnplacedHeavyAtoms_IAtomContainer() {
         IAtomContainer ac = makeAlphaPinene();
         int count = new AtomPlacer3D().numberOfUnplacedHeavyAtoms(ac);
-        Assert.assertEquals(10, count);
+        Assertions.assertEquals(10, count);
     }
 
     /**
@@ -179,49 +176,49 @@ public class AtomPlacer3DTest extends CDKTestCase {
      *
      */
     @Test
-    public void testNumberOfUnplacedHeavyAtoms_IAtomContainerWithExplicitHydrogens() {
+    void testNumberOfUnplacedHeavyAtoms_IAtomContainerWithExplicitHydrogens() {
         IAtomContainer ac = makeMethaneWithExplicitHydrogens();
         int count = new AtomPlacer3D().numberOfUnplacedHeavyAtoms(ac);
-        Assert.assertEquals(1, count);
+        Assertions.assertEquals(1, count);
     }
 
     @Test
-    public void testGetPlacedHeavyAtoms_IAtomContainer_IAtom() {
+    void testGetPlacedHeavyAtoms_IAtomContainer_IAtom() {
         IAtomContainer ac = makeAlphaPinene();
         IAtomContainer acplaced = new AtomPlacer3D().getPlacedHeavyAtoms(ac, ac.getAtom(0));
-        Assert.assertEquals(0, acplaced.getAtomCount());
-        ac.getAtom(1).setFlag(CDKConstants.ISPLACED, true);
+        Assertions.assertEquals(0, acplaced.getAtomCount());
+        ac.getAtom(1).setFlag(IChemObject.PLACED, true);
         acplaced = new AtomPlacer3D().getPlacedHeavyAtoms(ac, ac.getAtom(0));
-        Assert.assertEquals(1, acplaced.getAtomCount());
+        Assertions.assertEquals(1, acplaced.getAtomCount());
     }
 
     @Test
-    public void testGetPlacedHeavyAtom_IAtomContainer_IAtom_IAtom() {
+    void testGetPlacedHeavyAtom_IAtomContainer_IAtom_IAtom() {
         IAtomContainer ac = makeAlphaPinene();
         IAtom acplaced = new AtomPlacer3D().getPlacedHeavyAtom(ac, ac.getAtom(0), ac.getAtom(1));
-        Assert.assertNull(acplaced);
-        ac.getAtom(1).setFlag(CDKConstants.ISPLACED, true);
+        Assertions.assertNull(acplaced);
+        ac.getAtom(1).setFlag(IChemObject.PLACED, true);
         acplaced = new AtomPlacer3D().getPlacedHeavyAtom(ac, ac.getAtom(0), ac.getAtom(2));
-        Assert.assertEquals(ac.getAtom(1), acplaced);
+        Assertions.assertEquals(ac.getAtom(1), acplaced);
         acplaced = new AtomPlacer3D().getPlacedHeavyAtom(ac, ac.getAtom(0), ac.getAtom(1));
-        Assert.assertNull(acplaced);
+        Assertions.assertNull(acplaced);
     }
 
     @Test
-    public void testGetPlacedHeavyAtom_IAtomContainer_IAtom() {
+    void testGetPlacedHeavyAtom_IAtomContainer_IAtom() {
         IAtomContainer ac = makeAlphaPinene();
         IAtom acplaced = new AtomPlacer3D().getPlacedHeavyAtom(ac, ac.getAtom(0));
-        Assert.assertNull(acplaced);
-        ac.getAtom(1).setFlag(CDKConstants.ISPLACED, true);
+        Assertions.assertNull(acplaced);
+        ac.getAtom(1).setFlag(IChemObject.PLACED, true);
         acplaced = new AtomPlacer3D().getPlacedHeavyAtom(ac, ac.getAtom(0));
-        Assert.assertEquals(ac.getAtom(1), acplaced);
+        Assertions.assertEquals(ac.getAtom(1), acplaced);
     }
 
     @Test
-    public void testGeometricCenterAllPlacedAtoms_IAtomContainer() throws Exception {
+    void testGeometricCenterAllPlacedAtoms_IAtomContainer() throws Exception {
         IAtomContainer ac = makeAlphaPinene();
         for (int i = 0; i < ac.getAtomCount(); i++) {
-            ac.getAtom(i).setFlag(CDKConstants.ISPLACED, true);
+            ac.getAtom(i).setFlag(IChemObject.PLACED, true);
         }
         ac.getAtom(0).setPoint3d(new Point3d(1.39, 2.04, 0));
         ac.getAtom(0).setPoint3d(new Point3d(2.02, 2.28, -1.12));
@@ -234,111 +231,111 @@ public class AtomPlacer3DTest extends CDKTestCase {
         ac.getAtom(0).setPoint3d(new Point3d(3.32, 4.27, 2.49));
         ac.getAtom(0).setPoint3d(new Point3d(2.02, 4.68, 0.35));
         Point3d center = new AtomPlacer3D().geometricCenterAllPlacedAtoms(ac);
-        Assert.assertEquals(2.02, center.x, 0.01);
-        Assert.assertEquals(4.68, center.y, 0.01);
-        Assert.assertEquals(0.35, center.z, 0.01);
+        Assertions.assertEquals(2.02, center.x, 0.01);
+        Assertions.assertEquals(4.68, center.y, 0.01);
+        Assertions.assertEquals(0.35, center.z, 0.01);
     }
 
     @Test
-    public void testIsUnplacedHeavyAtom() {
+    void testIsUnplacedHeavyAtom() {
 
         IAtomContainer ac = makeMethaneWithExplicitHydrogens();
         IAtom carbon = ac.getAtom(0);
         IAtom hydrogen = ac.getAtom(1);
         AtomPlacer3D placer = new AtomPlacer3D();
 
-        boolean result = false;
+        boolean result;
         result = placer.isUnplacedHeavyAtom(carbon);
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
         result = placer.isUnplacedHeavyAtom(hydrogen);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
 
-        carbon.setFlag(CDKConstants.ISPLACED, true);
+        carbon.setFlag(IChemObject.PLACED, true);
         result = placer.isUnplacedHeavyAtom(carbon);
-        Assert.assertFalse(result);
-        hydrogen.setFlag(CDKConstants.ISPLACED, true);
+        Assertions.assertFalse(result);
+        hydrogen.setFlag(IChemObject.PLACED, true);
         result = placer.isUnplacedHeavyAtom(hydrogen);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void testIsPlacedHeavyAtom() {
+    void testIsPlacedHeavyAtom() {
 
         IAtomContainer ac = makeMethaneWithExplicitHydrogens();
         IAtom carbon = ac.getAtom(0);
         IAtom hydrogen = ac.getAtom(1);
         AtomPlacer3D placer = new AtomPlacer3D();
 
-        boolean result = false;
+        boolean result;
         result = placer.isPlacedHeavyAtom(carbon);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
         result = placer.isPlacedHeavyAtom(hydrogen);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
 
-        carbon.setFlag(CDKConstants.ISPLACED, true);
+        carbon.setFlag(IChemObject.PLACED, true);
         result = placer.isPlacedHeavyAtom(carbon);
-        Assert.assertTrue(result);
-        hydrogen.setFlag(CDKConstants.ISPLACED, true);
+        Assertions.assertTrue(result);
+        hydrogen.setFlag(IChemObject.PLACED, true);
         result = placer.isPlacedHeavyAtom(hydrogen);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void testIsAliphaticHeavyAtom() {
+    void testIsAliphaticHeavyAtom() {
 
         IAtomContainer ac = makeMethaneWithExplicitHydrogens();
         IAtom carbon = ac.getAtom(0);
         IAtom hydrogen = ac.getAtom(1);
         AtomPlacer3D placer = new AtomPlacer3D();
 
-        boolean result = false;
+        boolean result;
         result = placer.isAliphaticHeavyAtom(carbon);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
         result = placer.isAliphaticHeavyAtom(hydrogen);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
 
-        carbon.setFlag(CDKConstants.ISALIPHATIC, true);
+        carbon.setFlag(IChemObject.ALIPHATIC, true);
         result = placer.isAliphaticHeavyAtom(carbon);
-        Assert.assertTrue(result);
-        hydrogen.setFlag(CDKConstants.ISALIPHATIC, true);
+        Assertions.assertTrue(result);
+        hydrogen.setFlag(IChemObject.ALIPHATIC, true);
         result = placer.isAliphaticHeavyAtom(hydrogen);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void testIsRingHeavyAtom() {
+    void testIsRingHeavyAtom() {
 
         IAtomContainer ac = makeMethaneWithExplicitHydrogens();
         IAtom carbon = ac.getAtom(0);
         IAtom hydrogen = ac.getAtom(1);
         AtomPlacer3D placer = new AtomPlacer3D();
 
-        boolean result = false;
+        boolean result;
         result = placer.isRingHeavyAtom(carbon);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
         result = placer.isRingHeavyAtom(hydrogen);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
 
-        carbon.setFlag(CDKConstants.ISINRING, true);
+        carbon.setFlag(IChemObject.IN_RING, true);
         result = placer.isRingHeavyAtom(carbon);
-        Assert.assertTrue(result);
-        hydrogen.setFlag(CDKConstants.ISINRING, true);
+        Assertions.assertTrue(result);
+        hydrogen.setFlag(IChemObject.IN_RING, true);
         result = placer.isRingHeavyAtom(hydrogen);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 
     @Test
-    public void testIsHeavyAtom() {
+    void testIsHeavyAtom() {
 
         IAtomContainer ac = makeMethaneWithExplicitHydrogens();
         IAtom carbon = ac.getAtom(0);
         IAtom hydrogen = ac.getAtom(1);
         AtomPlacer3D placer = new AtomPlacer3D();
 
-        boolean result = false;
+        boolean result;
         result = placer.isHeavyAtom(carbon);
-        Assert.assertTrue(result);
+        Assertions.assertTrue(result);
         result = placer.isHeavyAtom(hydrogen);
-        Assert.assertFalse(result);
+        Assertions.assertFalse(result);
     }
 }

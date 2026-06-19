@@ -22,6 +22,7 @@
 package org.openscience.cdk.qsar.descriptors.molecular;
 
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType.Hybridization;
@@ -43,8 +44,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  * , which usually have a high value of the sp3 to sp2 ratio.
  *
  * @author Rajarshi Guha
- * @cdk.module qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:hybratio
  */
 public class HybridizationRatioDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
@@ -117,22 +116,22 @@ public class HybridizationRatioDescriptor extends AbstractMolecularDescriptor im
     @Override
     public DescriptorValue calculate(IAtomContainer container) {
         try {
-            IAtomContainer clone = (IAtomContainer) container.clone();
+            IAtomContainer clone = container.clone();
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(clone);
             int nsp2 = 0;
             int nsp3 = 0;
             for (IAtom atom : clone.atoms()) {
-                if (!atom.getSymbol().equals("C")) continue;
+                if (atom.getAtomicNumber() != IElement.C) continue;
                 if (atom.getHybridization() == Hybridization.SP2)
                     nsp2++;
                 else if (atom.getHybridization() == Hybridization.SP3) nsp3++;
             }
+            if (nsp2+nsp3 == 0)
+                return getDummyDescriptorValue(new ArithmeticException("Cannot divide by 0"));
             double ratio = nsp3 / (double) (nsp2 + nsp3);
             return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(),
                     new DoubleResult(ratio), getDescriptorNames());
-        } catch (CloneNotSupportedException e) {
-            return getDummyDescriptorValue(e);
-        } catch (CDKException e) {
+        } catch (CloneNotSupportedException | CDKException e) {
             return getDummyDescriptorValue(e);
         }
     }

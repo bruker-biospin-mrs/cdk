@@ -25,6 +25,7 @@ package org.openscience.cdk.layout;
 import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
@@ -44,8 +45,6 @@ import java.util.List;
  *
  * @author Christoph Steinbeck
  * @cdk.created 2003-08-06
- * @cdk.module sdg
- * @cdk.githash
  * @see AtomPlacer
  */
 public final class HydrogenPlacer {
@@ -116,7 +115,7 @@ public final class HydrogenPlacer {
         // divide connected atoms into those which are have and haven't been placed
         for (final IAtom conAtom : connected) {
             if (conAtom.getPoint2d() == null) {
-                if (conAtom.getSymbol().equals("H")) {
+                if (conAtom.getAtomicNumber() == IElement.H) {
                     unplaced.addAtom(conAtom);
                 } else {
                     throw new IllegalArgumentException("cannot place hydrogens, atom has connected"

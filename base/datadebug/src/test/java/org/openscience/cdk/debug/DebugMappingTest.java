@@ -19,23 +19,22 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractMappingTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractMappingTest;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IMapping;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugMapping}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugMappingTest extends AbstractMappingTest {
+class DebugMappingTest extends AbstractMappingTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setTestObjectBuilder(new ITestObjectBuilder() {
 
             @Override
@@ -46,9 +45,9 @@ public class DebugMappingTest extends AbstractMappingTest {
     }
 
     @Test
-    public void testDebugMapping_IChemObject_IChemObject() {
+    void testDebugMapping_IChemObject_IChemObject() {
         IMapping mapping = new DebugMapping(new DebugAtom(), new DebugAtom());
-        Assert.assertNotNull(mapping);
+        Assertions.assertNotNull(mapping);
     }
 
 }

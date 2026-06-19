@@ -32,8 +32,6 @@ import org.openscience.cdk.smsd.tools.MolHandler;
 
 /**
  * Interface that holds basic core interface for all MCS algorithm.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -49,7 +47,7 @@ public interface IMCSBase {
      * @throws CDKException
      *
      */
-    public abstract void set(MolHandler source, MolHandler target) throws CDKException;
+    void set(MolHandler source, MolHandler target) throws CDKException;
 
     /**
      * Initialise the query and target molecule.
@@ -59,7 +57,7 @@ public interface IMCSBase {
      * @throws CDKException
      *
      */
-    public abstract void set(IQueryAtomContainer source, IAtomContainer target) throws CDKException;
+    void set(IQueryAtomContainer source, IAtomContainer target) throws CDKException;
 
     /**
      * Returns all plausible mappings between query and target molecules.
@@ -68,7 +66,7 @@ public interface IMCSBase {
      * and map.getValue() for the target molecule
      * @return All possible MCS atom Mappings
      */
-    public abstract List<Map<IAtom, IAtom>> getAllAtomMapping();
+    List<Map<IAtom, IAtom>> getAllAtomMapping();
 
     /**
      * Returns all plausible mappings between query and target molecules.
@@ -77,17 +75,17 @@ public interface IMCSBase {
      * and map.getValue() for the target molecule
      * @return All possible MCS Mapping Index
      */
-    public abstract List<Map<Integer, Integer>> getAllMapping();
+    List<Map<Integer, Integer>> getAllMapping();
 
     /**
      * Returns one of the best matches with atoms mapped.
      * @return Best Atom Mapping
      */
-    public abstract Map<IAtom, IAtom> getFirstAtomMapping();
+    Map<IAtom, IAtom> getFirstAtomMapping();
 
     /**
      * Returns one of the best matches with atom indexes mapped.
      * @return Best Mapping Index
      */
-    public abstract Map<Integer, Integer> getFirstMapping();
+    Map<Integer, Integer> getFirstMapping();
 }

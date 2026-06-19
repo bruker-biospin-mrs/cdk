@@ -19,9 +19,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.DefaultChemObjectBuilder;
@@ -32,6 +32,7 @@ import org.openscience.cdk.io.ISimpleChemObjectReader;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.qsar.DescriptorValue;
 import org.openscience.cdk.qsar.result.DoubleArrayResult;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
@@ -42,22 +43,21 @@ import java.util.List;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class BCUTDescriptorTest extends MolecularDescriptorTest {
+class BCUTDescriptorTest extends MolecularDescriptorTest {
 
-    public BCUTDescriptorTest() {}
+    BCUTDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(BCUTDescriptor.class);
     }
 
     @Test
-    public void testBCUT() throws Exception {
-        String filename = "data/hin/gravindex.hin";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testBCUT() throws Exception {
+        String filename = "gravindex.hin";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new HINReader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
@@ -71,15 +71,15 @@ public class BCUTDescriptorTest extends MolecularDescriptorTest {
         DescriptorValue descriptorValue = descriptor.calculate(ac);
 
         DoubleArrayResult retval = (DoubleArrayResult) descriptorValue.getValue();
-        Assert.assertNotNull(retval);
+        Assertions.assertNotNull(retval);
         /* System.out.println("Num ret = "+retval.size()); */
         for (int i = 0; i < retval.length(); i++) {
-            Assert.assertTrue("The returned value must be non-zero", Math.abs(0.0 - retval.get(i)) > 0.0000001);
+            Assertions.assertTrue(Math.abs(0.0 - retval.get(i)) > 0.0000001, "The returned value must be non-zero");
         }
 
         String[] names = descriptorValue.getNames();
         for (String name : names)
-            Assert.assertNotNull(name);
+            Assertions.assertNotNull(name);
 
         /*
          * Assert.assertEquals(1756.5060703860984,
@@ -104,9 +104,9 @@ public class BCUTDescriptorTest extends MolecularDescriptorTest {
     }
 
     @Test
-    public void testExtraEigenvalues() throws Exception {
-        String filename = "data/hin/gravindex.hin";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testExtraEigenvalues() throws Exception {
+        String filename = "gravindex.hin";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new HINReader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
@@ -122,17 +122,17 @@ public class BCUTDescriptorTest extends MolecularDescriptorTest {
         DoubleArrayResult retval = (DoubleArrayResult) descriptorValue.getValue();
         int nheavy = 20;
 
-        Assert.assertEquals(75, retval.length());
+        Assertions.assertEquals(75, retval.length());
         for (int i = 0; i < nheavy; i++)
-            Assert.assertTrue(retval.get(i) != Double.NaN);
+            Assertions.assertTrue(retval.get(i) != Double.NaN);
         for (int i = nheavy; i < nheavy + 5; i++) {
-            Assert.assertTrue("Extra eigenvalue should have been NaN", Double.isNaN(retval.get(i)));
+            Assertions.assertTrue(Double.isNaN(retval.get(i)), "Extra eigenvalue should have been NaN");
         }
 
     }
 
     @Test
-    public void testAromaticity() throws Exception {
+    void testAromaticity() throws Exception {
         setDescriptor(BCUTDescriptor.class);
 
         String smiles1 = "c1ccccc1";
@@ -153,42 +153,69 @@ public class BCUTDescriptorTest extends MolecularDescriptorTest {
         DoubleArrayResult result1 = (DoubleArrayResult) descriptor.calculate(mol1).getValue();
         DoubleArrayResult result2 = (DoubleArrayResult) descriptor.calculate(mol2).getValue();
 
-        Assert.assertEquals(result1.length(), result2.length());
+        Assertions.assertEquals(result1.length(), result2.length());
         for (int i = 0; i < result1.length(); i++) {
-            Assert.assertEquals("element " + i + " does not match", result1.get(i), result2.get(i), 0.01);
+            Assertions.assertEquals(result1.get(i), result2.get(i), 0.01, "element " + i + " does not match");
         }
     }
 
     @Test
-    public void testHAddition() throws Exception {
+    void testHAddition() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("C=1C=CC(=CC1)CNC2=CC=C(C=C2N(=O)=O)S(=O)(=O)C(Cl)(Cl)Br");
         DoubleArrayResult result1 = (DoubleArrayResult) descriptor.calculate(mol).getValue();
         for (int i = 0; i < result1.length(); i++)
-            Assert.assertTrue(result1.get(i) != Double.NaN);
+            Assertions.assertTrue(result1.get(i) != Double.NaN);
     }
 
     /**
      * @cdk.bug 3489559
      */
     @Test
-    public void testUndefinedValues() throws Exception {
-        String filename = "data/mdl/burden_undefined.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testUndefinedValues() throws Exception {
+        String filename = "burden_undefined.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new MDLV2000Reader(ins);
         ChemFile content = reader.read(new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
         IAtomContainer ac = (IAtomContainer) cList.get(0);
 
-        Assert.assertNotNull(ac);
+        Assertions.assertNotNull(ac);
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(ac);
         addExplicitHydrogens(ac);
         Aromaticity.cdkLegacy().apply(ac);
 
         Exception e = descriptor.calculate(ac).getException();
-        Assert.assertNotNull(e);
+        Assertions.assertNotNull(e);
         // make sure exception was a NPE etc.
-        Assert.assertEquals("Could not calculate partial charges: Partial charge not-supported for element: 'As'.",
-                e.getMessage());
+        Assertions.assertEquals("Could not calculate partial charges: Partial charge not-supported for element: 'As'.", e.getMessage());
+    }
+
+    @Test
+    void testBug735_ordering1() throws Exception {
+        SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = sp.parseSmiles("C(C)(N)=O");
+        DescriptorValue val = descriptor.calculate(mol);
+        DoubleArrayResult res = (DoubleArrayResult) val.getValue();
+        Assertions.assertEquals(11.8815865, res.get(0), 0.00001);
+        Assertions.assertEquals(16.0059576, res.get(1), 0.00001);
+        Assertions.assertEquals(-0.381844, res.get(2), 0.00001);
+        Assertions.assertEquals(0.325509, res.get(3), 0.00001);
+        Assertions.assertEquals(3.374638, res.get(4), 0.00001);
+        Assertions.assertEquals(5.033583, res.get(5), 0.00001);
+    }
+
+    @Test
+    void testBug735_ordering2() throws Exception {
+        SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = sp.parseSmiles("CC(=O)N");
+        DescriptorValue val = descriptor.calculate(mol);
+        DoubleArrayResult res = (DoubleArrayResult) val.getValue();
+        Assertions.assertEquals(11.8815865, res.get(0), 0.00001);
+        Assertions.assertEquals(16.0059576, res.get(1), 0.00001);
+        Assertions.assertEquals(-0.381844, res.get(2), 0.00001);
+        Assertions.assertEquals(0.325509, res.get(3), 0.00001);
+        Assertions.assertEquals(3.374638, res.get(4), 0.00001);
+        Assertions.assertEquals(5.033583, res.get(5), 0.00001);
     }
 }

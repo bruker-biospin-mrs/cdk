@@ -22,10 +22,9 @@
  */
 package org.openscience.cdk.group;
 
-import org.junit.Assert;
-
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -35,47 +34,46 @@ import org.openscience.cdk.smiles.SmilesParser;
 
 /**
  * @author maclean
- * @cdk.module test-group
  */
-public class BondGroupTests extends CDKTestCase {
+class BondGroupTests extends CDKTestCase {
 
     private static final IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
 
-    public IAtomContainer getMol(String smiles) throws InvalidSmilesException {
+    IAtomContainer getMol(String smiles) throws InvalidSmilesException {
         SmilesParser parser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         parser.kekulise(false);
         return parser.parseSmiles(smiles);
     }
 
-    public void test(IAtomContainer mol, int expected) {
+    void test(IAtomContainer mol, int expected) {
         BondDiscretePartitionRefiner refiner = new BondDiscretePartitionRefiner();
         PermutationGroup group = refiner.getAutomorphismGroup(mol);
-        Assert.assertEquals(expected, group.order());
+        Assertions.assertEquals(expected, group.order());
     }
 
     @Test
-    public void cycloButane() throws InvalidSmilesException {
+    void cycloButane() throws InvalidSmilesException {
         test(AtomContainerPrinter.fromString("C0C1C2C3 0:1(1),1:2(1),2:3(1),0:3(1)", builder), 8);
     }
 
     @Test
-    public void cycloButadiene() throws InvalidSmilesException {
+    void cycloButadiene() throws InvalidSmilesException {
         test(AtomContainerPrinter.fromString("C0C1C2C3 0:1(2),1:2(1),2:3(2),0:3(1)", builder), 4);
     }
 
     @Test
-    public void cycloPentadiene() throws InvalidSmilesException {
+    void cycloPentadiene() throws InvalidSmilesException {
         test(getMol("C1=CCC=C1"), 2);
     }
 
     @Test
-    public void napthaleneA() throws InvalidSmilesException {
+    void napthaleneA() throws InvalidSmilesException {
         test(AtomContainerPrinter.fromString("C0C1C2C3C4C5C6C7C8C9 0:1(2),1:2(1),2:3(2),3:4(1),4:5(2),"
                 + "5:6(1),6:7(2),7:8(1),3:8(1),8:9(2),0:9(1)", builder), 2);
     }
 
     @Test
-    public void napthaleneB() throws InvalidSmilesException {
+    void napthaleneB() throws InvalidSmilesException {
         test(AtomContainerPrinter.fromString("C0C1C2C3C4C5C6C7C8C9 0:1(1),1:2(2),2:3(1),3:4(1),4:5(2),"
                 + "5:6(1),6:7(2),7:8(1),3:8(2),8:9(1),0:9(2)", SilentChemObjectBuilder.getInstance()), 4);
     }

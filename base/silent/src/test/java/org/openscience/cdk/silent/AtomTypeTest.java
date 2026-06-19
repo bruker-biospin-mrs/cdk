@@ -19,24 +19,23 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomType;
-import org.openscience.cdk.interfaces.AbstractAtomTypeTest;
+import org.openscience.cdk.test.interfaces.AbstractAtomTypeTest;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IElement;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link AtomType}.
  *
- * @cdk.module test-silent
  */
-public class AtomTypeTest extends AbstractAtomTypeTest {
+class AtomTypeTest extends AbstractAtomTypeTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setTestObjectBuilder(new ITestObjectBuilder() {
 
             @Override
@@ -47,23 +46,23 @@ public class AtomTypeTest extends AbstractAtomTypeTest {
     }
 
     @Test
-    public void testAtomType_String() {
+    void testAtomType_String() {
         IAtomType at = new AtomType("C");
-        Assert.assertEquals("C", at.getSymbol());
+        Assertions.assertEquals("C", at.getSymbol());
     }
 
     @Test
-    public void testAtomType_IElement() {
+    void testAtomType_IElement() {
         IElement element = new Element("C");
         IAtomType at = element.getBuilder().newInstance(IAtomType.class, element);
-        Assert.assertEquals("C", at.getSymbol());
+        Assertions.assertEquals("C", at.getSymbol());
     }
 
     @Test
-    public void testAtomType_String_String() {
+    void testAtomType_String_String() {
         IAtomType at = new AtomType("C4", "C");
-        Assert.assertEquals("C", at.getSymbol());
-        Assert.assertEquals("C4", at.getAtomTypeName());
+        Assertions.assertEquals("C", at.getSymbol());
+        Assertions.assertEquals("C4", at.getAtomTypeName());
     }
 
     // Overwrite default methods: no notifications are expected!
@@ -141,38 +140,38 @@ public class AtomTypeTest extends AbstractAtomTypeTest {
     }
 
     @Test
-    public void testCompare_AtomTypeName() {
+    void testCompare_AtomTypeName() {
         AtomType at1 = new AtomType("C");
         AtomType at2 = new AtomType("C");
-        at1.setAtomTypeName(new String("C4"));
-        at2.setAtomTypeName(new String("C4"));
-        Assert.assertTrue(at1.compare(at2));
+        at1.setAtomTypeName("C4");
+        at2.setAtomTypeName("C4");
+        Assertions.assertTrue(at1.compare(at2));
     }
 
     @Test
-    public void testCompare_DiffAtomTypeName() {
+    void testCompare_DiffAtomTypeName() {
         AtomType at1 = new AtomType("C");
         AtomType at2 = new AtomType("C");
-        at1.setAtomTypeName(new String("C4"));
-        at2.setAtomTypeName(new String("C3"));
-        Assert.assertFalse(at1.compare(at2));
+        at1.setAtomTypeName("C4");
+        at2.setAtomTypeName("C3");
+        Assertions.assertFalse(at1.compare(at2));
     }
 
     @Test
-    public void testCompare_BondOrderSum() {
+    void testCompare_BondOrderSum() {
         AtomType at1 = new AtomType("C");
         AtomType at2 = new AtomType("C");
         at1.setBondOrderSum(1.5);
         at2.setBondOrderSum(1.5);
-        Assert.assertTrue(at1.compare(at2));
+        Assertions.assertTrue(at1.compare(at2));
     }
 
     @Test
-    public void testCompare_DiffBondOrderSum() {
+    void testCompare_DiffBondOrderSum() {
         AtomType at1 = new AtomType("C");
         AtomType at2 = new AtomType("C");
         at1.setBondOrderSum(1.5);
         at2.setBondOrderSum(2.0);
-        Assert.assertFalse(at1.compare(at2));
+        Assertions.assertFalse(at1.compare(at2));
     }
 }

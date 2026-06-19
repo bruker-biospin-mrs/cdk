@@ -24,19 +24,19 @@
 
 package org.openscience.cdk.layout;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import org.openscience.cdk.graph.GraphUtil;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
+import org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.ringsearch.RingSearch;
 import org.openscience.cdk.stereo.ExtendedCisTrans;
 
 import javax.vecmath.Point2d;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -49,7 +49,6 @@ import java.util.Map;
  * double-bonds with a configuration can not be corrected (error logged).</b>
  *
  * @author John May
- * @cdk.module sdg
  */
 final class CorrectGeometricConfiguration {
 
@@ -78,7 +77,8 @@ final class CorrectGeometricConfiguration {
      * @throws IllegalArgumentException an atom had unset coordinates
      */
     public static IAtomContainer correct(IAtomContainer container) {
-        if (!Iterables.isEmpty(container.stereoElements())) new CorrectGeometricConfiguration(container);
+        if (container.stereoElements().iterator().hasNext())
+            new CorrectGeometricConfiguration(container);
         return container;
     }
 
@@ -103,7 +103,7 @@ final class CorrectGeometricConfiguration {
         this.container = container;
         this.graph = graph;
         this.visited = new boolean[graph.length];
-        this.atomToIndex = Maps.newHashMapWithExpectedSize(container.getAtomCount());
+        this.atomToIndex = new HashMap<>(2*container.getAtomCount());
         this.ringSearch = new RingSearch(container, graph);
 
         for (int i = 0; i < container.getAtomCount(); i++) {
@@ -122,6 +122,29 @@ final class CorrectGeometricConfiguration {
     }
 
     /**
+     * Utility method to get the conformation which is currently depicted with
+     * 2D coordinates.
+     *
+     * @param dbStereo the double bond stereo element
+     * @return the conformation, if no conformation is depicted then null is
+     *         returned
+     */
+    static Conformation getConformation2d(IDoubleBondStereochemistry dbStereo) {
+        IBond db = dbStereo.getStereoBond();
+        IBond[] bonds = dbStereo.getBonds();
+
+        IAtom left = db.getBegin();
+        IAtom right = db.getEnd();
+
+        int p1 = parity(getAtoms(left, bonds[0].getOther(left), right));
+        int p2 = parity(getAtoms(right, bonds[1].getOther(right), left));
+        if (p1 == 0 || p2 == 0) return null;
+
+        return p1 * p2 < 0 ? Conformation.TOGETHER
+                           : Conformation.OPPOSITE;
+    }
+
+    /**
      * Adjust the configuration of the {@code dbs} element (if required).
      *
      * @param dbs double-bond stereochemistry element
@@ -134,29 +157,26 @@ final class CorrectGeometricConfiguration {
         IAtom left = db.getBegin();
         IAtom right = db.getEnd();
 
-        int p = parity(dbs);
-        int q = parity(getAtoms(left, bonds[0].getOther(left), right))
-                * parity(getAtoms(right, bonds[1].getOther(right), left));
-
         // configuration is unspecified? then we add an unspecified bond.
         // note: IDoubleBondStereochemistry doesn't indicate this yet
-        if (p == 0) {
+        if (dbs.getConfigOrder() == 0) {
             for (IBond bond : container.getConnectedBondsList(left))
-                bond.setStereo(IBond.Stereo.NONE);
+                bond.setDisplay(IBond.Display.Solid);
             for (IBond bond : container.getConnectedBondsList(right))
-                bond.setStereo(IBond.Stereo.NONE);
-            bonds[0].setStereo(IBond.Stereo.UP_OR_DOWN);
+                bond.setDisplay(IBond.Display.Solid);
+            bonds[0].setDisplay(IBond.Display.Wavy);
             return;
         }
 
         // configuration is already correct
-        if (p == q) return;
+        if (dbs.getStereo() == getConformation2d(dbs))
+            return;
 
         Arrays.fill(visited, false);
         visited[atomToIndex.get(left)] = true;
 
         if (ringSearch.cyclic(atomToIndex.get(left), atomToIndex.get(right))) {
-            db.setStereo(IBond.Stereo.E_OR_Z);
+            db.setDisplay(IBond.Display.Crossed);
             return;
         }
 
@@ -188,10 +208,10 @@ final class CorrectGeometricConfiguration {
         // note: IDoubleBondStereochemistry doesn't indicate this yet
         if (p == 0) {
             for (IBond bond : container.getConnectedBondsList(left))
-                bond.setStereo(IBond.Stereo.NONE);
+                bond.setDisplay(IBond.Display.Solid);
             for (IBond bond : container.getConnectedBondsList(right))
-                bond.setStereo(IBond.Stereo.NONE);
-            bonds[0].setStereo(IBond.Stereo.UP_OR_DOWN);
+                bond.setDisplay(IBond.Display.Solid);
+            bonds[0].setDisplay(IBond.Display.Wavy);
             return;
         }
 
@@ -223,11 +243,11 @@ final class CorrectGeometricConfiguration {
      *         focus. if the focus atom has an implicit hydrogen the other
      *         substituent is the focus.
      */
-    private IAtom[] getAtoms(IAtom focus, IAtom substituent, IAtom otherFocus) {
+    private static IAtom[] getAtoms(IAtom focus, IAtom substituent, IAtom otherFocus) {
         IAtom otherSubstituent = focus;
-        for (int w : graph[atomToIndex.get(focus)]) {
-            IAtom atom = container.getAtom(w);
-            if (!atom.equals(substituent) && !atom.equals(otherFocus)) otherSubstituent = atom;
+        for (IBond b : focus.bonds()) {
+            IAtom nbr = b.getOther(focus);
+            if (!nbr.equals(substituent) && !nbr.equals(otherFocus)) otherSubstituent = nbr;
         }
         return new IAtom[]{substituent, otherSubstituent, otherFocus};
     }

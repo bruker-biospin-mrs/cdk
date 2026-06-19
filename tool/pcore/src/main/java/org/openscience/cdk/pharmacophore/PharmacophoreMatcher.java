@@ -18,25 +18,9 @@
  */
 package org.openscience.cdk.pharmacophore;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
-import javax.vecmath.Point3d;
-
-import com.google.common.collect.HashBiMap;
 import org.openscience.cdk.AtomRef;
-import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.aromaticity.Aromaticity;
-import org.openscience.cdk.aromaticity.ElectronDonation;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.geometry.GeometryUtil;
-import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -47,6 +31,16 @@ import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
 import org.openscience.cdk.smarts.SmartsPattern;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
+
+import javax.vecmath.Point3d;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Identifies atoms whose 3D arrangement matches a specified pharmacophore query.
@@ -117,7 +111,7 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * }
  * </pre>
  *
- * <h3>Extensions to SMARTS</h3>
+ * <b>Extensions to SMARTS</b><br/>
  *
  * The pharmacophore supports some extentions to the SMARTS language that lead
  * to flexible pharmacophore definitions  Note that these extensions are specific to
@@ -131,8 +125,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * </ul>
  *
  * @author Rajarshi Guha
- * @cdk.module pcore
- * @cdk.githash
  * @cdk.keyword pharmacophore
  * @cdk.keyword 3D isomorphism
  * @see org.openscience.cdk.pharmacophore.PharmacophoreAtom
@@ -142,7 +134,7 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  */
 public class PharmacophoreMatcher {
 
-    private ILoggingTool                  logger                = LoggingToolFactory
+    private final ILoggingTool                  logger                = LoggingToolFactory
                                                                         .createLoggingTool(PharmacophoreMatcher.class);
     private PharmacophoreQuery            pharmacophoreQuery    = null;
     private IAtomContainer                pharmacophoreMolecule = null;
@@ -206,7 +198,7 @@ public class PharmacophoreMatcher {
         if (!checkQuery(pharmacophoreQuery))
             throw new CDKException(
                     "A problem in the query. Make sure all pharmacophore groups of the same symbol have the same same SMARTS");
-        String title = (String) atomContainer.getTitle();
+        String title = atomContainer.getTitle();
 
         if (initializeTarget)
             pharmacophoreMolecule = getPharmacophoreMolecule(atomContainer);
@@ -216,7 +208,7 @@ public class PharmacophoreMatcher {
             // sure we get the latest set of effective coordinates
             for (IAtom iAtom : pharmacophoreMolecule.atoms()) {
                 PharmacophoreAtom patom = PharmacophoreAtom.get(iAtom);
-                List<Integer> tmpList = new ArrayList<Integer>();
+                List<Integer> tmpList = new ArrayList<>();
                 for (int idx : patom.getMatchingAtoms())
                     tmpList.add(idx);
                 Point3d coords = getEffectiveCoordinates(atomContainer, tmpList);
@@ -280,7 +272,10 @@ public class PharmacophoreMatcher {
         // query -> target so need to inverse the mapping
         // XXX: re-subsearching the query
         for (Map<IBond,IBond> map : mappings.toBondMap()) {
-            bondMap.add(new HashMap<>(HashBiMap.create(map).inverse()));
+            HashMap<IBond, IBond> inv = new HashMap<>();
+            for (Map.Entry<IBond, IBond> e : map.entrySet())
+                inv.put(e.getValue(), e.getKey());
+            bondMap.add(inv);
         }
         
         return bondMap;
@@ -430,9 +425,9 @@ public class PharmacophoreMatcher {
 
                 // make a list of the patoms in the target that match
                 // each type of angle atom
-                List<IAtom> startl = new ArrayList<IAtom>();
-                List<IAtom> middlel = new ArrayList<IAtom>();
-                List<IAtom> endl = new ArrayList<IAtom>();
+                List<IAtom> startl = new ArrayList<>();
+                List<IAtom> middlel = new ArrayList<>();
+                List<IAtom> endl = new ArrayList<>();
 
                 for (IAtom tatom : pharmacophoreMolecule.atoms()) {
                     if (tatom.getSymbol().equals(startQAtom.getSymbol())) startl.add(tatom);
@@ -442,7 +437,7 @@ public class PharmacophoreMatcher {
 
                 // now we form the relevant angles, but we will
                 // have reversed repeats
-                List<IAtom[]> tmpl = new ArrayList<IAtom[]>();
+                List<IAtom[]> tmpl = new ArrayList<>();
                 for (IAtom middle : middlel) {
                     for (IAtom start : startl) {
                         if (middle.equals(start)) continue;
@@ -454,7 +449,7 @@ public class PharmacophoreMatcher {
                 }
 
                 // now clean up reversed repeats
-                List<IAtom[]> unique = new ArrayList<IAtom[]>();
+                List<IAtom[]> unique = new ArrayList<>();
                 for (int i = 0; i < tmpl.size(); i++) {
                     IAtom[] seq1 = tmpl.get(i);
                     boolean isRepeat = false;
@@ -547,7 +542,7 @@ public class PharmacophoreMatcher {
 
     private boolean checkQuery(IQueryAtomContainer query) {
         if (!(query instanceof PharmacophoreQuery)) return false;
-        HashMap<String, String> map = new HashMap<String, String>();
+        HashMap<String, String> map = new HashMap<>();
         for (int i = 0; i < query.getAtomCount(); i++) {
             IQueryAtom atom = (IQueryAtom) query.getAtom(i);
             if (!(atom instanceof PharmacophoreQueryAtom)) return false;

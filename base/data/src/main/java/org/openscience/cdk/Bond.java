@@ -22,11 +22,13 @@ package org.openscience.cdk;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Implements the concept of a covalent bond between two or more atoms. A bond is
@@ -42,8 +44,6 @@ import java.util.Iterator;
  * using multi-center bonds using this class as the orders may not make sense.
  *
  * @author steinbeck
- * @cdk.module data
- * @cdk.githash
  * @cdk.created 2003-10-02
  * @cdk.keyword bond
  * @cdk.keyword atom
@@ -64,28 +64,25 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
     /**
      * The bond order of this bond.
      */
-    protected IBond.Order     order            = (Order) CDKConstants.UNSET;
+    protected IBond.Order     order            = null;
 
     /**
      * Number of atoms contained by this object.
      */
-    protected int             atomCount        = 0;
+    protected int             atomCount;
 
     /**
      * A list of atoms participating in this bond.
      */
-    protected IAtom[]         atoms            = null;
+    protected IAtom[]         atoms;
 
-    /**
-     * A descriptor the stereochemical orientation of this bond.
-     */
-    protected IBond.Stereo    stereo;
+    protected IBond.Display display = Display.Solid;
 
     /**
      * Constructs an empty bond.
      */
     public Bond() {
-        this(null, null, null, IBond.Stereo.NONE);
+        this(null, null, null, Display.Solid);
         atomCount = 0;
     }
 
@@ -96,7 +93,7 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
      * @param atom2 the second Atom in the bond
      */
     public Bond(IAtom atom1, IAtom atom2) {
-        this(atom1, atom2, IBond.Order.SINGLE, IBond.Stereo.NONE);
+        this(atom1, atom2, IBond.Order.SINGLE, Display.Solid);
     }
 
     /**
@@ -107,7 +104,7 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
      * @param order the bond order
      */
     public Bond(IAtom atom1, IAtom atom2, Order order) {
-        this(atom1, atom2, order, IBond.Stereo.NONE);
+        this(atom1, atom2, order, Display.Solid);
     }
 
     /**
@@ -149,7 +146,26 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
         atoms[1] = atom2;
         this.order = order;
         updateElectronCount(order);
-        this.stereo = stereo;
+        setInitStereo(stereo); // required to work around DebugBond issues
+        this.atomCount = 2;
+    }
+
+    /**
+     * Constructs a bond with a given order and display from an array
+     * of atoms.
+     *
+     * @param beg  the first Atom in the bond
+     * @param end  the second Atom in the bond
+     * @param order  the bond order
+     * @param display graphical display of this bond
+     */
+    public Bond(IAtom beg, IAtom end, Order order, IBond.Display display) {
+        atoms = new IAtom[2];
+        atoms[0] = beg;
+        atoms[1] = end;
+        this.order = order;
+        updateElectronCount(order);
+        this.display = display;
         this.atomCount = 2;
     }
 
@@ -162,13 +178,7 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
      */
     @Override
     public Iterable<IAtom> atoms() {
-        return new Iterable<IAtom>() {
-
-            @Override
-            public Iterator<IAtom> iterator() {
-                return new AtomsIterator();
-            }
-        };
+        return AtomsIterator::new;
     }
 
     /**
@@ -201,6 +211,8 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
 
         @Override
         public IAtom next() {
+            if (pointer >= atomCount)
+                throw new NoSuchElementException();
             ++pointer;
             return atoms[pointer - 1];
         }
@@ -395,7 +407,33 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
      */
     @Override
     public IBond.Stereo getStereo() {
-        return this.stereo;
+        switch (display) {
+            case WedgeBegin:
+            case HollowWedgeBegin:
+            case Bold:
+                return Stereo.UP;
+            case HollowWedgeEnd:
+            case WedgeEnd:
+                return Stereo.UP_INVERTED;
+            case WedgedHashBegin:
+            case Hash:
+                return Stereo.DOWN;
+            case WedgedHashEnd:
+                return Stereo.DOWN_INVERTED;
+            case Wavy:
+                return Stereo.UP_OR_DOWN;
+            case Crossed:
+                return Stereo.E_OR_Z;
+            case Solid:
+                if (order == Order.SINGLE)
+                    return Stereo.NONE;
+                else if (order == Order.DOUBLE)
+                    return Stereo.E_Z_BY_COORDINATES;
+                else
+                    return Stereo.NONE;
+            default:
+                return Stereo.NONE;
+        }
     }
 
     /**
@@ -407,7 +445,55 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
      */
     @Override
     public void setStereo(IBond.Stereo stereo) {
-        this.stereo = stereo;
+        setInitStereo(stereo);
+        notifyChanged();
+    }
+
+    // does not call notify
+    private void setInitStereo(IBond.Stereo stereo) {
+        if (stereo == null) {
+            this.display = Display.Solid;
+        } else {
+            switch (stereo) {
+                case NONE:
+                case E_Z_BY_COORDINATES:
+                    display = Display.Solid;
+                    break;
+                case UP:
+                    display = Display.WedgeBegin;
+                    break;
+                case DOWN:
+                    display = Display.WedgedHashBegin;
+                    break;
+                case UP_INVERTED:
+                    display = Display.WedgeEnd;
+                    break;
+                case DOWN_INVERTED:
+                    display = Display.WedgedHashEnd;
+                    break;
+                case E_OR_Z:
+                    display = Display.Crossed;
+                    break;
+                case UP_OR_DOWN:
+                case UP_OR_DOWN_INVERTED:
+                    display = Display.Wavy;
+                    break;
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public IBond.Display getDisplay() {
+        return display;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setDisplay(IBond.Display display) {
+        this.display = display;
         notifyChanged();
     }
 
@@ -490,25 +576,25 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
     /** {@inheritDoc} */
     @Override
     public boolean isAromatic() {
-        return getFlag(CDKConstants.ISAROMATIC);
+        return getFlag(IChemObject.AROMATIC);
     }
 
     /** {@inheritDoc} */
     @Override
     public void setIsAromatic(boolean arom) {
-        setFlag(CDKConstants.ISAROMATIC, arom);
+        setFlag(IChemObject.AROMATIC, arom);
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean isInRing() {
-        return getFlag(CDKConstants.ISINRING);
+        return getFlag(IChemObject.IN_RING);
     }
 
     /** {@inheritDoc} */
     @Override
     public void setIsInRing(boolean ring) {
-        setFlag(CDKConstants.ISINRING, ring);
+        setFlag(IChemObject.IN_RING, ring);
     }
 
     /**
@@ -525,7 +611,7 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
             clone.atoms = new IAtom[atoms.length];
             for (int f = 0; f < atoms.length; f++) {
                 if (atoms[f] != null) {
-                    clone.atoms[f] = (IAtom) ((IAtom) atoms[f]).clone();
+                    clone.atoms[f] = atoms[f].clone();
                 }
             }
         }
@@ -558,12 +644,12 @@ public class Bond extends ElectronContainer implements IBond, Serializable, Clon
      */
     @Override
     public String toString() {
-        StringBuffer resultString = new StringBuffer(32);
+        StringBuilder resultString = new StringBuilder(32);
         resultString.append("Bond(").append(this.hashCode());
         if (getOrder() != null) {
             resultString.append(", #O:").append(getOrder());
         }
-        resultString.append(", #S:").append(getStereo());
+        resultString.append(", #D:").append(getDisplay());
         if (getAtomCount() > 0) {
             resultString.append(", #A:").append(getAtomCount());
             for (int i = 0; i < atomCount; i++) {

@@ -19,12 +19,12 @@
 package org.openscience.cdk.qsar.descriptors.molecular;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -59,8 +59,6 @@ import org.openscience.cdk.tools.LonePairElectronChecker;
  *
  * @author           Miguel Rojas
  * @cdk.created      2006-05-26
- * @cdk.module       qsarionpot
- * @cdk.githash
  * @cdk.dictref      qsar-descriptors:ionizationPotential
  * @cdk.keyword      ionization potential
  *
@@ -128,13 +126,10 @@ public class IPMolecularLearningDescriptor extends AbstractMolecularDescriptor i
         IAtomContainer local;
         if (addlp) {
             try {
-                local = (IAtomContainer) atomContainer.clone();
+                local = atomContainer.clone();
                 LonePairElectronChecker lpcheck = new LonePairElectronChecker();
                 lpcheck.saturate(local);
-            } catch (CloneNotSupportedException e) {
-                return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new DoubleResult(
-                        Double.NaN), getDescriptorNames(), e);
-            } catch (CDKException e) {
+            } catch (CloneNotSupportedException | CDKException e) {
                 return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new DoubleResult(
                         Double.NaN), getDescriptorNames(), e);
             }
@@ -162,16 +157,14 @@ public class IPMolecularLearningDescriptor extends AbstractMolecularDescriptor i
      */
     public DescriptorValue calculatePlus(IAtomContainer container) throws CDKException {
 
-        ArrayList<Double> dar = new ArrayList<Double>();
-        for (Iterator<IAtom> itA = container.atoms().iterator(); itA.hasNext();) {
-            IAtom atom = itA.next();
+        ArrayList<Double> dar = new ArrayList<>();
+        for (IAtom atom : container.atoms()) {
             double value = IonizationPotentialTool.predictIP(container, atom);
             if (value != 0) dar.add(value);
         }
-        for (Iterator<IBond> itB = container.bonds().iterator(); itB.hasNext();) {
-            IBond bond = itB.next();
-            if (bond.getOrder() == IBond.Order.DOUBLE & bond.getBegin().getSymbol().equals("C")
-                    & bond.getEnd().getSymbol().equals("C")) {
+        for (IBond bond : container.bonds()) {
+            if (bond.getOrder() == IBond.Order.DOUBLE && bond.getBegin().getAtomicNumber() == IElement.C
+                    && bond.getEnd().getAtomicNumber() == IElement.C) {
                 double value = IonizationPotentialTool.predictIP(container, bond);
                 if (value != 0) dar.add(value);
 

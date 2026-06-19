@@ -19,36 +19,27 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractAtomContainerSetTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractAtomContainerSetTest;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugAtomContainerSet}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugAtomContainerSetTest extends AbstractAtomContainerSetTest {
+class DebugAtomContainerSetTest extends AbstractAtomContainerSetTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugAtomContainerSet();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugAtomContainerSet::new);
     }
 
     @Test
-    public void testDebugAtomContainerSet() {
+    void testDebugAtomContainerSet() {
         IAtomContainerSet som = new DebugAtomContainerSet();
-        Assert.assertNotNull(som);
-        Assert.assertEquals(0, som.getAtomContainerCount());
+        Assertions.assertNotNull(som);
+        Assertions.assertEquals(0, som.getAtomContainerCount());
     }
 }

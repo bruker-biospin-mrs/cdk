@@ -31,8 +31,6 @@ import org.openscience.cdk.interfaces.IChemObject;
  * An abstract selection of {@link IChemObject}s.
  *
  * @author Arvid
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public abstract class AbstractSelection implements IChemObjectSelection {
 
@@ -72,7 +70,6 @@ public abstract class AbstractSelection implements IChemObjectSelection {
     @Override
     public void select(IChemModel chemModel) {
         // TODO Auto-generated method stub
-
     }
 
     /**
@@ -87,7 +84,12 @@ public abstract class AbstractSelection implements IChemObjectSelection {
         } else if (item instanceof IAtom) {
             ac.addAtom((IAtom) item);
         } else if (item instanceof IBond) {
-            ac.addBond((IBond) item);
+            // as per "Make an IAtomContainer where all the bonds only have
+            // atoms that are in the selection." We should only include bonds
+            // which are valid
+            if (ac.contains(((IBond) item).getBegin()) &&
+                ac.contains(((IBond) item).getEnd()))
+                ac.addBond((IBond) item);
         }
     }
 

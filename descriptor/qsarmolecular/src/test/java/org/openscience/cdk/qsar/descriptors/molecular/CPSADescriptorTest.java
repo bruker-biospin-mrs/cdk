@@ -19,9 +19,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -37,22 +37,21 @@ import java.util.List;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class CPSADescriptorTest extends MolecularDescriptorTest {
+class CPSADescriptorTest extends MolecularDescriptorTest {
 
-    public CPSADescriptorTest() {}
+    CPSADescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(CPSADescriptor.class);
     }
 
     @Test
-    public void testCPSA() throws Exception {
-        String filename = "data/hin/benzene.hin";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testCPSA() throws Exception {
+        String filename = "benzene.hin";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new HINReader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
@@ -64,17 +63,17 @@ public class CPSADescriptorTest extends MolecularDescriptorTest {
          * retval.size(); i++) { System.out.println( retval.get(i) ); }
          */
 
-        Assert.assertEquals(0, retval.get(28), 0.0001);
-        Assert.assertEquals(1, retval.get(27), 0.0001);
-        Assert.assertEquals(0, retval.get(26), 0.0001);
-        Assert.assertEquals(356.8849, retval.get(25), 0.0001);
+        Assertions.assertEquals(0, retval.get(28), 0.0001); // RPSA
+        Assertions.assertEquals(1, retval.get(27), 0.0001); // RHSA
+        Assertions.assertEquals(0, retval.get(26), 0.0001); // TPSA
+        Assertions.assertEquals(231.66182, retval.get(25), 0.0001); // THSA
 
     }
 
     @Test
-    public void testChargedMolecule() throws Exception {
-        String filename = "data/mdl/cpsa-charged.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testChargedMolecule() throws Exception {
+        String filename = "cpsa-charged.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new MDLV2000Reader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
@@ -83,13 +82,13 @@ public class CPSADescriptorTest extends MolecularDescriptorTest {
         DoubleArrayResult retval = (DoubleArrayResult) descriptor.calculate(ac).getValue();
         int ndesc = retval.length();
         for (int i = 0; i < ndesc; i++)
-            Assert.assertTrue(retval.get(i) != Double.NaN);
+            Assertions.assertTrue(retval.get(i) != Double.NaN);
     }
 
     @Test
-    public void testUnChargedMolecule() throws Exception {
-        String filename = "data/mdl/cpsa-uncharged.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testUnChargedMolecule() throws Exception {
+        String filename = "cpsa-uncharged.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new MDLV2000Reader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
@@ -98,6 +97,6 @@ public class CPSADescriptorTest extends MolecularDescriptorTest {
         DoubleArrayResult retval = (DoubleArrayResult) descriptor.calculate(ac).getValue();
         int ndesc = retval.length();
         for (int i = 0; i < ndesc; i++)
-            Assert.assertTrue(retval.get(i) != Double.NaN);
+            Assertions.assertTrue(retval.get(i) != Double.NaN);
     }
 }

@@ -26,11 +26,11 @@ import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.openscience.cdk.AtomContainer;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemFile;
 import org.openscience.cdk.io.formats.CMLFormat;
@@ -56,170 +56,169 @@ import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 /**
  * TestCase for the instantiation and functionality of the {@link ReaderFactory}.
  *
- * @cdk.module test-io
  */
-public class ReaderFactoryTest extends AbstractReaderFactoryTest {
+class ReaderFactoryTest extends AbstractReaderFactoryTest {
 
-    private ReaderFactory factory = new ReaderFactory();
+    private final ReaderFactory factory = new ReaderFactory();
 
     @Test
-    public void testCreateReader_IChemFormat() {
+    void testCreateReader_IChemFormat() {
         IChemFormat format = (IChemFormat) XYZFormat.getInstance();
         ISimpleChemObjectReader reader = factory.createReader(format);
-        Assert.assertNotNull(reader);
-        Assert.assertEquals(format.getFormatName(), reader.getFormat().getFormatName());
+        Assertions.assertNotNull(reader);
+        Assertions.assertEquals(format.getFormatName(), reader.getFormat().getFormatName());
     }
 
     @Test
-    public void testGaussian98() throws Exception {
-        expectReader("data/gaussian/g98.out", Gaussian98Format.getInstance(), -1, -1);
+    void testGaussian98() throws Exception {
+        expectReader("org/openscience/cdk/io/g98.out", Gaussian98Format.getInstance(), -1, -1);
     }
 
     @Test
-    public void testGhemical() throws Exception {
-        expectReader("data/ghemical/ethene.mm1gp", GhemicalSPMFormat.getInstance(), 6, 5);
+    void testGhemical() throws Exception {
+        expectReader("org/openscience/cdk/io/ethene.mm1gp", GhemicalSPMFormat.getInstance(), 6, 5);
     }
 
     @Test
-    public void testCML() throws Exception {
-        expectReader("data/cml/estron.cml", CMLFormat.getInstance(), -1, -1);
+    void testCML() throws Exception {
+        expectReader("org/openscience/cdk/io/estron.cml", CMLFormat.getInstance(), -1, -1);
     }
 
     @Test
-    public void testXYZ() throws Exception {
-        expectReader("data/xyz/bf3.xyz", XYZFormat.getInstance(), -1, -1);
+    void testXYZ() throws Exception {
+        expectReader("org/openscience/cdk/io/bf3.xyz", XYZFormat.getInstance(), -1, -1);
     }
 
     @Test
-    public void testShelX() throws Exception {
-        expectReader("data/shelx/frame_1.res", ShelXFormat.getInstance(), -1, -1);
+    void testShelX() throws Exception {
+        expectReader("org/openscience/cdk/io/frame_1.res", ShelXFormat.getInstance(), -1, -1);
     }
 
     @Test
-    public void testMDLMol() throws Exception {
-        expectReader("data/mdl/bug1014344-1.mol", MDLFormat.getInstance(), 21, 21);
+    void testMDLMol() throws Exception {
+        expectReader("org/openscience/cdk/io/bug1014344-1.mol", MDLFormat.getInstance(), 21, 21);
     }
 
     @Test
-    public void testMDLMolV2000() throws Exception {
-        expectReader("data/mdl/methylbenzol.mol", MDLV2000Format.getInstance(), 15, 15);
+    void testMDLMolV2000() throws Exception {
+        expectReader("org/openscience/cdk/io/methylbenzol.mol", MDLV2000Format.getInstance(), 15, 15);
     }
 
     @Test
-    public void testDetection() throws Exception {
-        expectReader("data/mdl/withcharges.mol", MDLV2000Format.getInstance(), 9, 9);
+    void testDetection() throws Exception {
+        expectReader("org/openscience/cdk/io/withcharges.mol", MDLV2000Format.getInstance(), 9, 9);
     }
 
     @Test
-    public void testMDLMolV3000() throws Exception {
-        expectReader("data/mdl/molV3000.mol", MDLV3000Format.getInstance(), -1, -1);
+    void testMDLMolV3000() throws Exception {
+        expectReader("org/openscience/cdk/io/molV3000.mol", MDLV3000Format.getInstance(), -1, -1);
     }
 
     @Test
-    public void testMDLRxnV2000() throws Exception {
-        expectReader("data/mdl/reaction-1.rxn", MDLRXNV2000Format.getInstance(), -1, -1);
+    void testMDLRxnV2000() throws Exception {
+        expectReader("org/openscience/cdk/io/reaction-1.rxn", MDLRXNV2000Format.getInstance(), -1, -1);
     }
     
     @Test
-    public void testMDLRxnV3000() throws Exception {
-        expectReader("data/mdl/reaction_v3.rxn", MDLRXNV3000Format.getInstance(), -1, -1);
+    void testMDLRxnV3000() throws Exception {
+        expectReader("org/openscience/cdk/io/reaction_v3.rxn", MDLRXNV3000Format.getInstance(), -1, -1);
     }
     
-    @Ignore("test moved to cdk-test-pdb/PDBReaderFactoryTest")
-    public void testPDB() throws Exception {
-        expectReader("data/pdb/coffeine.pdb", PDBFormat.getInstance(), -1, -1);
+    @Disabled("test moved to cdk-test-pdb/PDBReaderFactoryTest")
+    void testPDB() throws Exception {
+        expectReader("org/openscience/cdk/io/coffeine.pdb", PDBFormat.getInstance(), -1, -1);
     }
 
     @Test
-    public void testMol2() throws Exception {
-        expectReader("data/mol2/fromWebsite.mol2", Mol2Format.getInstance(), -1, -1);
+    void testMol2() throws Exception {
+        expectReader("org/openscience/cdk/io/fromWebsite.mol2", Mol2Format.getInstance(), -1, -1);
     }
 
     @Test
-    public void testCTX() throws Exception {
-        expectReader("data/ctx/methanol_with_descriptors.ctx", CTXFormat.getInstance(), -1, -1);
+    void testCTX() throws Exception {
+        expectReader("org/openscience/cdk/io/methanol_with_descriptors.ctx", CTXFormat.getInstance(), -1, -1);
     }
 
     @Test
-    public void testPubChemCompoundASN() throws Exception {
-        expectReader("data/asn/pubchem/cid1.asn", PubChemASNFormat.getInstance(), -1, -1);
+    void testPubChemCompoundASN() throws Exception {
+        expectReader("org/openscience/cdk/io/cid1.asn", PubChemASNFormat.getInstance(), -1, -1);
     }
 
     @Test
-    public void testPubChemSubstanceXML() throws Exception {
-        expectReader("data/asn/pubchem/sid577309.xml", PubChemSubstanceXMLFormat.getInstance(), -1, -1);
+    void testPubChemSubstanceXML() throws Exception {
+        expectReader("org/openscience/cdk/io/sid577309.xml", PubChemSubstanceXMLFormat.getInstance(), -1, -1);
     }
 
     @Test
-    public void testPubChemCompoundXML() throws Exception {
-        expectReader("data/asn/pubchem/cid1145.xml", PubChemCompoundXMLFormat.getInstance(), -1, -1);
+    void testPubChemCompoundXML() throws Exception {
+        expectReader("org/openscience/cdk/io/cid1145.xml", PubChemCompoundXMLFormat.getInstance(), -1, -1);
     }
 
     @Test
-    public void testSmiles() throws Exception {
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("data/smiles/drugs.smi");
+    void testSmiles() throws Exception {
+        InputStream is = this.getClass().getResourceAsStream("drugs.smi");
         Object reader = factory.createReader(is);
-        Assert.assertNull(reader);
+        Assertions.assertNull(reader);
     }
 
     /**
      * @cdk.bug 2153298
      */
     @Test
-    public void testBug2153298() throws Exception {
-        String filename = "data/asn/pubchem/cid1145.xml";
+    void testBug2153298() throws Exception {
+        String filename = "org/openscience/cdk/io/cid1145.xml";
         InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
-        Assert.assertNotNull("Cannot find file: " + filename, ins);
+        Assertions.assertNotNull(ins, "Cannot find file: " + filename);
         IChemFormatMatcher realFormat = (IChemFormatMatcher) PubChemCompoundXMLFormat.getInstance();
         factory.registerFormat(realFormat);
         // ok, if format ok, try instantiating a reader
         ins = this.getClass().getClassLoader().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = factory.createReader(ins);
-        Assert.assertNotNull(reader);
-        Assert.assertEquals(((IChemFormat) PubChemCompoundXMLFormat.getInstance()).getReaderClassName(), reader
+        Assertions.assertNotNull(reader);
+        Assertions.assertEquals(((IChemFormat) PubChemCompoundXMLFormat.getInstance()).getReaderClassName(), reader
                 .getClass().getName());
         // now try reading something from it
-        IAtomContainer molecule = (IAtomContainer) reader.read(new AtomContainer());
-        Assert.assertNotNull(molecule);
-        Assert.assertNotSame(0, molecule.getAtomCount());
-        Assert.assertNotSame(0, molecule.getBondCount());
+        IAtomContainer molecule = reader.read(DefaultChemObjectBuilder.getInstance().newAtomContainer());
+        Assertions.assertNotNull(molecule);
+        Assertions.assertNotSame(0, molecule.getAtomCount());
+        Assertions.assertNotSame(0, molecule.getBondCount());
     }
 
     @Test
-    public void testReadGz() throws Exception {
-        String filename = "data/xyz/bf3.xyz.gz";
+    void testReadGz() throws Exception {
+        String filename = "org/openscience/cdk/io/bf3.xyz.gz";
         InputStream input = new BufferedInputStream(new GZIPInputStream(this.getClass().getClassLoader()
                 .getResourceAsStream(filename)));
         // ok, if format ok, try instantiating a reader
         ISimpleChemObjectReader reader = factory.createReader(input);
-        Assert.assertNotNull(reader);
-        Assert.assertEquals(((IChemFormat) XYZFormat.getInstance()).getReaderClassName(), reader.getClass().getName());
+        Assertions.assertNotNull(reader);
+        Assertions.assertEquals(((IChemFormat) XYZFormat.getInstance()).getReaderClassName(), reader.getClass().getName());
         // now try reading something from it
-        IChemFile chemFile = (IChemFile) reader.read(new ChemFile());
-        IAtomContainer molecule = new AtomContainer();
+        IChemFile chemFile = reader.read(new ChemFile());
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         for (IAtomContainer container : ChemFileManipulator.getAllAtomContainers(chemFile)) {
             molecule.add(container);
         }
-        Assert.assertNotNull(molecule);
-        Assert.assertEquals(4, molecule.getAtomCount());
+        Assertions.assertNotNull(molecule);
+        Assertions.assertEquals(4, molecule.getAtomCount());
     }
 
     @Test
-    public void testReadGzWithGzipDetection() throws Exception {
-        String filename = "data/xyz/bf3.xyz.gz";
+    void testReadGzWithGzipDetection() throws Exception {
+        String filename = "org/openscience/cdk/io/bf3.xyz.gz";
         InputStream input = this.getClass().getClassLoader().getResourceAsStream(filename);
         // ok, if format ok, try instantiating a reader
         ISimpleChemObjectReader reader = factory.createReader(input);
-        Assert.assertNotNull(reader);
-        Assert.assertEquals(((IChemFormat) XYZFormat.getInstance()).getReaderClassName(), reader.getClass().getName());
+        Assertions.assertNotNull(reader);
+        Assertions.assertEquals(((IChemFormat) XYZFormat.getInstance()).getReaderClassName(), reader.getClass().getName());
         // now try reading something from it
-        IChemFile chemFile = (IChemFile) reader.read(new ChemFile());
-        IAtomContainer molecule = new AtomContainer();
+        IChemFile chemFile = reader.read(new ChemFile());
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         for (IAtomContainer container : ChemFileManipulator.getAllAtomContainers(chemFile)) {
             molecule.add(container);
         }
-        Assert.assertNotNull(molecule);
-        Assert.assertEquals(4, molecule.getAtomCount());
+        Assertions.assertNotNull(molecule);
+        Assertions.assertEquals(4, molecule.getAtomCount());
     }
 
 }

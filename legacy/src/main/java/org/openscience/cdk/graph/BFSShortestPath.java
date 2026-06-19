@@ -37,8 +37,6 @@ import java.util.List;
  *
  * @author Ulrich Bauer &lt;ulrich.bauer@alumni.tum.de&gt;
  *
- * @cdk.module  standard
- * @cdk.githash
  * @cdk.created 2004-10-19
  * @deprecated Use {@link ShortestPaths}
  */
@@ -62,7 +60,7 @@ public final class BFSShortestPath {
     }
 
     private static List<Edge> createPath(MyBreadthFirstIterator iter, Object endVertex) {
-        List<Edge> path = new ArrayList<Edge>();
+        List<Edge> path = new ArrayList<>();
 
         while (true) {
             Edge edge = iter.getSpanningTreeEdge(endVertex);

@@ -21,10 +21,8 @@ package org.openscience.cdk.isomorphism.matchers;
 import org.openscience.cdk.interfaces.IBond;
 
 /**
- * Defines the abililty to be matched against IBond's.
+ * Defines the ability to be matched against IBond's.
  *
- * @cdk.module interfaces
- * @cdk.githash
  * @see        org.openscience.cdk.isomorphism.Pattern
  */
 public interface IQueryBond extends IBond {
@@ -35,6 +33,6 @@ public interface IQueryBond extends IBond {
      * @param bond IBond to match against
      * @return     true, if this IQueryBond matches the given IBond
      */
-    public boolean matches(IBond bond);
+    boolean matches(IBond bond);
 
 }

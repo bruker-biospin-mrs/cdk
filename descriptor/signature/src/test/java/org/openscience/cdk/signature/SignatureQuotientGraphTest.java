@@ -22,73 +22,72 @@
  */
 package org.openscience.cdk.signature;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
 /**
- * @cdk.module test-signature
  * @author maclean
  *
  */
-public class SignatureQuotientGraphTest extends AbstractSignatureTest {
+class SignatureQuotientGraphTest extends AbstractSignatureTest {
 
     @Test
-    public void isConnectedTest() {
+    void isConnectedTest() {
         IAtomContainer singleBond = builder.newInstance(IAtomContainer.class);
         singleBond.addAtom(builder.newInstance(IAtom.class, "C"));
         singleBond.addAtom(builder.newInstance(IAtom.class, "C"));
         singleBond.addBond(0, 1, IBond.Order.SINGLE);
         SignatureQuotientGraph quotientGraph = new SignatureQuotientGraph(singleBond);
-        Assert.assertTrue(quotientGraph.isConnected(0, 1));
+        Assertions.assertTrue(quotientGraph.isConnected(0, 1));
     }
 
-    public void checkParameters(SignatureQuotientGraph qGraph, int expectedVertexCount, int expectedEdgeCount,
-            int expectedLoopEdgeCount) {
-        Assert.assertEquals(expectedVertexCount, qGraph.getVertexCount());
-        Assert.assertEquals(expectedEdgeCount, qGraph.getEdgeCount());
-        Assert.assertEquals(expectedLoopEdgeCount, qGraph.numberOfLoopEdges());
+    void checkParameters(SignatureQuotientGraph qGraph, int expectedVertexCount, int expectedEdgeCount,
+                         int expectedLoopEdgeCount) {
+        Assertions.assertEquals(expectedVertexCount, qGraph.getVertexCount());
+        Assertions.assertEquals(expectedEdgeCount, qGraph.getEdgeCount());
+        Assertions.assertEquals(expectedLoopEdgeCount, qGraph.numberOfLoopEdges());
     }
 
     @Test
-    public void testCubane() {
+    void testCubane() {
         IAtomContainer cubane = AbstractSignatureTest.makeCubane();
         SignatureQuotientGraph qGraph = new SignatureQuotientGraph(cubane);
         checkParameters(qGraph, 1, 1, 1);
     }
 
     @Test
-    public void testCuneaneAtHeight1() {
+    void testCuneaneAtHeight1() {
         IAtomContainer cuneane = AbstractSignatureTest.makeCuneane();
         SignatureQuotientGraph qGraph = new SignatureQuotientGraph(cuneane, 1);
         checkParameters(qGraph, 1, 1, 1);
     }
 
     @Test
-    public void testCuneaneAtHeight2() {
+    void testCuneaneAtHeight2() {
         IAtomContainer cuneane = AbstractSignatureTest.makeCuneane();
         SignatureQuotientGraph qGraph = new SignatureQuotientGraph(cuneane, 2);
         checkParameters(qGraph, 3, 5, 3);
     }
 
     @Test
-    public void testPropellane() {
+    void testPropellane() {
         IAtomContainer propellane = AbstractSignatureTest.makePropellane();
         SignatureQuotientGraph qGraph = new SignatureQuotientGraph(propellane);
         checkParameters(qGraph, 2, 2, 1);
     }
 
     @Test
-    public void testTwistane() {
+    void testTwistane() {
         IAtomContainer twistane = AbstractSignatureTest.makeTwistane();
         SignatureQuotientGraph qGraph = new SignatureQuotientGraph(twistane);
         checkParameters(qGraph, 3, 4, 2);
     }
 
     @Test
-    public void testC7H16Isomers() {
+    void testC7H16Isomers() {
         IAtomContainer c7H16A = AbstractSignatureTest.makeC7H16A();
         IAtomContainer c7H16B = AbstractSignatureTest.makeC7H16B();
         IAtomContainer c7H16C = AbstractSignatureTest.makeC7H16C();
@@ -101,7 +100,7 @@ public class SignatureQuotientGraphTest extends AbstractSignatureTest {
     }
 
     @Test
-    public void testAromatic() {
+    void testAromatic() {
         IAtomContainer benzene = AbstractSignatureTest.makeBenzene();
         SignatureQuotientGraph qGraph = new SignatureQuotientGraph(benzene);
         checkParameters(qGraph, 1, 1, 1);

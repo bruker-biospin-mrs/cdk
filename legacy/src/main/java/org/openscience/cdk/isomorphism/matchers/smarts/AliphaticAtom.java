@@ -19,15 +19,13 @@
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
 import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 /**
  * This matcher any non-aromatic atom. This assumes that aromaticity in the
  * molecule has been perceived.
  *
- * @cdk.module  smarts
- * @cdk.githash
  * @cdk.keyword SMARTS
  */
 @Deprecated
@@ -41,7 +39,7 @@ public class AliphaticAtom extends SMARTSAtom {
      */
     public AliphaticAtom(IChemObjectBuilder builder) {
         super(builder);
-        setFlag(CDKConstants.ISALIPHATIC, true);
+        setFlag(IChemObject.ALIPHATIC, true);
     }
 
     /*

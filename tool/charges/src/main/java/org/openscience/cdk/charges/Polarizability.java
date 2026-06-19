@@ -25,6 +25,8 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
@@ -32,7 +34,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -43,14 +44,12 @@ import java.util.List;
  * P, Osp3 and Osp2. Aromaticity must be calculated beforehand.
  *
  * @author         chhoppe
- * @cdk.githash
  * @cdk.created    2004-11-03
  * @cdk.keyword polarizability
- * @cdk.module     charges
  */
 public class Polarizability {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(Polarizability.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(Polarizability.class);
 
     /**
      * Constructor for the Polarizability object.
@@ -214,7 +213,7 @@ public class Polarizability {
                 polarizabilitiyFactor = 0.387;
                 break;
             case "C":
-                if (atom.getFlag(CDKConstants.ISAROMATIC)) {
+                if (atom.getFlag(IChemObject.AROMATIC)) {
                     polarizabilitiyFactor = 1.230;
                 } else if (atomContainer.getMaximumBondOrder(atom) == IBond.Order.SINGLE) {
                     polarizabilitiyFactor = 1.064;/* 1.064 */
@@ -258,7 +257,7 @@ public class Polarizability {
                 }
                 break;
             case "S":
-                if (atom.getFlag(CDKConstants.ISAROMATIC)) {
+                if (atom.getFlag(IChemObject.AROMATIC)) {
                     polarizabilitiyFactor = 3.38;
                 } else if (atomContainer.getMaximumBondOrder(atom) == IBond.Order.SINGLE) {
                     polarizabilitiyFactor = 3.20;/* 3.19 */
@@ -301,7 +300,7 @@ public class Polarizability {
         int hCounter = 0;
         for (IBond bond : bonds) {
             connectedAtom = bond.getOther(atom);
-            if (connectedAtom.getSymbol().equals("H")) {
+            if (connectedAtom.getAtomicNumber() == IElement.H) {
                 hCounter += 1;
             }
         }

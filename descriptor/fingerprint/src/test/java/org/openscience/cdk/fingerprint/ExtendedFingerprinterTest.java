@@ -24,31 +24,36 @@ package org.openscience.cdk.fingerprint;
 
 import java.io.InputStream;
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.vecmath.Point2d;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
-import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.ringsearch.RingPartitioner;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.templates.TestMoleculeFactory;
 import org.openscience.cdk.tools.diff.AtomContainerDiff;
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 /**
- * @cdk.module test-fingerprint
  */
-public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterTest {
+class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterTest {
 
     @Override
     public IFingerprinter getBitFingerprinter() {
@@ -56,28 +61,28 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
     }
 
     @Test
-    public void testExtendedFingerprinter() throws java.lang.Exception {
+    void testExtendedFingerprinter() throws java.lang.Exception {
         IFingerprinter fingerprinter = new ExtendedFingerprinter();
-        Assert.assertNotNull(fingerprinter);
+        Assertions.assertNotNull(fingerprinter);
     }
 
     @Test
-    public void testgetBitFingerprint_IAtomContainer() throws java.lang.Exception {
+    void testgetBitFingerprint_IAtomContainer() throws java.lang.Exception {
         IFingerprinter fingerprinter = new ExtendedFingerprinter();
-        Assert.assertNotNull(fingerprinter);
+        Assertions.assertNotNull(fingerprinter);
 
         IAtomContainer mol = TestMoleculeFactory.makeIndole();
         BitSet bs = fingerprinter.getBitFingerprint(mol).asBitSet();
         IAtomContainer frag1 = TestMoleculeFactory.makePyrrole();
         BitSet bs1 = fingerprinter.getBitFingerprint(frag1).asBitSet();
-        Assert.assertTrue(FingerprinterTool.isSubset(bs, bs1));
-        Assert.assertFalse(FingerprinterTool.isSubset(bs1, bs));
+        Assertions.assertTrue(FingerprinterTool.isSubset(bs, bs1));
+        Assertions.assertFalse(FingerprinterTool.isSubset(bs1, bs));
     }
 
     @Test
-    public void testgetBitFingerprint_IAtomContainer_IRingSet_List() throws java.lang.Exception {
+    void testgetBitFingerprint_IAtomContainer_IRingSet_List() throws java.lang.Exception {
         ExtendedFingerprinter fingerprinter = new ExtendedFingerprinter();
-        Assert.assertNotNull(fingerprinter);
+        Assertions.assertNotNull(fingerprinter);
 
         IAtomContainer mol = TestMoleculeFactory.makeIndole();
         IRingSet rs = Cycles.sssr(mol).toRingSet();
@@ -85,41 +90,41 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
         BitSet bs = fingerprinter.getBitFingerprint(mol, rs, rslist).asBitSet();
         IAtomContainer frag1 = TestMoleculeFactory.makePyrrole();
         BitSet bs1 = fingerprinter.getBitFingerprint(frag1).asBitSet();
-        Assert.assertTrue(FingerprinterTool.isSubset(bs, bs1));
-        Assert.assertFalse(FingerprinterTool.isSubset(bs1, bs));
+        Assertions.assertTrue(FingerprinterTool.isSubset(bs, bs1));
+        Assertions.assertFalse(FingerprinterTool.isSubset(bs1, bs));
     }
 
     @Test
-    public void testGetSize() throws java.lang.Exception {
+    void testGetSize() throws java.lang.Exception {
         IFingerprinter fingerprinter = new ExtendedFingerprinter(512);
-        Assert.assertNotNull(fingerprinter);
-        Assert.assertEquals(512, fingerprinter.getSize());
+        Assertions.assertNotNull(fingerprinter);
+        Assertions.assertEquals(512, fingerprinter.getSize());
     }
 
     @Test
-    public void testExtendedFingerprinter_int() throws java.lang.Exception {
+    void testExtendedFingerprinter_int() throws java.lang.Exception {
         IFingerprinter fingerprinter = new ExtendedFingerprinter(512);
-        Assert.assertNotNull(fingerprinter);
+        Assertions.assertNotNull(fingerprinter);
 
         IAtomContainer mol = TestMoleculeFactory.makeIndole();
         BitSet bs = fingerprinter.getBitFingerprint(mol).asBitSet();
         IAtomContainer frag1 = TestMoleculeFactory.makePyrrole();
         BitSet bs1 = fingerprinter.getBitFingerprint(frag1).asBitSet();
-        Assert.assertTrue(FingerprinterTool.isSubset(bs, bs1));
-        Assert.assertFalse(FingerprinterTool.isSubset(bs1, bs));
+        Assertions.assertTrue(FingerprinterTool.isSubset(bs, bs1));
+        Assertions.assertFalse(FingerprinterTool.isSubset(bs1, bs));
     }
 
     @Test
-    public void testExtendedFingerprinter_int_int() throws java.lang.Exception {
+    void testExtendedFingerprinter_int_int() throws java.lang.Exception {
         IFingerprinter fingerprinter = new ExtendedFingerprinter(512, 7);
-        Assert.assertNotNull(fingerprinter);
+        Assertions.assertNotNull(fingerprinter);
 
         IAtomContainer mol = TestMoleculeFactory.makeIndole();
         BitSet bs = fingerprinter.getBitFingerprint(mol).asBitSet();
         IAtomContainer frag1 = TestMoleculeFactory.makePyrrole();
         BitSet bs1 = fingerprinter.getBitFingerprint(frag1).asBitSet();
-        Assert.assertTrue(FingerprinterTool.isSubset(bs, bs1));
-        Assert.assertFalse(FingerprinterTool.isSubset(bs1, bs));
+        Assertions.assertTrue(FingerprinterTool.isSubset(bs, bs1));
+        Assertions.assertFalse(FingerprinterTool.isSubset(bs1, bs));
     }
 
     /*
@@ -128,9 +133,9 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
      * default
      */
     @Test
-    public void testDifferentRingFinders() throws Exception {
+    void testDifferentRingFinders() throws Exception {
         IFingerprinter fingerprinter = new ExtendedFingerprinter();
-        IAtomContainer ac1 = new AtomContainer();
+        IAtomContainer ac1 = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom atom1 = new Atom("C");
         Atom atom2 = new Atom("C");
         Atom atom3 = new Atom("C");
@@ -155,7 +160,7 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
         ac1.addBond(bond4);
         ac1.addBond(bond5);
         ac1.addBond(bond6);
-        IAtomContainer ac2 = new AtomContainer();
+        IAtomContainer ac2 = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         ac2.addAtom(atom1);
         ac2.addAtom(atom2);
         ac2.addAtom(atom3);
@@ -172,8 +177,8 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
         ac2.addBond(bond7);
         BitSet bs = fingerprinter.getBitFingerprint(ac1).asBitSet();
         BitSet bs1 = fingerprinter.getBitFingerprint(ac2).asBitSet();
-        Assert.assertTrue(FingerprinterTool.isSubset(bs1, bs));
-        Assert.assertFalse(FingerprinterTool.isSubset(bs, bs1));
+        Assertions.assertTrue(FingerprinterTool.isSubset(bs1, bs));
+        Assertions.assertFalse(FingerprinterTool.isSubset(bs, bs1));
     }
 
     /*
@@ -182,8 +187,8 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
      * fingerprint
      */
     @Test
-    public void testCondensedSingle() throws Exception {
-        IAtomContainer molcondensed = new AtomContainer();
+    void testCondensedSingle() throws Exception {
+        IAtomContainer molcondensed = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = molcondensed.getBuilder().newInstance(IAtom.class, "C");
         a1.setPoint2d(new Point2d(421.99999999999994, 860.0));
         molcondensed.addAtom(a1);
@@ -269,7 +274,7 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
         IBond b18 = molcondensed.getBuilder().newInstance(IBond.class, a13, a16, IBond.Order.SINGLE);
         molcondensed.addBond(b18);
 
-        IAtomContainer molsingle = new AtomContainer();
+        IAtomContainer molsingle = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1s = molsingle.getBuilder().newInstance(IAtom.class, "C");
         a1s.setPoint2d(new Point2d(421.99999999999994, 860.0));
         molsingle.addAtom(a1s);
@@ -379,8 +384,8 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
         BitSet bs1 = fingerprinter.getBitFingerprint(molsingle).asBitSet();
         BitSet bs2 = fingerprinter.getBitFingerprint(molcondensed).asBitSet();
 
-        Assert.assertFalse(FingerprinterTool.isSubset(bs1, bs2));
-        Assert.assertTrue(FingerprinterTool.isSubset(bs2, bs1));
+        Assertions.assertFalse(FingerprinterTool.isSubset(bs1, bs2));
+        Assertions.assertTrue(FingerprinterTool.isSubset(bs2, bs1));
 
     }
 
@@ -389,26 +394,26 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
      * before the change in r11932
      */
     @Test
-    public void testChebi() throws Exception {
-        IAtomContainer searchmol = null;
-        IAtomContainer findmol = null;
-        String filename = "data/mdl/chebisearch.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testChebi() throws Exception {
+        IAtomContainer searchmol;
+        IAtomContainer findmol;
+        String filename = "chebisearch.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
-        searchmol = reader.read(new AtomContainer());
+        searchmol = reader.read(DefaultChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
-        filename = "data/mdl/chebifind.mol";
-        ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        filename = "chebifind.mol";
+        ins = this.getClass().getResourceAsStream(filename);
         reader = new MDLV2000Reader(ins);
-        findmol = reader.read(new AtomContainer());
+        findmol = reader.read(DefaultChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
         IFingerprinter fingerprinter = new ExtendedFingerprinter();
         BitSet superBS = fingerprinter.getBitFingerprint(findmol).asBitSet();
         BitSet subBS = fingerprinter.getBitFingerprint(searchmol).asBitSet();
         boolean isSubset = FingerprinterTool.isSubset(superBS, subBS);
         boolean isSubset2 = FingerprinterTool.isSubset(subBS, superBS);
-        Assert.assertFalse(isSubset);
-        Assert.assertFalse(isSubset2);
+        Assertions.assertFalse(isSubset);
+        Assertions.assertFalse(isSubset2);
     }
 
     /**
@@ -417,23 +422,129 @@ public class ExtendedFingerprinterTest extends AbstractFixedLengthFingerprinterT
      * @throws CloneNotSupportedException
      */
     @Test
-    public void testMoleculeInvariance() throws Exception, CloneNotSupportedException {
+    void testMoleculeInvariance() throws Exception, CloneNotSupportedException {
         IAtomContainer mol = TestMoleculeFactory.makePyrrole();
-        IAtomContainer clone = (IAtomContainer) mol.clone();
+        IAtomContainer clone = mol.clone();
 
         // should pass since we have not explicitly detected aromaticity
         for (IAtom atom : mol.atoms()) {
-            Assert.assertFalse(atom.getFlag(CDKConstants.ISAROMATIC));
+            Assertions.assertFalse(atom.getFlag(IChemObject.AROMATIC));
         }
 
         String diff1 = AtomContainerDiff.diff(mol, clone);
-        Assert.assertEquals("", diff1);
+        Assertions.assertEquals("", diff1);
 
         ExtendedFingerprinter fprinter = new ExtendedFingerprinter();
         BitSet fp = fprinter.getBitFingerprint(mol).asBitSet();
-        Assert.assertNotNull(fp);
+        Assertions.assertNotNull(fp);
 
         String diff2 = AtomContainerDiff.diff(mol, clone);
-        Assert.assertTrue("There was a difference\n" + diff2, diff2.equals(""));
+        Assertions.assertTrue(diff2.equals(""), "There was a difference\n" + diff2);
     }
+
+    @Test public void testGetRawFingerprint() throws CDKException {
+        final SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        ExtendedFingerprinter fpr = new ExtendedFingerprinter(1024, 7); // 7 bonds
+        fpr.setPathLimit(2000);
+        final String smi  = "CC(=O)OC1=CC=CC=C1C(=O)O";
+        IAtomContainer mol  = smipar.parseSmiles(smi);
+        Map<String,Integer> actual = fpr.getRawFingerprint(mol);
+        Map<String,Integer> expected = new HashMap<>();
+        expected.put("RNCT:1", 1);
+        expected.put("RCNT_MAX:1", 1);
+        expected.put("MASS_RANGE:1", 1);
+        expected.put("C", 9);
+        expected.put("O", 4);
+        expected.put("O=C", 2);
+        expected.put("C-C", 2);
+        expected.put("O-C", 3);
+        expected.put("C:C", 6);
+        expected.put("O-C:C", 2);
+        expected.put("O=C-O", 2);
+        expected.put("C:C-C", 2);
+        expected.put("O-C-C", 2);
+        expected.put("C:C:C", 6);
+        expected.put("O=C-C", 2);
+        expected.put("C-O-C", 1);
+        expected.put("C:C:C-C", 2);
+        expected.put("C:C:C:C", 6);
+        expected.put("O-C:C-C", 1);
+        expected.put("O-C:C:C", 2);
+        expected.put("O=C-O-C", 1);
+        expected.put("C:C-O-C", 2);
+        expected.put("C-O-C-C", 1);
+        expected.put("O=C-C:C", 2);
+        expected.put("O-C-C:C", 2);
+        expected.put("O-C-C:C:C", 2);
+        expected.put("C:C:C:C:C", 6);
+        expected.put("O-C:C:C:C", 2);
+        expected.put("C:C-O-C-C", 2);
+        expected.put("C:C:C:C-C", 2);
+        expected.put("O=C-C:C:C", 2);
+        expected.put("C:C:C-O-C", 2);
+        expected.put("C-O-C:C-C", 1);
+        expected.put("O=C-C:C-O", 1);
+        expected.put("O-C:C-C-O", 1);
+        expected.put("O=C-O-C:C", 2);
+        expected.put("C:C:C:C:C:C", 6);
+        expected.put("O-C:C:C:C:C", 2);
+        expected.put("O=C-C:C:C:C", 2);
+        expected.put("O-C-C:C:C:C", 2);
+        expected.put("C:C:C:C:C-C", 2);
+        expected.put("O=C-C:C-O-C", 1);
+        expected.put("O-C-C:C-O-C", 1);
+        expected.put("O=C-O-C:C:C", 2);
+        expected.put("C-C:C-O-C-C", 1);
+        expected.put("O=C-O-C:C-C", 1);
+        expected.put("C:C:C-O-C-C", 2);
+        expected.put("C:C:C:C-O-C", 2);
+        expected.put("O=C-C:C-O-C-C", 1);
+        expected.put("O=C-O-C:C-C-O", 1);
+        expected.put("O=C-O-C:C-C=O", 1);
+        expected.put("O-C-C:C-O-C-C", 1);
+        expected.put("C:C:C:C:C-O-C", 2);
+        expected.put("O=C-C:C:C:C:C", 2);
+        expected.put("C:C:C:C-O-C-C", 2);
+        expected.put("O-C-C:C:C:C:C", 2);
+        expected.put("O=C-O-C:C:C:C", 2);
+        expected.put("C:C:C:C:C:C-C", 2);
+        expected.put("O-C:C:C:C:C:C", 2);
+        expected.put("O-C:C:C:C:C:C-C", 1);
+        expected.put("O-C-C:C:C:C:C:C", 2);
+        expected.put("C:C:C:C:C-O-C-C", 2);
+        expected.put("C:C:C:C:C:C-O-C", 2);
+        expected.put("O=C-O-C:C:C:C:C", 2);
+        expected.put("O=C-C:C:C:C:C:C", 2);
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetCountFingerprint() throws CDKException {
+        final SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        ExtendedFingerprinter fpr = new ExtendedFingerprinter(1024, 7); // 7 bonds
+        fpr.setPathLimit(2000);
+        final String smi  = "CC(=O)OC1=CC=CC=C1C(=O)O";
+        IAtomContainer mol  = smipar.parseSmiles(smi);
+        ICountFingerprint actual = fpr.getCountFingerprint(mol);
+        Assertions.assertEquals(65, actual.numOfPopulatedbins());
+    }
+
+    @Test
+    void testHydrogenRepresentations() throws CDKException, CloneNotSupportedException {
+        String smiles = "C=1C=C(C(=C(C1)Cl)Cl)N2CCN(CC2)CCCCOC=3C=CC4=C(C3)NC(=O)CC4";
+        IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+        IAtomContainer abilify = new SmilesParser(bldr).parseSmiles(smiles);
+        IAtomContainer abilifyExplH = abilify.clone();
+        AtomContainerManipulator.convertImplicitToExplicitHydrogens(abilifyExplH);
+        Assertions.assertNotEquals(abilify.getAtomCount(), abilifyExplH.getAtomCount());
+        Assertions.assertNotEquals(abilify.getBondCount(), abilifyExplH.getBondCount());
+
+        ExtendedFingerprinter fp = new ExtendedFingerprinter();
+        Assertions.assertEquals(fp.getBitFingerprint(abilify),
+                                fp.getBitFingerprint(abilifyExplH));
+
+        Assertions.assertNotEquals(abilify.getAtomCount(), abilifyExplH.getAtomCount());
+        Assertions.assertNotEquals(abilify.getBondCount(), abilifyExplH.getBondCount());
+    }
+
 }

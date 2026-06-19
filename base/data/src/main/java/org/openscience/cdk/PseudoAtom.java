@@ -32,8 +32,6 @@ import org.openscience.cdk.interfaces.IPseudoAtom;
  *
  * <p>This should be replaced by the mechanism explained in RFC #8.
  *
- * @cdk.module data
- * @cdk.githash
  *
  * @see  Atom
  */
@@ -168,7 +166,7 @@ public class PseudoAtom extends Atom implements java.io.Serializable, Cloneable,
      */
     @Override
     public String toString() {
-        StringBuffer description = new StringBuffer();
+        StringBuilder description = new StringBuilder();
         description.append("PseudoAtom(");
         description.append(this.hashCode());
         if (getLabel() != null) {

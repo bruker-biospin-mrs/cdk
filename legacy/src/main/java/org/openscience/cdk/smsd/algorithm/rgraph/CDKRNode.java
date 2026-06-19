@@ -39,8 +39,6 @@ import java.util.BitSet;
  *
  * @author      Stephane Werner from IXELIS mail@ixelis.net
  * @cdk.created 2002-07-17
- * @cdk.module  smsd
- * @cdk.githash
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
  *             access to internal implementation details. SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -50,11 +48,11 @@ public class CDKRNode {
 
     // G1/G2 mapping
 
-    private CDKRMap rMap      = null;
+    private CDKRMap rMap;
     // set of neighbour nodes in the RGraph
-    private BitSet  extension = null;
+    private BitSet  extension;
     // set of incompatible nodes in the RGraph
-    private BitSet  forbidden = null;
+    private BitSet  forbidden;
 
     /**
      *  Constructor for the RNode object

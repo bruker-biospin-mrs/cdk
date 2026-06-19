@@ -26,7 +26,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Iterator;
 
 import javax.vecmath.Point3d;
 
@@ -37,13 +36,10 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.io.formats.XYZFormat;
-import org.openscience.cdk.tools.FormatStringBuffer;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
- * @cdk.module io
- * @cdk.githash
  * @cdk.iooptions
  *
  * @author Bradley A. Smith &lt;bradley@baysmith.com&gt;
@@ -53,8 +49,8 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 public class XYZWriter extends DefaultChemObjectWriter {
 
     private BufferedWriter      writer;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(XYZWriter.class);
-    private FormatStringBuffer  fsb;
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(XYZWriter.class);
+    private final FormatStringBuilder fsb;
 
     /**
     * Constructor.
@@ -62,7 +58,7 @@ public class XYZWriter extends DefaultChemObjectWriter {
     * @param out the stream to write the XYZ file to.
     */
     public XYZWriter(Writer out) {
-        fsb = new FormatStringBuffer("%-8.6f");
+        fsb = new FormatStringBuilder("%-8.6f");
         try {
             if (out instanceof BufferedWriter) {
                 writer = (BufferedWriter) out;
@@ -112,8 +108,8 @@ public class XYZWriter extends DefaultChemObjectWriter {
     public boolean accepts(Class<? extends IChemObject> classObject) {
         if (IAtomContainer.class.equals(classObject)) return true;
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (IAtomContainer.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (IAtomContainer.class.equals(anInterface)) return true;
         }
         Class superClass = classObject.getSuperclass();
         if (superClass != null) return this.accepts(superClass);
@@ -137,27 +133,22 @@ public class XYZWriter extends DefaultChemObjectWriter {
     * writes a single frame in XYZ format to the Writer.
     * @param mol the Molecule to write
     */
-    public void writeMolecule(IAtomContainer mol) throws IOException {
+    public void writeMolecule(IAtomContainer mol) {
 
-        String st = "";
-        boolean writecharge = true;
-
+        String st;
         try {
-
             String s1 = "" + mol.getAtomCount();
             writer.write(s1, 0, s1.length());
             writer.write('\n');
 
-            String s2 = null; // FIXME: add some interesting comment
+            String s2 = mol.getTitle();
             if (s2 != null) {
                 writer.write(s2, 0, s2.length());
             }
             writer.write('\n');
 
             // Loop through the atoms and write them out:
-            Iterator<IAtom> atoms = mol.atoms().iterator();
-            while (atoms.hasNext()) {
-                IAtom a = atoms.next();
+            for (IAtom a : mol.atoms()) {
                 st = a.getSymbol();
 
                 Point3d p3 = a.getPoint3d();
@@ -168,10 +159,9 @@ public class XYZWriter extends DefaultChemObjectWriter {
                     st = st + "\t " + fsb.format(0.0) + "\t " + fsb.format(0.0) + "\t " + fsb.format(0.0);
                 }
 
-                if (writecharge) {
-                    double ct = a.getCharge() == CDKConstants.UNSET ? 0.0 : a.getCharge();
-                    st = st + "\t" + ct;
-                }
+                // write charges
+                double ct = a.getCharge() == CDKConstants.UNSET ? 0.0 : a.getCharge();
+                st = st + "\t" + ct;
 
                 writer.write(st, 0, st.length());
                 writer.write('\n');

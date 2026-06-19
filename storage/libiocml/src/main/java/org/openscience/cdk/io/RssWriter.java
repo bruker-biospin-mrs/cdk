@@ -10,11 +10,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Vector;
 
 import nu.xom.Attribute;
 import nu.xom.Document;
@@ -43,8 +41,6 @@ import org.openscience.cdk.libio.cml.Convertor;
  * Generates an RSS feed. It the object is a {@link IAtomContainerSet}, the molecules
  * are put in separately. All other objects are made CML and put in.
  *
- * @cdk.module       libiocml
- * @cdk.githash
  * @cdk.iooptions
  *
  * @author Stefan Kuhn
@@ -161,8 +157,8 @@ public class RssWriter extends DefaultChemObjectWriter {
             } else {
                 list.add(object);
             }
-            for (int i = 0; i < list.size(); i++) {
-                IChemObject chemObject = (IChemObject) list.get(i);
+            for (IChemObject iChemObject : list) {
+                IChemObject chemObject = iChemObject;
                 Element itemElement = new Element("item", NS_RSS10);
                 String easylink = (String) linkmap.get(chemObject);
                 if (easylink != null) itemElement.addAttribute(new Attribute("rdf:about", NS_RDF, easylink));
@@ -198,9 +194,9 @@ public class RssWriter extends DefaultChemObjectWriter {
                     inchiElement.appendChild(new Text((String) inchimap.get(chemObject)));
                     itemElement.appendChild(inchiElement);
                 }
-                Element root = null;
+                Element root;
                 Convertor convertor = new Convertor(true, null);
-                object = list.get(i);
+                object = iChemObject;
                 if (object instanceof ICrystal) {
                     root = convertor.cdkCrystalToCMLMolecule((ICrystal) object);
                 } else if (object instanceof IAtomContainer) {
@@ -227,9 +223,8 @@ public class RssWriter extends DefaultChemObjectWriter {
                 itemElement.appendChild(root);
                 if (multiMap.get(chemObject) != null) {
                     Collection coll = (Collection) multiMap.get(chemObject);
-                    Iterator iterator = coll.iterator();
-                    while (iterator.hasNext()) {
-                        itemElement.appendChild((Element) iterator.next());
+                    for (Object o : coll) {
+                        itemElement.appendChild((Element) o);
                     }
                 }
                 rdfElement.appendChild(itemElement);

@@ -54,8 +54,6 @@ import org.openscience.cdk.smsd.algorithm.vflib.builder.NodeBuilder;
 
 /**
  * Interface for the Node (atomss) in graph.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -67,35 +65,35 @@ public interface INode {
      * Returns Neighbors count.
      * @return Neighbors count.
      */
-    public int countNeighbors();
+    int countNeighbors();
 
     /**
      * Returns neighbors.
      * @return Iterable INode.
      */
-    public Iterable<INode> neighbors();
+    Iterable<INode> neighbors();
 
     /**
      * Returns Query Atom.
      * @return Query Atom.
      */
-    public VFAtomMatcher getAtomMatcher();
+    VFAtomMatcher getAtomMatcher();
 
     /**
      * Returns List of Edges.
      * @return edges.
      */
-    public List<IEdge> getEdges();
+    List<IEdge> getEdges();
 
     /**
      * Adds edge to the edge list.
      * @param edge add an edge.
      */
-    public void addEdge(EdgeBuilder edge);
+    void addEdge(EdgeBuilder edge);
 
     /**
      * Adds neighbor to the Neighbors List.
      * @param node add a node.
      */
-    public void addNeighbor(NodeBuilder node);
+    void addNeighbor(NodeBuilder node);
 }

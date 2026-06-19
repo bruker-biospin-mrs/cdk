@@ -34,8 +34,6 @@ package org.openscience.cdk.smsd.algorithm.rgraph;
  * @author Stephane Werner, IXELIS &lt;mail@ixelis.net&gt;,
  *              Syed Asad Rahman &gt;asad@ebi.ac.uk&lt; (modified the orignal code)
  * @cdk.created 2002-07-24
- * @cdk.module  smsd
- * @cdk.githash
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
  *             access to internal implementation details. SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -43,8 +41,8 @@ package org.openscience.cdk.smsd.algorithm.rgraph;
 @Deprecated
 public class CDKRMap {
 
-    private int id1 = 0;
-    private int id2 = 0;
+    private int id1;
+    private int id2;
 
     /**
      *  Constructor for the CDKRMap
@@ -96,16 +94,15 @@ public class CDKRMap {
     /**
      *  The equals method.
      *
-     * @param  obj  The object to compare.
+     * @param  o  The object to check.
      * @return    true=if both ids equal, else false.
      */
     @Override
-    public boolean equals(Object obj) {
-        if (((CDKRMap) obj).getId1() == getId1() && ((CDKRMap) obj).getId2() == getId2()) {
-            return (true);
-        } else {
-            return (false);
-        }
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CDKRMap cdkrMap = (CDKRMap) o;
+        return id1 == cdkrMap.id1 && id2 == cdkrMap.id2;
     }
 
     /**

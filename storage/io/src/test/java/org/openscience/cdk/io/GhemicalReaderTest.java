@@ -25,36 +25,36 @@ package org.openscience.cdk.io;
 import java.io.InputStream;
 import java.io.StringReader;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemModel;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 
 /**
  * TestCase for the reading Ghemical molecular dynamics files using one test file.
  *
- * @cdk.module test-io
  *
  * @see org.openscience.cdk.io.GhemicalReader
  */
-public class GhemicalReaderTest extends SimpleChemObjectReaderTest {
+class GhemicalReaderTest extends SimpleChemObjectReaderTest {
 
-    @BeforeClass
-    public static void setup() {
-        setSimpleChemObjectReader(new GhemicalMMReader(), "data/ghemical/ethene.mm1gp");
+    @BeforeAll
+    static void setup() {
+        setSimpleChemObjectReader(new GhemicalMMReader(), "ethene.mm1gp");
     }
 
     @Test
-    public void testAccepts() {
-        Assert.assertTrue(chemObjectIO.accepts(ChemModel.class));
+    void testAccepts() {
+        Assertions.assertTrue(chemObjectIO.accepts(ChemModel.class));
     }
 
     @Test
-    public void testExample() throws Exception {
+    void testExample() throws Exception {
         String testfile = "!Header mm1gp 100\n" + "!Info 1\n" + "!Atoms 6\n" + "0 6 \n" + "1 6 \n" + "2 1 \n"
                 + "3 1 \n" + "4 1 \n" + "5 1 \n" + "!Bonds 5\n" + "1 0 D \n" + "2 0 S \n" + "3 0 S \n" + "4 1 S \n"
                 + "5 1 S \n" + "!Coord\n" + "0 0.06677 -0.00197151 4.968e-07 \n"
@@ -67,46 +67,46 @@ public class GhemicalReaderTest extends SimpleChemObjectReaderTest {
         ChemModel model = (ChemModel) reader.read((ChemObject) new ChemModel());
         reader.close();
 
-        Assert.assertNotNull(model);
-        Assert.assertNotNull(model.getMoleculeSet());
+        Assertions.assertNotNull(model);
+        Assertions.assertNotNull(model.getMoleculeSet());
         IAtomContainerSet som = model.getMoleculeSet();
-        Assert.assertNotNull(som);
-        Assert.assertEquals(1, som.getAtomContainerCount());
+        Assertions.assertNotNull(som);
+        Assertions.assertEquals(1, som.getAtomContainerCount());
         IAtomContainer m = som.getAtomContainer(0);
-        Assert.assertNotNull(m);
-        Assert.assertEquals(6, m.getAtomCount());
-        Assert.assertEquals(5, m.getBondCount());
+        Assertions.assertNotNull(m);
+        Assertions.assertEquals(6, m.getAtomCount());
+        Assertions.assertEquals(5, m.getBondCount());
 
         // test reading of formal charges
         org.openscience.cdk.interfaces.IAtom a = m.getAtom(0);
-        Assert.assertNotNull(a);
-        Assert.assertEquals(6, a.getAtomicNumber().intValue());
-        Assert.assertEquals(-0.2, a.getCharge(), 0.01);
-        Assert.assertEquals(0.06677, a.getPoint3d().x, 0.01);
+        Assertions.assertNotNull(a);
+        Assertions.assertEquals(6, a.getAtomicNumber().intValue());
+        Assertions.assertEquals(-0.2, a.getCharge(), 0.01);
+        Assertions.assertEquals(0.06677, a.getPoint3d().x, 0.01);
     }
 
     @Test
-    public void testEthene() throws Exception {
-        String filename = "data/ghemical/ethene.mm1gp";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testEthene() throws Exception {
+        String filename = "ethene.mm1gp";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         GhemicalMMReader reader = new GhemicalMMReader(ins);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         reader.close();
 
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         org.openscience.cdk.interfaces.IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(1, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(1, seq.getChemModelCount());
         org.openscience.cdk.interfaces.IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
+        Assertions.assertNotNull(model);
 
         IAtomContainerSet som = model.getMoleculeSet();
-        Assert.assertNotNull(som);
-        Assert.assertEquals(1, som.getAtomContainerCount());
+        Assertions.assertNotNull(som);
+        Assertions.assertEquals(1, som.getAtomContainerCount());
         IAtomContainer m = som.getAtomContainer(0);
-        Assert.assertNotNull(m);
-        Assert.assertEquals(6, m.getAtomCount());
-        Assert.assertEquals(5, m.getBondCount());
+        Assertions.assertNotNull(m);
+        Assertions.assertEquals(6, m.getAtomCount());
+        Assertions.assertEquals(5, m.getBondCount());
     }
 }

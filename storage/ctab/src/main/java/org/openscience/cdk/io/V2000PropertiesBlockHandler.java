@@ -25,11 +25,15 @@
  */
 package org.openscience.cdk.io;
 
+import org.openscience.cdk.AtomRef;
 import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.isomorphism.matchers.Expr;
+import org.openscience.cdk.isomorphism.matchers.QueryAtom;
 import org.openscience.cdk.sgroup.Sgroup;
 import org.openscience.cdk.sgroup.SgroupBracket;
 import org.openscience.cdk.sgroup.SgroupKey;
@@ -294,6 +298,39 @@ public class V2000PropertiesBlockHandler extends V2000BlockHandler {
                 // ooo: Integer component order (1...256). This limit applies only to MACCS-II
                 case M_SNC:
                     handleSNC(line, sgroups, length);
+                    break;
+
+                // aaa T/F nnn 111 222 ...
+                // Old-style atom list (superseded by M  ALS)
+                // aaa = atom number, T = NOT list, F = normal list
+                // nnn = count, 111..555 = atomic number of each entry
+                case LEGACY_ATOM_LIST:
+                    handleLegacyAtomList(container, line);
+                    break;
+
+                // M  ALS aaannn e 11112222 ...
+                // aaa: atom index, nnn: count, e: T/F exclusion, 1111: symbol
+                case M_ALS:
+                    handleALS(container, line);
+                    break;
+
+                // Data Sgroup Field Description
+                // M  SDT sss fff...fff gg hhh...hhh ii jjj...
+                case M_SDT:
+                    handleSDT(sgroups, line, length);
+                    break;
+
+                // Data Sgroup Display Info
+                case M_SDD:
+                    handleSDD(sgroups, line);
+                    break;
+
+                // Data Sgroup Data (continue / end)
+                // M  SCD sss d...
+                // M  SED sss d...
+                case M_SCD:
+                case M_SED:
+                    handleSCDSED(sgroups, line, length);
                     break;
 
                 // M  END
@@ -742,6 +779,120 @@ public class V2000PropertiesBlockHandler extends V2000BlockHandler {
             sgroup.putValue(SgroupKey.CtabComponentNumber,
                     readMolfileInt(line, st + 4));
         }
+    }
+
+    /**
+     * Old-style atom list (superseded by M ALS).
+     * aaa T/F nnn 111 222 ...
+     * aaa = atom index (1-based), T = NOT list, F = normal list
+     * nnn = count, 111..555 = atomic number of each entry
+     */
+    protected void handleLegacyAtomList(IAtomContainer container, String line) throws CDKException {
+        int index = readUInt(line, 0, 3) - 1;
+        boolean negate = line.charAt(3) == 'T' || line.charAt(4) == 'T';
+        Expr expr = new Expr(Expr.Type.TRUE);
+        for (int i = 11; i < line.length(); i += 4) {
+            int atomicNumber = readUInt(line, i, 3);
+            expr.or(new Expr(Expr.Type.ELEMENT, atomicNumber));
+        }
+        if (negate)
+            expr.negate();
+        IAtom atom = container.getAtom(index);
+        if (AtomRef.deref(atom) instanceof QueryAtom) {
+            QueryAtom ref = (QueryAtom) AtomRef.deref(atom);
+            ref.setExpression(expr);
+        } else {
+            QueryAtom queryAtom = new QueryAtom(expr);
+            queryAtom.setPoint2d(atom.getPoint2d());
+            queryAtom.setPoint3d(atom.getPoint3d());
+            container.setAtom(index, queryAtom);
+        }
+    }
+
+    /**
+     * M  ALS aaannn e 11112222 ...
+     * aaa: atom index, nnn: count, e: T/F exclusion list, 1111: symbol (4-char padded)
+     */
+    protected void handleALS(IAtomContainer container, String line) throws CDKException {
+        int index = readUInt(line, 7, 3) - 1;
+        boolean negate = line.charAt(13) == 'T' || line.charAt(14) == 'T';
+        Expr expr = new Expr(Expr.Type.TRUE);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 16; i < line.length(); i++) {
+            if (line.charAt(i) != ' ') {
+                sb.append(line.charAt(i));
+            } else if (sb.length() != 0) {
+                int elem = Elements.ofString(sb.toString()).number();
+                if (elem != 0)
+                    expr.or(new Expr(Expr.Type.ELEMENT, elem));
+                sb.setLength(0);
+            }
+        }
+        if (sb.length() != 0) {
+            int elem = Elements.ofString(sb.toString()).number();
+            if (elem != 0)
+                expr.or(new Expr(Expr.Type.ELEMENT, elem));
+        }
+        if (negate)
+            expr.negate();
+        IAtom atom = container.getAtom(index);
+        if (AtomRef.deref(atom) instanceof QueryAtom) {
+            QueryAtom ref = (QueryAtom) AtomRef.deref(atom);
+            ref.setExpression(expr);
+        } else {
+            QueryAtom queryAtom = new QueryAtom(expr);
+            queryAtom.setPoint2d(atom.getPoint2d());
+            queryAtom.setPoint3d(atom.getPoint3d());
+            container.setAtom(index, queryAtom);
+        }
+    }
+
+    /**
+     * Data Sgroup Field Description
+     * M  SDT sss fff...fff gg hhh...hhh ii jjj...
+     * sss: Sgroup index
+     * fff: field name (cols 11-40), gg: format (cols 41-42),
+     * hhh: units (cols 43-62)
+     */
+    protected void handleSDT(Map<Integer, Sgroup> sgroups, String line, int length) throws CDKException {
+        Sgroup sgroup = ensureSgroup(sgroups, readMolfileInt(line, 7));
+        if (length < 11) return;
+        String name = line.substring(11, Math.min(41, length)).trim();
+        sgroup.putValue(SgroupKey.DataFieldName, name);
+        if (length < 41) return;
+        String fmt = line.substring(41, Math.min(43, length)).trim();
+        if (fmt.length() == 1 &&
+            fmt.charAt(0) != 'F' && fmt.charAt(0) != 'N' && fmt.charAt(0) != 'T')
+            handleError("Invalid Data Sgroup field format: " + fmt);
+        if (!fmt.isEmpty())
+            sgroup.putValue(SgroupKey.DataFieldFormat, fmt);
+        if (length < 43) return;
+        String units = line.substring(43, Math.min(63, length)).trim();
+        if (!units.isEmpty())
+            sgroup.putValue(SgroupKey.DataFieldUnits, units);
+    }
+
+    /**
+     * Data Sgroup Display Info
+     * M  SDD sss ...
+     * Currently not parsed (TODO).
+     */
+    protected void handleSDD(Map<Integer, Sgroup> sgroups, String line) throws CDKException {
+        // TODO: parse data Sgroup display info
+    }
+
+    /**
+     * Data Sgroup Data (continue / end line)
+     * M  SCD sss d...   (continue)
+     * M  SED sss d...   (end)
+     * d...: up to 69 chars of data (columns 12-80)
+     */
+    protected void handleSCDSED(Map<Integer, Sgroup> sgroups, String line, int length) throws CDKException {
+        Sgroup sgroup = ensureSgroup(sgroups, readMolfileInt(line, 7));
+        String data = line.substring(11, Math.min(79, length));
+        String curr = sgroup.getValue(SgroupKey.Data);
+        if (curr != null) data = curr + data;
+        sgroup.putValue(SgroupKey.Data, data);
     }
 
     private Sgroup ensureSgroup(Map<Integer, Sgroup> map, int idx) throws CDKException {

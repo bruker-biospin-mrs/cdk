@@ -24,8 +24,6 @@ import java.util.TreeMap;
 /**
  * Implements the common parts of the {@link IFontManager} interface.
  *
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public abstract class AbstractFontManager implements IFontManager {
 
@@ -36,7 +34,7 @@ public abstract class AbstractFontManager implements IFontManager {
     private IFontManager.FontStyle fontStyle;
 
     /** The mapping between zoom levels and font sizes */
-    private Map<Double, Integer>   zoomToFontSizeMap;
+    private final Map<Double, Integer>   zoomToFontSizeMap;
 
     // these two values track the font position if it falls
     // off the end of the array so that font and scale are always in synch
@@ -50,7 +48,7 @@ public abstract class AbstractFontManager implements IFontManager {
      * Call this in subclasses with the super() constructor.
      */
     public AbstractFontManager() {
-        this.zoomToFontSizeMap = new TreeMap<Double, Integer>();
+        this.zoomToFontSizeMap = new TreeMap<>();
     }
 
     /**

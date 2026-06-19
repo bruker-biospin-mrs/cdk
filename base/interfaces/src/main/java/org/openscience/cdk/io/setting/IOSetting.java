@@ -25,8 +25,6 @@ import org.openscience.cdk.interfaces.ISetting;
  * An interface for reader settings. It is subclassed by implementations,
  * one for each type of field, e.g. IntReaderSetting.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
  */
@@ -36,9 +34,9 @@ public abstract class IOSetting implements ISetting {
         HIGH, MEDIUM, LOW
     }
 
-    protected Importance level;
-    protected String     name;
-    protected String     question;
+    protected final Importance level;
+    protected final String     name;
+    protected final String     question;
     protected String     setting;
 
     /**

@@ -25,9 +25,9 @@ package org.openscience.cdk.io.iterator;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IChemModel;
 import org.openscience.cdk.interfaces.IChemSequence;
@@ -36,15 +36,14 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.ChemModelManipulator;
 
 /**
- * @cdk.module test-io
  */
-public class IteratingPCSubstancesXMLReaderTest extends CDKTestCase {
+class IteratingPCSubstancesXMLReaderTest extends CDKTestCase {
 
-    private ILoggingTool logger = LoggingToolFactory.createLoggingTool(IteratingPCSubstancesXMLReaderTest.class);
+    private final ILoggingTool logger = LoggingToolFactory.createLoggingTool(IteratingPCSubstancesXMLReaderTest.class);
 
     @Test
-    public void testTaxols() throws Exception {
-        String filename = "data/asn/pubchem/taxols.xml";
+    void testTaxols() throws Exception {
+        String filename = "org/openscience/cdk/io/taxols.xml";
         logger.info("Testing: " + filename);
         InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
         IteratingPCSubstancesXMLReader reader = new IteratingPCSubstancesXMLReader(new InputStreamReader(ins),
@@ -54,16 +53,16 @@ public class IteratingPCSubstancesXMLReaderTest extends CDKTestCase {
         IChemSequence set = DefaultChemObjectBuilder.getInstance().newInstance(IChemSequence.class);
         while (reader.hasNext()) {
             Object object = reader.next();
-            Assert.assertNotNull(object);
-            Assert.assertTrue(object instanceof IChemModel);
+            Assertions.assertNotNull(object);
+            Assertions.assertTrue(object instanceof IChemModel);
             set.addChemModel((IChemModel) object);
             modelCount++;
         }
 
-        Assert.assertEquals(77, modelCount);
+        Assertions.assertEquals(77, modelCount);
         IChemModel first = set.getChemModel(0);
-        Assert.assertEquals(63, ChemModelManipulator.getAtomCount(first));
-        Assert.assertEquals(69, ChemModelManipulator.getBondCount(first));
+        Assertions.assertEquals(63, ChemModelManipulator.getAtomCount(first));
+        Assertions.assertEquals(69, ChemModelManipulator.getBondCount(first));
     }
 
 }

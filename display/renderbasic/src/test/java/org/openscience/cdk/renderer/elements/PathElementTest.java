@@ -26,16 +26,13 @@ import java.util.ArrayList;
 
 import javax.vecmath.Point2d;
 
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
-/**
- * @cdk.module test-renderbasic
- */
-public class PathElementTest extends AbstractElementTest {
+class PathElementTest extends AbstractElementTest {
 
     @SuppressWarnings("serial")
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         IRenderingElement element = new PathElement(new ArrayList<Point2d>() {
 
             {

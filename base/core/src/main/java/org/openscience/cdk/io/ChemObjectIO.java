@@ -41,8 +41,6 @@ import java.util.List;
  * {@link SettingManager#get(String)} is invoked by {@link #getSetting(String)}).
  *
  * @author johnmay
- * @cdk.module io
- * @cdk.githash
  * @cdk.created 20.03.2012
  */
 public abstract class ChemObjectIO implements IChemObjectIO {
@@ -50,8 +48,8 @@ public abstract class ChemObjectIO implements IChemObjectIO {
     /**
      * Holder of reader event listeners.
      */
-    private List<IChemObjectIOListener> listeners = new ArrayList<IChemObjectIOListener>(2);
-    private SettingManager<IOSetting>   settings  = new SettingManager<IOSetting>();
+    private final List<IChemObjectIOListener> listeners = new ArrayList<>(2);
+    private final SettingManager<IOSetting>   settings  = new SettingManager<>();
 
     /**
      *{@inheritDoc}
@@ -82,6 +80,16 @@ public abstract class ChemObjectIO implements IChemObjectIO {
      */
     @Override
     public <S extends IOSetting> S addSetting(IOSetting setting) {
+        if (hasSetting(setting.getName())) {
+            try {
+                S current = getSetting(setting.getName());
+                current.setSetting(setting.getSetting());
+                return current;
+            } catch (CDKException ex) {
+                // setting value was invalid (ignore as we already have a value for this setting
+                // and we can't throw CDKException as IChemObject is in interfaces module)
+            }
+        }
         return (S) settings.add(setting);
     }
 
@@ -91,16 +99,7 @@ public abstract class ChemObjectIO implements IChemObjectIO {
     @Override
     public void addSettings(Collection<IOSetting> settings) {
         for (IOSetting setting : settings) {
-            if (hasSetting(setting.getName())) {
-                try {
-                    getSetting(setting.getName()).setSetting(setting.getSetting());
-                } catch (CDKException ex) {
-                    // setting value was invalid (ignore as we already have a value for this setting
-                    // and we can't throw CDKException as IChemObject is in interfaces module)
-                }
-            } else {
-                addSetting(setting);
-            }
+            addSetting(setting);
         }
     }
 

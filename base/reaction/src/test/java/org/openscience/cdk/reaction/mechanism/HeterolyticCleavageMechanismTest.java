@@ -18,31 +18,30 @@
  */
 package org.openscience.cdk.reaction.mechanism;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.reaction.IReactionMechanism;
 import org.openscience.cdk.reaction.ReactionMechanismTest;
 
 /**
  * Tests for HeterolyticCleavageMechanism implementations.
  *
- * @cdk.module test-reaction
  */
-public class HeterolyticCleavageMechanismTest extends ReactionMechanismTest {
+class HeterolyticCleavageMechanismTest extends ReactionMechanismTest {
 
     /**
      *  The JUnit setup method
      */
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         setMechanism(HeterolyticCleavageMechanism.class);
     }
 
     /**
      *  Constructor for the HeterolyticCleavageMechanismTest object.
      */
-    public HeterolyticCleavageMechanismTest() {
+    HeterolyticCleavageMechanismTest() {
         super();
     }
 
@@ -52,9 +51,9 @@ public class HeterolyticCleavageMechanismTest extends ReactionMechanismTest {
      * @throws Exception
      */
     @Test
-    public void testHeterolyticCleavageMechanism() {
+    void testHeterolyticCleavageMechanism() {
         IReactionMechanism mechanism = new HeterolyticCleavageMechanism();
-        Assert.assertNotNull(mechanism);
+        Assertions.assertNotNull(mechanism);
     }
 
     /**
@@ -64,9 +63,9 @@ public class HeterolyticCleavageMechanismTest extends ReactionMechanismTest {
      * @throws Exception
      */
     @Test
-    public void testInitiate_IAtomContainerSet_ArrayList_ArrayList() {
+    void testInitiate_IAtomContainerSet_ArrayList_ArrayList() {
         IReactionMechanism mechanism = new HeterolyticCleavageMechanism();
 
-        Assert.assertNotNull(mechanism);
+        Assertions.assertNotNull(mechanism);
     }
 }

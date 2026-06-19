@@ -24,16 +24,17 @@
 
 package org.openscience.cdk.smiles;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.silent.Atom;
-import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.silent.Bond;
 import org.openscience.cdk.silent.PseudoAtom;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
@@ -50,9 +51,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.openscience.cdk.interfaces.IBond.Order.DOUBLE;
@@ -69,36 +68,41 @@ import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo.CLOCKW
  * the Grins output changed and there was not a problem with the conversion.
  *
  * @author John May
- * @cdk.module test-smiles
  */
-public class CDKToBeamTest {
+class CDKToBeamTest {
 
-    @Test(expected = NullPointerException.class)
-    public void noImplicitHCount() throws Exception {
-        new CDKToBeam().toBeamAtom(new Atom("C"));
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void noSymbol() throws Exception {
-        new CDKToBeam().toBeamAtom(new Atom());
+    @Test
+    void noImplicitHCount() throws Exception {
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {
+                                    new CDKToBeam().toBeamAtom(new Atom("C"));
+                                });
     }
 
     @Test
-    public void unknownSymbol() throws Exception {
+    void noSymbol() throws Exception {
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {
+                                    new CDKToBeam().toBeamAtom(new Atom());
+                                });
+    }
+
+    @Test
+    void unknownSymbol() throws Exception {
         IAtom a = new PseudoAtom("ALA");
         a.setImplicitHydrogenCount(0);
         assertThat(new CDKToBeam().toBeamAtom(a).element(), is(Element.Unknown));
     }
 
     @Test
-    public void unknownSymbol_Pseudo() throws Exception {
+    void unknownSymbol_Pseudo() throws Exception {
         IAtom a = new PseudoAtom("R1");
         a.setImplicitHydrogenCount(0);
         assertThat(new CDKToBeam().toBeamAtom(a).element(), is(Element.Unknown));
     }
 
     @Test
-    public void methane_Atom() throws Exception {
+    void methane_Atom() throws Exception {
         IAtom a = new Atom("C");
         a.setImplicitHydrogenCount(4);
         assertThat(new CDKToBeam().toBeamAtom(a).element(), is(Element.Carbon));
@@ -106,7 +110,7 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void water_Atom() throws Exception {
+    void water_Atom() throws Exception {
         IAtom a = new Atom("O");
         a.setImplicitHydrogenCount(2);
         assertThat(new CDKToBeam().toBeamAtom(a).element(), is(Element.Oxygen));
@@ -114,7 +118,7 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void chargedAtom() throws Exception {
+    void chargedAtom() throws Exception {
         IAtom a = new Atom("C");
         a.setImplicitHydrogenCount(0);
         for (int chg = -10; chg < 10; chg++) {
@@ -124,29 +128,29 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void aliphaticAtom() throws Exception {
+    void aliphaticAtom() throws Exception {
         IAtom a = new Atom("C");
         a.setImplicitHydrogenCount(0);
-        assertFalse(new CDKToBeam().toBeamAtom(a).aromatic());
+        Assertions.assertFalse(new CDKToBeam().toBeamAtom(a).aromatic());
     }
 
     @Test
-    public void aromaticAtom() throws Exception {
+    void aromaticAtom() throws Exception {
         IAtom a = new Atom("C");
         a.setImplicitHydrogenCount(0);
-        a.setFlag(CDKConstants.ISAROMATIC, true);
-        assertTrue(new CDKToBeam().toBeamAtom(a).aromatic());
+        a.setFlag(IChemObject.AROMATIC, true);
+        Assertions.assertTrue(new CDKToBeam().toBeamAtom(a).aromatic());
     }
 
     @Test
-    public void unspecifiedIsotope() throws Exception {
+    void unspecifiedIsotope() throws Exception {
         IAtom a = new Atom("C");
         a.setImplicitHydrogenCount(0);
         assertThat(new CDKToBeam().toBeamAtom(a).isotope(), is(-1));
     }
 
     @Test
-    public void specifiedIsotope() throws Exception {
+    void specifiedIsotope() throws Exception {
         IAtom a = new Atom("C");
         a.setImplicitHydrogenCount(0);
         a.setMassNumber(13);
@@ -154,7 +158,7 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void noDefaultIsotope() throws Exception {
+    void noDefaultIsotope() throws Exception {
         IAtom a = new Atom("C");
         a.setImplicitHydrogenCount(0);
         a.setMassNumber(12);
@@ -164,53 +168,65 @@ public class CDKToBeamTest {
     // special check that a CDK pseudo atom will default to 0 hydrogens if
     // the hydrogens are set to null
     @Test
-    public void pseudoAtom_nullH() throws Exception {
+    void pseudoAtom_nullH() throws Exception {
         assertThat(new CDKToBeam().toBeamAtom(new PseudoAtom("R")).hydrogens(), is(0));
         assertThat(new CDKToBeam().toBeamAtom(new PseudoAtom("*")).hydrogens(), is(0));
         assertThat(new CDKToBeam().toBeamAtom(new PseudoAtom("R1")).hydrogens(), is(0));
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = CDKException.class)
-    public void unsetBondOrder() throws Exception {
-        IAtom u = mock(IAtom.class);
-        IAtom v = mock(IAtom.class);
-        IBond b = new Bond(u, v, IBond.Order.UNSET);
-        Map<IAtom, Integer> mock = mock(Map.class);
-        when(mock.get(u)).thenReturn(0);
-        when(mock.get(v)).thenReturn(1);
-        new CDKToBeam().toBeamEdge(b, mock);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test(expected = CDKException.class)
-    public void undefBondOrder() throws Exception {
-        IAtom u = mock(IAtom.class);
-        IAtom v = mock(IAtom.class);
-        IBond b = new Bond(u, v, null);
-        Map<IAtom, Integer> mock = mock(Map.class);
-        when(mock.get(u)).thenReturn(0);
-        when(mock.get(v)).thenReturn(1);
-        new CDKToBeam().toBeamEdge(b, mock);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test(expected = IllegalArgumentException.class)
-    public void tooFewAtoms() throws Exception {
-        IBond b = new Bond(new IAtom[]{mock(IAtom.class)});
-        new CDKToBeam().toBeamEdge(b, mock(Map.class));
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test(expected = IllegalArgumentException.class)
-    public void tooManyAtoms() throws Exception {
-        IBond b = new Bond(new IAtom[]{mock(IAtom.class), mock(IAtom.class), mock(IAtom.class)});
-        new CDKToBeam().toBeamEdge(b, mock(Map.class));
+    @Test
+    void unsetBondOrder() throws Exception {
+        Assertions.assertThrows(CDKException.class,
+                                () -> {
+                                    IAtom u = mock(IAtom.class);
+                                    IAtom v = mock(IAtom.class);
+                                    IBond b = new Bond(u, v, IBond.Order.UNSET);
+                                    Map<IAtom, Integer> mock = mock(Map.class);
+                                    when(mock.get(u)).thenReturn(0);
+                                    when(mock.get(v)).thenReturn(1);
+                                    new CDKToBeam().toBeamEdge(b, mock);
+                                });
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void singleBond() throws Exception {
+    void undefBondOrder() throws Exception {
+        Assertions.assertThrows(CDKException.class,
+                                () -> {
+                                    IAtom u = mock(IAtom.class);
+                                    IAtom v = mock(IAtom.class);
+                                    IBond b = new Bond(u, v, null);
+                                    Map<IAtom, Integer> mock = mock(Map.class);
+                                    when(mock.get(u)).thenReturn(0);
+                                    when(mock.get(v)).thenReturn(1);
+                                    new CDKToBeam().toBeamEdge(b, mock);
+                                });
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void tooFewAtoms() throws Exception {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    IBond b = new Bond(new IAtom[]{mock(IAtom.class)});
+                                    new CDKToBeam().toBeamEdge(b, mock(Map.class));
+                                });
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void tooManyAtoms() throws Exception {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    IBond b = new Bond(new IAtom[]{mock(IAtom.class), mock(IAtom.class), mock(IAtom.class)});
+                                    new CDKToBeam().toBeamEdge(b, mock(Map.class));
+                                });
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void singleBond() throws Exception {
         IAtom u = mock(IAtom.class);
         IAtom v = mock(IAtom.class);
         IBond b = new Bond(u, v);
@@ -223,11 +239,11 @@ public class CDKToBeamTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void aromaticBond() throws Exception {
+    void aromaticBond() throws Exception {
         IAtom u = mock(IAtom.class);
         IAtom v = mock(IAtom.class);
         IBond b = new Bond(u, v);
-        b.setFlag(CDKConstants.ISAROMATIC, true);
+        b.setFlag(IChemObject.AROMATIC, true);
         Map<IAtom, Integer> mock = mock(Map.class);
         when(mock.get(u)).thenReturn(0);
         when(mock.get(v)).thenReturn(1);
@@ -239,7 +255,7 @@ public class CDKToBeamTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void doubleBond() throws Exception {
+    void doubleBond() throws Exception {
         IAtom u = mock(IAtom.class);
         IAtom v = mock(IAtom.class);
         IBond b = new Bond(u, v, IBond.Order.DOUBLE);
@@ -252,7 +268,7 @@ public class CDKToBeamTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void tripleBond() throws Exception {
+    void tripleBond() throws Exception {
         IAtom u = mock(IAtom.class);
         IAtom v = mock(IAtom.class);
         IBond b = new Bond(u, v, IBond.Order.TRIPLE);
@@ -265,7 +281,7 @@ public class CDKToBeamTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void quadrupleBond() throws Exception {
+    void quadrupleBond() throws Exception {
         IAtom u = mock(IAtom.class);
         IAtom v = mock(IAtom.class);
         IBond b = new Bond(u, v, IBond.Order.QUADRUPLE);
@@ -277,45 +293,45 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void adeneine() throws Exception {
+    void adeneine() throws Exception {
         Graph g = convert(TestMoleculeFactory.makeAdenine(), 0);
         assertThat(g.toSmiles(), is("C12=C(N=CN=C1N)NC=N2"));
     }
 
     @Test
-    public void benzene_kekule() throws Exception {
+    void benzene_kekule() throws Exception {
         Graph g = convert(TestMoleculeFactory.makeBenzene(), 0);
         assertThat(g.toSmiles(), is("C=1C=CC=CC1"));
     }
 
     @Test
-    public void benzene() throws Exception {
+    void benzene() throws Exception {
         IAtomContainer ac = TestMoleculeFactory.makeBenzene();
         Graph g = convert(ac, true, SmiFlavor.UseAromaticSymbols);
         assertThat(g.toSmiles(), is("c1ccccc1"));
     }
 
     @Test
-    public void imidazole_kekule() throws Exception {
+    void imidazole_kekule() throws Exception {
         Graph g = convert(TestMoleculeFactory.makeImidazole(), false, 0);
         assertThat(g.toSmiles(), is("C=1NC=NC1"));
     }
 
     @Test
-    public void imidazole() throws Exception {
+    void imidazole() throws Exception {
         Graph g = convert(TestMoleculeFactory.makeImidazole(), true, SmiFlavor.UseAromaticSymbols);
         assertThat(g.toSmiles(), is("c1[nH]cnc1"));
     }
 
     @Test
-    public void imidazole_ignoreAromatic() throws Exception {
+    void imidazole_ignoreAromatic() throws Exception {
         Graph g = convert(TestMoleculeFactory.makeImidazole(), true, 0);
         assertThat(g.toSmiles(), is("C=1NC=NC1"));
     }
 
     @Test
-    public void C13_isomeric() throws Exception {
-        IAtomContainer ac = new AtomContainer();
+    void C13_isomeric() throws Exception {
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a = new Atom("C");
         a.setMassNumber(13);
         ac.addAtom(a);
@@ -325,8 +341,8 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void C13_nonIsomeric() throws Exception {
-        IAtomContainer ac = new AtomContainer();
+    void C13_nonIsomeric() throws Exception {
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a = new Atom("C");
         a.setMassNumber(13);
         ac.addAtom(a);
@@ -336,8 +352,8 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void azanium() throws Exception {
-        IAtomContainer ac = new AtomContainer();
+    void azanium() throws Exception {
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a = new Atom("N");
         a.setFormalCharge(+1);
         ac.addAtom(a);
@@ -347,8 +363,8 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void oxidanide() throws Exception {
-        IAtomContainer ac = new AtomContainer();
+    void oxidanide() throws Exception {
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a = new Atom("O");
         a.setFormalCharge(-1);
         ac.addAtom(a);
@@ -358,8 +374,8 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void oxidandiide() throws Exception {
-        IAtomContainer ac = new AtomContainer();
+    void oxidandiide() throws Exception {
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a = new Atom("O");
         a.setFormalCharge(-2);
         ac.addAtom(a);
@@ -374,9 +390,9 @@ public class CDKToBeamTest {
      * @cdk.inchi InChI=1/C2H2F2/c3-1-2-4/h1-2H/b2-1+
      */
     @Test
-    public void e_1_2_difluoroethene() throws Exception {
+    void e_1_2_difluoroethene() throws Exception {
 
-        IAtomContainer ac = new AtomContainer();
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         ac.addAtom(new Atom("F"));
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("C"));
@@ -397,9 +413,9 @@ public class CDKToBeamTest {
      * @cdk.inchi InChI=1/C2H2F2/c3-1-2-4/h1-2H/b2-1-
      */
     @Test
-    public void z_1_2_difluoroethene() throws Exception {
+    void z_1_2_difluoroethene() throws Exception {
 
-        IAtomContainer ac = new AtomContainer();
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         ac.addAtom(new Atom("F"));
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("C"));
@@ -420,9 +436,9 @@ public class CDKToBeamTest {
      * @cdk.inchi InChI=1/C4H10O/c1-3-4(2)5/h4-5H,3H2,1-2H3/t4-/s2
      */
     @Test
-    public void _2R_butan_2_ol() throws Exception {
+    void _2R_butan_2_ol() throws Exception {
 
-        IAtomContainer ac = new AtomContainer();
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("C"));
@@ -451,9 +467,9 @@ public class CDKToBeamTest {
      * @cdk.inchi InChI=1/C4H10O/c1-3-4(2)5/h4-5H,3H2,1-2H3/t4-/s2
      */
     @Test
-    public void _2S_butan_2_ol() throws Exception {
+    void _2S_butan_2_ol() throws Exception {
 
-        IAtomContainer ac = new AtomContainer();
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("C"));
@@ -484,9 +500,9 @@ public class CDKToBeamTest {
      * @cdk.inchi InChI=1/C2H2F2/c3-1-2-4/h1-2H/b2-1-
      */
     @Test
-    public void z_1_2_difluoroethene_aromatic() throws Exception {
+    void z_1_2_difluoroethene_aromatic() throws Exception {
 
-        IAtomContainer ac = new AtomContainer();
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         ac.addAtom(new Atom("F"));
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("C"));
@@ -497,7 +513,7 @@ public class CDKToBeamTest {
         ac.getAtom(1).setIsAromatic(true);
         ac.getAtom(2).setIsAromatic(true);
 
-        ac.getBond(1).setFlag(CDKConstants.ISAROMATIC, true);
+        ac.getBond(1).setFlag(IChemObject.AROMATIC, true);
 
         ac.addStereoElement(new DoubleBondStereochemistry(ac.getBond(1), new IBond[]{ac.getBond(0), ac.getBond(2)},
                 TOGETHER));
@@ -506,13 +522,13 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void propadiene() throws Exception {
+    void propadiene() throws Exception {
 
     }
 
     @Test
-    public void writeAtomClass() throws Exception {
-        IAtomContainer ac = new AtomContainer();
+    void writeAtomClass() throws Exception {
+        IAtomContainer ac = SilentChemObjectBuilder.getInstance().newAtomContainer();
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("O"));
@@ -525,8 +541,8 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void r_penta_2_3_diene_impl_h() throws Exception {
-        IAtomContainer m = new AtomContainer(5, 4, 0, 0);
+    void r_penta_2_3_diene_impl_h() throws Exception {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(new Atom("C"));
         m.addAtom(new Atom("C"));
         m.addAtom(new Atom("C"));
@@ -545,8 +561,8 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void s_penta_2_3_diene_impl_h() throws Exception {
-        IAtomContainer m = new AtomContainer(5, 4, 0, 0);
+    void s_penta_2_3_diene_impl_h() throws Exception {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(new Atom("C"));
         m.addAtom(new Atom("C"));
         m.addAtom(new Atom("C"));
@@ -565,8 +581,8 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void r_penta_2_3_diene_expl_h() throws Exception {
-        IAtomContainer m = new AtomContainer(5, 4, 0, 0);
+    void r_penta_2_3_diene_expl_h() throws Exception {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(new Atom("C"));
         m.addAtom(new Atom("C"));
         m.addAtom(new Atom("C"));
@@ -598,8 +614,8 @@ public class CDKToBeamTest {
     }
 
     @Test
-    public void s_penta_2_3_diene_expl_h() throws Exception {
-        IAtomContainer m = new AtomContainer(5, 4, 0, 0);
+    void s_penta_2_3_diene_expl_h() throws Exception {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(new Atom("C"));
         m.addAtom(new Atom("C"));
         m.addAtom(new Atom("C"));

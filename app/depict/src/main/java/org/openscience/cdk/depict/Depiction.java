@@ -18,7 +18,6 @@
  */
 package org.openscience.cdk.depict;
 
-import com.google.common.base.Charsets;
 import org.openscience.cdk.renderer.RendererModel;
 import org.openscience.cdk.renderer.elements.Bounds;
 import org.openscience.cdk.renderer.elements.IRenderingElement;
@@ -34,6 +33,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +60,7 @@ public abstract class Depiction {
      * When no fixed padding value is specified we use margin
      * multiplied by this value.
      */
-    protected static final double DEFAULT_PADDING_FACTOR = 2;
+    protected static final double DEFAULT_PADDING_FACTOR = 2.5;
 
     /**
      * Structured Vector Graphics (SVG) format key.
@@ -111,7 +111,7 @@ public abstract class Depiction {
 
     private static final char DOT = '.';
 
-    private final RendererModel model;
+    protected final RendererModel model;
 
     /**
      * Internal method passes in the rendering model parameters.
@@ -179,6 +179,15 @@ public abstract class Depiction {
     }
 
     /**
+     * Render the image to an PDF format byte array.
+     *
+     * @return pdf content
+     */
+    public final byte[] toPdf() {
+        return toVecBytes(PDF_FMT, UNITS_MM);
+    }
+
+    /**
      * Access the specified padding value or fallback to a provided
      * default.
      *
@@ -214,7 +223,11 @@ public abstract class Depiction {
      * @param units the units to use (px or mm)
      * @return the vector graphics format string
      */
-    abstract String toVecStr(String fmt, String units);
+    private final String toVecStr(String fmt, String units) {
+        return new String(toVecBytes(fmt, units));
+    }
+
+    abstract byte[] toVecBytes(String fmt, String units);
 
     /**
      * List the available formats that can be rendered.
@@ -245,11 +258,11 @@ public abstract class Depiction {
      */
     public final void writeTo(String fmt, OutputStream out) throws IOException {
         if (fmt.equalsIgnoreCase(SVG_FMT)) {
-            out.write(toSvgStr().getBytes(Charsets.UTF_8));
+            out.write(toSvgStr().getBytes(StandardCharsets.UTF_8));
         } else if (fmt.equalsIgnoreCase(PS_FMT)) {
-            out.write(toEpsStr().getBytes(Charsets.UTF_8));
+            out.write(toEpsStr().getBytes(StandardCharsets.UTF_8));
         } else if (fmt.equalsIgnoreCase(PDF_FMT)) {
-            out.write(toPdfStr().getBytes(Charsets.UTF_8));
+            out.write(toPdf());
         } else {
             ImageIO.write(toImg(), fmt, out);
         }
@@ -373,9 +386,26 @@ public abstract class Depiction {
         return bondLength / model.get(BasicSceneGenerator.BondLength.class);
     }
 
-    protected void svgPrevisit(String fmt, double rescale, SvgDrawVisitor visitor, List<? extends IRenderingElement> elements) {
+    protected void svgStyleCache(String fmt,
+                                 double rescale,
+                                 SvgDrawVisitor visitor,
+                                 List<? extends IRenderingElement> elements) {
         visitor.setTransform(AffineTransform.getScaleInstance(rescale, rescale));
         visitor.previsit(elements);
         visitor.setTransform(null);
     }
+
+    protected double calcFitting(Dimensions srcDim,
+                                 Dimensions dstDim,
+                                 double margin) {
+        if (dstDim == Dimensions.AUTOMATIC)
+            return 1; // no fitting
+        dstDim = dstDim.add(2*-margin, 2*-margin);
+        double resize = Math.min(dstDim.w / srcDim.w,
+                                 dstDim.h / srcDim.h);
+        if (resize > 1 && !model.get(BasicSceneGenerator.FitToScreen.class))
+            resize = 1;
+        return resize;
+    }
+
 }

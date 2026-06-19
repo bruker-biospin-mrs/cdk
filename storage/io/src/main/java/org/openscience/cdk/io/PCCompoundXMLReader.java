@@ -45,8 +45,6 @@ import javax.xml.stream.events.XMLEvent;
  * The following bits are supported: atoms.aid, atoms.element, atoms.2d,
  * atoms.3d, bonds.aid1, bonds.aid2.
  *
- * @cdk.module  io
- * @cdk.githash
  * @cdk.iooptions
  *
  * @cdk.keyword file format, PubChem Compound XML
@@ -86,6 +84,8 @@ public class PCCompoundXMLReader extends DefaultChemObjectReader {
     public void setReader(Reader input) throws CDKException {
         try {
             XMLInputFactory xmlfact = XMLInputFactory.newFactory();
+            xmlfact.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+            xmlfact.setProperty(XMLInputFactory.SUPPORT_DTD, false);
             xmlfact.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, true);
             parser = xmlfact.createXMLStreamReader(input);
             this.input = input;

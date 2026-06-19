@@ -26,6 +26,7 @@ package org.openscience.cdk.hash;
 
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 
 import java.util.BitSet;
@@ -35,7 +36,6 @@ import java.util.BitSet;
  * when computing the hash codes for the molecule or its atoms.
  *
  * @author John May
- * @cdk.module hash
  */
 abstract class AtomSuppression {
 
@@ -69,7 +69,7 @@ abstract class AtomSuppression {
             BitSet hydrogens = new BitSet();
             for (int i = 0; i < container.getAtomCount(); i++) {
                 IAtom atom = container.getAtom(i);
-                hydrogens.set(i, "H".equals(atom.getSymbol()));
+                hydrogens.set(i, atom.getAtomicNumber() == IElement.H);
             }
             return Suppressed.fromBitSet(hydrogens);
         }

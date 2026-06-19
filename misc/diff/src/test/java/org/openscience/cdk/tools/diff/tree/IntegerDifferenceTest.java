@@ -18,55 +18,53 @@
  */
 package org.openscience.cdk.tools.diff.tree;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-diff
  */
-public class IntegerDifferenceTest extends CDKTestCase {
+class IntegerDifferenceTest {
 
     @Test
-    public void testDiff() {
+    void testDiff() {
         IDifference result = IntegerDifference.construct("Foo", 1, 2);
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
     @Test
-    public void testSame() {
+    void testSame() {
         IDifference result = IntegerDifference.construct("Foo", 1, 1);
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
     }
 
     @Test
-    public void testTwoNull() {
+    void testTwoNull() {
         IDifference result = IntegerDifference.construct("Foo", null, null);
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
     }
 
     @Test
-    public void testOneNull() {
+    void testOneNull() {
         IDifference result = IntegerDifference.construct("Foo", null, 1);
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
 
         result = IntegerDifference.construct("Foo", 2, null);
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         IDifference result = IntegerDifference.construct("Foo", 1, 2);
         String diffString = result.toString();
-        Assert.assertNotNull(diffString);
-        assertOneLiner(diffString);
+        Assertions.assertNotNull(diffString);
+        StringDifferenceTest.assertOneLiner(diffString);
     }
 
     @Test
-    public void testRefs() {
-        Integer x = new Integer(1);
-        Integer y = new Integer(1);
+    void testRefs() {
+        Integer x = 1;
+        Integer y = 1;
         IDifference diff = IntegerDifference.construct("foo", x, y);
-        Assert.assertNull(diff);
+        Assertions.assertNull(diff);
     }
 }

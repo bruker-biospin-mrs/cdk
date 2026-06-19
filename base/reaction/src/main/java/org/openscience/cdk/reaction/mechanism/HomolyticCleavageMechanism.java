@@ -42,8 +42,6 @@ import java.util.ArrayList;
  *
  * @author         miguelrojasch
  * @cdk.created    2008-02-10
- * @cdk.module     reaction
- * @cdk.githash
  */
 public class HomolyticCleavageMechanism implements IReactionMechanism {
 
@@ -75,7 +73,7 @@ public class HomolyticCleavageMechanism implements IReactionMechanism {
         IAtomContainer molecule = atomContainerSet.getAtomContainer(0);
         IAtomContainer reactantCloned;
         try {
-            reactantCloned = (IAtomContainer) molecule.clone();
+            reactantCloned = molecule.clone();
         } catch (CloneNotSupportedException e) {
             throw new CDKException("Could not clone IAtomContainer!", e);
         }
@@ -119,7 +117,7 @@ public class HomolyticCleavageMechanism implements IReactionMechanism {
         } else {
             IAtomContainerSet moleculeSetP = ConnectivityChecker.partitionIntoMolecules(reactantCloned);
             for (int z = 0; z < moleculeSetP.getAtomContainerCount(); z++) {
-                reaction.addProduct((IAtomContainer) moleculeSetP.getAtomContainer(z));
+                reaction.addProduct(moleculeSetP.getAtomContainer(z));
             }
         }
 

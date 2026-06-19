@@ -18,31 +18,31 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
 /**
- * @cdk.module test-qsarmolecular
  */
-public class ChiIndexUtilsTest extends CDKTestCase {
+class ChiIndexUtilsTest extends CDKTestCase {
 
-    DefaultChemObjectBuilder builder;
+    private IChemObjectBuilder builder;
 
-    public ChiIndexUtilsTest() {}
+    ChiIndexUtilsTest() {}
 
-    @Before
-    public void setup() {
-        builder = (DefaultChemObjectBuilder) DefaultChemObjectBuilder.getInstance();
+    @BeforeEach
+    void setup() {
+        builder = DefaultChemObjectBuilder.getInstance();
     }
 
     @Test
-    public void testDeltaVSulphurSO() {
+    void testDeltaVSulphurSO() {
         IAtom s = builder.newInstance(IAtom.class, "S");
         IAtom o = builder.newInstance(IAtom.class, "O");
         IBond b = builder.newInstance(IBond.class, s, o);
@@ -54,11 +54,11 @@ public class ChiIndexUtilsTest extends CDKTestCase {
         m.addBond(b);
 
         double deltav = ChiIndexUtils.deltavSulphur(s, m);
-        Assert.assertEquals(1.33, deltav, 0.01);
+        Assertions.assertEquals(1.33, deltav, 0.01);
     }
 
     @Test
-    public void testDeltaVSulphurSO2() {
+    void testDeltaVSulphurSO2() {
         IAtom s = builder.newInstance(IAtom.class, "S");
         IAtom o1 = builder.newInstance(IAtom.class, "O");
         IAtom o2 = builder.newInstance(IAtom.class, "O");
@@ -75,7 +75,7 @@ public class ChiIndexUtilsTest extends CDKTestCase {
         m.addBond(b2);
 
         double deltav = ChiIndexUtils.deltavSulphur(s, m);
-        Assert.assertEquals(2.67, deltav, 0.01);
+        Assertions.assertEquals(2.67, deltav, 0.01);
     }
 
 }

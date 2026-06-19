@@ -30,16 +30,14 @@ import org.openscience.cdk.math.Vector;
  * This class represents a set of orbitals
  *
  * @author Stephan Michels &lt;stephan@vern.chem.tu-berlin.de&gt;
- * @cdk.githash
  * @cdk.created 2001-06-14
- * @cdk.module  qm
  */
 public class Orbitals {
 
-    private int    count_basis;
+    private final int    count_basis;
     private int    count_orbitals;
     private Matrix C;
-    private IBasis basis;
+    private final IBasis basis;
     private int    count_electrons = 1;
 
     /**

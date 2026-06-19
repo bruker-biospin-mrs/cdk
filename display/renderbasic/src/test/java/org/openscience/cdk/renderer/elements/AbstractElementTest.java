@@ -23,21 +23,18 @@ package org.openscience.cdk.renderer.elements;
 
 import java.awt.geom.AffineTransform;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-/**
- * @cdk.module test-renderbasic
- */
-public abstract class AbstractElementTest {
+abstract class AbstractElementTest {
 
     private static IRenderingElement element;
 
-    protected static void setRenderingElement(IRenderingElement renderingElement) {
+    static void setRenderingElement(IRenderingElement renderingElement) {
         element = renderingElement;
     }
 
-    public class MockVisitor implements IRenderingVisitor {
+    class MockVisitor implements IRenderingVisitor {
 
         boolean isVisited = false;
 
@@ -53,16 +50,16 @@ public abstract class AbstractElementTest {
     }
 
     @Test
-    public void testConstructor() {
-        Assert.assertNotNull(element);
+    void testConstructor() {
+        Assertions.assertNotNull(element);
     }
 
     @Test
-    public void testAccept() {
+    void testAccept() {
         MockVisitor visitor = new MockVisitor();
-        Assert.assertFalse(visitor.isVisited);
+        Assertions.assertFalse(visitor.isVisited);
         element.accept(visitor);
-        Assert.assertTrue(visitor.isVisited);
+        Assertions.assertTrue(visitor.isVisited);
     }
 
 }

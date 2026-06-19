@@ -25,8 +25,6 @@ import java.awt.Color;
  * A 'wedge' is a triangle aligned along a bond that indicates stereochemistry.
  * It can be dashed or not to indicate up and down.
  *
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public class WedgeLineElement extends LineElement {
 
@@ -52,7 +50,7 @@ public class WedgeLineElement extends LineElement {
      * point in the line.
      */
     public enum Direction {
-        toFirst, toSecond;
+        toFirst, toSecond
     }
 
     /**

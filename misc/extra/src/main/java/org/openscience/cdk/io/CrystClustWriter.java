@@ -44,14 +44,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * @author Egon Willighagen
  * @cdk.created 2004-01-01
  *
- * @cdk.module extra
- * @cdk.githash
  * @cdk.iooptions
  */
 public class CrystClustWriter extends DefaultChemObjectWriter {
 
     private BufferedWriter      writer;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(CrystClustWriter.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(CrystClustWriter.class);
 
     /**
      * Constructs a new CrystClustWriter class. Output will be stored in the Writer
@@ -185,8 +183,7 @@ public class CrystClustWriter extends DefaultChemObjectWriter {
         if (sg.equals("P1")) {
             writeln("1");
         } else {
-            // duno
-            writeln("1");
+            throw new IllegalStateException("Unknown asymmetric units for SpaceGroup=" + sg);
         }
 
         // output atoms
@@ -209,7 +206,7 @@ public class CrystClustWriter extends DefaultChemObjectWriter {
         try {
             writer.write(s);
         } catch (IOException e) {
-            System.err.println("CMLWriter IOException while printing \"" + s + "\":" + e.toString());
+            System.err.println("CMLWriter IOException while printing \"" + s + "\":" + e);
         }
     }
 
@@ -218,7 +215,7 @@ public class CrystClustWriter extends DefaultChemObjectWriter {
             writer.write(s);
             writer.write('\n');
         } catch (IOException e) {
-            System.err.println("CMLWriter IOException while printing \"" + s + "\":" + e.toString());
+            System.err.println("CMLWriter IOException while printing \"" + s + "\":" + e);
         }
     }
 

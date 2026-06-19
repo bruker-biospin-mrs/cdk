@@ -2,10 +2,9 @@ package org.openscience.cdk.qsar.descriptors.molecular;
 
 import javax.vecmath.Point2d;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.openscience.cdk.AtomContainer;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -16,21 +15,20 @@ import org.openscience.cdk.smiles.SmilesParser;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class ChiClusterDescriptorTest extends MolecularDescriptorTest {
+class ChiClusterDescriptorTest extends MolecularDescriptorTest {
 
-    public ChiClusterDescriptorTest() {}
+    ChiClusterDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(ChiClusterDescriptor.class);
     }
 
     @Test
-    public void testDan64() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testDan64() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         a1.setPoint2d(new Point2d(0.7500000000000004, 2.799038105676658));
         mol.addAtom(a1);
@@ -54,20 +52,20 @@ public class ChiClusterDescriptorTest extends MolecularDescriptorTest {
 
         DoubleArrayResult ret = (DoubleArrayResult) descriptor.calculate(mol).getValue();
 
-        Assert.assertEquals(0.2887, ret.get(0), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(1), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(2), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(3), 0.0001);
-        Assert.assertEquals(0.1667, ret.get(4), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(5), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(6), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(7), 0.0001);
+        Assertions.assertEquals(0.2887, ret.get(0), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(1), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(2), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(3), 0.0001);
+        Assertions.assertEquals(0.1667, ret.get(4), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(5), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(6), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(7), 0.0001);
     }
 
     @Test
-    public void testDan154() throws Exception {
+    void testDan154() throws Exception {
 
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         a1.setPoint2d(new Point2d(0.0, 1.5));
         mol.addAtom(a1);
@@ -111,20 +109,20 @@ public class ChiClusterDescriptorTest extends MolecularDescriptorTest {
 
         DoubleArrayResult ret = (DoubleArrayResult) descriptor.calculate(mol).getValue();
 
-        Assert.assertEquals(0.5774, ret.get(0), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(1), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(2), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(3), 0.0001);
-        Assert.assertEquals(0.3780, ret.get(4), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(5), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(6), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(7), 0.0001);
+        Assertions.assertEquals(0.5774, ret.get(0), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(1), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(2), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(3), 0.0001);
+        Assertions.assertEquals(0.3780, ret.get(4), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(5), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(6), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(7), 0.0001);
     }
 
     @Test
-    public void testDan248() throws Exception {
+    void testDan248() throws Exception {
 
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         a1.setPoint2d(new Point2d(0.0, 1.5));
         mol.addAtom(a1);
@@ -178,35 +176,37 @@ public class ChiClusterDescriptorTest extends MolecularDescriptorTest {
 
         DoubleArrayResult ret = (DoubleArrayResult) descriptor.calculate(mol).getValue();
 
-        Assert.assertEquals(1.7845, ret.get(0), 0.0001);
-        Assert.assertEquals(0.2500, ret.get(1), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(2), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(3), 0.0001);
-        Assert.assertEquals(1.4946, ret.get(4), 0.0001);
-        Assert.assertEquals(0.2500, ret.get(5), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(6), 0.0001);
-        Assert.assertEquals(0.0000, ret.get(7), 0.0001);
+        Assertions.assertEquals(1.7845, ret.get(0), 0.0001);
+        Assertions.assertEquals(0.2500, ret.get(1), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(2), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(3), 0.0001);
+        Assertions.assertEquals(1.4946, ret.get(4), 0.0001);
+        Assertions.assertEquals(0.2500, ret.get(5), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(6), 0.0001);
+        Assertions.assertEquals(0.0000, ret.get(7), 0.0001);
     }
 
     /**
      * @cdk.bug 3023326
      */
     @Test
-    public void testCovalentMetal() throws Exception {
+    void testCovalentMetal() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CCCC[Sn](CCCC)(CCCC)c1cc(Cl)c(Nc2nc(C)nc(N(CCC)CC3CC3)c2Cl)c(Cl)c1");
         DoubleArrayResult ret = (DoubleArrayResult) descriptor.calculate(mol).getValue();
-        Assert.assertNotNull(ret);
+        Assertions.assertNotNull(ret);
     }
 
     /**
      * @cdk.bug 3023326
      */
-    @Test(expected = NullPointerException.class)
-    public void testCovalentPlatinum() throws Exception {
+    @Test
+    void testCovalentPlatinum() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CC1CN[Pt]2(N1)OC(=O)C(C)P(=O)(O)O2");
-        descriptor.calculate(mol).getValue();
+        Assertions.assertThrows(NullPointerException.class, () -> {
+            descriptor.calculate(mol).getValue();
+        });
     }
 
     //    @Test public void testDan277() throws CDKException {

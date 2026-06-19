@@ -32,8 +32,6 @@ import org.openscience.cdk.interfaces.IPDBAtom;
  * Represents the idea of an atom as used in PDB files. It contains extra fields
  * normally associated with atoms in such files.
  *
- * @cdk.module  silent
- * @cdk.githash
  *
  * @see  Atom
  */
@@ -109,8 +107,8 @@ public class PDBAtom extends Atom implements Cloneable, IPDBAtom {
         oxt = false;
         hetAtom = false;
         super.hydrogenCount = null;
-        super.charge = Double.valueOf(0.0);
-        super.formalCharge = Integer.valueOf(0);
+        super.charge = 0.0;
+        super.formalCharge = 0;
     }
 
     /**

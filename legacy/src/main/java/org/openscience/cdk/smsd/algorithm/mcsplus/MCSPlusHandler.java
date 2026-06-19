@@ -37,12 +37,11 @@ import org.openscience.cdk.smsd.helper.FinalMappings;
 import org.openscience.cdk.smsd.interfaces.AbstractMCSAlgorithm;
 import org.openscience.cdk.smsd.interfaces.IMCSBase;
 import org.openscience.cdk.smsd.tools.MolHandler;
+import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
  * This class acts as a handler class for MCSPlus algorithm.
  * {@link org.openscience.cdk.smsd.algorithm.mcsplus.MCSPlus}
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -62,10 +61,10 @@ public class MCSPlusHandler extends AbstractMCSAlgorithm implements IMCSBase {
      * Constructor for the MCS Plus algorithm class
      */
     public MCSPlusHandler() {
-        allAtomMCS = new ArrayList<Map<IAtom, IAtom>>();
-        atomsMCS = new HashMap<IAtom, IAtom>();
-        firstMCS = new TreeMap<Integer, Integer>();
-        allMCS = new ArrayList<Map<Integer, Integer>>();
+        allAtomMCS = new ArrayList<>();
+        atomsMCS = new HashMap<>();
+        firstMCS = new TreeMap<>();
+        allMCS = new ArrayList<>();
     }
 
     /** {@inheritDoc}
@@ -97,7 +96,7 @@ public class MCSPlusHandler extends AbstractMCSAlgorithm implements IMCSBase {
      */
     @Override
     public synchronized void searchMCS(boolean shouldMatchBonds) {
-        List<List<Integer>> mappings = null;
+        List<List<Integer>> mappings;
         try {
             if (source.getAtomCount() >= target.getAtomCount()) {
                 mappings = new MCSPlus().getOverlaps(source, target, shouldMatchBonds);
@@ -122,7 +121,7 @@ public class MCSPlusHandler extends AbstractMCSAlgorithm implements IMCSBase {
             int counter = 0;
             for (Map<Integer, Integer> solution : finalSolution) {
                 //                System.out.println("Number of MCS solution: " + solution);
-                Map<Integer, Integer> validSolution = new TreeMap<Integer, Integer>();
+                Map<Integer, Integer> validSolution = new TreeMap<>();
                 if (!flagExchange) {
                     for (Map.Entry<Integer, Integer> map : solution.entrySet()) {
                         validSolution.put(map.getKey(), map.getValue());
@@ -136,7 +135,8 @@ public class MCSPlusHandler extends AbstractMCSAlgorithm implements IMCSBase {
             }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LoggingToolFactory.createLoggingTool(MCSPlusHandler.class)
+                              .warn("Unexpected Error:", ex);
         }
 
     }
@@ -146,14 +146,14 @@ public class MCSPlusHandler extends AbstractMCSAlgorithm implements IMCSBase {
 
             int counter = 0;
             for (Map<Integer, Integer> solution : allMCS) {
-                Map<IAtom, IAtom> atomMappings = new HashMap<IAtom, IAtom>();
+                Map<IAtom, IAtom> atomMappings = new HashMap<>();
                 for (Map.Entry<Integer, Integer> map : solution.entrySet()) {
 
                     int iIndex = map.getKey();
                     int jIndex = map.getValue();
 
-                    IAtom sourceAtom = null;
-                    IAtom targetAtom = null;
+                    IAtom sourceAtom;
+                    IAtom targetAtom;
 
                     sourceAtom = source.getAtom(iIndex);
                     targetAtom = target.getAtom(jIndex);
@@ -169,13 +169,13 @@ public class MCSPlusHandler extends AbstractMCSAlgorithm implements IMCSBase {
 
     private synchronized void setFirstMapping() {
         if (!allMCS.isEmpty()) {
-            firstMCS = new TreeMap<Integer, Integer>(allMCS.iterator().next());
+            firstMCS = new TreeMap<>(allMCS.iterator().next());
         }
     }
 
     private synchronized void setFirstAtomMapping() {
         if (!allAtomMCS.isEmpty()) {
-            atomsMCS = new HashMap<IAtom, IAtom>(allAtomMCS.iterator().next());
+            atomsMCS = new HashMap<>(allAtomMCS.iterator().next());
         }
     }
 

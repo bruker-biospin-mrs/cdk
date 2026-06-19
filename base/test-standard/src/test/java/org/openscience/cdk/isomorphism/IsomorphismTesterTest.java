@@ -19,12 +19,12 @@
  */
 package org.openscience.cdk.isomorphism;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -36,19 +36,20 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * Checks the functionality of the IsomorphismTester
  *
- * @cdk.module test-standard
  */
-public class IsomorphismTesterTest extends CDKTestCase {
+class IsomorphismTesterTest extends CDKTestCase {
 
-    IAtomContainer pinene_1 = null, pinene_2 = null, pinene_non = null;
+    private IAtomContainer pinene_1 = null;
+    private IAtomContainer pinene_2 = null;
+    private IAtomContainer pinene_non = null;
 
-    public IsomorphismTesterTest() {
+    IsomorphismTesterTest() {
         super();
     }
 
-    @Before
-    public void setUp() {
-        pinene_1 = new AtomContainer();
+    @BeforeEach
+    void setUp() {
+        pinene_1 = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         pinene_1.addAtom(new Atom("C")); // 1
         pinene_1.addAtom(new Atom("C")); // 2
         pinene_1.addAtom(new Atom("C")); // 3
@@ -72,7 +73,7 @@ public class IsomorphismTesterTest extends CDKTestCase {
         pinene_1.addBond(7, 8, IBond.Order.SINGLE); // 10
         pinene_1.addBond(7, 9, IBond.Order.SINGLE); // 11
 
-        pinene_2 = new AtomContainer();
+        pinene_2 = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         pinene_2.addAtom(new Atom("C")); // 1
         pinene_2.addAtom(new Atom("C")); // 2
         pinene_2.addAtom(new Atom("C")); // 3
@@ -96,7 +97,7 @@ public class IsomorphismTesterTest extends CDKTestCase {
         pinene_2.addBond(7, 9, IBond.Order.DOUBLE); // 10
         pinene_2.addBond(7, 6, IBond.Order.SINGLE); // 11
 
-        pinene_non = new AtomContainer();
+        pinene_non = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         pinene_non.addAtom(new Atom("C")); // 1
         pinene_non.addAtom(new Atom("C")); // 2
         pinene_non.addAtom(new Atom("C")); // 3
@@ -122,33 +123,33 @@ public class IsomorphismTesterTest extends CDKTestCase {
     }
 
     @Test
-    public void testIsomorphismTester_IAtomContainer() throws Exception {
+    void testIsomorphismTester_IAtomContainer() throws Exception {
         IsomorphismTester it = new IsomorphismTester(pinene_1);
-        Assert.assertNotNull(it);
+        Assertions.assertNotNull(it);
     }
 
     @Test
-    public void testIsomorphismTester() throws Exception {
+    void testIsomorphismTester() throws Exception {
         IsomorphismTester it = new IsomorphismTester();
-        Assert.assertNotNull(it);
+        Assertions.assertNotNull(it);
     }
 
     @Test
-    public void testIsIsomorphic_IAtomContainer() throws Exception {
+    void testIsIsomorphic_IAtomContainer() throws Exception {
         IsomorphismTester it = new IsomorphismTester(pinene_1);
-        Assert.assertTrue(it.isIsomorphic(pinene_2));
-        Assert.assertFalse(it.isIsomorphic(pinene_non));
+        Assertions.assertTrue(it.isIsomorphic(pinene_2));
+        Assertions.assertFalse(it.isIsomorphic(pinene_non));
     }
 
     @Test
-    public void testIsIsomorphic_IAtomContainer_IAtomContainer() throws Exception {
+    void testIsIsomorphic_IAtomContainer_IAtomContainer() throws Exception {
         IsomorphismTester it = new IsomorphismTester();
-        Assert.assertTrue(it.isIsomorphic(pinene_2, pinene_1));
-        Assert.assertFalse(it.isIsomorphic(pinene_2, pinene_non));
+        Assertions.assertTrue(it.isIsomorphic(pinene_2, pinene_1));
+        Assertions.assertFalse(it.isIsomorphic(pinene_2, pinene_non));
     }
 
     @Test
-    public void testBiphenyl() throws Exception {
+    void testBiphenyl() throws Exception {
 
         //get the biphenyl as aromatic smiles
         SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
@@ -167,6 +168,6 @@ public class IsomorphismTesterTest extends CDKTestCase {
         Aromaticity.cdkLegacy().apply(biphenyl_kekulesmiles);
         AtomContainerManipulator.convertImplicitToExplicitHydrogens(biphenyl_kekulesmiles);
 
-        Assert.assertTrue(new UniversalIsomorphismTester().isIsomorph(biphenyl_aromaticsmiles, biphenyl_kekulesmiles));
+        Assertions.assertTrue(new UniversalIsomorphismTester().isIsomorph(biphenyl_aromaticsmiles, biphenyl_kekulesmiles));
     }
 }

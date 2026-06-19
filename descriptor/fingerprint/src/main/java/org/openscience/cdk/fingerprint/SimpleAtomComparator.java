@@ -36,8 +36,6 @@ import java.util.Comparator;
  * @author Syed Asad Rahman (2012)
  * @cdk.keyword fingerprint
  * @cdk.keyword similarity
- * @cdk.module fingerprint
- * @cdk.githash
  *
  */
 public class SimpleAtomComparator implements Comparator<IAtom>, Serializable {
@@ -46,7 +44,7 @@ public class SimpleAtomComparator implements Comparator<IAtom>, Serializable {
 
     @Override
     public int compare(IAtom o1, IAtom o2) {
-        if (o1.getSymbol().equalsIgnoreCase(o2.getSymbol())) {
+        if (o1.getAtomicNumber().equals(o2.getAtomicNumber())) {
             if (o1.getHybridization() != null && o2.getHybridization() != null) {
                 return o1.getHybridization().compareTo(o2.getHybridization());
             }

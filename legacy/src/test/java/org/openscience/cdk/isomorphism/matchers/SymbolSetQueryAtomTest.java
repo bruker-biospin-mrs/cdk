@@ -19,50 +19,49 @@
  */
 package org.openscience.cdk.isomorphism.matchers;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 
 /**
  * Checks the functionality of the IsomorphismTester
  *
- * @cdk.module test-isomorphism
  */
-public class SymbolSetQueryAtomTest extends CDKTestCase {
+class SymbolSetQueryAtomTest extends CDKTestCase {
 
     private static SymbolSetQueryAtom symbolSet = null;
 
-    @BeforeClass
-    static public void setUp() {
+    @BeforeAll
+    static void setUp() {
         symbolSet = new SymbolSetQueryAtom(DefaultChemObjectBuilder.getInstance());
         symbolSet.addSymbol("C");
         symbolSet.addSymbol("Fe");
     }
 
     @Test
-    public void testMatches() {
+    void testMatches() {
         Atom c = new Atom("C");
         Atom n = new Atom("N");
-        Assert.assertTrue(symbolSet.matches(c));
-        Assert.assertFalse(symbolSet.matches(n));
+        Assertions.assertTrue(symbolSet.matches(c));
+        Assertions.assertFalse(symbolSet.matches(n));
     }
 
     @Test
-    public void testRemoveSymbol() {
+    void testRemoveSymbol() {
         symbolSet.removeSymbol("Fe");
-        Assert.assertEquals(1, symbolSet.getSymbolSet().size());
-        Assert.assertFalse(symbolSet.hasSymbol("Fe"));
-        Assert.assertTrue(symbolSet.hasSymbol("C"));
+        Assertions.assertEquals(1, symbolSet.getSymbolSet().size());
+        Assertions.assertFalse(symbolSet.hasSymbol("Fe"));
+        Assertions.assertTrue(symbolSet.hasSymbol("C"));
         symbolSet.addSymbol("Fe");
     }
 
     @Test
-    public void testHasSymbol() {
-        Assert.assertTrue(symbolSet.hasSymbol("C"));
-        Assert.assertFalse(symbolSet.hasSymbol("N"));
+    void testHasSymbol() {
+        Assertions.assertTrue(symbolSet.hasSymbol("C"));
+        Assertions.assertFalse(symbolSet.hasSymbol("N"));
     }
 
 }

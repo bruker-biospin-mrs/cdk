@@ -19,15 +19,12 @@
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
 import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 /**
 * This matcher any aromatic atom. This assumes that aromaticity in the molecule
 * has been perceived.
 *
-* @cdk.module  smarts
-* @cdk.githash
 * @cdk.keyword SMARTS
 */
 @Deprecated

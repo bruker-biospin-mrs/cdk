@@ -19,35 +19,26 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractReactionSetTest;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractReactionSetTest;
 import org.openscience.cdk.interfaces.IReactionSet;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugReactionSet}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugReactionSetTest extends AbstractReactionSetTest {
+class DebugReactionSetTest extends AbstractReactionSetTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugReactionSet();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugReactionSet::new);
     }
 
     @Test
-    public void testDebugReactionSet() {
+    void testDebugReactionSet() {
         IReactionSet rs = new DebugReactionSet();
-        Assert.assertNotNull(rs);
+        Assertions.assertNotNull(rs);
     }
 }

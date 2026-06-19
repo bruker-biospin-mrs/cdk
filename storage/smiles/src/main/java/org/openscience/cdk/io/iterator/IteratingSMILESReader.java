@@ -29,7 +29,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.NoSuchElementException;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -49,8 +48,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * <p>For parsing each SMILES it still uses the normal SMILESReader.
  *
- * @cdk.module smiles
- * @cdk.githash
  * @cdk.iooptions
  *
  * @see org.openscience.cdk.io.SMILESReader
@@ -63,9 +60,9 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 public class IteratingSMILESReader extends DefaultIteratingChemObjectReader<IAtomContainer> {
 
     private BufferedReader           input;
-    private static ILoggingTool      logger           = LoggingToolFactory
+    private static final ILoggingTool      logger           = LoggingToolFactory
                                                               .createLoggingTool(IteratingSMILESReader.class);
-    private SmilesParser             sp               = null;
+    private SmilesParser             sp;
 
     private boolean                  nextAvailableIsKnown;
     private boolean                  hasNext;
@@ -130,11 +127,7 @@ public class IteratingSMILESReader extends DefaultIteratingChemObjectReader<IAto
                 }
 
                 hasNext = true;
-                final String suffix = suffix(line);
-
                 nextMolecule = readSmiles(line);
-                nextMolecule.setTitle(suffix);
-
             } catch (Exception exception) {
                 logger.error("Unexpected problem: ", exception.getMessage());
                 logger.debug(exception);
@@ -156,7 +149,9 @@ public class IteratingSMILESReader extends DefaultIteratingChemObjectReader<IAto
     private String suffix(final String line) {
         for (int i = 0; i < line.length(); i++) {
             char c = line.charAt(i);
-            if (c == ' ' || c == '\t') return line.substring(i + 1);
+            if (c == ' ' || c == '\t') {
+                return line.substring(i + 1);
+            }
         }
         return "";
     }
@@ -174,6 +169,7 @@ public class IteratingSMILESReader extends DefaultIteratingChemObjectReader<IAto
             logger.error("Error while reading the SMILES from: " + line + ", ", e);
             final IAtomContainer empty = builder.newInstance(IAtomContainer.class, 0, 0, 0, 0);
             empty.setProperty(BAD_SMILES_INPUT, line);
+            empty.setTitle(suffix(line));
             return empty;
         }
     }
@@ -186,7 +182,7 @@ public class IteratingSMILESReader extends DefaultIteratingChemObjectReader<IAto
     @Override
     public IAtomContainer next() {
         if (!nextAvailableIsKnown) {
-            hasNext();
+            hasNext = hasNext();
         }
         nextAvailableIsKnown = false;
         if (!hasNext) {

@@ -19,36 +19,27 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IReaction;
-import org.openscience.cdk.interfaces.AbstractReactionTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractReactionTest;
 
 /**
  * Checks the functionality of the {@link Reaction}.
  *
- * @cdk.module test-silent
  */
-public class ReactionTest extends AbstractReactionTest {
+class ReactionTest extends AbstractReactionTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new Reaction();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(Reaction::new);
     }
 
     @Test
-    public void testReaction() {
+    void testReaction() {
         IReaction polymer = new Reaction();
-        Assert.assertTrue(polymer instanceof Reaction);
+        Assertions.assertTrue(polymer instanceof Reaction);
     }
 
     // Overwrite default methods: no notifications are expected!

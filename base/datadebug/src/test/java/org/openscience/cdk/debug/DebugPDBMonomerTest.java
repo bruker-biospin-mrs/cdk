@@ -19,36 +19,27 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractPDBMonomerTest;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractPDBMonomerTest;
 import org.openscience.cdk.interfaces.IPDBMonomer;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugPDBMonomer}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugPDBMonomerTest extends AbstractPDBMonomerTest {
+class DebugPDBMonomerTest extends AbstractPDBMonomerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugPDBMonomer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugPDBMonomer::new);
     }
 
     @Test
-    public void testDebugPDBMonomer() {
+    void testDebugPDBMonomer() {
         IPDBMonomer monomer = new DebugPDBMonomer();
-        Assert.assertNotNull(monomer);
-        Assert.assertEquals(monomer.getICode(), null);
+        Assertions.assertNotNull(monomer);
+        Assertions.assertEquals(monomer.getICode(), null);
     }
 }

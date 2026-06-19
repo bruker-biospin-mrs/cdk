@@ -22,14 +22,12 @@ package org.openscience.cdk.qsar.result;
 /**
  * Object that provides access to the calculated descriptor value.
  *
- * @cdk.module standard
- * @cdk.githash
  */
 public class IntegerResult implements IDescriptorResult {
 
     private static final long serialVersionUID = -8066984646119839996L;
 
-    private int               value;
+    private final int               value;
 
     public IntegerResult(int value) {
         this.value = value;

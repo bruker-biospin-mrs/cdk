@@ -40,14 +40,12 @@ import org.xml.sax.XMLReader;
 /**
  * XML Reader for the {@link OWLBasedAtomTypeConfigurator}.
  *
- * @cdk.module  atomtype
- * @cdk.githash
  */
 public class OWLAtomTypeMappingReader {
 
     private XMLReader           parser;
-    private Reader              input;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(OWLAtomTypeReader.class);
+    private final Reader              input;
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(OWLAtomTypeReader.class);
 
     /**
      * Instantiates the XML based AtomTypeReader.
@@ -118,7 +116,7 @@ public class OWLAtomTypeMappingReader {
             logger.error("SAXException: ", saxe.getMessage());
             logger.debug(saxe);
         }
-        return mappings == null ? new HashMap<String, String>() : mappings;
+        return mappings == null ? new HashMap<>() : mappings;
     }
 
 }

@@ -55,13 +55,11 @@ import java.util.List;
  *
  * @author      egonw
  * @cdk.created 2006-01-15
- * @cdk.module  qsarprotein
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:aminoAcidsCount
  */
 public class AminoAcidCountDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
 
-    private IAtomContainerSet substructureSet;
+    private final IAtomContainerSet substructureSet;
 
     private static String[]   names;
 

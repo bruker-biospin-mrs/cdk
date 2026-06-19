@@ -26,9 +26,9 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemModel;
@@ -41,42 +41,42 @@ import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemFile;
 import org.openscience.cdk.io.IChemObjectReader.Mode;
-import org.openscience.cdk.silent.AtomContainer;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * TestCase for the reading MDL mol files using one test file.
  * A test case for SDF files is available as separate Class.
  *
- * @cdk.module test-io
  *
  * @see org.openscience.cdk.io.MDLReader
  * @see org.openscience.cdk.io.SDFReaderTest
  */
-public class MDLReaderTest extends SimpleChemObjectReaderTest {
+class MDLReaderTest extends SimpleChemObjectReaderTest {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(MDLReaderTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(MDLReaderTest.class);
 
-    @BeforeClass
-    public static void setup() {
-        setSimpleChemObjectReader(new MDLReader(), "data/mdl/Strychnine_nichtOK.mol");
+    @BeforeAll
+    static void setup() {
+        setSimpleChemObjectReader(new MDLReader(), "Strychnine_nichtOK.mol");
     }
 
     @Test
-    public void testAccepts() {
+    void testAccepts() {
         MDLReader reader = new MDLReader();
         reader.setReaderMode(Mode.STRICT);
-        Assert.assertTrue(reader.accepts(ChemFile.class));
-        Assert.assertTrue(reader.accepts(ChemModel.class));
-        Assert.assertTrue(reader.accepts(AtomContainer.class));
+        Assertions.assertTrue(reader.accepts(ChemFile.class));
+        Assertions.assertTrue(reader.accepts(ChemModel.class));
+        Assertions.assertTrue(reader.accepts(IAtomContainer.class));
     }
 
     @Test
-    public void testReadFromStringReader() throws Exception {
+    void testReadFromStringReader() throws Exception {
         String mdl = "cyclopropane.mol\n" + "\n" + "\n" + "  9  9  0  0\n"
                 + "   -0.0073   -0.5272    0.9655 C   0  0  0  0  0\n"
                 + "   -0.6776   -0.7930   -0.3498 C   0  0  0  0  0\n"
@@ -90,34 +90,34 @@ public class MDLReaderTest extends SimpleChemObjectReaderTest {
                 + "  1  3  1  6  0  0\n" + "  1  4  1  0  0  0\n" + "  1  5  1  1  0  0\n" + "  2  3  1  0  0  0\n"
                 + "  2  6  1  0  0  0\n" + "  2  7  1  6  0  0\n" + "  3  8  1  6  0  0\n" + "  3  9  1  0  0  0\n";
         MDLReader reader = new MDLReader(new StringReader(mdl), Mode.STRICT);
-        ChemFile chemFile = (ChemFile) reader.read(new ChemFile());
+        ChemFile chemFile = reader.read(new ChemFile());
         reader.close();
-        assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         org.openscience.cdk.interfaces.IChemSequence seq = chemFile.getChemSequence(0);
-        assertNotNull(seq);
-        Assert.assertEquals(1, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(1, seq.getChemModelCount());
         org.openscience.cdk.interfaces.IChemModel model = seq.getChemModel(0);
-        assertNotNull(model);
+        Assertions.assertNotNull(model);
 
         IAtomContainerSet som = model.getMoleculeSet();
-        assertNotNull(som);
-        Assert.assertEquals(1, som.getAtomContainerCount());
+        Assertions.assertNotNull(som);
+        Assertions.assertEquals(1, som.getAtomContainerCount());
         IAtomContainer m = som.getAtomContainer(0);
-        assertNotNull(m);
-        Assert.assertEquals(9, m.getAtomCount());
-        Assert.assertEquals(9, m.getBondCount());
+        Assertions.assertNotNull(m);
+        Assertions.assertEquals(9, m.getAtomCount());
+        Assertions.assertEquals(9, m.getBondCount());
     }
     
     @Test
-    public void testMassDiff() throws Exception {
+    void testMassDiff() throws Exception {
         String mdl = "deuterium.mol\n" + "\n" + "\n" + "  1  0  0  0  0                 1\n"
                 + "    0.0000    0.0000    0.0000 H  +1  0  0  0  0\n";
         try (MDLReader reader = new MDLReader(new StringReader(mdl), Mode.STRICT)) {
-            IAtomContainer mol = reader.read(new AtomContainer());
+            IAtomContainer mol = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
             IAtom atom = mol.getAtom(0);
-            Assert.assertEquals(1, atom.getAtomicNumber().intValue());
-            Assert.assertEquals(2, atom.getMassNumber().intValue());
+            Assertions.assertEquals(1, atom.getAtomicNumber().intValue());
+            Assertions.assertEquals(2, atom.getMassNumber().intValue());
         }
     }
 
@@ -125,52 +125,52 @@ public class MDLReaderTest extends SimpleChemObjectReaderTest {
      * @cdk.bug 1542467
      */
     @Test
-    public void testBug1542467() throws Exception {
-        String filename = "data/mdl/Strychnine_nichtOK.mol";
+    void testBug1542467() throws Exception {
+        String filename = "Strychnine_nichtOK.mol";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLReader reader = new MDLReader(ins, Mode.STRICT);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         reader.close();
-        assertNotNull(chemFile);
+        Assertions.assertNotNull(chemFile);
         List<IAtomContainer> containersList = ChemFileManipulator.getAllAtomContainers(chemFile);
-        Assert.assertEquals(1, containersList.size());
-        Assert.assertTrue((containersList.get(0)).getAtomCount() > 0);
-        Assert.assertTrue((containersList.get(0)).getBondCount() > 0);
+        Assertions.assertEquals(1, containersList.size());
+        Assertions.assertTrue((containersList.get(0)).getAtomCount() > 0);
+        Assertions.assertTrue((containersList.get(0)).getBondCount() > 0);
     }
 
     @Test
-    public void testReadProton() throws Exception {
+    void testReadProton() throws Exception {
         String mdl = "proton.mol\n" + "\n" + "\n" + "  1  0  0  0  0                 1\n"
                 + "   -0.0073   -0.5272    0.9655 H   0  3  0  0  0\n";
         MDLReader reader = new MDLReader(new StringReader(mdl), Mode.STRICT);
-        IAtomContainer mol = reader.read(new AtomContainer());
+        IAtomContainer mol = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
-        assertNotNull(mol);
-        Assert.assertEquals(1, mol.getAtomCount());
-        Assert.assertEquals(0, mol.getBondCount());
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(1, mol.getAtomCount());
+        Assertions.assertEquals(0, mol.getBondCount());
         IAtom atom = mol.getAtom(0);
-        Assert.assertEquals(1, atom.getFormalCharge().intValue());
+        Assertions.assertEquals(1, atom.getFormalCharge().intValue());
     }
 
     /**
      * The corrupt file is really ok; it is just not V2000 material.
      */
     @Test
-    public void testSDF() throws Exception {
-        String filename = "data/mdl/prev2000.sd";
+    void testSDF() throws Exception {
+        String filename = "prev2000.sd";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLReader reader = new MDLReader(ins, Mode.STRICT);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         reader.close();
-        assertNotNull(chemFile);
+        Assertions.assertNotNull(chemFile);
         List<IAtomContainer> containersList = ChemFileManipulator.getAllAtomContainers(chemFile);
-        Assert.assertEquals(2, containersList.size());
-        Assert.assertEquals(39, (containersList.get(0)).getAtomCount());
-        Assert.assertEquals(41, (containersList.get(0)).getBondCount());
-        Assert.assertEquals(29, (containersList.get(1)).getAtomCount());
-        Assert.assertEquals(28, (containersList.get(1)).getBondCount());
+        Assertions.assertEquals(2, containersList.size());
+        Assertions.assertEquals(39, (containersList.get(0)).getAtomCount());
+        Assertions.assertEquals(41, (containersList.get(0)).getBondCount());
+        Assertions.assertEquals(29, (containersList.get(1)).getAtomCount());
+        Assertions.assertEquals(28, (containersList.get(1)).getBondCount());
     }
 
     /**
@@ -178,103 +178,108 @@ public class MDLReaderTest extends SimpleChemObjectReaderTest {
      * is read is 'no stereochemistry involved'.
      */
     @Test
-    public void testStereoReadZeroDefault() throws Exception {
-        String filename = "data/mdl/prev2000.sd";
+    void testStereoReadZeroDefault() throws Exception {
+        String filename = "prev2000.sd";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLReader reader = new MDLReader(ins, Mode.STRICT);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         reader.close();
-        assertNotNull(chemFile);
+        Assertions.assertNotNull(chemFile);
         List<IAtomContainer> containersList = ChemFileManipulator.getAllAtomContainers(chemFile);
-        Assert.assertEquals(2, containersList.size());
+        Assertions.assertEquals(2, containersList.size());
         IAtomContainer container = containersList.get(0);
-        Assert.assertEquals(IBond.Stereo.NONE, container.getBond(0).getStereo());
+        Assertions.assertEquals(IBond.Display.Solid, container.getBond(0).getDisplay());
     }
 
     @Test
-    public void testEmptyString() throws Exception {
+    void testEmptyString() throws Exception {
         String emptyString = "";
         MDLReader reader = new MDLReader(new StringReader(emptyString), Mode.STRICT);
-        IAtomContainer mol = (IAtomContainer) reader.read(new AtomContainer());
+        IAtomContainer mol = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
-        Assert.assertNull(mol);
+        assertNull(mol);
     }
 
     @Test
-    public void testUndefinedStereo() throws Exception {
-        String filename = "data/mdl/ChEBI_26120.mol";
+    void testUndefinedStereo() throws Exception {
+        String filename = "ChEBI_26120.mol";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLReader reader = new MDLReader(ins, Mode.RELAXED);
-        IAtomContainer mol = (IAtomContainer) reader.read(new AtomContainer());
+        IAtomContainer mol = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
-        Assert.assertEquals(IBond.Stereo.E_OR_Z, mol.getBond(1).getStereo());
-        Assert.assertEquals(IBond.Stereo.E_OR_Z, mol.getBond(6).getStereo());
-        Assert.assertEquals(IBond.Stereo.E_OR_Z, mol.getBond(7).getStereo());
-        Assert.assertEquals(IBond.Stereo.E_OR_Z, mol.getBond(11).getStereo());
+        Assertions.assertEquals(IBond.Display.Crossed, mol.getBond(1).getDisplay());
+        Assertions.assertEquals(IBond.Display.Crossed, mol.getBond(6).getDisplay());
+        Assertions.assertEquals(IBond.Display.Crossed, mol.getBond(7).getDisplay());
+        Assertions.assertEquals(IBond.Display.Crossed, mol.getBond(11).getDisplay());
     }
 
     @Test
-    public void testReadAtomAtomMapping() throws Exception {
-        String filename = "data/mdl/a-pinene-with-atom-atom-mapping.mol";
+    void testReadAtomAtomMapping() throws Exception {
+        String filename = "a-pinene-with-atom-atom-mapping.mol";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins);
 
-        IAtomContainer mol = reader.read(new AtomContainer());
+        IAtomContainer mol = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
-        assertNotNull(mol);
-        Assert.assertEquals(1, ((Integer) mol.getAtom(0).getProperty(CDKConstants.ATOM_ATOM_MAPPING)).intValue());
-        Assert.assertEquals(15, ((Integer) mol.getAtom(1).getProperty(CDKConstants.ATOM_ATOM_MAPPING)).intValue());
-        Assert.assertNull(mol.getAtom(2).getProperty(CDKConstants.ATOM_ATOM_MAPPING));
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(1, ((Integer) mol.getAtom(0).getProperty(CDKConstants.ATOM_ATOM_MAPPING)).intValue());
+        Assertions.assertEquals(15, ((Integer) mol.getAtom(1).getProperty(CDKConstants.ATOM_ATOM_MAPPING)).intValue());
+        assertNull(mol.getAtom(2).getProperty(CDKConstants.ATOM_ATOM_MAPPING));
     }
 
-    @Test(expected = AssertionError.class)
-    public void testHas2DCoordinates_With000() throws Exception {
-        String filenameMol = "data/mdl/with000coordinate.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filenameMol);
-        IAtomContainer molOne = null;
+    @Test
+    void testHas2DCoordinates_With000() throws Exception {
+        String filenameMol = "with000coordinate.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filenameMol);
+        IAtomContainer molOne;
         MDLReader reader = new MDLReader(ins, Mode.RELAXED);
-        molOne = reader.read(new AtomContainer());
+        molOne = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
-        assertNotNull(molOne.getAtom(0).getPoint2d());
+        // 0,0 or null no Coords, MDLV2000 will get this OK if there is 2D/3D
+        // in the headerO
+        assertNull(molOne.getAtom(0).getPoint2d());
     }
 
     /**
      * @cdk.bug 3485634
      */
     @Test
-    public void testMissingAtomProperties() throws Exception {
-        InputStream in = ClassLoader.getSystemResourceAsStream("data/mdl/bug3485634.mol");
+    void testMissingAtomProperties() throws Exception {
+        InputStream in = getClass().getResourceAsStream("bug3485634.mol");
         MDLReader reader = new MDLReader(in);
         IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         molecule = reader.read(molecule);
         reader.close();
-        Assert.assertEquals(9, molecule.getAtomCount());
+        Assertions.assertEquals(9, molecule.getAtomCount());
     }
 
     /**
      * @cdk.bug 1356
      */
     @Test
-    public void properties() throws Exception {
-        InputStream in = ClassLoader.getSystemResourceAsStream("data/mdl/bug1356.sdf");
+    void properties() throws Exception {
+        InputStream in = getClass().getResourceAsStream("bug1356.sdf");
         MDLReader reader = new MDLReader(in);
         IChemFile chemfile = DefaultChemObjectBuilder.getInstance().newInstance(IChemFile.class);
         chemfile = reader.read(chemfile);
         IAtomContainer container = ChemFileManipulator.getAllAtomContainers(chemfile).iterator().next();
-        assertNotNull(container.getProperty("first"));
-        assertNotNull(container.getProperty("second"));
+        Assertions.assertNotNull(container.getProperty("first"));
+        Assertions.assertNotNull(container.getProperty("second"));
         reader.close();
             
     }
 
-    @Test(expected=CDKException.class)
-    public void wrongFormat() throws CDKException {
-        InputStream in = ClassLoader.getSystemResourceAsStream("data/mdl/bug1356.sdf");
+    @Test
+    void wrongFormat() throws CDKException {
+        InputStream in = getClass().getResourceAsStream("bug1356.sdf");
         MDLReader reader = new MDLReader(in, Mode.STRICT);
-        IChemFile chemfile = DefaultChemObjectBuilder.getInstance().newInstance(IChemFile.class);
-        chemfile = reader.read(chemfile);
+        Assertions.assertThrows(CDKException.class,
+                                () -> {
+                                    IChemFile chemfile = DefaultChemObjectBuilder.getInstance().newInstance(IChemFile.class);
+                                    chemfile = reader.read(chemfile);
+                                });
     }
 }

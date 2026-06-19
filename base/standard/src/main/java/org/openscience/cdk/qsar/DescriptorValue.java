@@ -30,19 +30,17 @@ import org.openscience.cdk.qsar.result.IntegerResult;
 /**
  * Class that is used to store descriptor values as IChemObject properties.
  *
- * @cdk.module standard
- * @cdk.githash
  */
 public class DescriptorValue implements Serializable {
 
     private static final long       serialVersionUID = -5672896059814842972L;
 
-    private DescriptorSpecification specification;
-    private String[]                parameterNames;
-    private Object[]                parameterSettings;
-    private IDescriptorResult       value;
+    private final DescriptorSpecification specification;
+    private final String[]                parameterNames;
+    private final Object[]                parameterSettings;
+    private final IDescriptorResult       value;
     private String[]                descriptorNames;
-    private Exception               exception;
+    private final Exception               exception;
 
     /**
      * Construct a descriptor value object, representing the numeric values as well as parameters and provenance.

@@ -24,148 +24,146 @@
 
 package org.openscience.cdk.isomorphism;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.isomorphism.matchers.IQueryBond;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.openscience.cdk.CDKConstants.ISAROMATIC;
+import static org.openscience.cdk.interfaces.IChemObject.AROMATIC;
 
 /**
  * @author John May
- * @cdk.module test-isomorphism
  */
-public class BondMatcherTest {
+class BondMatcherTest {
 
     @Test
-    public void anyMatch() {
+    void anyMatch() {
         BondMatcher matcher = BondMatcher.forAny();
         IBond bond1 = mock(IBond.class);
         IBond bond2 = mock(IBond.class);
         IBond bond3 = mock(IBond.class);
-        assertTrue(matcher.matches(bond1, bond2));
-        assertTrue(matcher.matches(bond2, bond1));
-        assertTrue(matcher.matches(bond1, bond3));
-        assertTrue(matcher.matches(bond1, null));
-        assertTrue(matcher.matches(null, null));
+        Assertions.assertTrue(matcher.matches(bond1, bond2));
+        Assertions.assertTrue(matcher.matches(bond2, bond1));
+        Assertions.assertTrue(matcher.matches(bond1, bond3));
+        Assertions.assertTrue(matcher.matches(bond1, null));
+        Assertions.assertTrue(matcher.matches(null, null));
     }
 
     @Test
-    public void aromaticMatch() {
+    void aromaticMatch() {
         BondMatcher matcher = BondMatcher.forOrder();
         IBond bond1 = mock(IBond.class);
         IBond bond2 = mock(IBond.class);
-        when(bond1.getFlag(ISAROMATIC)).thenReturn(true);
-        when(bond2.getFlag(ISAROMATIC)).thenReturn(true);
+        when(bond1.getFlag(AROMATIC)).thenReturn(true);
+        when(bond2.getFlag(AROMATIC)).thenReturn(true);
         when(bond1.getOrder()).thenReturn(IBond.Order.SINGLE);
         when(bond2.getOrder()).thenReturn(IBond.Order.DOUBLE);
-        assertTrue(matcher.matches(bond1, bond2));
-        assertTrue(matcher.matches(bond2, bond1));
+        Assertions.assertTrue(matcher.matches(bond1, bond2));
+        Assertions.assertTrue(matcher.matches(bond2, bond1));
     }
 
     @Test
-    public void aliphaticMatch() {
+    void aliphaticMatch() {
         BondMatcher matcher = BondMatcher.forOrder();
         IBond bond1 = mock(IBond.class);
         IBond bond2 = mock(IBond.class);
-        when(bond1.getFlag(ISAROMATIC)).thenReturn(false);
-        when(bond2.getFlag(ISAROMATIC)).thenReturn(false);
+        when(bond1.getFlag(AROMATIC)).thenReturn(false);
+        when(bond2.getFlag(AROMATIC)).thenReturn(false);
         when(bond1.getOrder()).thenReturn(IBond.Order.SINGLE);
         when(bond2.getOrder()).thenReturn(IBond.Order.SINGLE);
-        assertTrue(matcher.matches(bond1, bond2));
-        assertTrue(matcher.matches(bond2, bond1));
+        Assertions.assertTrue(matcher.matches(bond1, bond2));
+        Assertions.assertTrue(matcher.matches(bond2, bond1));
     }
 
     @Test
-    public void aromaticStrictMatch() {
+    void aromaticStrictMatch() {
         BondMatcher matcher = BondMatcher.forStrictOrder();
         IBond bond1 = mock(IBond.class);
         IBond bond2 = mock(IBond.class);
-        when(bond1.getFlag(ISAROMATIC)).thenReturn(true);
-        when(bond2.getFlag(ISAROMATIC)).thenReturn(true);
+        when(bond1.getFlag(AROMATIC)).thenReturn(true);
+        when(bond2.getFlag(AROMATIC)).thenReturn(true);
         when(bond1.getOrder()).thenReturn(IBond.Order.SINGLE);
         when(bond2.getOrder()).thenReturn(IBond.Order.DOUBLE);
-        assertTrue(matcher.matches(bond1, bond2));
-        assertTrue(matcher.matches(bond2, bond1));
+        Assertions.assertTrue(matcher.matches(bond1, bond2));
+        Assertions.assertTrue(matcher.matches(bond2, bond1));
     }
 
     @Test
-    public void aliphaticStrictMatch() {
+    void aliphaticStrictMatch() {
         BondMatcher matcher = BondMatcher.forStrictOrder();
         IBond bond1 = mock(IBond.class);
         IBond bond2 = mock(IBond.class);
-        when(bond1.getFlag(ISAROMATIC)).thenReturn(false);
-        when(bond2.getFlag(ISAROMATIC)).thenReturn(false);
+        when(bond1.getFlag(AROMATIC)).thenReturn(false);
+        when(bond2.getFlag(AROMATIC)).thenReturn(false);
         when(bond1.getOrder()).thenReturn(IBond.Order.SINGLE);
         when(bond2.getOrder()).thenReturn(IBond.Order.SINGLE);
-        assertTrue(matcher.matches(bond1, bond2));
-        assertTrue(matcher.matches(bond2, bond1));
+        Assertions.assertTrue(matcher.matches(bond1, bond2));
+        Assertions.assertTrue(matcher.matches(bond2, bond1));
     }
 
     @Test
-    public void aliphaticMismatch_aromatic() {
+    void aliphaticMismatch_aromatic() {
         BondMatcher matcher = BondMatcher.forOrder();
         IBond bond1 = mock(IBond.class);
         IBond bond2 = mock(IBond.class);
-        when(bond1.getFlag(ISAROMATIC)).thenReturn(true);
-        when(bond2.getFlag(ISAROMATIC)).thenReturn(false);
+        when(bond1.getFlag(AROMATIC)).thenReturn(true);
+        when(bond2.getFlag(AROMATIC)).thenReturn(false);
         when(bond1.getOrder()).thenReturn(IBond.Order.SINGLE);
         when(bond2.getOrder()).thenReturn(IBond.Order.SINGLE);
-        assertTrue(matcher.matches(bond1, bond2));
-        assertTrue(matcher.matches(bond2, bond1));
+        Assertions.assertTrue(matcher.matches(bond1, bond2));
+        Assertions.assertTrue(matcher.matches(bond2, bond1));
     }
 
     @Test
-    public void aliphaticStrictMismatch_aromatic() {
+    void aliphaticStrictMismatch_aromatic() {
         BondMatcher matcher = BondMatcher.forStrictOrder();
         IBond bond1 = mock(IBond.class);
         IBond bond2 = mock(IBond.class);
-        when(bond1.getFlag(ISAROMATIC)).thenReturn(true);
-        when(bond2.getFlag(ISAROMATIC)).thenReturn(false);
+        when(bond1.getFlag(AROMATIC)).thenReturn(true);
+        when(bond2.getFlag(AROMATIC)).thenReturn(false);
         when(bond1.getOrder()).thenReturn(IBond.Order.SINGLE);
         when(bond2.getOrder()).thenReturn(IBond.Order.SINGLE);
-        assertFalse(matcher.matches(bond1, bond2));
-        assertFalse(matcher.matches(bond2, bond1));
+        Assertions.assertFalse(matcher.matches(bond1, bond2));
+        Assertions.assertFalse(matcher.matches(bond2, bond1));
     }
 
     @Test
-    public void aliphaticMismatch_order() {
+    void aliphaticMismatch_order() {
         BondMatcher matcher = BondMatcher.forOrder();
         IBond bond1 = mock(IBond.class);
         IBond bond2 = mock(IBond.class);
-        when(bond1.getFlag(ISAROMATIC)).thenReturn(false);
-        when(bond2.getFlag(ISAROMATIC)).thenReturn(false);
+        when(bond1.getFlag(AROMATIC)).thenReturn(false);
+        when(bond2.getFlag(AROMATIC)).thenReturn(false);
         when(bond1.getOrder()).thenReturn(IBond.Order.SINGLE);
         when(bond2.getOrder()).thenReturn(IBond.Order.DOUBLE);
-        assertFalse(matcher.matches(bond1, bond2));
-        assertFalse(matcher.matches(bond2, bond1));
+        Assertions.assertFalse(matcher.matches(bond1, bond2));
+        Assertions.assertFalse(matcher.matches(bond2, bond1));
     }
 
     @Test
-    public void aliphaticStrictMismatch_order() {
+    void aliphaticStrictMismatch_order() {
         BondMatcher matcher = BondMatcher.forStrictOrder();
         IBond bond1 = mock(IBond.class);
         IBond bond2 = mock(IBond.class);
-        when(bond1.getFlag(ISAROMATIC)).thenReturn(false);
-        when(bond2.getFlag(ISAROMATIC)).thenReturn(false);
+        when(bond1.getFlag(AROMATIC)).thenReturn(false);
+        when(bond2.getFlag(AROMATIC)).thenReturn(false);
         when(bond1.getOrder()).thenReturn(IBond.Order.SINGLE);
         when(bond2.getOrder()).thenReturn(IBond.Order.DOUBLE);
-        assertFalse(matcher.matches(bond1, bond2));
-        assertFalse(matcher.matches(bond2, bond1));
+        Assertions.assertFalse(matcher.matches(bond1, bond2));
+        Assertions.assertFalse(matcher.matches(bond2, bond1));
     }
 
     @Test
-    public void queryMatch() {
+    void queryMatch() {
         BondMatcher matcher = BondMatcher.forQuery();
         IQueryBond bond1 = mock(IQueryBond.class);
         IBond bond2 = mock(IBond.class);
         IBond bond3 = mock(IBond.class);
         when(bond1.matches(bond2)).thenReturn(true);
         when(bond1.matches(bond3)).thenReturn(false);
-        assertTrue(matcher.matches(bond1, bond2));
-        assertFalse(matcher.matches(bond1, bond3));
+        Assertions.assertTrue(matcher.matches(bond1, bond2));
+        Assertions.assertFalse(matcher.matches(bond1, bond3));
     }
 }

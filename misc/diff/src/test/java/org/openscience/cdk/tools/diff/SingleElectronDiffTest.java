@@ -18,31 +18,31 @@
  */
 package org.openscience.cdk.tools.diff;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.ISingleElectron;
 import org.openscience.cdk.tools.diff.tree.IDifference;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * @cdk.module test-diff
  */
-public class SingleElectronDiffTest extends CDKTestCase {
+class SingleElectronDiffTest {
 
     @Test
-    public void testMatchAgainstItself() {
+    void testMatchAgainstItself() {
         ISingleElectron bond1 = mock(ISingleElectron.class);
         String result = SingleElectronDiff.diff(bond1, bond1);
-        assertZeroLength(result);
+        Assertions.assertEquals("", result);
     }
 
     @Test
-    public void testDiff() {
+    void testDiff() {
         IAtom carbon = mock(IAtom.class);
         IAtom oxygen = mock(IAtom.class);
 
@@ -56,15 +56,15 @@ public class SingleElectronDiffTest extends CDKTestCase {
         when(bond2.getAtom()).thenReturn(oxygen);
 
         String result = SingleElectronDiff.diff(bond1, bond2);
-        Assert.assertNotNull(result);
-        Assert.assertNotSame(0, result.length());
-        assertContains(result, "SingleElectronDiff");
-        assertContains(result, "AtomDiff");
-        assertContains(result, "C/O");
+        Assertions.assertNotNull(result);
+        Assertions.assertNotSame(0, result.length());
+        MatcherAssert.assertThat(result, containsString("SingleElectronDiff"));
+        MatcherAssert.assertThat(result, containsString("AtomDiff"));
+        MatcherAssert.assertThat(result, containsString("C/O"));
     }
 
     @Test
-    public void testDifference() {
+    void testDifference() {
         IAtom carbon = mock(IAtom.class);
         IAtom oxygen = mock(IAtom.class);
 
@@ -89,6 +89,6 @@ public class SingleElectronDiffTest extends CDKTestCase {
         bond2.setOrder(IBond.Order.DOUBLE);
 
         IDifference difference = BondDiff.difference(bond1, bond2);
-        Assert.assertNotNull(difference);
+        Assertions.assertNotNull(difference);
     }
 }

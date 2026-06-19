@@ -72,8 +72,6 @@ import java.util.List;
  * </pre></blockquote>
  *
  * @author John May
- * @cdk.module hash
- * @cdk.githash
  */
 public final class HashGeneratorMaker {
 
@@ -81,13 +79,13 @@ public final class HashGeneratorMaker {
     private int                        depth          = -1;
 
     /* ordered list of custom encoders */
-    private List<AtomEncoder>          customEncoders = new ArrayList<AtomEncoder>();
+    private final List<AtomEncoder>          customEncoders = new ArrayList<>();
 
     /* ordered set of basic encoders */
-    private EnumSet<BasicAtomEncoder>  encoderSet     = EnumSet.noneOf(BasicAtomEncoder.class);
+    private final EnumSet<BasicAtomEncoder>  encoderSet     = EnumSet.noneOf(BasicAtomEncoder.class);
 
     /* list of stereo encoders */
-    private List<StereoEncoderFactory> stereoEncoders = new ArrayList<StereoEncoderFactory>();
+    private final List<StereoEncoderFactory> stereoEncoders = new ArrayList<>();
 
     /* whether we want to use perturbed hash generators */
     private EquivalentSetFinder        equivSetFinder = null;
@@ -318,7 +316,7 @@ public final class HashGeneratorMaker {
 
         if (depth < 0) throw new IllegalArgumentException("no depth specified, use .depth(int)");
 
-        List<AtomEncoder> encoders = new ArrayList<AtomEncoder>();
+        List<AtomEncoder> encoders = new ArrayList<>();
 
         // set is ordered
         for (AtomEncoder encoder : encoderSet) {

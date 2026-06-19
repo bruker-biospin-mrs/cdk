@@ -32,10 +32,13 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.ringsearch.RingSearch;
+import org.openscience.cdk.tools.LoggingToolFactory;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Deque;
 import java.util.List;
 
 import static org.openscience.cdk.graph.GraphUtil.EdgeToBondMap;
@@ -83,10 +86,24 @@ import static org.openscience.cdk.graph.GraphUtil.EdgeToBondMap;
  * practice the vertex/edge short cycles are similar to MCB. </li> </ul>
  *
  * @author John May
- * @cdk.module core
- * @cdk.githash
  */
 public final class Cycles {
+
+    private static final String CDK_MAX_RELEVANT_CYCLES_KEY = "cdk.maxRelevantCycles";
+    private static final long MAX_RELEVANT_CYCLES = getSystemInteger(CDK_MAX_RELEVANT_CYCLES_KEY, 512000);
+
+    private static long getSystemInteger(String key, long val) {
+        String prop = System.getProperty(key);
+        if (prop == null)
+            return val;
+        try {
+            return Long.parseLong(prop);
+        } catch (NumberFormatException ex) {
+            LoggingToolFactory.createLoggingTool(Cycles.class)
+                              .error("Error - Invalid number for system property=" + key);
+        }
+        return val;
+    }
 
     /** Vertex paths for each cycle. */
     private final int[][]        paths;
@@ -410,6 +427,153 @@ public final class Cycles {
         return or(all(), vertexShort());
     }
 
+    /**
+     * Convenience method to determine the smallest ring size of every atom in
+     * the molecule. For each atom index the smallest ring size is set in the
+     * array, if 0 the atom is acyclic. If you just need to check a single atom
+     * is more efficient to call {@link #smallRingSize(IAtom, int)}.
+     *
+     * @param mol the molecule
+     * @param rsizes the array to be filled
+     * @see #smallRingSize(IAtom, int)
+     */
+    public static void smallRingSizes(IAtomContainer mol, int[] rsizes)
+    {
+        int acount = mol.getAtomCount();
+        int marker = acount+1;
+        if (rsizes == null || acount > rsizes.length)
+            throw new IllegalArgumentException();
+        Arrays.fill(rsizes, 0, acount, marker);
+        Cycles cycles = Cycles.vertexShort(mol);
+        for (int[] path : cycles.paths()) {
+            int rsize = path.length-1;
+            for (int v : path) {
+                rsizes[v] = Math.min(rsize, rsizes[v]);
+            }
+        }
+        // replace temporary marker values with '0'
+        for (int i = 0; i < acount; i++) {
+            if (rsizes[i] == marker)
+                rsizes[i] = 0;
+        }
+    }
+
+    /**
+     * Determine the smallest ring size an atom belongs to. This method requires
+     * that {@link #markRingAtomsAndBonds(IAtomContainer)} has been called
+     * first to set the {@link IAtom#isInRing()} status of each atom/bond. If
+     * you need to check every atom in a molecule use
+     * {@link #smallRingSizes(IAtomContainer, int[])}.
+     *
+     * @param atom the atom
+     * @param max the max ring size
+     * @return the ring size, or 0 if the atom is not in a ring or is in a ring
+     *         larger than 'max'
+     * @see #smallRingSizes(IAtomContainer, int[])
+     */
+    public static int smallRingSize(IAtom atom, int max) {
+        if (!atom.isInRing())
+            return 0;
+        IAtomContainer mol    = atom.getContainer();
+        int[]          distTo = new int[mol.getAtomCount()];
+        Arrays.fill(distTo, 1 + distTo.length);
+        distTo[atom.getIndex()] = 0;
+        Deque<IAtom> queue = new ArrayDeque<>();
+        queue.add(atom);
+        int smallest = 1 + distTo.length;
+        while (!queue.isEmpty()) {
+            IAtom a    = queue.poll();
+            int   dist = 1 + distTo[a.getIndex()];
+            for (IBond b : a.bonds()) {
+                if (!b.isInRing())
+                    continue;
+                IAtom nbr = b.getOther(a);
+                if (dist < distTo[nbr.getIndex()]) {
+                    distTo[nbr.getIndex()] = dist;
+                    queue.add(nbr);
+                } else if (dist != 2 + distTo[nbr.getIndex()]) {
+                    int tmp = dist + distTo[nbr.getIndex()];
+                    if (tmp < smallest)
+                        smallest = tmp;
+                }
+            }
+            if (2 * dist > 1 + max)
+                break;
+        }
+        return smallest <= max ? smallest : 0;
+    }
+
+    /**
+     * Determine the smallest ring size an atom belongs to. This method requires
+     * that {@link #markRingAtomsAndBonds(IAtomContainer)} has been called
+     * first to set the {@link IAtom#isInRing()} status of each atom/bond. If
+     * you need to check every atom in a molecule use
+     * {@link #smallRingSizes(IAtomContainer, int[])}.
+     *
+     * @param atom the atom
+     * @return the ring size, or 0 if the atom is not in a ring
+     * @see #smallRingSizes(IAtomContainer, int[])
+     */
+    public static int smallRingSize(IAtom atom) {
+        return smallRingSize(atom, atom.getContainer().getAtomCount());
+    }
+
+    /**
+     * Determine the smallest ring size an bond belongs to. This method requires
+     * that {@link #markRingAtomsAndBonds(IAtomContainer)} has been called
+     * first to set the {@link IBond#isInRing()} status of each atom/bond.
+     *
+     * @param bond the bond
+     * @param max the max ring size
+     * @return the ring size, or 0 if the bond is not in a ring or is in a ring
+     *         larger than 'max'
+     */
+    public static int smallRingSize(IBond bond, int max) {
+        if (!bond.isInRing())
+            return 0;
+        IAtomContainer mol    = bond.getContainer();
+        int[]          distTo = new int[mol.getAtomCount()];
+        Arrays.fill(distTo, 1 + distTo.length);
+        distTo[bond.getBegin().getIndex()] = 0;
+        distTo[bond.getEnd().getIndex()] = 0;
+        Deque<IAtom> queue = new ArrayDeque<>();
+        queue.add(bond.getBegin());
+        queue.add(bond.getEnd());
+        int smallest = 1 + distTo.length;
+        while (!queue.isEmpty()) {
+            IAtom a = queue.poll();
+            int dist = 1 + distTo[a.getIndex()];
+            for (IBond b : a.bonds()) {
+                if (b == bond || !b.isInRing())
+                    continue;
+                IAtom nbr = b.getOther(a);
+                if (dist < distTo[nbr.getIndex()]) {
+                    distTo[nbr.getIndex()] = dist;
+                    queue.add(nbr);
+                } else if (dist != 2 + distTo[nbr.getIndex()]) {
+                    int tmp = 1 + dist + distTo[nbr.getIndex()];
+                    if (tmp < smallest)
+                        smallest = tmp;
+                }
+            }
+            if (2 * dist > 1 + max)
+                break;
+        }
+        return smallest <= max ? smallest : 0;
+    }
+
+    /**
+     * Determine the smallest ring size an bond belongs to. This method requires
+     * that {@link #markRingAtomsAndBonds(IAtomContainer)} has been called
+     * first to set the {@link IBond#isInRing()} status of each atom/bond.
+     *
+     * @param bond the bond
+     * @return the ring size, or 0 if the bond is not in a ring or is in a ring
+     *         larger than 'max'
+     */
+    public static int smallRingSize(IBond bond) {
+        return smallRingSize(bond, bond.getContainer().getAtomCount());
+    }
 
     /**
      * Find and mark all cyclic atoms and bonds in the provided molecule.
@@ -421,8 +585,7 @@ public final class Cycles {
      * @see <a href="https://en.wikipedia.org/wiki/Circuit_rank">Circuit Rank</a>
      */
     public static int markRingAtomsAndBonds(IAtomContainer mol) {
-        EdgeToBondMap bonds = EdgeToBondMap.withSpaceFor(mol);
-        return markRingAtomsAndBonds(mol, GraphUtil.toAdjList(mol, bonds), bonds);
+        return BiconnectedComponents.mark(mol);
     }
 
     /**
@@ -435,24 +598,11 @@ public final class Cycles {
      * @see IAtom#isInRing()
      * @return Number of rings found (circuit rank)
      * @see <a href="https://en.wikipedia.org/wiki/Circuit_rank">Circuit Rank</a>
+     * @deprecated Use {@link #markRingAtomsAndBonds(org.openscience.cdk.interfaces.IAtomContainer)}
      */
+    @Deprecated
     public static int markRingAtomsAndBonds(IAtomContainer mol, int[][] adjList, EdgeToBondMap bondMap) {
-        RingSearch ringSearch = new RingSearch(mol, adjList);
-        for (int v = 0; v < mol.getAtomCount(); v++) {
-            mol.getAtom(v).setIsInRing(false);
-            for (int w : adjList[v]) {
-                // note we only mark the bond on second visit (first v < w) and
-                // clear flag on first visit (or if non-cyclic)
-                if (v > w && ringSearch.cyclic(v, w)) {
-                    bondMap.get(v, w).setIsInRing(true);
-                    mol.getAtom(v).setIsInRing(true);
-                    mol.getAtom(w).setIsInRing(true);
-                } else {
-                    bondMap.get(v, w).setIsInRing(false);
-                }
-            }
-        }
-        return ringSearch.numRings();
+        return markRingAtomsAndBonds(mol);
     }
 
     /**
@@ -712,7 +862,7 @@ public final class Cycles {
     }
 
     /** Interbank enumeration of cycle finders. */
-    private static enum CycleComputation implements CycleFinder {
+    private enum CycleComputation implements CycleFinder {
         MCB {
 
             /** {@inheritDoc} */
@@ -726,19 +876,23 @@ public final class Cycles {
 
             /** {@inheritDoc} */
             @Override
-            int[][] apply(int[][] graph, int length) {
+            int[][] apply(int[][] graph, int length) throws Intractable {
                 InitialCycles ic = InitialCycles.ofBiconnectedComponent(graph, length);
                 RelevantCycles rc = new RelevantCycles(ic);
-                return new EssentialCycles(rc, ic).paths();
+                numberOfCyclesCheck(rc);
+                EssentialCycles essentialCycles = new EssentialCycles(rc, ic);
+                return essentialCycles.paths();
             }
         },
         RELEVANT {
 
             /** {@inheritDoc} */
             @Override
-            int[][] apply(int[][] graph, int length) {
+            int[][] apply(int[][] graph, int length) throws Intractable {
                 InitialCycles ic = InitialCycles.ofBiconnectedComponent(graph, length);
-                return new RelevantCycles(ic).paths();
+                RelevantCycles rc = new RelevantCycles(ic);
+                numberOfCyclesCheck(rc);
+                return rc.paths();
             }
         },
         ALL {
@@ -746,7 +900,7 @@ public final class Cycles {
             /** {@inheritDoc} */
             @Override
             int[][] apply(int[][] graph, int length) throws Intractable {
-                final int threshold = 684; // see. AllRingsFinder.Threshold.Pubchem_99
+                final int threshold = 3072; // see. AllRingsFinder.Threshold.Pubchem_994
                 AllCycles ac = new AllCycles(graph, Math.min(length, graph.length), threshold);
                 if (!ac.completed())
                     throw new Intractable("A large number of cycles were being generated and the"
@@ -807,7 +961,7 @@ public final class Cycles {
             /** {@inheritDoc} */
             @Override
             int[][] apply(int[][] graph, int length) throws Intractable {
-                final int threshold = 684; // see. AllRingsFinder.Threshold.Pubchem_99
+                final int threshold = 3072; // see. AllRingsFinder.Threshold.Pubchem_994
                 AllCycles ac = new AllCycles(graph, Math.min(length, graph.length), threshold);
 
                 return ac.completed() ? ac.paths() : VERTEX_SHORT.apply(graph, length);
@@ -838,7 +992,7 @@ public final class Cycles {
             int[][] graph = GraphUtil.toAdjList(molecule, bondMap);
             RingSearch ringSearch = new RingSearch(molecule, graph);
 
-            List<int[]> walks = new ArrayList<int[]>(6);
+            List<int[]> walks = new ArrayList<>(6);
 
             // all isolated cycles are relevant - all we need to do is walk around
             // the vertices in the subset 'isolated'
@@ -866,7 +1020,7 @@ public final class Cycles {
 
             RingSearch ringSearch = new RingSearch(molecule, graph);
 
-            List<int[]> walks = new ArrayList<int[]>(6);
+            List<int[]> walks = new ArrayList<>(6);
 
             // all isolated cycles are relevant - all we need to do is walk around
             // the vertices in the subset 'isolated'
@@ -887,6 +1041,12 @@ public final class Cycles {
 
             return new Cycles(walks.toArray(new int[walks.size()][0]), molecule, null);
         }
+    }
+
+    private static void numberOfCyclesCheck(RelevantCycles rc) throws Intractable {
+        if (rc.size() > MAX_RELEVANT_CYCLES)
+            throw new Intractable("Too many relevant cycles cycles! max=" + MAX_RELEVANT_CYCLES + " was=" + rc.size() + "." +
+                                  " Increase this limit with System property -D" + CDK_MAX_RELEVANT_CYCLES_KEY + "=<num>");
     }
 
     /**
@@ -978,8 +1138,8 @@ public final class Cycles {
 
         private final int predefinedLength;
 
-        // see. AllRingsFinder.Threshold.Pubchem_99
-        private final int threshold = 684;
+        // see. AllRingsFinder.Threshold.Pubchem_994
+        private final int threshold = 3072;
 
         private AllUpToLength(int length) {
             this.predefinedLength = length;
@@ -1004,7 +1164,7 @@ public final class Cycles {
 
             if (this.predefinedLength < length) length = this.predefinedLength;
 
-            List<int[]> walks = new ArrayList<int[]>(6);
+            List<int[]> walks = new ArrayList<>(6);
 
             // all isolated cycles are relevant - all we need to do is walk around
             // the vertices in the subset 'isolated'
@@ -1049,7 +1209,8 @@ public final class Cycles {
      */
     private static final class Fallback implements CycleFinder {
 
-        private CycleFinder primary, auxiliary;
+        private final CycleFinder primary;
+        private final CycleFinder auxiliary;
 
         /**
          * Create a fallback for two cycle finders.
@@ -1091,7 +1252,7 @@ public final class Cycles {
      */
     private static final class Unchorded implements CycleFinder {
 
-        private CycleFinder primary;
+        private final CycleFinder primary;
 
         /**
          * Filter any cycles produced by the {@code primary} cycle finder and

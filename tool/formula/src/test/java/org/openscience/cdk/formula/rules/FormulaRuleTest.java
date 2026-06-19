@@ -18,25 +18,23 @@
  */
 package org.openscience.cdk.formula.rules;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Isotope;
-import org.openscience.cdk.CDKTestCase;
-import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.formula.MolecularFormula;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 
 /**
  * Tests for formula restriction rules.
  *
- * @cdk.module test-formula
  */
-public abstract class FormulaRuleTest extends CDKTestCase {
+abstract class FormulaRuleTest extends CDKTestCase {
 
-    protected static IRule rule;
+    private static IRule rule;
     private static Class<? extends IRule> ruleClass;
 
-    public static void setRule(Class<? extends IRule> ruleClass) throws Exception {
+    static void setRule(Class<? extends IRule> ruleClass) throws Exception {
         FormulaRuleTest.ruleClass = ruleClass;
         FormulaRuleTest.rule = getRule();
     }
@@ -60,12 +58,12 @@ public abstract class FormulaRuleTest extends CDKTestCase {
      * </pre>
      */
     @Test
-    public void testHasSetSuperDotRule() {
-        Assert.assertNotNull("The extending class must set the super.rule in its setUp() method.", rule);
+    void testHasSetSuperDotRule() {
+        Assertions.assertNotNull(rule, "The extending class must set the super.rule in its setUp() method.");
     }
 
     @Test
-    public void testValidate_IMolecularFormula() throws Exception {
+    void testValidate_IMolecularFormula() throws Exception {
         IRule rule = getRule();
     	
         IMolecularFormula mf = new MolecularFormula();

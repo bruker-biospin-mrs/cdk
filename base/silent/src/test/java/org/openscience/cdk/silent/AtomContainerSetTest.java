@@ -18,37 +18,28 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractAtomContainerSetTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractAtomContainerSetTest;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link AtomContainerSet}.
  *
- * @cdk.module test-silent
  */
-public class AtomContainerSetTest extends AbstractAtomContainerSetTest {
+class AtomContainerSetTest extends AbstractAtomContainerSetTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new AtomContainerSet();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(AtomContainerSet::new);
     }
 
     @Test
-    public void testAtomContainerSet() {
+    void testAtomContainerSet() {
         IAtomContainerSet som = new AtomContainerSet();
-        Assert.assertNotNull(som);
-        Assert.assertEquals(0, som.getAtomContainerCount());
+        Assertions.assertNotNull(som);
+        Assertions.assertEquals(0, som.getAtomContainerCount());
     }
 
     // Overwrite default methods: no notifications are expected!

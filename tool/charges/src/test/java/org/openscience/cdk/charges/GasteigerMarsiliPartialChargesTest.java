@@ -18,11 +18,10 @@
  */
 package org.openscience.cdk.charges;
 
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
@@ -37,7 +36,6 @@ import org.openscience.cdk.tools.LonePairElectronChecker;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 
-import java.util.Iterator;
 import java.util.List;
 import java.io.InputStream;
 
@@ -47,15 +45,14 @@ import static org.hamcrest.CoreMatchers.not;
 /**
  *  Description of the Class
  *
- * @cdk.module test-charges
  *
  *@author     chhoppe
  *@cdk.created    2004-11-04
  */
-public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
+class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
 
-    private IChemObjectBuilder      builder = SilentChemObjectBuilder.getInstance();
-    private LonePairElectronChecker lpcheck = new LonePairElectronChecker();
+    private final IChemObjectBuilder      builder = SilentChemObjectBuilder.getInstance();
+    private final LonePairElectronChecker lpcheck = new LonePairElectronChecker();
 
     /**
      *  A unit test for JUnit with methylenfluoride
@@ -63,7 +60,7 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *  @cdk.inchi InChI=1/CH3F/c1-2/h1H3
      */
     @Test
-    public void testCalculateCharges_IAtomContainer() throws Exception {
+    void testCalculateCharges_IAtomContainer() throws Exception {
         double[] testResult = {0.07915, -0.25264, 0.05783, 0.05783, 0.05783};
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
@@ -80,7 +77,7 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
         peoe.calculateCharges(molecule);
         for (int i = 0; i < molecule.getAtomCount(); i++) {
             //logger.debug("Charge for atom:"+i+" S:"+mol.getAtomAt(i).getSymbol()+" Charge:"+mol.getAtomAt(i).getCharge());
-            Assert.assertEquals(testResult[i], molecule.getAtom(i).getCharge(), 0.01);
+            Assertions.assertEquals(testResult[i], molecule.getAtom(i).getCharge(), 0.01);
         }
     }
 
@@ -88,7 +85,7 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testAssignGasteigerMarsiliSigmaPartialCharges_IAtomContainer_Boolean() throws Exception {
+    void testAssignGasteigerMarsiliSigmaPartialCharges_IAtomContainer_Boolean() throws Exception {
         double[] testResult = {0.07915, -0.25264, 0.05783, 0.05783, 0.05783};
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
@@ -105,7 +102,7 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
         peoe.assignGasteigerMarsiliSigmaPartialCharges(molecule, true);
         for (int i = 0; i < molecule.getAtomCount(); i++) {
             //logger.debug("Charge for atom:"+i+" S:"+mol.getAtomAt(i).getSymbol()+" Charge:"+mol.getAtomAt(i).getCharge());
-            Assert.assertEquals(testResult[i], molecule.getAtom(i).getCharge(), 0.01);
+            Assertions.assertEquals(testResult[i], molecule.getAtom(i).getCharge(), 0.01);
         }
 
     }
@@ -114,7 +111,7 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testAssignGasteigerSigmaMarsiliFactors_IAtomContainer() throws Exception {
+    void testAssignGasteigerSigmaMarsiliFactors_IAtomContainer() throws Exception {
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
 
         IAtomContainer molecule = builder.newInstance(IAtomContainer.class);
@@ -130,7 +127,7 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
         for (IAtom atom : molecule.atoms())
             atom.setCharge(0.0);
 
-        Assert.assertThat(peoe.assignGasteigerSigmaMarsiliFactors(molecule).length,
+        org.hamcrest.MatcherAssert.assertThat(peoe.assignGasteigerSigmaMarsiliFactors(molecule).length,
                           is(not(0)));
 
     }
@@ -139,11 +136,11 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testGetMaxGasteigerIters() throws Exception {
+    void testGetMaxGasteigerIters() throws Exception {
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
 
-        Assert.assertEquals(20, peoe.getMaxGasteigerIters(), 0.01);
+        Assertions.assertEquals(20, peoe.getMaxGasteigerIters(), 0.01);
 
     }
 
@@ -151,11 +148,11 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testGetMaxGasteigerDamp() throws Exception {
+    void testGetMaxGasteigerDamp() throws Exception {
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
 
-        Assert.assertEquals(20, peoe.getMaxGasteigerIters(), 0.01);
+        Assertions.assertEquals(20, peoe.getMaxGasteigerIters(), 0.01);
 
     }
 
@@ -163,11 +160,11 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testGetChiCatHydrogen() throws Exception {
+    void testGetChiCatHydrogen() throws Exception {
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
 
-        Assert.assertEquals(20, peoe.getMaxGasteigerIters(), 0.01);
+        Assertions.assertEquals(20, peoe.getMaxGasteigerIters(), 0.01);
 
     }
 
@@ -175,10 +172,10 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testGetStepSize() throws Exception {
+    void testGetStepSize() throws Exception {
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
-        Assert.assertEquals(5, peoe.getStepSize());
+        Assertions.assertEquals(5, peoe.getStepSize());
 
     }
 
@@ -186,12 +183,12 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testSetMaxGasteigerIters_Double() throws Exception {
+    void testSetMaxGasteigerIters_Double() throws Exception {
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
         double MX_ITERATIONS = 10;
         peoe.setMaxGasteigerIters(MX_ITERATIONS);
-        Assert.assertEquals(MX_ITERATIONS, peoe.getMaxGasteigerIters(), 0.01);
+        Assertions.assertEquals(MX_ITERATIONS, peoe.getMaxGasteigerIters(), 0.01);
 
     }
 
@@ -199,12 +196,12 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testSetMaxGasteigerDamp_Double() throws Exception {
+    void testSetMaxGasteigerDamp_Double() throws Exception {
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
         double MX_DAMP = 1;
         peoe.setMaxGasteigerDamp(MX_DAMP);
-        Assert.assertEquals(MX_DAMP, peoe.getMaxGasteigerDamp(), 0.01);
+        Assertions.assertEquals(MX_DAMP, peoe.getMaxGasteigerDamp(), 0.01);
 
     }
 
@@ -212,12 +209,12 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testSetChiCatHydrogen_Double() throws Exception {
+    void testSetChiCatHydrogen_Double() throws Exception {
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
         double DEOC_HYDROGEN = 22;
         peoe.setChiCatHydrogen(DEOC_HYDROGEN);
-        Assert.assertEquals(DEOC_HYDROGEN, peoe.getChiCatHydrogen(), 0.01);
+        Assertions.assertEquals(DEOC_HYDROGEN, peoe.getChiCatHydrogen(), 0.01);
 
     }
 
@@ -225,25 +222,25 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testSetStepSize() throws Exception {
+    void testSetStepSize() throws Exception {
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
         int STEP_SIZE = 22;
         peoe.setStepSize(STEP_SIZE);
-        Assert.assertEquals(STEP_SIZE, peoe.getStepSize());
+        Assertions.assertEquals(STEP_SIZE, peoe.getStepSize());
 
     }
 
-    @Test(expected = CDKException.class)
-    public void testUndefinedPartialCharge() throws Exception {
-        String filename = "data/mdl/burden_undefined.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    @Test
+    void testUndefinedPartialCharge() throws Exception {
+        String filename = "burden_undefined.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new MDLV2000Reader(ins);
         ChemFile content = reader.read(new ChemFile());
         reader.close();
         List<IAtomContainer> cList = ChemFileManipulator.getAllAtomContainers(content);
         IAtomContainer ac = cList.get(0);
 
-        Assert.assertNotNull(ac);
+        Assertions.assertNotNull(ac);
         addExplicitHydrogens(ac);
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(ac);
         Aromaticity.cdkLegacy().apply(ac);
@@ -253,6 +250,8 @@ public class GasteigerMarsiliPartialChargesTest extends CDKTestCase {
         lpcheck.saturate(ac);
 
         GasteigerMarsiliPartialCharges peoe = new GasteigerMarsiliPartialCharges();
-        peoe.calculateCharges(ac);
+        Assertions.assertThrows(CDKException.class, () -> {
+            peoe.calculateCharges(ac);
+        });
     }
 }

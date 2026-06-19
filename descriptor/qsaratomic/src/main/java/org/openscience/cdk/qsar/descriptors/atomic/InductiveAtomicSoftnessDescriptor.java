@@ -67,15 +67,13 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * @author         mfe4
  * @cdk.created    2004-11-03
- * @cdk.module     qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:atomicSoftness
  */
 public class InductiveAtomicSoftnessDescriptor extends AbstractAtomicDescriptor implements IAtomicDescriptor {
 
     private static final String[] NAMES   = {"indAtomSoftness"};
 
-    private static ILoggingTool   logger  = LoggingToolFactory
+    private static final ILoggingTool   logger  = LoggingToolFactory
                                                   .createLoggingTool(InductiveAtomicSoftnessDescriptor.class);
     private AtomTypeFactory       factory = null;
 
@@ -165,7 +163,7 @@ public class InductiveAtomicSoftnessDescriptor extends AbstractAtomicDescriptor 
         }
 
         while (allAtoms.hasNext()) {
-            IAtom curAtom = (IAtom) allAtoms.next();
+            IAtom curAtom = allAtoms.next();
             if (atom.getPoint3d() == null || curAtom.getPoint3d() == null) {
                 return getDummyDescriptorValue(new CDKException(
                         "The target atom or current atom had no 3D coordinates. These are required"));

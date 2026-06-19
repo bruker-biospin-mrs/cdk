@@ -19,18 +19,17 @@
 package org.openscience.cdk.graph;
 
 import org._3pq.jgrapht.graph.SimpleGraph;
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.templates.TestMoleculeFactory;
 
 /**
- * @cdk.module test-standard
  */
-public class MoleculeGraphsTest extends CDKTestCase {
+class MoleculeGraphsTest extends CDKTestCase {
 
-    public MoleculeGraphsTest() {
+    MoleculeGraphsTest() {
         super();
     }
 
@@ -39,11 +38,11 @@ public class MoleculeGraphsTest extends CDKTestCase {
      * and as many edges as bonds in alpha-pinene.
      */
     @Test
-    public void testGetMoleculeGraph_IAtomContainer() {
+    void testGetMoleculeGraph_IAtomContainer() {
         IAtomContainer apinene = TestMoleculeFactory.makeAlphaPinene();
         SimpleGraph graph = MoleculeGraphs.getMoleculeGraph(apinene);
-        Assert.assertEquals(apinene.getAtomCount(), graph.vertexSet().size());
-        Assert.assertEquals(apinene.getBondCount(), graph.edgeSet().size());
+        Assertions.assertEquals(apinene.getAtomCount(), graph.vertexSet().size());
+        Assertions.assertEquals(apinene.getBondCount(), graph.edgeSet().size());
     }
 
 }

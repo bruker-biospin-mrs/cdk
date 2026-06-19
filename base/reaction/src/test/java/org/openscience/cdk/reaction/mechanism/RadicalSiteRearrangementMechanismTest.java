@@ -18,31 +18,30 @@
  */
 package org.openscience.cdk.reaction.mechanism;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.reaction.IReactionMechanism;
 import org.openscience.cdk.reaction.ReactionMechanismTest;
 
 /**
  * Tests for RadicalSiteRearrangementMechanism implementations.
  *
- * @cdk.module test-reaction
  */
-public class RadicalSiteRearrangementMechanismTest extends ReactionMechanismTest {
+class RadicalSiteRearrangementMechanismTest extends ReactionMechanismTest {
 
     /**
      *  The JUnit setup method
      */
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         setMechanism(RadicalSiteRearrangementMechanism.class);
     }
 
     /**
      *  Constructor for the RadicalSiteRearrangementMechanismTest object.
      */
-    public RadicalSiteRearrangementMechanismTest() {
+    RadicalSiteRearrangementMechanismTest() {
         super();
     }
 
@@ -52,9 +51,9 @@ public class RadicalSiteRearrangementMechanismTest extends ReactionMechanismTest
      * @throws Exception
      */
     @Test
-    public void testRadicalSiteRearrangementMechanism() {
+    void testRadicalSiteRearrangementMechanism() {
         IReactionMechanism mechanism = new RadicalSiteRearrangementMechanism();
-        Assert.assertNotNull(mechanism);
+        Assertions.assertNotNull(mechanism);
     }
 
     /**
@@ -64,9 +63,9 @@ public class RadicalSiteRearrangementMechanismTest extends ReactionMechanismTest
      * @throws Exception
      */
     @Test
-    public void testInitiate_IAtomContainerSet_ArrayList_ArrayList() {
+    void testInitiate_IAtomContainerSet_ArrayList_ArrayList() {
         IReactionMechanism mechanism = new RadicalSiteRearrangementMechanism();
 
-        Assert.assertNotNull(mechanism);
+        Assertions.assertNotNull(mechanism);
     }
 }

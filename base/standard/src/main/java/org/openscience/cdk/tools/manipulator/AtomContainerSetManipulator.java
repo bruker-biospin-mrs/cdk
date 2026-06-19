@@ -23,7 +23,6 @@
 package org.openscience.cdk.tools.manipulator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.openscience.cdk.graph.ConnectivityChecker;
@@ -35,8 +34,6 @@ import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IElectronContainer;
 
 /**
- * @cdk.module standard
- * @cdk.githash
  *
  * @see ChemModelManipulator
  */
@@ -97,7 +94,7 @@ public class AtomContainerSetManipulator {
      * @return A list of individual IAtomContainer's
      */
     public static List<IAtomContainer> getAllAtomContainers(IAtomContainerSet set) {
-        List<IAtomContainer> atomContainerList = new ArrayList<IAtomContainer>();
+        List<IAtomContainer> atomContainerList = new ArrayList<>();
         for (IAtomContainer atomContainer : set.atomContainers()) {
             atomContainerList.add(atomContainer);
         }
@@ -113,7 +110,7 @@ public class AtomContainerSetManipulator {
         for (int i = 0; i < set.getAtomContainerCount(); i++) {
             int thisCharge = AtomContainerManipulator.getTotalFormalCharge(set.getAtomContainer(i));
             double stoich = set.getMultiplier(i);
-            charge += stoich * thisCharge;
+            charge += stoich * (double)thisCharge;
         }
         return charge;
     }
@@ -127,7 +124,7 @@ public class AtomContainerSetManipulator {
         for (int i = 0; i < set.getAtomContainerCount(); i++) {
             int thisCharge = AtomContainerManipulator.getTotalFormalCharge(set.getAtomContainer(i));
             double stoich = set.getMultiplier(i);
-            charge += stoich * thisCharge;
+            charge += (int)(stoich * (double)thisCharge);
         }
         return charge;
     }
@@ -145,7 +142,7 @@ public class AtomContainerSetManipulator {
     }
 
     public static List<String> getAllIDs(IAtomContainerSet set) {
-        List<String> idList = new ArrayList<String>();
+        List<String> idList = new ArrayList<>();
         if (set != null) {
             if (set.getID() != null) idList.add(set.getID());
             for (int i = 0; i < set.getAtomContainerCount(); i++) {
@@ -188,7 +185,7 @@ public class AtomContainerSetManipulator {
      * @return a list of individual ChemObject's
      */
     public static List<IChemObject> getAllChemObjects(IAtomContainerSet set) {
-        ArrayList<IChemObject> list = new ArrayList<IChemObject>();
+        ArrayList<IChemObject> list = new ArrayList<>();
         list.add(set);
         for (IAtomContainer atomContainer : set.atomContainers()) {
             list.add(atomContainer);
@@ -211,7 +208,7 @@ public class AtomContainerSetManipulator {
      */
     public static void sort(IAtomContainerSet atomContainerSet) {
         List<IAtomContainer> atomContainerList = AtomContainerSetManipulator.getAllAtomContainers(atomContainerSet);
-        Collections.sort(atomContainerList, new AtomContainerComparator());
+        atomContainerList.sort(new AtomContainerComparator());
         atomContainerSet.removeAllAtomContainers();
         for (Object anAtomContainerList : atomContainerList)
             atomContainerSet.addAtomContainer((IAtomContainer) anAtomContainerList);

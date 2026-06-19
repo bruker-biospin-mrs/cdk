@@ -24,6 +24,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.reaction.IReactionProcess;
@@ -36,7 +37,6 @@ import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * <p>IReactionProcess which a bond is broken displacing the electron to one of the
@@ -71,14 +71,12 @@ import java.util.Iterator;
  * @author         Miguel Rojas
  *
  * @cdk.created    2006-06-09
- * @cdk.module     reaction
- * @cdk.githash
  *
  * @see HeterolyticCleavageMechanism
  **/
 public class HeterolyticCleavagePBReaction extends ReactionEngine implements IReactionProcess {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(HeterolyticCleavagePBReaction.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(HeterolyticCleavagePBReaction.class);
 
     /**
      * Constructor of the HeterolyticCleavagePBReaction object.
@@ -131,13 +129,11 @@ public class HeterolyticCleavagePBReaction extends ReactionEngine implements IRe
         IParameterReact ipr = super.getParameterClass(SetReactionCenter.class);
         if (ipr != null && !ipr.isSetParameter()) setActiveCenters(reactant);
 
-        Iterator<IBond> bondis = reactant.bonds().iterator();
-        while (bondis.hasNext()) {
-            IBond bondi = bondis.next();
+        for (IBond bondi : reactant.bonds()) {
             IAtom atom1 = bondi.getBegin();
             IAtom atom2 = bondi.getEnd();
-            if (bondi.getFlag(CDKConstants.REACTIVE_CENTER) && bondi.getOrder() != IBond.Order.SINGLE
-                    && atom1.getFlag(CDKConstants.REACTIVE_CENTER) && atom2.getFlag(CDKConstants.REACTIVE_CENTER)
+            if (bondi.getFlag(IChemObject.REACTIVE_CENTER) && bondi.getOrder() != IBond.Order.SINGLE
+                    && atom1.getFlag(IChemObject.REACTIVE_CENTER) && atom2.getFlag(IChemObject.REACTIVE_CENTER)
                     && (atom1.getFormalCharge() == CDKConstants.UNSET ? 0 : atom1.getFormalCharge()) == 0
                     && (atom2.getFormalCharge() == CDKConstants.UNSET ? 0 : atom2.getFormalCharge()) == 0
                     && reactant.getConnectedSingleElectronsCount(atom1) == 0
@@ -146,7 +142,7 @@ public class HeterolyticCleavagePBReaction extends ReactionEngine implements IRe
                 /**/
                 for (int j = 0; j < 2; j++) {
 
-                    ArrayList<IAtom> atomList = new ArrayList<IAtom>();
+                    ArrayList<IAtom> atomList = new ArrayList<>();
                     if (j == 0) {
                         atomList.add(atom1);
                         atomList.add(atom2);
@@ -154,7 +150,7 @@ public class HeterolyticCleavagePBReaction extends ReactionEngine implements IRe
                         atomList.add(atom2);
                         atomList.add(atom1);
                     }
-                    ArrayList<IBond> bondList = new ArrayList<IBond>();
+                    ArrayList<IBond> bondList = new ArrayList<>();
                     bondList.add(bondi);
 
                     IAtomContainerSet moleculeSet = reactant.getBuilder().newInstance(IAtomContainerSet.class);
@@ -184,9 +180,7 @@ public class HeterolyticCleavagePBReaction extends ReactionEngine implements IRe
      * @throws CDKException
      */
     private void setActiveCenters(IAtomContainer reactant) throws CDKException {
-        Iterator<IBond> bonds = reactant.bonds().iterator();
-        while (bonds.hasNext()) {
-            IBond bond = bonds.next();
+        for (IBond bond : reactant.bonds()) {
             IAtom atom1 = bond.getBegin();
             IAtom atom2 = bond.getEnd();
             if (bond.getOrder() != IBond.Order.SINGLE
@@ -194,9 +188,9 @@ public class HeterolyticCleavagePBReaction extends ReactionEngine implements IRe
                     && (atom2.getFormalCharge() == CDKConstants.UNSET ? 0 : atom2.getFormalCharge()) == 0
                     && reactant.getConnectedSingleElectronsCount(atom1) == 0
                     && reactant.getConnectedSingleElectronsCount(atom2) == 0) {
-                atom1.setFlag(CDKConstants.REACTIVE_CENTER, true);
-                atom2.setFlag(CDKConstants.REACTIVE_CENTER, true);
-                bond.setFlag(CDKConstants.REACTIVE_CENTER, true);
+                atom1.setFlag(IChemObject.REACTIVE_CENTER, true);
+                atom2.setFlag(IChemObject.REACTIVE_CENTER, true);
+                bond.setFlag(IChemObject.REACTIVE_CENTER, true);
             }
         }
     }

@@ -22,16 +22,13 @@
  */
 package org.openscience.cdk.io.rdf;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.io.ChemObjectWriterTest;
+import org.openscience.cdk.test.io.ChemObjectWriterTest;
 import org.openscience.cdk.silent.Atom;
 
 import java.io.StringWriter;
@@ -39,19 +36,16 @@ import java.io.StringWriter;
 /**
  * TestCase for the {@link CDKOWLWriter}.
  *
- * @cdk.module test-iordf
  */
-public class CDKOWLWriterTest extends ChemObjectWriterTest {
+class CDKOWLWriterTest extends ChemObjectWriterTest {
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         setChemObjectWriter(new CDKOWLWriter());
     }
 
     @Test
-    public void testWriteMolecule() throws Exception {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.ERROR);
+    void testWriteMolecule() throws Exception {
         StringWriter output = new StringWriter();
         CDKOWLWriter writer = new CDKOWLWriter(output);
 
@@ -62,6 +56,6 @@ public class CDKOWLWriterTest extends ChemObjectWriterTest {
         writer.write(mol);
         writer.close();
         String outputString = output.toString();
-        Assert.assertTrue(outputString.contains("http://cdk.sourceforge.net/model.owl#"));
+        Assertions.assertTrue(outputString.contains("http://cdk.sourceforge.net/model.owl#"));
     }
 }

@@ -19,35 +19,26 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractChemSequenceTest;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractChemSequenceTest;
 import org.openscience.cdk.interfaces.IChemSequence;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugChemSequence}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugChemSequenceTest extends AbstractChemSequenceTest {
+class DebugChemSequenceTest extends AbstractChemSequenceTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugChemSequence();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugChemSequence::new);
     }
 
     @Test
-    public void testDebugChemSequence() {
+    void testDebugChemSequence() {
         IChemSequence cs = new DebugChemSequence();
-        Assert.assertNotNull(cs);
+        Assertions.assertNotNull(cs);
     }
 }

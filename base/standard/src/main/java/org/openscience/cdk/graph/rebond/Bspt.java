@@ -67,8 +67,6 @@ import java.util.Enumeration;
  * @author  Miguel Howard
  * @cdk.created 2003-05
  *
- * @cdk.module  standard
- * @cdk.githash
  * @cdk.keyword rebonding
  * @cdk.keyword Binary Space Partitioning Tree
  * @cdk.keyword join-the-dots
@@ -80,7 +78,7 @@ public final class Bspt {
                                                * this corresponds to the max
                                                * height of the tree
                                                */
-    int                      dimMax;
+    final int                      dimMax;
     Element                  eleRoot;
 
     /*
@@ -118,7 +116,7 @@ public final class Bspt {
 
     class EnumerateAll implements Enumeration {
 
-        Node[] stack;
+        final Node[] stack;
         int    sp;
         int    i;
         Leaf   leaf;
@@ -165,12 +163,12 @@ public final class Bspt {
 
     class EnumerateNear implements Enumeration {
 
-        Node[] stack;
+        final Node[] stack;
         int    sp;
         int    i;
         Leaf   leaf;
-        double distance;
-        Tuple  center;
+        final double distance;
+        final Tuple  center;
 
         EnumerateNear(Tuple center, double distance) {
             this.distance = distance;
@@ -233,19 +231,19 @@ public final class Bspt {
 
     class EnumerateSphere implements Enumeration {
 
-        Node[]  stack;
+        final Node[]  stack;
         int     sp;
         int     i;
         Leaf    leaf;
-        double  distance;
-        double  distance2;
-        Tuple   center;
-        double  centerValues[];
+        final double  distance;
+        final double  distance2;
+        final Tuple   center;
+        final double[] centerValues;
         double  foundDistance2; // the dist squared of a found Element;
 
         // when set, only the hemisphere sphere .GT. or .EQ. the point
         // (on the first dim) is returned
-        boolean tHemisphere;
+        final boolean tHemisphere;
 
         EnumerateSphere(Tuple center, double distance, boolean tHemisphere) {
             this.distance = distance;
@@ -332,7 +330,7 @@ public final class Bspt {
 
     public interface Tuple {
 
-        public double getDimValue(int dim);
+        double getDimValue(int dim);
     }
 
     interface Element {
@@ -347,9 +345,9 @@ public final class Bspt {
     class Node implements Element {
 
         Element eleLE;
-        int     dim;
-        int     dimMax;
-        double  splitValue;
+        final int     dim;
+        final int     dimMax;
+        final double  splitValue;
         Element eleGE;
 
         Node(int dim, int dimMax, Leaf leafLE) {
@@ -411,7 +409,7 @@ public final class Bspt {
     class Leaf implements Element {
 
         int     count;
-        Tuple[] tuples;
+        final Tuple[] tuples;
 
         Leaf() {
             count = 0;

@@ -25,8 +25,7 @@ package org.openscience.cdk.hash.stereo;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,14 +33,15 @@ import java.util.Collections;
 
 import javax.vecmath.Point2d;
 
+import org.junit.jupiter.api.Assertions;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Some isolated test of the cumulative encoder factory, check out {@link
@@ -49,9 +49,8 @@ import org.junit.Test;
  * allene and cumulene.
  *
  * @author John May
- * @cdk.module test-hash
  */
-public class GeometricCumulativeDoubleBondFactoryTest {
+class GeometricCumulativeDoubleBondFactoryTest {
 
     private static IAtom carbonAt(double x, double y) {
         IAtom atom = new Atom("C");
@@ -60,8 +59,8 @@ public class GeometricCumulativeDoubleBondFactoryTest {
     }
 
     @Test
-    public void testCreate() throws Exception {
-        IAtomContainer m = new AtomContainer();
+    void testCreate() throws Exception {
+        IAtomContainer m = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(carbonAt(-0.2994, 3.2084));
         m.addAtom(carbonAt(-1.1244, 3.2084));
         m.addAtom(carbonAt(-1.9494, 3.2084));
@@ -79,21 +78,21 @@ public class GeometricCumulativeDoubleBondFactoryTest {
     }
 
     @Test
-    public void testAxialEncoder_Empty() throws Exception {
+    void testAxialEncoder_Empty() throws Exception {
         IAtomContainer container = mock(IAtomContainer.class);
         IAtom start = mock(IAtom.class);
         IAtom end = mock(IAtom.class);
-        when(container.getConnectedBondsList(start)).thenReturn(Collections.<IBond> emptyList());
-        when(container.getConnectedBondsList(end)).thenReturn(Collections.<IBond> emptyList());
-        assertNull(GeometricCumulativeDoubleBondFactory.axialEncoder(container, start, end));
+        when(container.getConnectedBondsList(start)).thenReturn(Collections.emptyList());
+        when(container.getConnectedBondsList(end)).thenReturn(Collections.emptyList());
+        Assertions.assertNull(GeometricCumulativeDoubleBondFactory.axialEncoder(container, start, end));
     }
 
     @Test
-    public void testElevation_Atom_Up() throws Exception {
+    void testElevation_Atom_Up() throws Exception {
         IAtom a1 = mock(IAtom.class);
         IAtom a2 = mock(IAtom.class);
         IBond bond = mock(IBond.class);
-        when(bond.getStereo()).thenReturn(IBond.Stereo.UP);
+        when(bond.getDisplay()).thenReturn(IBond.Display.WedgeBegin);
         when(bond.getBegin()).thenReturn(a1);
         when(bond.getEnd()).thenReturn(a2);
         assertThat(GeometricCumulativeDoubleBondFactory.elevation(bond, a1), is(+1));
@@ -101,11 +100,11 @@ public class GeometricCumulativeDoubleBondFactoryTest {
     }
 
     @Test
-    public void testElevation_Atom_Down() throws Exception {
+    void testElevation_Atom_Down() throws Exception {
         IAtom a1 = mock(IAtom.class);
         IAtom a2 = mock(IAtom.class);
         IBond bond = mock(IBond.class);
-        when(bond.getStereo()).thenReturn(IBond.Stereo.DOWN);
+        when(bond.getDisplay()).thenReturn(IBond.Display.WedgedHashBegin);
         when(bond.getBegin()).thenReturn(a1);
         when(bond.getEnd()).thenReturn(a2);
         assertThat(GeometricCumulativeDoubleBondFactory.elevation(bond, a1), is(-1));
@@ -113,22 +112,22 @@ public class GeometricCumulativeDoubleBondFactoryTest {
     }
 
     @Test
-    public void testElevation_null() throws Exception {
+    void testElevation_null() throws Exception {
         IBond bond = mock(IBond.class);
         assertThat(GeometricCumulativeDoubleBondFactory.elevation(bond), is(0));
     }
 
     @Test
-    public void testElevation_Up() throws Exception {
+    void testElevation_Up() throws Exception {
         IBond bond = mock(IBond.class);
-        when(bond.getStereo()).thenReturn(IBond.Stereo.UP);
+        when(bond.getDisplay()).thenReturn(IBond.Display.WedgeBegin);
         assertThat(GeometricCumulativeDoubleBondFactory.elevation(bond), is(+1));
     }
 
     @Test
-    public void testElevation_Down() throws Exception {
+    void testElevation_Down() throws Exception {
         IBond bond = mock(IBond.class);
-        when(bond.getStereo()).thenReturn(IBond.Stereo.DOWN);
+        when(bond.getDisplay()).thenReturn(IBond.Display.WedgedHashBegin);
         assertThat(GeometricCumulativeDoubleBondFactory.elevation(bond), is(-1));
     }
 }

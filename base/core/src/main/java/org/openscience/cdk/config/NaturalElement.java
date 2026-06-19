@@ -35,8 +35,6 @@ import org.openscience.cdk.interfaces.IElement;
  * be used than by only {@link Elements}.
  *
  * @author      egonw
- * @cdk.module  core
- * @cdk.githash
  */
 final class NaturalElement implements IElement {
 
@@ -131,6 +129,26 @@ final class NaturalElement implements IElement {
     @Override
     public boolean[] getFlags() {
         return new boolean[CDKConstants.MAX_FLAG_INDEX + 1];
+    }
+
+    @Override
+    public void set(int flags) {
+
+    }
+
+    @Override
+    public void clear(int flags) {
+
+    }
+
+    @Override
+    public boolean is(int flags) {
+        return false;
+    }
+
+    @Override
+    public int flags() {
+        return 0;
     }
 
     @Override

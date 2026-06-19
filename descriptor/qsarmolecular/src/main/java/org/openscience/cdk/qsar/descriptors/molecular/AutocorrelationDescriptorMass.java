@@ -41,8 +41,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  *
  * @author      Federico
  * @cdk.created 2007-02-08
- * @cdk.module  qsarmolecular
- * @cdk.githash
  */
 public class AutocorrelationDescriptorMass extends AbstractMolecularDescriptor implements IMolecularDescriptor {
 
@@ -75,7 +73,7 @@ public class AutocorrelationDescriptorMass extends AbstractMolecularDescriptor i
     public DescriptorValue calculate(IAtomContainer atomContainer) {
         IAtomContainer container;
         try {
-            container = (IAtomContainer) atomContainer.clone();
+            container = atomContainer.clone();
             container = AtomContainerManipulator.removeHydrogens(container);
         } catch (CloneNotSupportedException e) {
             DoubleArrayResult result = new DoubleArrayResult(5);

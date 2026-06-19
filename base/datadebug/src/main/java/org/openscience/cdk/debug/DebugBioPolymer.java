@@ -44,14 +44,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author     egonw
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugBioPolymer extends BioPolymer implements IBioPolymer {
 
     private static final long serialVersionUID = 5349870327516864575L;
 
-    ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugAtomContainer.class);
+    final ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugAtomContainer.class);
 
     /** {@inheritDoc} */
     @Override

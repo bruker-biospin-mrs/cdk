@@ -1,13 +1,14 @@
 package org.openscience.cdk.hash;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyInt;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,17 +17,19 @@ import static org.mockito.Mockito.when;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class SeedGeneratorTest {
+class SeedGeneratorTest {
 
-    @Test(expected = NullPointerException.class)
-    public void testConstruct_Null() {
-        new SeedGenerator(null);
+    @Test
+    void testConstruct_Null() {
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {
+                                    new SeedGenerator(null);
+                                });
     }
 
     @Test
-    public void testGenerate() throws Exception {
+    void testGenerate() {
 
         IAtomContainer container = mock(IAtomContainer.class);
 
@@ -68,7 +71,7 @@ public class SeedGeneratorTest {
     }
 
     @Test
-    public void testGenerate_SizeSeeding() throws Exception {
+    void testGenerate_SizeSeeding() {
 
         IAtomContainer m1 = mock(IAtomContainer.class);
         IAtomContainer m2 = mock(IAtomContainer.class);
@@ -144,4 +147,41 @@ public class SeedGeneratorTest {
 
     }
 
+    @Test
+    void testGenerate_negativeAtomHash() {
+        // arrange
+        IAtomContainer atomContainer = mock(IAtomContainer.class);
+        IAtom atom = mock(IAtom.class);
+        when(atomContainer.getAtomCount()).thenReturn(1);
+        when(atomContainer.getAtom(0)).thenReturn(atom);
+
+        AtomEncoder encoder = mock(AtomEncoder.class);
+        when(encoder.encode(atom, atomContainer)).thenReturn(-512);
+
+        SeedGenerator generator = new SeedGenerator(encoder);
+
+        // act
+        long[] hashes = generator.generate(atomContainer);
+        assertThat(hashes.length, is(1));
+        assertThat(hashes[0], is(67554012666142223L));
+    }
+
+    @Test
+    void testGenerate_positiveAtomHash() {
+        // arrange
+        IAtomContainer atomContainer = mock(IAtomContainer.class);
+        IAtom atom = mock(IAtom.class);
+        when(atomContainer.getAtomCount()).thenReturn(1);
+        when(atomContainer.getAtom(0)).thenReturn(atom);
+
+        AtomEncoder encoder = mock(AtomEncoder.class);
+        when(encoder.encode(atom, atomContainer)).thenReturn(512);
+
+        SeedGenerator generator = new SeedGenerator(encoder);
+
+        // act
+        long[] hashes = generator.generate(atomContainer);
+        assertThat(hashes.length, is(1));
+        assertThat(hashes[0], is(18253619712L));
+    }
 }

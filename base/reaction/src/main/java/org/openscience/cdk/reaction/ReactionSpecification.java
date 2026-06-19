@@ -24,15 +24,13 @@ import org.openscience.cdk.IImplementationSpecification;
  * Class that is used to distribute reactions specifications.
  *
  * @author      Miguel Rojas
- * @cdk.module  reaction
- * @cdk.githash
  */
 public class ReactionSpecification implements IImplementationSpecification {
 
-    private String specificationReference;
-    private String implementationTitle;
-    private String implementationIdentifier;
-    private String implementationVendor;
+    private final String specificationReference;
+    private final String implementationTitle;
+    private final String implementationIdentifier;
+    private final String implementationVendor;
 
     /**
      * Container for specifying the type of reaction.
@@ -60,21 +58,21 @@ public class ReactionSpecification implements IImplementationSpecification {
     @Override
     public String getSpecificationReference() {
         return this.specificationReference;
-    };
+    }
 
     @Override
     public String getImplementationTitle() {
         return this.implementationTitle;
-    };
+    }
 
     @Override
     public String getImplementationIdentifier() {
         return this.implementationIdentifier;
-    };
+    }
 
     @Override
     public String getImplementationVendor() {
         return this.implementationVendor;
-    };
+    }
 
 }

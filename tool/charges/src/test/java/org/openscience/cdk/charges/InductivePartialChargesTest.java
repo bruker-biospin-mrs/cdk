@@ -18,13 +18,12 @@
  */
 package org.openscience.cdk.charges;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -36,18 +35,17 @@ import javax.vecmath.Point3d;
 /**
  *  TestSuite that runs a test for the MMFF94PartialCharges.
  *
- * @cdk.module test-charges
  *
  *@author        mfe4
  *@cdk.created       2004-11-04
  */
 
-public class InductivePartialChargesTest extends CDKTestCase {
+class InductivePartialChargesTest extends CDKTestCase {
 
     private static IAtomContainer mol;
 
-    @BeforeClass
-    public static void makeMoleucle() {
+    @BeforeAll
+    static void makeMoleucle() {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         mol = builder.newInstance(IAtomContainer.class);
         IAtom atom1 = builder.newInstance(IAtom.class, "C");
@@ -83,7 +81,7 @@ public class InductivePartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testCalculateCharges_IAtomContainer() throws java.lang.Exception {
+    void testCalculateCharges_IAtomContainer() throws java.lang.Exception {
         double[] testResult = {0.197, -0.492, 0.051, 0.099, 0.099};
         Point3d c_coord = new Point3d(1.392, 0.0, 0.0);
         Point3d f_coord = new Point3d(0.0, 0.0, 0.0);
@@ -91,7 +89,7 @@ public class InductivePartialChargesTest extends CDKTestCase {
         Point3d h2_coord = new Point3d(1.7439615035767404, -0.5279422553651107, 0.914422809754875);
         Point3d h3_coord = new Point3d(1.7439615035767402, -0.5279422553651113, -0.9144228097548747);
 
-        IAtomContainer mol = new AtomContainer(); // molecule is CF
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer(); // molecule is CF
 
         Atom c = new Atom("C");
         mol.addAtom(c);
@@ -120,8 +118,7 @@ public class InductivePartialChargesTest extends CDKTestCase {
         InductivePartialCharges ipc = new InductivePartialCharges();
         ipc.assignInductivePartialCharges(mol);
         for (int i = 0; i < mol.getAtomCount(); i++) {
-            Assert.assertEquals(testResult[i],
-                    ((Double) mol.getAtom(i).getProperty("InductivePartialCharge")).doubleValue(), 0.1);
+            Assertions.assertEquals(testResult[i], (Double) mol.getAtom(i).getProperty("InductivePartialCharge"), 0.1);
             //logger.debug("CHARGE AT " + ac.getAtomAt(i).getSymbol() + " " + ac.getAtomAt(i).getProperty("MMFF94charge"));
         }
     }
@@ -131,7 +128,7 @@ public class InductivePartialChargesTest extends CDKTestCase {
      *
      */
     @Test
-    public void testInductivePartialCharges() throws java.lang.Exception {
+    void testInductivePartialCharges() throws java.lang.Exception {
         double[] testResult = {0.197, -0.492, 0.051, 0.099, 0.099};
         Point3d c_coord = new Point3d(1.392, 0.0, 0.0);
         Point3d f_coord = new Point3d(0.0, 0.0, 0.0);
@@ -139,7 +136,7 @@ public class InductivePartialChargesTest extends CDKTestCase {
         Point3d h2_coord = new Point3d(1.7439615035767404, -0.5279422553651107, 0.914422809754875);
         Point3d h3_coord = new Point3d(1.7439615035767402, -0.5279422553651113, -0.9144228097548747);
 
-        IAtomContainer mol = new AtomContainer(); // molecule is CF
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer(); // molecule is CF
 
         Atom c = new Atom("C");
         mol.addAtom(c);
@@ -168,30 +165,29 @@ public class InductivePartialChargesTest extends CDKTestCase {
         InductivePartialCharges ipc = new InductivePartialCharges();
         ipc.assignInductivePartialCharges(mol);
         for (int i = 0; i < mol.getAtomCount(); i++) {
-            Assert.assertEquals(testResult[i],
-                    ((Double) mol.getAtom(i).getProperty("InductivePartialCharge")).doubleValue(), 0.1);
+            Assertions.assertEquals(testResult[i], (Double) mol.getAtom(i).getProperty("InductivePartialCharge"), 0.1);
             //logger.debug("CHARGE AT " + ac.getAtomAt(i).getSymbol() + " " + ac.getAtomAt(i).getProperty("MMFF94charge"));
         }
     }
 
     @Test
-    public void testGetPaulingElectronegativities() throws Exception {
+    void testGetPaulingElectronegativities() throws Exception {
         InductivePartialCharges ipc = new InductivePartialCharges();
         double[] eneg = ipc.getPaulingElectronegativities(mol, true);
         long[] expected = {};
-        Assert.assertEquals("Error in C electronegativity", 2.20, eneg[0], 0.01);
-        Assert.assertEquals("Error in Cl electronegativity", 3.28, eneg[1], 0.01);
-        Assert.assertEquals("Error in Br electronegativity", 3.13, eneg[2], 0.01);
-        Assert.assertEquals("Error in H electronegativity", 2.10, eneg[3], 0.01);
-        Assert.assertEquals("Error in O electronegativity", 3.20, eneg[4], 0.01);
+        Assertions.assertEquals(2.20, eneg[0], 0.01, "Error in C electronegativity");
+        Assertions.assertEquals(3.28, eneg[1], 0.01, "Error in Cl electronegativity");
+        Assertions.assertEquals(3.13, eneg[2], 0.01, "Error in Br electronegativity");
+        Assertions.assertEquals(2.10, eneg[3], 0.01, "Error in H electronegativity");
+        Assertions.assertEquals(3.20, eneg[4], 0.01, "Error in O electronegativity");
     }
 
-    @Ignore
+    @Disabled
     @Test
-    public void testGetAtomicSoftness() throws Exception {
+    void testGetAtomicSoftness() throws Exception {
         InductivePartialCharges ipc = new InductivePartialCharges();
         double softness = ipc.getAtomicSoftnessCore(mol, 0);
-        Assert.fail("Not validated - need known values");
+        Assertions.fail("Not validated - need known values");
     }
 
 }

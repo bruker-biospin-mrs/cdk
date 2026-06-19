@@ -22,20 +22,23 @@
  */
 package org.openscience.cdk.fingerprint;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.smarts.SmartsPattern;
 import org.openscience.cdk.tools.periodictable.PeriodicTable;
 
-import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,16 +54,26 @@ import java.util.Map;
  * here</a>
  * 
  * 
- * A fingerprint is generated for an AtomContainer with this code: <pre>
- *   Molecule molecule = new Molecule();
- *   PubchemFingerprinter fprinter = new PubchemFingerprinter();
- *   BitSet fingerprint = fprinter.getBitFingerprint(molecule);
- *   fprinter.getSize(); // returns 881
- *   fingerprint.length(); // returns the highest set bit
+ * A fingerprint is generated for an AtomContainer with this code:
+ * <pre>
+ *   IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+ *   IAtomContainer molecule = ...; // e.g. from SMILES
+ *
+ *   // note likely now optional:
+ *   // AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
+ *   // Aromaticity.cdkLegacy().apply(mol);
+ *   // AtomContainerManipulator.convertImplicitToExplicitHydrogens(mol);
+ *
+ *   PubchemFingerprinter fprinter = new PubchemFingerprinter(builder);
+ *   BitSet fingerprint = fprinter.getBitFingerprint(molecule).asBitSet();
  * </pre>
- * Note that the fingerprinter assumes that you have detected aromaticity and
- * atom types before evaluating the fingerprint. Also the fingerprinter
- * expects that explicit H's are present
+ *
+ * Note: the fingerprinter originally assumed you have detected aromaticity
+ * and atom types before evaluating the fingerprint, hydrogens should also be
+ * explicit. Modifications have been made to automatically aromatize before
+ * SMARTS matching and work with either implicit/explicit Hydrogens but further
+ * testing is needed to confirm the correct results (as defined in PubChem
+ * SDfiles) are obtained.
  * 
  * Note that this fingerprint is not particularly fast, as it will perform
  * ring detection using {@link org.openscience.cdk.ringsearch.AllRingsFinder}
@@ -75,15 +88,17 @@ import java.util.Map;
  * which was {@code [#6](~[#6])(~[#6])(~[#6])([H])} and is rewritten as
  * {@code [#6H1](~[#6])(~[#6])(~[#6])}.
  * 
- *
+ * <br/>
  * <b>Warning - this class is not thread-safe and uses stores intermediate steps
  * internally. Please use a separate instance of the class for each thread.</b>
+ * <br/>
+ * <b>
+ * Important! this fingerprint can <b>not</b> be used for substructure screening.
+ * </b>
  *
  * @author Rajarshi Guha
  * @cdk.keyword fingerprint
  * @cdk.keyword similarity
- * @cdk.module fingerprint
- * @cdk.githash
  * @cdk.threadnonsafe
  */
 public class PubchemFingerprinter extends AbstractFingerprinter implements IFingerprinter {
@@ -93,12 +108,26 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
      */
     public static final int FP_SIZE = 881;
 
-    private byte[]          m_bits;
+    private final byte[]          m_bits;
 
-    private Map<String,SmartsPattern> cache = new HashMap<>();
+    private final Map<String,SmartsPattern> cache = new HashMap<>();
+
+    /* Use the Extended Smallest Set of Smallest Rings (ESSSR) for ring bits */
+    private final boolean esssr;
+
+    public PubchemFingerprinter(IChemObjectBuilder builder, boolean esssr) {
+        this.m_bits = new byte[(FP_SIZE + 7) >> 3];
+        this.esssr = esssr;
+    }
 
     public PubchemFingerprinter(IChemObjectBuilder builder) {
-        m_bits = new byte[(FP_SIZE + 7) >> 3];
+        this(builder, true);
+    }
+
+    @Override
+    protected List<Map.Entry<String, String>> getParameters() {
+        return Collections.singletonList(new AbstractMap.SimpleImmutableEntry<>("ESSSR",
+                                                                                Boolean.toString(esssr)));
     }
 
     /**
@@ -142,11 +171,14 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
 
     static class CountElements {
 
-        int[] counts = new int[120];
+        final int[] counts = new int[120];
 
-        public CountElements(IAtomContainer m) {
-            for (int i = 0; i < m.getAtomCount(); i++)
-                ++counts[m.getAtom(i).getAtomicNumber()];
+        CountElements(IAtomContainer m) {
+            for (int i = 0; i < m.getAtomCount(); i++) {
+                IAtom atom = m.getAtom(i);
+                ++counts[atom.getAtomicNumber()];
+                counts[IAtom.H] += atom.getImplicitHydrogenCount();
+            }
         }
 
         public int getCount(int atno) {
@@ -158,13 +190,16 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
         }
     }
 
-    static class CountRings {
+    final class CountRings {
 
         int[][]  sssr = {};
-        IRingSet ringSet;
+        final IRingSet ringSet;
 
         public CountRings(IAtomContainer m) {
-            ringSet = Cycles.sssr(m).toRingSet();
+            if (esssr)
+                ringSet = Cycles.tripletShort(m).toRingSet();
+            else
+                ringSet = Cycles.sssr(m).toRingSet();
         }
 
         public int countAnyRing(int size) {
@@ -177,15 +212,16 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
 
         private boolean isCarbonOnlyRing(IAtomContainer ring) {
             for (IAtom ringAtom : ring.atoms()) {
-                if (!ringAtom.getSymbol().equals("C")) return false;
+                if (ringAtom.getAtomicNumber() != IElement.C) return false;
             }
             return true;
         }
 
         private boolean isRingSaturated(IAtomContainer ring) {
             for (IBond ringBond : ring.bonds()) {
-                if (ringBond.getOrder() != IBond.Order.SINGLE || ringBond.getFlag(CDKConstants.ISAROMATIC)
-                        || ringBond.getFlag(CDKConstants.SINGLE_OR_DOUBLE)) return false;
+                // JWM: checked with comparisons to PubChem
+                if (ringBond.getOrder() != IBond.Order.SINGLE && !ringBond.isAromatic())
+                    return false;
             }
             return true;
         }
@@ -197,7 +233,7 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
         private int countNitrogenInRing(IAtomContainer ring) {
             int c = 0;
             for (IAtom ringAtom : ring.atoms()) {
-                if (ringAtom.getSymbol().equals("N")) c++;
+                if (ringAtom.getAtomicNumber() == IElement.N) c++;
             }
             return c;
         }
@@ -205,14 +241,14 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
         private int countHeteroInRing(IAtomContainer ring) {
             int c = 0;
             for (IAtom ringAtom : ring.atoms()) {
-                if (!ringAtom.getSymbol().equals("C") && !ringAtom.getSymbol().equals("H")) c++;
+                if (ringAtom.getAtomicNumber() != IElement.C && ringAtom.getAtomicNumber() != IElement.H) c++;
             }
             return c;
         }
 
         private boolean isAromaticRing(IAtomContainer ring) {
             for (IBond bond : ring.bonds())
-                if (!bond.getFlag(CDKConstants.ISAROMATIC)) return false;
+                if (!bond.getFlag(IChemObject.AROMATIC)) return false;
             return true;
         }
 
@@ -289,7 +325,7 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
 
     class CountSubstructures {
 
-        private IAtomContainer mol;
+        private final IAtomContainer mol;
 
         public CountSubstructures(IAtomContainer m) {
             mol = m;
@@ -307,6 +343,8 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
     }
 
     private void _generateFp(byte[] fp, IAtomContainer mol) throws CDKException {
+        // JWM: need test cases but ESSSR maybe should also be used in aromaticity
+        // perception? C1=C2N=C2C3=C1C3=O would tell us but no pubchem entry
         SmartsPattern.prepare(mol);
         countElements(fp, mol);
         countRings(fp, mol);
@@ -382,11 +420,11 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
         return base64Encode(pack);
     }
 
-    private static String BASE64_LUT = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz0123456789+/=";
+    private static final String BASE64_LUT = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz0123456789+/=";
 
     // based on NCBI C implementation
     private static String base64Encode(byte[] data) {
-        char c64[] = new char[data.length * 4 / 3 + 5];
+        char[] c64 = new char[data.length * 4 / 3 + 5];
         for (int i = 0, k = 0; i < data.length; i += 3, k += 4) {
             c64[k + 0] = (char) (data[i] >> 2);
             c64[k + 1] = (char) ((data[i] & 0x03) << 4);
@@ -453,7 +491,7 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
         return b64;
     }
 
-    static final int BITCOUNT[] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4,
+    static final int[] BITCOUNT = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4,
             3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
             1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4,
             3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4,
@@ -462,7 +500,7 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
             3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6,
             5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8};
 
-    static final int MASK[]     = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
+    static final int[] MASK = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
     /*
      * Section 1: Hierarchic Element Counts - These bs test for the presence or
@@ -471,248 +509,247 @@ public class PubchemFingerprinter extends AbstractFingerprinter implements IFing
     private static void countElements(byte[] fp, IAtomContainer mol) {
         int b;
         CountElements ce = new CountElements(mol);
-
         b = 0;
-        if (ce.getCount("H") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.H) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 1;
-        if (ce.getCount("H") >= 8) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.H) >= 8) fp[b >> 3] |= MASK[b % 8];
         b = 2;
-        if (ce.getCount("H") >= 16) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.H) >= 16) fp[b >> 3] |= MASK[b % 8];
         b = 3;
-        if (ce.getCount("H") >= 32) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.H) >= 32) fp[b >> 3] |= MASK[b % 8];
         b = 4;
-        if (ce.getCount("Li") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Li) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 5;
-        if (ce.getCount("Li") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Li) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 6;
-        if (ce.getCount("B") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.B) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 7;
-        if (ce.getCount("B") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.B) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 8;
-        if (ce.getCount("B") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.B) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 9;
-        if (ce.getCount("C") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.C) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 10;
-        if (ce.getCount("C") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.C) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 11;
-        if (ce.getCount("C") >= 8) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.C) >= 8) fp[b >> 3] |= MASK[b % 8];
         b = 12;
-        if (ce.getCount("C") >= 16) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.C) >= 16) fp[b >> 3] |= MASK[b % 8];
         b = 13;
-        if (ce.getCount("C") >= 32) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.C) >= 32) fp[b >> 3] |= MASK[b % 8];
         b = 14;
-        if (ce.getCount("N") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.N) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 15;
-        if (ce.getCount("N") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.N) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 16;
-        if (ce.getCount("N") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.N) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 17;
-        if (ce.getCount("N") >= 8) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.N) >= 8) fp[b >> 3] |= MASK[b % 8];
         b = 18;
-        if (ce.getCount("O") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.O) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 19;
-        if (ce.getCount("O") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.O) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 20;
-        if (ce.getCount("O") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.O) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 21;
-        if (ce.getCount("O") >= 8) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.O) >= 8) fp[b >> 3] |= MASK[b % 8];
         b = 22;
-        if (ce.getCount("O") >= 16) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.O) >= 16) fp[b >> 3] |= MASK[b % 8];
         b = 23;
-        if (ce.getCount("F") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.F) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 24;
-        if (ce.getCount("F") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.F) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 25;
-        if (ce.getCount("F") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.F) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 26;
-        if (ce.getCount("Na") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Na) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 27;
-        if (ce.getCount("Na") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Na) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 28;
-        if (ce.getCount("Si") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Si) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 29;
-        if (ce.getCount("Si") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Si) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 30;
-        if (ce.getCount("P") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.P) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 31;
-        if (ce.getCount("P") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.P) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 32;
-        if (ce.getCount("P") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.P) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 33;
-        if (ce.getCount("S") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.S) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 34;
-        if (ce.getCount("S") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.S) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 35;
-        if (ce.getCount("S") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.S) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 36;
-        if (ce.getCount("S") >= 8) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.S) >= 8) fp[b >> 3] |= MASK[b % 8];
         b = 37;
-        if (ce.getCount("Cl") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Cl) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 38;
-        if (ce.getCount("Cl") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Cl) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 39;
-        if (ce.getCount("Cl") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Cl) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 40;
-        if (ce.getCount("Cl") >= 8) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Cl) >= 8) fp[b >> 3] |= MASK[b % 8];
         b = 41;
-        if (ce.getCount("K") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.K) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 42;
-        if (ce.getCount("K") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.K) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 43;
-        if (ce.getCount("Br") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Br) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 44;
-        if (ce.getCount("Br") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Br) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 45;
-        if (ce.getCount("Br") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Br) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 46;
-        if (ce.getCount("I") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.I) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 47;
-        if (ce.getCount("I") >= 2) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.I) >= 2) fp[b >> 3] |= MASK[b % 8];
         b = 48;
-        if (ce.getCount("I") >= 4) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.I) >= 4) fp[b >> 3] |= MASK[b % 8];
         b = 49;
-        if (ce.getCount("Be") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Be) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 50;
-        if (ce.getCount("Mg") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Mg) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 51;
-        if (ce.getCount("Al") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Al) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 52;
-        if (ce.getCount("Ca") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ca) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 53;
-        if (ce.getCount("Sc") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Sc) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 54;
-        if (ce.getCount("Ti") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ti) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 55;
-        if (ce.getCount("V") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.V) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 56;
-        if (ce.getCount("Cr") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Cr) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 57;
-        if (ce.getCount("Mn") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Mn) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 58;
-        if (ce.getCount("Fe") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Fe) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 59;
-        if (ce.getCount("Co") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Co) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 60;
-        if (ce.getCount("Ni") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ni) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 61;
-        if (ce.getCount("Cu") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Cu) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 62;
-        if (ce.getCount("Zn") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Zn) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 63;
-        if (ce.getCount("Ga") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ga) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 64;
-        if (ce.getCount("Ge") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ge) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 65;
-        if (ce.getCount("As") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.As) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 66;
-        if (ce.getCount("Se") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Se) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 67;
-        if (ce.getCount("Kr") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Kr) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 68;
-        if (ce.getCount("Rb") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Rb) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 69;
-        if (ce.getCount("Sr") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Sr) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 70;
-        if (ce.getCount("Y") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Y) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 71;
-        if (ce.getCount("Zr") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Zr) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 72;
-        if (ce.getCount("Nb") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Nb) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 73;
-        if (ce.getCount("Mo") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Mo) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 74;
-        if (ce.getCount("Ru") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ru) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 75;
-        if (ce.getCount("Rh") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Rh) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 76;
-        if (ce.getCount("Pd") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Pd) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 77;
-        if (ce.getCount("Ag") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ag) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 78;
-        if (ce.getCount("Cd") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Cd) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 79;
-        if (ce.getCount("In") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.In) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 80;
-        if (ce.getCount("Sn") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Sn) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 81;
-        if (ce.getCount("Sb") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Sb) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 82;
-        if (ce.getCount("Te") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Te) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 83;
-        if (ce.getCount("Xe") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Xe) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 84;
-        if (ce.getCount("Cs") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Cs) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 85;
-        if (ce.getCount("Ba") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ba) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 86;
-        if (ce.getCount("Lu") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Lu) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 87;
-        if (ce.getCount("Hf") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Hf) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 88;
-        if (ce.getCount("Ta") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ta) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 89;
-        if (ce.getCount("W") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.W) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 90;
-        if (ce.getCount("Re") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Re) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 91;
-        if (ce.getCount("Os") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Os) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 92;
-        if (ce.getCount("Ir") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ir) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 93;
-        if (ce.getCount("Pt") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Pt) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 94;
-        if (ce.getCount("Au") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Au) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 95;
-        if (ce.getCount("Hg") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Hg) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 96;
-        if (ce.getCount("Tl") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Tl) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 97;
-        if (ce.getCount("Pb") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Pb) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 98;
-        if (ce.getCount("Bi") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Bi) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 99;
-        if (ce.getCount("La") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.La) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 100;
-        if (ce.getCount("Ce") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ce) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 101;
-        if (ce.getCount("Pr") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Pr) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 102;
-        if (ce.getCount("Nd") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Nd) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 103;
-        if (ce.getCount("Pm") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Pm) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 104;
-        if (ce.getCount("Sm") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Sm) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 105;
-        if (ce.getCount("Eu") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Eu) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 106;
-        if (ce.getCount("Gd") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Gd) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 107;
-        if (ce.getCount("Tb") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Tb) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 108;
-        if (ce.getCount("Dy") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Dy) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 109;
-        if (ce.getCount("Ho") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Ho) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 110;
-        if (ce.getCount("Er") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Er) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 111;
-        if (ce.getCount("Tm") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Tm) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 112;
-        if (ce.getCount("Yb") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Yb) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 113;
-        if (ce.getCount("Tc") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.Tc) >= 1) fp[b >> 3] |= MASK[b % 8];
         b = 114;
-        if (ce.getCount("U") >= 1) fp[b >> 3] |= MASK[b % 8];
+        if (ce.getCount(IAtom.U) >= 1) fp[b >> 3] |= MASK[b % 8];
     }
 
     /*
-     * Section 2: Rings in a canonic ESSR ring set-These bs test for the
-     * presence or count of the described chemical ring system. An ESSR ring is
+     * Section 2: Rings in a canonic ESSSR ring set-These bs test for the
+     * presence or count of the described chemical ring system. An ESSSR ring is
      * any ring which does not share three consecutive atoms with any other ring
      * in the chemical structure. For example, naphthalene has three ESSR rings
      * (two phenyl fragments and the 10-membered envelope), while biphenyl will
-     * yield a count of only two ESSR rings.
+     * yield a count of only two ESSSR rings.
      */
-    private static void countRings(byte[] fp, IAtomContainer mol) {
+    private void countRings(byte[] fp, IAtomContainer mol) {
         CountRings cr = new CountRings(mol);
         int b;
 

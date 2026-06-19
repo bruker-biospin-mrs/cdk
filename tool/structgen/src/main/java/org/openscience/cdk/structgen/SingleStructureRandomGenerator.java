@@ -60,16 +60,14 @@ import org.openscience.cdk.tools.manipulator.BondManipulator;
  *
  * @author      steinbeck
  * @cdk.created 2001-09-04
- * @cdk.module  structgen
- * @cdk.githash
  */
 public class SingleStructureRandomGenerator {
 
-    ILoggingTool      logger = LoggingToolFactory.createLoggingTool(SingleStructureRandomGenerator.class);
+    final ILoggingTool      logger = LoggingToolFactory.createLoggingTool(SingleStructureRandomGenerator.class);
 
     IAtomContainer    atomContainer;
-    SaturationChecker satCheck;
-    Random            random = null;
+    final SaturationChecker satCheck;
+    Random            random;
 
     /**
      * Constructor for the SingleStructureRandomGenerator object.
@@ -83,7 +81,7 @@ public class SingleStructureRandomGenerator {
      * Constructor for the SingleStructureRandomGenerator object.
      */
     public SingleStructureRandomGenerator() throws java.lang.Exception {
-        this((long) 11000);
+        this(11000);
     }
 
     /**

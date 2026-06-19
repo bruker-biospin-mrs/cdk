@@ -21,35 +21,32 @@
  */
 package org.openscience.cdk.renderer.elements.path;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-/**
- * @cdk.module test-renderbasic
- */
-public abstract class AbstractPathElementTest {
+abstract class AbstractPathElementTest {
 
     private static PathElement pathElement;
 
-    public static void setPathElement(PathElement element) {
+    static void setPathElement(PathElement element) {
         pathElement = element;
     }
 
     @Test
-    public void testConstructor() {
-        Assert.assertNotNull(pathElement);
+    void testConstructor() {
+        Assertions.assertNotNull(pathElement);
     }
 
     @Test
-    public void testType() {
-        Assert.assertNotNull(pathElement.type());
+    void testType() {
+        Assertions.assertNotNull(pathElement.type());
     }
 
     @Test
-    public void testPoints() {
+    void testPoints() {
         float[] points = pathElement.points();
-        Assert.assertNotNull(points);
-        Assert.assertNotSame(0, points.length);
+        Assertions.assertNotNull(points);
+        Assertions.assertNotSame(0, points.length);
     }
 
 }

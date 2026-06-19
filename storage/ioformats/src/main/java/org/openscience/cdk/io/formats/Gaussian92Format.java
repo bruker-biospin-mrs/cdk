@@ -21,8 +21,6 @@ package org.openscience.cdk.io.formats;
 import org.openscience.cdk.tools.DataFeatures;
 
 /**
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class Gaussian92Format extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 
@@ -74,7 +72,7 @@ public class Gaussian92Format extends SimpleChemFormatMatcher implements IChemFo
     /** {@inheritDoc} */
     @Override
     public boolean matches(int lineNumber, String line) {
-        if (line.indexOf("Gaussian 92") >= 0) {
+        if (line.contains("Gaussian 92")) {
             return true;
         }
         return false;

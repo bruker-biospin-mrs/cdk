@@ -18,21 +18,20 @@
  */
 package org.openscience.cdk.reaction.type.parameters;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * Tests for SetReactionCenter implementations.
  *
- * @cdk.module test-reaction
  */
-public class SetReactionCenterTest extends CDKTestCase {
+class SetReactionCenterTest extends CDKTestCase {
 
     /**
      *  Constructor for the SetReactionCenterTest object.
      */
-    public SetReactionCenterTest() {
+    SetReactionCenterTest() {
         super();
     }
 
@@ -42,8 +41,8 @@ public class SetReactionCenterTest extends CDKTestCase {
      * @throws Exception
      */
     @Test
-    public void testSetReactionCenter() {
+    void testSetReactionCenter() {
         SetReactionCenter react = new SetReactionCenter();
-        Assert.assertNotNull(react);
+        Assertions.assertNotNull(react);
     }
 }

@@ -24,8 +24,8 @@ package org.openscience.cdk.renderer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.renderer.font.AWTFontManager;
 import org.openscience.cdk.renderer.generators.BasicAtomGenerator;
@@ -34,19 +34,18 @@ import org.openscience.cdk.renderer.generators.BasicSceneGenerator;
 import org.openscience.cdk.renderer.generators.IGenerator;
 
 /**
- * @cdk.module test-renderextra
  */
-public class ReactionSetRendererTest {
+class ReactionSetRendererTest {
 
     @Test
-    public void testConstructor() {
-        List<IGenerator<IAtomContainer>> generators = new ArrayList<IGenerator<IAtomContainer>>();
+    void testConstructor() {
+        List<IGenerator<IAtomContainer>> generators = new ArrayList<>();
         generators.add(new BasicSceneGenerator());
         generators.add(new BasicAtomGenerator());
         generators.add(new BasicBondGenerator());
 
         ReactionSetRenderer renderer = new ReactionSetRenderer(generators, new AWTFontManager());
-        Assert.assertNotNull(renderer);
+        Assertions.assertNotNull(renderer);
     }
 
 }

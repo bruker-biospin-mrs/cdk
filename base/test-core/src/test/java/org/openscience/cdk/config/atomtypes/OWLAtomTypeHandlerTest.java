@@ -19,41 +19,40 @@
  */
 package org.openscience.cdk.config.atomtypes;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemObject;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * Checks the functionality of the {@link OWLAtomTypeHandler}.
  *
- * @cdk.module test-core
  */
-public class OWLAtomTypeHandlerTest extends CDKTestCase {
+class OWLAtomTypeHandlerTest extends CDKTestCase {
 
     // serious testing is done in OWLAtomTypeFactoryTest; the factory
     // requires this class to work properly. But nevertheless:
 
     @Test
-    public void testAtomTypeHandler_IChemObjectBuilder() {
+    void testAtomTypeHandler_IChemObjectBuilder() {
         OWLAtomTypeHandler handler = new OWLAtomTypeHandler(new ChemObject().getBuilder());
-        Assert.assertNotNull(handler);
+        Assertions.assertNotNull(handler);
     }
 
     @Test
-    public void testGetAtomTypes() {
+    void testGetAtomTypes() {
         OWLAtomTypeHandler handler = new OWLAtomTypeHandler(new ChemObject().getBuilder());
         // nothing is read
-        Assert.assertNotNull(handler);
-        Assert.assertNull(handler.getAtomTypes());
+        Assertions.assertNotNull(handler);
+        Assertions.assertNull(handler.getAtomTypes());
     }
 
     @Test
-    public void testStartDocument() {
+    void testStartDocument() {
         OWLAtomTypeHandler handler = new OWLAtomTypeHandler(new ChemObject().getBuilder());
         // nothing is read, but Vector is initialized
-        Assert.assertNotNull(handler);
-        Assert.assertNull(handler.getAtomTypes());
+        Assertions.assertNotNull(handler);
+        Assertions.assertNull(handler.getAtomTypes());
     }
 
 }

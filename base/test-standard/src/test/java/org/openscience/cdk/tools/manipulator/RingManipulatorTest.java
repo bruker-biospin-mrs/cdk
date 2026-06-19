@@ -22,45 +22,37 @@
  */
 package org.openscience.cdk.tools.manipulator;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKConstants;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Ring;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IRing;
-import org.openscience.cdk.CDKTestCase;
-import org.openscience.cdk.tools.manipulator.RingManipulator;
-
-import java.util.Iterator;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
- * @cdk.module test-standard
  */
-public class RingManipulatorTest extends CDKTestCase {
+class RingManipulatorTest extends CDKTestCase {
 
-    public RingManipulatorTest() {
+    RingManipulatorTest() {
         super();
     }
 
     @Test
-    public void testMarkAromaticRings() {
+    void testMarkAromaticRings() {
         IRing ring = new Ring(3, "C");
-        Assert.assertNotNull(ring);
+        Assertions.assertNotNull(ring);
         RingManipulator.markAromaticRings(ring);
-        Assert.assertFalse(ring.getFlag(CDKConstants.ISAROMATIC));
+        Assertions.assertFalse(ring.getFlag(IChemObject.AROMATIC));
 
-        Iterator<IAtom> atoms = ring.atoms().iterator();
-        while (atoms.hasNext())
-            atoms.next().setFlag(CDKConstants.ISAROMATIC, true);
+        for (IAtom iAtom : ring.atoms()) iAtom.setFlag(IChemObject.AROMATIC, true);
         RingManipulator.markAromaticRings(ring);
-        Assert.assertFalse(ring.getFlag(CDKConstants.ISAROMATIC));
+        Assertions.assertFalse(ring.getFlag(IChemObject.AROMATIC));
 
-        Iterator<IBond> bonds = ring.bonds().iterator();
-        while (bonds.hasNext())
-            bonds.next().setFlag(CDKConstants.ISAROMATIC, true);
+        for (IBond iBond : ring.bonds()) iBond.setFlag(IChemObject.AROMATIC, true);
         RingManipulator.markAromaticRings(ring);
-        Assert.assertTrue(ring.getFlag(CDKConstants.ISAROMATIC));
+        Assertions.assertTrue(ring.getFlag(IChemObject.AROMATIC));
     }
 
 }

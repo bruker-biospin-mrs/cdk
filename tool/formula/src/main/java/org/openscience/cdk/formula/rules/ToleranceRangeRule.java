@@ -48,14 +48,12 @@ import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
  *   </tr>
  * </table>
  *
- * @cdk.module  formula
  * @author      miguelrojasch
  * @cdk.created 2007-11-20
- * @cdk.githash
  */
 public class ToleranceRangeRule implements IRule {
 
-    private static ILoggingTool logger    = LoggingToolFactory.createLoggingTool(ToleranceRangeRule.class);
+    private static final ILoggingTool logger    = LoggingToolFactory.createLoggingTool(ToleranceRangeRule.class);
 
     private double              mass      = 0.0;
 

@@ -26,11 +26,10 @@ import java.util.Arrays;
 
 /**
  * @author maclean
- * @cdk.module group
  */
 class IntegerListInvariant implements Invariant {
     
-    private int[] values;
+    private final int[] values;
     
     public IntegerListInvariant(int[] values) {
         this.values = values;

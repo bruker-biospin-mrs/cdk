@@ -34,13 +34,11 @@ import org.openscience.cdk.exception.CDKException;
  * @author         Egon Willighagen
  * @cdk.created    2004-01-08
  *
- * @cdk.module     valencycheck
- * @cdk.githash
  */
 public interface IValencyChecker {
 
-    public boolean isSaturated(IAtomContainer ac) throws CDKException;
+    boolean isSaturated(IAtomContainer ac) throws CDKException;
 
-    public boolean isSaturated(IAtom atom, IAtomContainer container) throws CDKException;
+    boolean isSaturated(IAtom atom, IAtomContainer container) throws CDKException;
 
 }

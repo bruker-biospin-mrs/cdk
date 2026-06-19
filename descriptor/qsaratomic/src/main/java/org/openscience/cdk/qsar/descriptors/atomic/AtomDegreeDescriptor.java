@@ -25,6 +25,7 @@ package org.openscience.cdk.qsar.descriptors.atomic;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.qsar.AbstractAtomicDescriptor;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -51,8 +52,6 @@ import java.util.List;
  *
  * @author      mfe4
  * @cdk.created 2004-11-13
- * @cdk.module  qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:atomDegree
  */
 public class AtomDegreeDescriptor extends AbstractAtomicDescriptor implements IAtomicDescriptor {
@@ -100,7 +99,7 @@ public class AtomDegreeDescriptor extends AbstractAtomicDescriptor implements IA
         int atomDegree = 0;
         List<IAtom> neighboors = container.getConnectedAtomsList(atom);
         for (IAtom neighboor : neighboors) {
-            if (!neighboor.getSymbol().equals("H")) atomDegree += 1;
+            if (neighboor.getAtomicNumber() != IElement.H) atomDegree += 1;
         }
         return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new IntegerResult(
                 atomDegree), getDescriptorNames());

@@ -64,8 +64,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  *
  * @author       Miguel Rojas
  * @cdk.created  2006-05-26
- * @cdk.module   qsaratomic
- * @cdk.githash
  * @cdk.dictref  qsar-descriptors:ionizationPotential
  */
 public class IPAtomicHOSEDescriptor extends AbstractAtomicDescriptor {
@@ -73,9 +71,9 @@ public class IPAtomicHOSEDescriptor extends AbstractAtomicDescriptor {
     private static final String[] NAMES = {"ipAtomicHOSE"};
 
     /** Maximum spheres to use by the HoseCode model.*/
-    int                           maxSpheresToUse = 10;
+    final int                           maxSpheresToUse = 10;
 
-    private IPdb                  db              = new IPdb();
+    private final IPdb                  db              = new IPdb();
 
     /**
      *  Constructor for the IPAtomicHOSEDescriptor object.
@@ -241,7 +239,7 @@ public class IPAtomicHOSEDescriptor extends AbstractAtomicDescriptor {
                 return 0;
 
             try {
-                HOSECodeGenerator hcg = new HOSECodeGenerator();
+                HOSECodeGenerator hcg = new HOSECodeGenerator(HOSECodeGenerator.LEGACY_MODE);
                 //Check starting from the exact sphere hose code and maximal a value of 10
                 int exactSphere = 0;
                 String hoseCode = "";
@@ -291,7 +289,8 @@ public class IPAtomicHOSEDescriptor extends AbstractAtomicDescriptor {
                     }
                 }
             } catch (CDKException e) {
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(IPAtomicHOSEDescriptor.class)
+                                  .warn("Unexpected Error:", e);
             }
             return 0;
         }
@@ -314,7 +313,8 @@ public class IPAtomicHOSEDescriptor extends AbstractAtomicDescriptor {
                     hoseVSenergy.put(values.get(0), Double.valueOf(values.get(1)));
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(IPAtomicHOSEDescriptor.class)
+                                  .warn("Unexpected Error:", e);
             }
             return hoseVSenergy;
         }

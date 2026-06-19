@@ -1,6 +1,7 @@
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
@@ -9,20 +10,18 @@ import org.openscience.cdk.smiles.SmilesParser;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Sets the computation of SMARTSAtomInvariants using the Daylight ring
  * values.
  *
  * @author John May
- * @cdk.module test-smarts
  */
-public class DaylightSMARTSAtomInvariantsTest {
+class DaylightSMARTSAtomInvariantsTest {
 
     @Test
-    public void target() throws Exception {
+    void target() throws Exception {
         IAtomContainer container = sp.parseSmiles("CCC");
         SMARTSAtomInvariants.configureDaylightWithRingInfo(container);
         for (IAtom atom : container.atoms()) {
@@ -31,7 +30,7 @@ public class DaylightSMARTSAtomInvariantsTest {
     }
 
     @Test
-    public void valence() throws Exception {
+    void valence() throws Exception {
         assertThat(invariantOfFirstAtom("C").valence(), is(4));
         assertThat(invariantOfFirstAtom("N").valence(), is(3));
         assertThat(invariantOfFirstAtom("O").valence(), is(2));
@@ -43,7 +42,7 @@ public class DaylightSMARTSAtomInvariantsTest {
     }
 
     @Test
-    public void connectivity() throws Exception {
+    void connectivity() throws Exception {
         assertThat(invariantOfFirstAtom("C").connectivity(), is(4));
         assertThat(invariantOfFirstAtom("N").connectivity(), is(3));
         assertThat(invariantOfFirstAtom("O").connectivity(), is(2));
@@ -56,7 +55,7 @@ public class DaylightSMARTSAtomInvariantsTest {
     }
 
     @Test
-    public void degree() throws Exception {
+    void degree() throws Exception {
         assertThat(invariantOfFirstAtom("C").degree(), is(0));
         assertThat(invariantOfFirstAtom("N").degree(), is(0));
         assertThat(invariantOfFirstAtom("O").degree(), is(0));
@@ -69,7 +68,7 @@ public class DaylightSMARTSAtomInvariantsTest {
     }
 
     @Test
-    public void totalHydrogenCount() throws Exception {
+    void totalHydrogenCount() throws Exception {
         assertThat(invariantOfFirstAtom("C").totalHydrogenCount(), is(4));
         assertThat(invariantOfFirstAtom("[CH4]").totalHydrogenCount(), is(4));
         assertThat(invariantOfFirstAtom("C[H]").totalHydrogenCount(), is(4));
@@ -78,7 +77,7 @@ public class DaylightSMARTSAtomInvariantsTest {
     }
 
     @Test
-    public void ringConnectivity() throws Exception {
+    void ringConnectivity() throws Exception {
         assertThat(invariantOfFirstAtom("C").ringConnectivity(), is(0));
 
         // 2,3,4 ring bonds
@@ -91,7 +90,7 @@ public class DaylightSMARTSAtomInvariantsTest {
     }
 
     @Test
-    public void ringNumber() throws Exception {
+    void ringNumber() throws Exception {
         assertThat(invariantOfFirstAtom("C").ringNumber(), is(0));
 
         assertThat(invariantOfFirstAtom("C1CCC1").ringNumber(), is(1));
@@ -106,7 +105,7 @@ public class DaylightSMARTSAtomInvariantsTest {
      * atoms in the input.
      */
     @Test
-    public void ringNumber_cyclophane() throws Exception {
+    void ringNumber_cyclophane() throws Exception {
         IAtomContainer container = sp.parseSmiles("C1CC23CCC11CCC4(CC1)CCC(CC2)(CC3)CC4");
         SMARTSAtomInvariants.configureDaylightWithRingInfo(container);
         int R1 = 0, R2 = 0, R3 = 0;
@@ -130,8 +129,8 @@ public class DaylightSMARTSAtomInvariantsTest {
     }
 
     @Test
-    public void ringSize() throws Exception {
-        assertTrue(invariantOfFirstAtom("C").ringSize().isEmpty());
+    void ringSize() throws Exception {
+        Assertions.assertTrue(invariantOfFirstAtom("C").ringSize().isEmpty());
         assertThat(invariantOfFirstAtom("C1CC1").ringSize(), hasItem(3));
         assertThat(invariantOfFirstAtom("C1CCC1").ringSize(), hasItem(4));
         assertThat(invariantOfFirstAtom("C1CCCC1").ringSize(), hasItem(5));
@@ -146,7 +145,7 @@ public class DaylightSMARTSAtomInvariantsTest {
      * @throws Exception
      */
     @Test
-    public void ringSize_imidazole() throws Exception {
+    void ringSize_imidazole() throws Exception {
 
         IAtomContainer container = sp.parseSmiles("N1C=NC2=CC=CC=C12");
         SMARTSAtomInvariants.configureDaylightWithRingInfo(container);
@@ -166,7 +165,7 @@ public class DaylightSMARTSAtomInvariantsTest {
      * @throws Exception
      */
     @Test
-    public void ringSize_cyclophane() throws Exception {
+    void ringSize_cyclophane() throws Exception {
 
         IAtomContainer container = sp.parseSmiles("C1CC23CCC11CCC4(CC1)CCC(CC2)(CC3)CC4");
         SMARTSAtomInvariants.configureDaylightWithRingInfo(container);
@@ -179,17 +178,17 @@ public class DaylightSMARTSAtomInvariantsTest {
     }
 
     @Test
-    public void noRingInfo() throws Exception {
+    void noRingInfo() throws Exception {
         IAtomContainer container = sp.parseSmiles("C1CC23CCC11CCC4(CC1)CCC(CC2)(CC3)CC4");
         SMARTSAtomInvariants.configureDaylightWithoutRingInfo(container);
         for (IAtom atom : container.atoms()) {
             SMARTSAtomInvariants inv = atom.getProperty(SMARTSAtomInvariants.KEY);
-            assertTrue(inv.ringSize().isEmpty());
+            Assertions.assertTrue(inv.ringSize().isEmpty());
             assertThat(inv.ringNumber(), is(0));
         }
     }
 
-    static final SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
+    private static final SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
 
     // compute the invariants for the first atom in a SMILES string
     static SMARTSAtomInvariants invariantOfFirstAtom(String smiles) throws Exception {

@@ -32,8 +32,6 @@ import org.xml.sax.Attributes;
 /**
  * This is an implementation for the CDK convention.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author egonw
  */
@@ -70,7 +68,7 @@ public class CDKConvention extends CMLCoreModule {
     }
 
     @Override
-    public void characterData(CMLStack xpath, char ch[], int start, int length) {
+    public void characterData(CMLStack xpath, char[] ch, int start, int length) {
         String s = new String(ch, start, length).trim();
         if (isBond) {
             logger.debug("CharData (bond): " + s);

@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.openscience.cdk.config.OWLBasedAtomTypeConfigurator;
@@ -42,14 +43,12 @@ import org.xml.sax.XMLReader;
 /**
  * XML Reader for the {@link OWLBasedAtomTypeConfigurator}.
  *
- * @cdk.module  core
- * @cdk.githash
  */
 public class OWLAtomTypeReader {
 
     private XMLReader           parser;
-    private Reader              input;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(OWLAtomTypeReader.class);
+    private final Reader              input;
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(OWLAtomTypeReader.class);
 
     /**
      * Instantiates the XML based AtomTypeReader.
@@ -72,7 +71,7 @@ public class OWLAtomTypeReader {
                 parser = saxParser.getXMLReader();
                 logger.info("Using JAXP/SAX XML parser.");
                 success = true;
-            } catch (ParserConfigurationException | SAXException exception) {
+            } catch (ParserConfigurationException | SAXException | FactoryConfigurationError exception) {
                 logger.warn("Could not instantiate JAXP/SAX XML reader!");
                 logger.debug(exception);
             }
@@ -101,7 +100,7 @@ public class OWLAtomTypeReader {
      * @return         a List with atom types. Is empty if some reading error occurred.
      */
     public List<IAtomType> readAtomTypes(IChemObjectBuilder builder) {
-        List<IAtomType> isotopes = new ArrayList<IAtomType>();
+        List<IAtomType> isotopes = new ArrayList<>();
         try {
             parser.setFeature("http://xml.org/sax/features/validation", false);
             logger.info("Deactivated validation");

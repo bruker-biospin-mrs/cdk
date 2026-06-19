@@ -18,7 +18,6 @@
  */
 package org.openscience.cdk.io;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -30,6 +29,7 @@ import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemSequence;
 import org.openscience.cdk.io.formats.HINFormat;
 import org.openscience.cdk.io.formats.IResourceFormat;
+import org.openscience.cdk.tools.LoggingToolFactory;
 
 import javax.vecmath.Point3d;
 import java.io.BufferedReader;
@@ -45,8 +45,6 @@ import java.util.StringTokenizer;
 /**
  * Reads an object from HIN formated input.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author Rajarshi Guha &lt;rajarshi.guha@gmail.com&gt;
  * @cdk.created 2004-01-27
@@ -159,8 +157,8 @@ public class HINReader extends DefaultChemObjectReader {
         String info;
 
         StringTokenizer tokenizer;
-        List<String> aroringText = new ArrayList<String>();
-        List<IAtomContainer> mols = new ArrayList<IAtomContainer>();
+        List<String> aroringText = new ArrayList<>();
+        List<IAtomContainer> mols = new ArrayList<>();
 
         try {
             String line;
@@ -191,7 +189,7 @@ public class HINReader extends DefaultChemObjectReader {
                 // the start and end indices and bond order of each bond
                 // found in the HIN file. Before adding bonds we need to reduce
                 // the number of bonds so as not to count the same bond twice
-                List<List<Object>> cons = new ArrayList<List<Object>>();
+                List<List<Object>> cons = new ArrayList<>();
 
                 // read data for current molecule
                 int atomSerial = 0;
@@ -237,7 +235,7 @@ public class HINReader extends DefaultChemObjectReader {
                                 bo = IBond.Order.QUADRUPLE;
                                 break;
                         }
-                        List<Object> ar = new ArrayList<Object>(3);
+                        List<Object> ar = new ArrayList<>(3);
                         ar.add(atomSerial);
                         ar.add(s);
                         ar.add(bo);
@@ -274,31 +272,31 @@ public class HINReader extends DefaultChemObjectReader {
                 }
             }
 
+            if (aroringText.size() > 0) { // process aromaticring annotations
+                for (String aroringTextLine : aroringText) {
+                    String[] toks = aroringTextLine.split(" ");
+                    int natom = Integer.parseInt(toks[1]);
+                    int n = 0;
+                    for (int i = 2; i < toks.length; i += 2) {
+                        int molnum = Integer.parseInt(toks[i]); // starts from 1
+                        int atnum = Integer.parseInt(toks[i + 1]); // starts from 1
+                        mols.get(molnum - 1).getAtom(atnum - 1).setFlag(IChemObject.AROMATIC, true);
+                        n++;
+                    }
+                    assert n == natom;
+                }
+            }
+
+            for (IAtomContainer mol : mols)
+                setOfMolecules.addAtomContainer(mol);
+            chemModel.setMoleculeSet(setOfMolecules);
+            chemSequence.addChemModel(chemModel);
+            file.addChemSequence(chemSequence);
         } catch (IOException e) {
-            // FIXME: should make some noise now
+            LoggingToolFactory.createLoggingTool(HINReader.class)
+                              .error("IO Error", e);
             file = null;
         }
-
-        if (aroringText.size() > 0) { // process aromaticring annotations
-            for (String line : aroringText) {
-                String[] toks = line.split(" ");
-                int natom = Integer.parseInt(toks[1]);
-                int n = 0;
-                for (int i = 2; i < toks.length; i += 2) {
-                    int molnum = Integer.parseInt(toks[i]); // starts from 1
-                    int atnum = Integer.parseInt(toks[i + 1]); // starts from 1
-                    mols.get(molnum - 1).getAtom(atnum - 1).setFlag(CDKConstants.ISAROMATIC, true);
-                    n++;
-                }
-                assert n == natom;
-            }
-        }
-
-        for (IAtomContainer mol : mols)
-            setOfMolecules.addAtomContainer(mol);
-        chemModel.setMoleculeSet(setOfMolecules);
-        chemSequence.addChemModel(chemModel);
-        file.addChemSequence(chemSequence);
 
         return file;
     }

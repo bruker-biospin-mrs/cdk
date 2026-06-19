@@ -42,14 +42,12 @@ import org.openscience.cdk.interfaces.IReaction;
  * by :'number' to allow for more than one reference.
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
- * @cdk.githash
  * @cdk.created    2003-08-06
  * @cdk.keyword    dictionary, implicit CDK references
- * @cdk.module     dict
  */
 public class CDKDictionaryReferences {
 
-    private static String prefix = DictionaryDatabase.DICTREFPROPERTYNAME;
+    private static final String prefix = DictionaryDatabase.DICTREFPROPERTYNAME;
 
     public static void makeReferencesExplicit(IChemObject object) {
         if (object instanceof IAtom) {
@@ -91,18 +89,21 @@ public class CDKDictionaryReferences {
         element.setProperty(prefix + ":field:symbol", "chemical:atomSymbol");
         element.setProperty(prefix + ":field:atomicNumber", "chemical:atomicNumber");
 
-        if (element.getSymbol().equals("C")) {
-            element.setProperty(prefix + ":self:" + selfCounter++, "element:carbon");
-        } else if (element.getSymbol().equals("N")) {
-            element.setProperty(prefix + ":self:" + selfCounter++, "element:nitrogen");
-        } else if (element.getSymbol().equals("O")) {
-            element.setProperty(prefix + ":self:" + selfCounter++, "element:oxygen");
-        } else if (element.getSymbol().equals("H")) {
-            element.setProperty(prefix + ":self:" + selfCounter++, "element:hydrogen");
-        } else if (element.getSymbol().equals("S")) {
-            element.setProperty(prefix + ":self:" + selfCounter++, "element:sulphur");
-        } else if (element.getSymbol().equals("P")) {
-            element.setProperty(prefix + ":self:" + selfCounter++, "element:phosphorus");
+        String symbol = element.getSymbol();
+        if(symbol !=null) {
+            if (symbol.equals("C")) {
+                element.setProperty(prefix + ":self:" + selfCounter++, "element:carbon");
+            } else if (symbol.equals("N")) {
+                element.setProperty(prefix + ":self:" + selfCounter++, "element:nitrogen");
+            } else if (symbol.equals("O")) {
+                element.setProperty(prefix + ":self:" + selfCounter++, "element:oxygen");
+            } else if (symbol.equals("H")) {
+                element.setProperty(prefix + ":self:" + selfCounter++, "element:hydrogen");
+            } else if (symbol.equals("S")) {
+                element.setProperty(prefix + ":self:" + selfCounter++, "element:sulphur");
+            } else if (symbol.equals("P")) {
+                element.setProperty(prefix + ":self:" + selfCounter++, "element:phosphorus");
+            }
         }
     }
 

@@ -35,16 +35,14 @@ import org.openscience.cdk.interfaces.IIsotope;
  * be used than by only {@link Isotopes}.
  *
  * @author      egonw
- * @cdk.module  core
- * @cdk.githash
  */
 final class BODRIsotope implements IIsotope {
 
-    private String  element;
-    private Integer atomicNumber;
-    private Double  naturalAbundance;
-    private Double  exactMass;
-    private Integer massNumber;
+    private final String  element;
+    private final Integer atomicNumber;
+    private final Double  naturalAbundance;
+    private final Double  exactMass;
+    private final Integer massNumber;
 
     protected BODRIsotope(String element, Integer atomicNumber, Integer massNumber, Double exactMass,
             Double naturalAbundance) {
@@ -141,6 +139,26 @@ final class BODRIsotope implements IIsotope {
     }
 
     @Override
+    public void set(int flags) {
+        
+    }
+
+    @Override
+    public void clear(int flags) {
+
+    }
+
+    @Override
+    public boolean is(int flags) {
+        return false;
+    }
+
+    @Override
+    public int flags() {
+        return 0;
+    }
+
+    @Override
     public IChemObjectBuilder getBuilder() {
         return null;
     }
@@ -180,7 +198,7 @@ final class BODRIsotope implements IIsotope {
     @Override
     public Double getExactMass() {
         return exactMass;
-    };
+    }
 
     @Override
     public Integer getMassNumber() {

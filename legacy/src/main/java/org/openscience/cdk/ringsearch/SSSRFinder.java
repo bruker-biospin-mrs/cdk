@@ -23,10 +23,10 @@
 package org.openscience.cdk.ringsearch;
 
 import org._3pq.jgrapht.UndirectedGraph;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.graph.MoleculeGraphs;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.ringsearch.cyclebasis.CycleBasis;
@@ -34,7 +34,6 @@ import org.openscience.cdk.ringsearch.cyclebasis.SimpleCycle;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -47,8 +46,6 @@ import java.util.List;
  *
  * @author Ulrich Bauer &lt;ulrich.bauer@alumni.tum.de&gt;
  *
- * @cdk.module standard
- * @cdk.githash
  *
  * @cdk.keyword smallest-set-of-rings
  * @cdk.keyword ring search
@@ -59,7 +56,7 @@ import java.util.List;
 @Deprecated
 public class SSSRFinder {
 
-    private IAtomContainer atomContainer;
+    private final IAtomContainer atomContainer;
     private CycleBasis     cycleBasis;
 
     /**
@@ -131,7 +128,7 @@ public class SSSRFinder {
             return null;
         }
 
-        List<IRingSet> equivalenceClasses = new ArrayList<IRingSet>();
+        List<IRingSet> equivalenceClasses = new ArrayList<>();
         for (Object o : cycleBasis().equivalenceClasses()) {
             equivalenceClasses.add(toRingSet(atomContainer, (Collection) o));
         }
@@ -176,28 +173,22 @@ public class SSSRFinder {
 
         IRingSet ringSet = container.getBuilder().newInstance(IRingSet.class);
 
-        Iterator cycleIterator = cycles.iterator();
-
-        while (cycleIterator.hasNext()) {
-            SimpleCycle cycle = (SimpleCycle) cycleIterator.next();
+        for (Object o : cycles) {
+            SimpleCycle cycle = (SimpleCycle) o;
 
             IRing ring = container.getBuilder().newInstance(IRing.class);
 
             List vertices = cycle.vertexList();
 
             IAtom[] atoms = new IAtom[vertices.size()];
-            atoms[0] = (IAtom) vertices.get(0);
-            for (int i = 1; i < vertices.size(); i++) {
+            for (int i = 0; i < vertices.size(); i++) {
                 atoms[i] = (IAtom) vertices.get(i);
-                ring.addElectronContainer(container.getBond(atoms[i - 1], atoms[i]));
+                atoms[i].setFlag(IChemObject.IN_RING, true);
             }
-
-            for (IAtom atom : atoms)
-                atom.setFlag(CDKConstants.ISINRING, true);
-
-            ring.addElectronContainer(container.getBond(atoms[vertices.size() - 1], atoms[0]));
             ring.setAtoms(atoms);
-
+            for (int i = 1; i < vertices.size(); i++)
+                ring.addElectronContainer(container.getBond(atoms[i - 1], atoms[i]));
+            ring.addElectronContainer(container.getBond(atoms[vertices.size() - 1], atoms[0]));
             ringSet.addAtomContainer(ring);
         }
 

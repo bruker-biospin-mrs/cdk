@@ -34,10 +34,8 @@ import java.util.List;
 /**
  * Generates all Combinatorial chemical isotopes given a structure.
  *
- * @cdk.module  formula
  * @author      Miguel Rojas Cherto
  * @cdk.created 2007-11-20
- * @cdk.githash
  *
  * @cdk.keyword isotope pattern
  *
@@ -47,11 +45,11 @@ public class IsotopePatternGenerator {
     private IChemObjectBuilder builder        = null;
     private IsotopeFactory     isoFactory;
 
-    private ILoggingTool       logger         = LoggingToolFactory.createLoggingTool(IsotopePatternGenerator.class);
+    private final ILoggingTool       logger         = LoggingToolFactory.createLoggingTool(IsotopePatternGenerator.class);
 
     /** Minimal abundance of the isotopes to be added in the combinatorial search.*/
-    private double  minIntensity = 0.00001;
-    private double  minAbundance = 1E-10; // n.b. not actually abundance
+    private double  minIntensity;
+    private final double  minAbundance = 1E-10; // n.b. not actually abundance
     private double  resolution   = 0.00005f;
     private boolean storeFormula = false;
 
@@ -119,7 +117,8 @@ public class IsotopePatternGenerator {
                 isoFactory = Isotopes.getInstance();
                 builder = molFor.getBuilder();
             } catch (Exception e) {
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(IsotopePatternGenerator.class)
+                                  .warn("Unexpected error:", e);
             }
         }
         String mf = MolecularFormulaManipulator.getString(molFor, true);

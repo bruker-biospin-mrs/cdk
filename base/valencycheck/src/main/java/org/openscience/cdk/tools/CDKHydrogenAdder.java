@@ -67,15 +67,13 @@ import org.openscience.cdk.interfaces.IPseudoAtom;
  * </pre>
  *
  * @author     egonw
- * @cdk.module valencycheck
- * @cdk.githash
  */
 public class CDKHydrogenAdder {
 
     private AtomTypeFactory                      atomTypeList;
     private final static String                  ATOM_TYPE_LIST = "org/openscience/cdk/dict/data/cdk-atom-types.owl";
 
-    private static Map<String, CDKHydrogenAdder> tables         = new Hashtable<String, CDKHydrogenAdder>(3);
+    private static final Map<String, CDKHydrogenAdder> tables         = new Hashtable<>(3);
 
     private CDKHydrogenAdder(IChemObjectBuilder builder) {
         if (atomTypeList == null) atomTypeList = AtomTypeFactory.getInstance(ATOM_TYPE_LIST, builder);

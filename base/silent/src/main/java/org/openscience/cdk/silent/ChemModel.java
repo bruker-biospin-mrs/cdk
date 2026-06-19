@@ -34,8 +34,6 @@ import java.io.Serializable;
  * the other lower level concepts like rings, sequences,
  * fragments, etc.
  *
- * @cdk.module  silent
- * @cdk.githash
  */
 public class ChemModel extends ChemObject implements Serializable, IChemModel, IChemObjectListener, Cloneable {
 
@@ -178,7 +176,7 @@ public class ChemModel extends ChemObject implements Serializable, IChemModel, I
      */
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer(64);
+        StringBuilder buffer = new StringBuilder(64);
         buffer.append("ChemModel(");
         buffer.append(hashCode());
         if (getMoleculeSet() != null) {
@@ -217,7 +215,7 @@ public class ChemModel extends ChemObject implements Serializable, IChemModel, I
             clone.setOfReactions = null;
         }
         if (crystal != null) {
-            clone.crystal = (Crystal) crystal.clone();
+            clone.crystal = crystal.clone();
         } else {
             clone.crystal = null;
         }

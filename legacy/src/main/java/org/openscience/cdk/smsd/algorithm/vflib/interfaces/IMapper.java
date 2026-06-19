@@ -54,8 +54,6 @@ import org.openscience.cdk.smsd.algorithm.vflib.builder.TargetProperties;
 
 /**
  * Interface for the mappings (mapped objects).
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -68,54 +66,54 @@ public interface IMapper {
      * @param molecule molecule
      * @return true/false.
      */
-    public boolean hasMap(IAtomContainer molecule);
+    boolean hasMap(IAtomContainer molecule);
 
     /**
      * Returns solution map count.
      * @param target target molecule.
      * @return map count.
      */
-    public int countMaps(IAtomContainer target);
+    int countMaps(IAtomContainer target);
 
     /**
      * Returns all solution map.
      * @param target molecule.
      * @return get maps.
      */
-    public List<Map<INode, IAtom>> getMaps(IAtomContainer target);
+    List<Map<INode, IAtom>> getMaps(IAtomContainer target);
 
     /**
      * Returns first solution map.
      * @param target molecule.
      * @return get first map.
      */
-    public Map<INode, IAtom> getFirstMap(IAtomContainer target);
+    Map<INode, IAtom> getFirstMap(IAtomContainer target);
 
     /**
      * checks if a map exits for a molecule.
      * @param molecule molecule
      * @return true/false.
      */
-    public boolean hasMap(TargetProperties molecule);
+    boolean hasMap(TargetProperties molecule);
 
     /**
      * Returns solution map count.
      * @param target target molecule.
      * @return map count.
      */
-    public int countMaps(TargetProperties target);
+    int countMaps(TargetProperties target);
 
     /**
      * Returns all solution map.
      * @param target molecule.
      * @return get maps.
      */
-    public List<Map<INode, IAtom>> getMaps(TargetProperties target);
+    List<Map<INode, IAtom>> getMaps(TargetProperties target);
 
     /**
      * Returns first solution map.
      * @param target molecule.
      * @return get first map.
      */
-    public Map<INode, IAtom> getFirstMap(TargetProperties target);
+    Map<INode, IAtom> getFirstMap(TargetProperties target);
 }

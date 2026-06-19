@@ -33,14 +33,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author     egonw
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugIsotope extends Isotope implements IIsotope {
 
     private static final long serialVersionUID = -2659188100080921299L;
 
-    ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugIsotope.class);
+    final ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugIsotope.class);
 
     public DebugIsotope(String elementSymbol) {
         super(elementSymbol);

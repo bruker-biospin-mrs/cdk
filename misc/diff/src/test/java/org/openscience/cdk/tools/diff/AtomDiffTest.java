@@ -18,59 +18,58 @@
  */
 package org.openscience.cdk.tools.diff;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-
-import org.openscience.cdk.CDKTestCase;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.tools.diff.tree.IDifference;
 
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import java.io.IOException;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
- * @cdk.module test-diff
  */
-public class AtomDiffTest extends CDKTestCase {
+class AtomDiffTest {
 
     @Test
-    public void testMatchAgainstItself() {
+    void testMatchAgainstItself() {
         IAtom atom1 = mock(IAtom.class);
         String result = AtomDiff.diff(atom1, atom1);
-        assertZeroLength(result);
+        Assertions.assertEquals("", result);
     }
 
     @Test
-    public void testDiff() {
+    void testDiff() {
         IAtom atom1 = mock(IAtom.class);
         IAtom atom2 = mock(IAtom.class);
         when(atom1.getSymbol()).thenReturn("H");
         when(atom2.getSymbol()).thenReturn("C");
 
         String result = AtomDiff.diff(atom1, atom2);
-        Assert.assertNotNull(result);
-        Assert.assertNotSame(0, result.length());
-        assertContains(result, "AtomDiff");
-        assertContains(result, "H/C");
+        Assertions.assertNotNull(result);
+        Assertions.assertNotSame(0, result.length());
+        MatcherAssert.assertThat(result, containsString( "AtomDiff"));
+        MatcherAssert.assertThat(result, containsString( "H/C"));
     }
 
     @Test
-    public void testDifference() {
+    void testDifference() {
         IAtom atom1 = mock(IAtom.class);
         IAtom atom2 = mock(IAtom.class);
         when(atom1.getSymbol()).thenReturn("H");
         when(atom2.getSymbol()).thenReturn("C");
 
         IDifference difference = AtomDiff.difference(atom1, atom2);
-        Assert.assertNotNull(difference);
+        Assertions.assertNotNull(difference);
     }
 
-    @Ignore("unit test did not test AtomDiff but rather the ability of AtomContainer"
+    @Disabled("unit test did not test AtomDiff but rather the ability of AtomContainer"
             + "to be serialized. This is already tested in each respective domain module")
-    public void testDiffFromSerialized() throws IOException, ClassNotFoundException {
+    void testDiffFromSerialized() throws IOException, ClassNotFoundException {
         //        IAtom atom = new Atom("C");
         //
         //        File tmpFile = File.createTempFile("serialized", ".dat");

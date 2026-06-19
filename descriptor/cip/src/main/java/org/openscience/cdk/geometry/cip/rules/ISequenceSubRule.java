@@ -29,8 +29,6 @@ import java.util.Comparator;
  * precedence {@cdk.cite Cahn1966}. A list ordered based on these rules will be
  * sorted from low to high precedence.
  *
- * @cdk.module cip
- * @cdk.githash
  */
 public interface ISequenceSubRule<ILigand> extends Comparator<ILigand> {
 
@@ -45,6 +43,6 @@ public interface ISequenceSubRule<ILigand> extends Comparator<ILigand> {
      *         of higher precedence than ligan1, and 0 if they have equal precedence
      */
     @Override
-    public int compare(ILigand ligand1, ILigand ligand2);
+    int compare(ILigand ligand1, ILigand ligand2);
 
 }

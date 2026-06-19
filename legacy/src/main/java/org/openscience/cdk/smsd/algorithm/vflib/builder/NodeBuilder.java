@@ -33,8 +33,6 @@ import org.openscience.cdk.smsd.algorithm.vflib.interfaces.INode;
 /**
  * Class for building/storing nodes (atoms) in the graph with atom
  * query capabilities.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -42,17 +40,17 @@ import org.openscience.cdk.smsd.algorithm.vflib.interfaces.INode;
 @Deprecated
 public class NodeBuilder implements INode {
 
-    private List<INode>   neighborsList;
-    private List<IEdge>   edgesList;
-    private VFAtomMatcher matcher;
+    private final List<INode>   neighborsList;
+    private final List<IEdge>   edgesList;
+    private final VFAtomMatcher matcher;
 
     /**
      * Construct a node for a query atom
      * @param matcher
      */
     protected NodeBuilder(VFAtomMatcher matcher) {
-        edgesList = new ArrayList<IEdge>();
-        neighborsList = new ArrayList<INode>();
+        edgesList = new ArrayList<>();
+        neighborsList = new ArrayList<>();
         this.matcher = matcher;
     }
 

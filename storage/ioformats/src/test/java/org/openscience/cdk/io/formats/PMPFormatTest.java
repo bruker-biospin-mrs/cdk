@@ -23,11 +23,10 @@
 package org.openscience.cdk.io.formats;
 
 /**
- * @cdk.module test-ioformats
  */
-public class PMPFormatTest extends ChemFormatMatcherTest {
+class PMPFormatTest extends ChemFormatMatcherTest {
 
-    public PMPFormatTest() {
+    PMPFormatTest() {
         super.setChemFormatMatcher((IChemFormatMatcher) PMPFormat.getInstance());
     }
 

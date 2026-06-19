@@ -18,47 +18,54 @@
  */
 package org.openscience.cdk.tools.diff.tree;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-diff
  */
-public class StringDifferenceTest extends CDKTestCase {
+class StringDifferenceTest {
+
+    public static void assertOneLiner(String testString) {
+        Assertions.assertNotNull(testString, "Expected a non-null String.");
+        for (int i = 0; i < testString.length(); i++) {
+            char c = testString.charAt(i);
+            Assertions.assertNotSame('\n', c, "The String must not contain newline characters");
+            Assertions.assertNotSame('\r', c, "The String must not contain newline characters");
+        }
+    }
 
     @Test
-    public void testDiff() {
+    void testDiff() {
         IDifference result = StringDifference.construct("Foo", "foo", "bar");
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
     @Test
-    public void testSame() {
+    void testSame() {
         IDifference result = StringDifference.construct("Foo", "foo", "foo");
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
     }
 
     @Test
-    public void testTwoNull() {
+    void testTwoNull() {
         IDifference result = StringDifference.construct("Foo", null, null);
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
     }
 
     @Test
-    public void testOneNull() {
+    void testOneNull() {
         IDifference result = StringDifference.construct("Foo", null, "bar");
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
 
         result = StringDifference.construct("Foo", "bar", null);
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         IDifference result = StringDifference.construct("Foo", null, "bar");
         String diffString = result.toString();
-        Assert.assertNotNull(diffString);
+        Assertions.assertNotNull(diffString);
         assertOneLiner(diffString);
     }
 }

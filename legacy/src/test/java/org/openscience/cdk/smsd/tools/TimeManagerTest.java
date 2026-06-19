@@ -22,75 +22,73 @@
  */
 package org.openscience.cdk.smsd.tools;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.openscience.cdk.CDKTestCase;
-import org.openscience.cdk.SlowTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * @author Asad
- * @cdk.module test-smsd
  */
-@Category(SlowTest.class)
+@Tag("SlowTest")
 // test uses Thread.sleep...
-public class TimeManagerTest extends CDKTestCase {
+class TimeManagerTest extends CDKTestCase {
 
     @Test
-    public void testTimeManager() throws Exception {
+    void testTimeManager() throws Exception {
         TimeManager tMan = new TimeManager();
-        Assert.assertNotNull(tMan);
+        Assertions.assertNotNull(tMan);
     }
 
     /**
      * Test of getElapsedTimeInHours method, of class TimeManager.
      */
     @Test
-    public void testGetElapsedTimeInHours() {
+    void testGetElapsedTimeInHours() {
         TimeManager instance = new TimeManager();
         double expResult = 0.0001;
         myMethod(360);
         double result = instance.getElapsedTimeInHours();
-        Assert.assertEquals(expResult, result, 0.0001);
+        Assertions.assertEquals(expResult, result, 0.0001);
     }
 
     /**
      * Test of getElapsedTimeInMinutes method, of class TimeManager.
      */
     @Test
-    public void testGetElapsedTimeInMinutes() {
+    void testGetElapsedTimeInMinutes() {
         TimeManager instance = new TimeManager();
         double expResult = 0.006;
         myMethod(360);
         double result = instance.getElapsedTimeInMinutes();
-        Assert.assertEquals(expResult, result, 0.006);
+        Assertions.assertEquals(expResult, result, 0.006);
     }
 
     /**
      * Test of getElapsedTimeInSeconds method, of class TimeManager.
      */
     @Test
-    public void testGetElapsedTimeInSeconds() {
+    void testGetElapsedTimeInSeconds() {
         TimeManager instance = new TimeManager();
         double expResult = 0.36;
         myMethod(360);
         double result = instance.getElapsedTimeInSeconds();
-        Assert.assertEquals(expResult, result, 0.36);
+        Assertions.assertEquals(expResult, result, 0.36);
     }
 
     /**
      * Test of getElapsedTimeInMilliSeconds method, of class TimeManager.
      */
     @Test
-    public void testGetElapsedTimeInMilliSeconds() {
+    void testGetElapsedTimeInMilliSeconds() {
         TimeManager instance = new TimeManager();
         double expResult = 360;
         myMethod(360);
         double result = instance.getElapsedTimeInMilliSeconds();
-        Assert.assertEquals(expResult, result, 360);
+        Assertions.assertEquals(expResult, result, 360);
     }
 
-    public void myMethod(long timeMillis) {
+    void myMethod(long timeMillis) {
         try {
             Thread.sleep(timeMillis);
         } catch (InterruptedException e) {

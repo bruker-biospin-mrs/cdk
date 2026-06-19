@@ -19,36 +19,27 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IFragmentAtom;
-import org.openscience.cdk.interfaces.AbstractFragmentAtomTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractFragmentAtomTest;
 
 /**
  * Checks the functionality of the {@link FragmentAtom}.
  *
- * @cdk.module test-silent
  */
-public class FragmentAtomTest extends AbstractFragmentAtomTest {
+class FragmentAtomTest extends AbstractFragmentAtomTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new FragmentAtom();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(FragmentAtom::new);
     }
 
     @Test
-    public void testFragmentAtom() {
+    void testFragmentAtom() {
         IFragmentAtom a = new FragmentAtom();
-        Assert.assertNotNull(a);
+        Assertions.assertNotNull(a);
     }
 
     // Overwrite default methods: no notifications are expected!

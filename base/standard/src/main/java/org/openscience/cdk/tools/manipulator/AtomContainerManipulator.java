@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2003-2007  The Chemistry Development Kit (CDK) project
  *                    2014  Mark B Vine (orcid:0000-0002-7794-0426)
  *
@@ -24,55 +24,46 @@
  *  */
 package org.openscience.cdk.tools.manipulator;
 
-import static org.openscience.cdk.CDKConstants.SINGLE_OR_DOUBLE;
-import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation;
+import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
+import org.openscience.cdk.config.Elements;
+import org.openscience.cdk.config.IsotopeFactory;
+import org.openscience.cdk.config.Isotopes;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IAtomType;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IElectronContainer;
+import org.openscience.cdk.interfaces.IElement;
+import org.openscience.cdk.interfaces.IIsotope;
+import org.openscience.cdk.interfaces.ILonePair;
+import org.openscience.cdk.interfaces.ISingleElectron;
+import org.openscience.cdk.interfaces.IStereoElement;
+import org.openscience.cdk.ringsearch.RingSearch;
+import org.openscience.cdk.sgroup.Sgroup;
+import org.openscience.cdk.sgroup.SgroupKey;
 
+import javax.vecmath.Point2d;
+import javax.vecmath.Point3d;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.Maps;
-import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
-import org.openscience.cdk.config.Isotopes;
-import org.openscience.cdk.config.Elements;
-import org.openscience.cdk.config.IsotopeFactory;
-import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.graph.GraphUtil;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IAtomType;
-import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.interfaces.IBond.Order;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
-import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
-import org.openscience.cdk.interfaces.IElectronContainer;
-import org.openscience.cdk.interfaces.IIsotope;
-import org.openscience.cdk.interfaces.ILonePair;
-import org.openscience.cdk.interfaces.IMolecularFormula;
-import org.openscience.cdk.interfaces.IPseudoAtom;
-import org.openscience.cdk.interfaces.ISingleElectron;
-import org.openscience.cdk.interfaces.IStereoElement;
-import org.openscience.cdk.interfaces.ITetrahedralChirality;
-import org.openscience.cdk.ringsearch.RingSearch;
-import org.openscience.cdk.sgroup.Sgroup;
-import org.openscience.cdk.sgroup.SgroupKey;
-import org.openscience.cdk.stereo.Atropisomeric;
-import org.openscience.cdk.stereo.DoubleBondStereochemistry;
-import org.openscience.cdk.stereo.ExtendedCisTrans;
-import org.openscience.cdk.stereo.ExtendedTetrahedral;
-import org.openscience.cdk.stereo.TetrahedralChirality;
-
-import javax.vecmath.Point2d;
-import javax.vecmath.Point3d;
+import static org.openscience.cdk.interfaces.IChemObject.SINGLE_OR_DOUBLE;
 
 /**
  * Class with convenience methods that provide methods to manipulate
@@ -83,8 +74,6 @@ import javax.vecmath.Point3d;
  * will replace the Atom in the AtomContainer, but in all the ElectronContainer's
  * it participates too.
  *
- * @cdk.module standard
- * @cdk.githash
  *
  * @author  Egon Willighagen
  * @cdk.created 2003-08-07
@@ -92,36 +81,160 @@ import javax.vecmath.Point3d;
 public class AtomContainerManipulator {
 
     /**
+     * For use with {@link #getMass(IAtomContainer)}. This option uses the mass
+     * stored on atoms ({@link IAtom#getExactMass()}) or the average mass of the
+     * element when unspecified.
+     */
+    public static final int MolWeight                = 0x1;
+
+    /**
+     * For use with {@link #getMass(IAtomContainer)}. This option ignores the
+     * mass stored on atoms ({@link IAtom#getExactMass()}) and uses the average
+     * mass of each element. This option is primarily provided for backwards
+     * compatibility.
+     */
+    public static final int MolWeightIgnoreSpecified = 0x2;
+
+    /**
+     * For use with {@link #getMass(IAtomContainer)}. This option uses the mass
+     * stored on atoms {@link IAtom#getExactMass()} or the mass of the major
+     * isotope when this is not specified.
+     */
+    public static final int MonoIsotopic             = 0x3;
+
+    /**
+     * For use with {@link #getMass(IAtomContainer)}. This option uses the mass
+     * stored on atoms {@link IAtom#getExactMass()} and then calculates a
+     * distribution for any unspecified atoms and uses the most abundant
+     * distribution. For example C<sub>6</sub>Br<sub>6</sub> would have three
+     * <sup>79</sup>Br and <sup>81</sup>Br because their abundance is 51 and
+     * 49%.
+     */
+    public static final int MostAbundant             = 0x4;
+
+    /**
      * Extract a substructure from an atom container, in the form of a new
      * cloned atom container with only the atoms with indices in atomIndices and
      * bonds that connect these atoms.
-     * 
      * Note that this may result in a disconnected atom container.
      *
      * @param atomContainer the source container to extract from
      * @param atomIndices the indices of the substructure
      * @return a cloned atom container with a substructure of the source
-     * @throws CloneNotSupportedException if the source container cannot be cloned
+     * @throws CloneNotSupportedException not thrown any longer, kept to retain compatability
+     * @deprecated use {@link #extractSubstructure(IAtomContainer, Collection)} instead
      */
+    @Deprecated
     public static IAtomContainer extractSubstructure(IAtomContainer atomContainer, int... atomIndices)
             throws CloneNotSupportedException {
-        IAtomContainer substructure = (IAtomContainer) atomContainer.clone();
-        int numberOfAtoms = substructure.getAtomCount();
-        IAtom[] atoms = new IAtom[numberOfAtoms];
-        for (int atomIndex = 0; atomIndex < numberOfAtoms; atomIndex++) {
-            atoms[atomIndex] = substructure.getAtom(atomIndex);
+        return extractSubstructure(atomContainer,
+                Arrays.stream(atomIndices).mapToObj(atomContainer::getAtom).collect(Collectors.toSet()));
+    }
+
+    /**
+     * Copy selected atoms/bonds from a 'source' molecule to the provided <code>dest</code>ination.
+     * For consistency the bond filter is only checked if both
+     * atoms of a bond pass the atom filter. i.e. you can't add a bond with
+     * atoms that would not be copied.
+     *
+     * @param dest the destination molecule
+     * @param source the source molecule
+     * @param atomFilter the atom filter indicates which atoms to copy
+     * @param bondFilter the bond filter indicates which bonds to copy
+     */
+    public static void copy(IAtomContainer dest,
+                            IAtomContainer source,
+                            Predicate<IAtom> atomFilter,
+                            Predicate<IBond> bondFilter) {
+        // holds entries of (reference to atom in source, reference to atom in dest)
+        Map<IChemObject, IChemObject> remap = new HashMap<>();
+
+        for (IAtom atom : source.atoms()) {
+            if (!atomFilter.test(atom))
+                continue;
+            dest.addAtom(atom);
+            // for AtomContainer2 we want the new "AtomRef" in the new container
+            remap.put(atom, dest.getAtom(dest.getAtomCount() - 1));
         }
 
-        Arrays.sort(atomIndices);
-        for (int index = 0; index < numberOfAtoms; index++) {
-            if (Arrays.binarySearch(atomIndices, index) < 0) {
-                IAtom atom = atoms[index];
-                substructure.removeAtom(atom);
+        for (IBond bond : source.bonds()) {
+            IAtom beg = (IAtom) remap.get(bond.getBegin());
+            IAtom end = (IAtom) remap.get(bond.getEnd());
+            if (beg != null && end != null && bondFilter.test(bond)) {
+                dest.addBond(dest.indexOf(beg), dest.indexOf(end),
+                             bond.getOrder(), bond.getStereo());
+                IBond destBond = dest.getBond(dest.getBondCount() - 1);
+                destBond.setIsInRing(bond.isInRing());
+                destBond.setIsAromatic(bond.isAromatic());
+                destBond.setProperties(bond.getProperties());
+                remap.put(bond, destBond);
             }
         }
 
-        return substructure;
+        for (ISingleElectron se : source.singleElectrons()) {
+            IAtom newAtom = (IAtom) remap.get(se.getAtom());
+            if (newAtom != null)
+                dest.addSingleElectron(dest.indexOf(newAtom));
+        }
+
+        for (ILonePair lp : source.lonePairs()) {
+            IAtom newAtom = (IAtom) remap.get(lp.getAtom());
+            if (newAtom != null)
+                dest.addLonePair(dest.indexOf(newAtom));
+        }
+
+        for (IStereoElement<?, ?> sourceStereo : source.stereoElements()) {
+            IStereoElement<?, ?> destStereo = sourceStereo.mapStrict(remap);
+            if (destStereo != null)
+                dest.addStereoElement(destStereo);
+        }
     }
+
+    /**
+     * Copy selected atoms from a 'source' molecule to the provided <code>dest</code>ination.
+     *
+     * @param dest the destination molecule
+     * @param source the source molecule
+     * @param atomFilter the atom filter indicates which atoms to copy
+     * @see #copy(org.openscience.cdk.interfaces.IAtomContainer, org.openscience.cdk.interfaces.IAtomContainer, java.util.function.Predicate, java.util.function.Predicate)
+     */
+    public static void copy(IAtomContainer dest,
+                            IAtomContainer source,
+                            Predicate<IAtom> atomFilter) {
+        copy(dest, source, atomFilter, b -> true);
+    }
+
+    /**
+     * Copy atoms in the collection from a 'source' molecule to the provided <code>dest</code>ination.
+     * For performance a {@link java.util.Set} of 'atoms' is preferred.
+     *
+     * @param dest the destination molecule
+     * @param source the source molecule
+     * @param atoms the atom collection indicates which atoms to copy
+     * @see #copy(org.openscience.cdk.interfaces.IAtomContainer, org.openscience.cdk.interfaces.IAtomContainer, java.util.function.Predicate, java.util.function.Predicate)
+     */
+    public static void copy(IAtomContainer dest,
+                            IAtomContainer source,
+                            Collection<IAtom> atoms) {
+        copy(dest, source, atoms::contains, b -> true);
+    }
+
+    /**
+     * Extract a substructure from a 'source' molecule to the provided <code>dest</code>ination based on the collection of atoms.
+     * For performance a {@link java.util.Set} of <code>atoms</code> is preferred.
+     *
+     * @param source the source molecule
+     * @param atoms the atom collection indicates which atoms to copy
+     * @return the extracted molecule
+     * @see #copy(org.openscience.cdk.interfaces.IAtomContainer, org.openscience.cdk.interfaces.IAtomContainer, java.util.function.Predicate, java.util.function.Predicate)
+     */
+    public static IAtomContainer extractSubstructure(IAtomContainer source,
+                                                     Collection<IAtom> atoms) {
+        IAtomContainer dest = source.getBuilder().newAtomContainer();
+        copy(dest, source, atoms::contains, b -> true);
+        return dest;
+    }
+
 
     /**
      * Returns an atom in an atomcontainer identified by id
@@ -156,11 +269,11 @@ public class AtomContainerManipulator {
         if (idx < 0)
             return false;
         container.setAtom(idx, newAtom);
-        List<Sgroup> sgrougs = container.getProperty(CDKConstants.CTAB_SGROUPS);
-        if (sgrougs != null) {
+        List<Sgroup> sgroups  = container.getProperty(CDKConstants.CTAB_SGROUPS);
+        if (sgroups != null) {
             boolean updated = false;
             List<Sgroup> replaced = new ArrayList<>();
-            for (Sgroup org : sgrougs) {
+            for (Sgroup org : sgroups) {
                 if (org.getAtoms().contains(oldAtom)) {
                     updated = true;
                     Sgroup cpy = new Sgroup();
@@ -206,102 +319,216 @@ public class AtomContainerManipulator {
         return charge;
     }
 
-    /**
-     * Get the summed exact mass of all atoms in an AtomContainer. It
-     * requires isotope information for all atoms to be set. Either set
-     * this information using the {@link IsotopeFactory}, or use the
-     * {@link MolecularFormulaManipulator#getMajorIsotopeMass(org.openscience.cdk.interfaces.IMolecularFormula)}
-     * method, after converting the {@link IAtomContainer} to a
-     * {@link IMolecularFormula} with the {@link MolecularFormulaManipulator}.
-     *
-     * @param  atomContainer The IAtomContainer to manipulate
-     * @return The summed exact mass of all atoms in this AtomContainer.
-     * @see #getMolecularWeight(IAtomContainer)
-     */
-    public static double getTotalExactMass(IAtomContainer atomContainer) {
-        try {
+    private static boolean hasIsotopeSpecified(IIsotope atom) {
+        return atom.getMassNumber() != null && atom.getMassNumber() != 0;
+    }
 
-            Isotopes isotopes = Isotopes.getInstance();
-            double mass = 0.0;
-            double hExactMass = isotopes.getMajorIsotope(1).getExactMass();
-            for (IAtom atom : atomContainer.atoms()) {
-                if (atom.getImplicitHydrogenCount() == null)
-                    throw new IllegalArgumentException("an atom had with unknown (null) implicit hydrogens");
-                mass += atom.getExactMass();
-                mass += atom.getImplicitHydrogenCount() * hExactMass;
-            }
-            return mass;
-        } catch (IOException e) {
-            throw new RuntimeException("Isotopes definitions could not be loaded", e);
+    private static double getExactMass(IsotopeFactory isofact, IIsotope atom) {
+        if (atom.getExactMass() != null)
+            return atom.getExactMass();
+        else if (atom.getMassNumber() != null)
+            return isofact.getExactMass(getAtomicNum(atom),
+                                        atom.getMassNumber());
+        else
+            return isofact.getMajorIsotopeMass(getAtomicNum(atom));
+    }
+
+    private static double getMassOrAvg(IsotopeFactory isofact, IIsotope atom) {
+        if (!hasIsotopeSpecified(atom))
+            return isofact.getNaturalMass(atom);
+        return getExactMass(isofact, atom);
+    }
+
+    public static final Comparator<IIsotope> NAT_ABUN_COMP = new Comparator<IIsotope>() {
+        @Override
+        public int compare(IIsotope o1, IIsotope o2) {
+            return -Double.compare(o1.getNaturalAbundance(),
+                                   o2.getNaturalAbundance());
         }
+    };
+
+    private static double getDistMass(IsotopeFactory isofact,
+                                      IIsotope[] isos, int idx, int count) {
+        if (count == 0)
+            return 0;
+        double frac = 100d;
+        double res  = 0;
+        for (int i = 0; i < idx; i++)
+            frac -= isos[i].getNaturalAbundance();
+        double p    = isos[idx].getNaturalAbundance() / frac;
+        if (p >= 1.0)
+            return count * isos[idx].getExactMass();
+        double kMin = (count + 1) * (1 - p) - 1;
+        double kMax = (count + 1) * (1 - p);
+        if ((int) Math.ceil(kMin) == (int) Math.floor(kMax)) {
+            int k = (int) kMax;
+            res = (count - k) * getExactMass(isofact,
+                                             isos[idx]);
+            res += getDistMass(isofact, isos, idx + 1, k);
+        }
+        return res;
+    }
+
+    private static int getImplHCount(IAtom atom) {
+        Integer implh = atom.getImplicitHydrogenCount();
+        if (implh == null)
+            throw new IllegalArgumentException("An atom had 'null' implicit hydrogens!");
+        return implh;
+    }
+
+    private static int getAtomicNum(IElement atom) {
+        Integer atno = atom.getAtomicNumber();
+        if (atno == null)
+            throw new IllegalArgumentException("An atom had 'null' atomic number!");
+        return atno;
     }
 
     /**
-     * Returns the molecular mass of the IAtomContainer. For the calculation it
-     * uses the masses of the isotope mixture using natural abundances.
+     * Calculate the mass of a molecule, this function takes an optional
+     * 'mass flavour' that switches the computation type. The key distinction
+     * is how specified/unspecified isotopes are handled. A specified isotope
+     * is an atom that has either {@link IAtom#setMassNumber(Integer)}
+     * or {@link IAtom#setExactMass(Double)} set to non-null and non-zero.
+     * <br>
+     * The flavours are:
+     * <br>
+     * <ul>
+     *     <li>{@link #MolWeight} (default) - uses the exact mass of each
+     *     atom when an isotope is specified, if not specified the average mass
+     *     of the element is used.</li>
+     *     <li>{@link #MolWeightIgnoreSpecified} - uses the average mass of each
+     *     element, ignoring any isotopic/exact mass specification</li>
+     *     <li>{@link #MonoIsotopic} - uses the exact mass of each
+     *     atom when an isotope is specified, if not specified the major isotope
+     *     mass for that element is used.</li>
+     *     <li>{@link #MostAbundant} - uses the exact mass of each atom when
+     *     specified, if not specified a distribution is calculated and the
+     *     most abundant isotope pattern is used.</li>
+     * </ul>
      *
-     * @param atomContainer
-     * @cdk.keyword mass, molecular
-     * @see #getMolecularWeight(IAtomContainer)
+     * @param mol molecule to compute mass for
+     * @param flav flavor
+     * @return the mass of the molecule
+     * @see #getMass(IAtomContainer, int)
+     * @see #MolWeight
+     * @see #MolWeightIgnoreSpecified
+     * @see #MonoIsotopic
+     * @see #MostAbundant
      */
-    public static double getNaturalExactMass(IAtomContainer atomContainer) {
+    public static double getMass(IAtomContainer mol, int flav) {
+
+        final Isotopes isofact;
         try {
-            Isotopes isotopes = Isotopes.getInstance();
-            double hydgrogenMass = isotopes.getNaturalMass(Elements.HYDROGEN);
-
-            double mass = 0.0;
-            for (final IAtom atom : atomContainer.atoms()) {
-
-                if (atom.getAtomicNumber() == null)
-                    throw new IllegalArgumentException("an atom had with unknown (null) atomic number");
-                if (atom.getImplicitHydrogenCount() == null)
-                    throw new IllegalArgumentException("an atom had with unknown (null) implicit hydrogens");
-
-                mass += isotopes.getNaturalMass(Elements.ofNumber(atom.getAtomicNumber()).toIElement());
-                mass += hydgrogenMass * atom.getImplicitHydrogenCount();
-            }
-            return mass;
-
+            isofact = Isotopes.getInstance();
         } catch (IOException e) {
-            throw new RuntimeException("Isotopes definitions could not be loaded", e);
+            throw new IllegalStateException("Could not load Isotopes!");
         }
-    }
 
-    /**
-     * Calculate the molecular weight of a molecule.
-     *
-     * @param mol the molecule
-     * @return the molecular weight
-     */
-    public static double getMolecularWeight(IAtomContainer mol) {
-        try {
-            Isotopes isotopes = Isotopes.getInstance();
-            double hmass = isotopes.getNaturalMass(Elements.HYDROGEN);
-            double mw    = 0.0;
-            for (final IAtom atom : mol.atoms()) {
-                if (atom.getAtomicNumber() == null || atom.getAtomicNumber() == 0)
-                    throw new IllegalArgumentException("An atom had with unknown (null) atomic number");
-                if (atom.getImplicitHydrogenCount() == null)
-                    throw new IllegalArgumentException("An atom had with unknown (null) implicit hydrogens");
-                mw += hmass * atom.getImplicitHydrogenCount();
-                if (atom.getMassNumber() == null)
-                    mw += isotopes.getNaturalMass(atom);
-                else if (atom.getExactMass() != null)
-                    mw += atom.getExactMass();
-                else {
-                    IIsotope isotope = isotopes.getIsotope(atom.getSymbol(), atom.getMassNumber());
-                    if (isotope == null)
-                        mw += isotopes.getNaturalMass(atom);
+        double mass = 0;
+        int    hcnt = 0;
+
+        switch (flav & 0xf) {
+            case MolWeight:
+                for (IAtom atom : mol.atoms()) {
+                    mass += getMassOrAvg(isofact, atom);
+                    hcnt += getImplHCount(atom);
+                }
+                mass += hcnt * isofact.getNaturalMass(1);
+                break;
+            case MolWeightIgnoreSpecified:
+                for (IAtom atom : mol.atoms()) {
+                    mass += isofact.getNaturalMass(getAtomicNum(atom));
+                    hcnt += getImplHCount(atom);
+                }
+                mass += hcnt * isofact.getNaturalMass(1);
+                break;
+            case MonoIsotopic:
+                for (IAtom atom : mol.atoms()) {
+                    mass += getExactMass(isofact, atom);
+                    hcnt += getImplHCount(atom);
+                }
+                mass += hcnt * isofact.getMajorIsotopeMass(1);
+                break;
+            case MostAbundant:
+                int[] mf = new int[128];
+                for (IAtom atom : mol.atoms()) {
+                    if (hasIsotopeSpecified(atom))
+                        mass += getExactMass(isofact, atom);
                     else
-                        mw += isotope.getExactMass();
+                        mf[getAtomicNum(atom)]++;
+                    mf[1] += atom.getImplicitHydrogenCount();
                 }
 
-            }
-            return mw;
-
-        } catch (IOException e) {
-            throw new RuntimeException("Isotopes definitions could not be loaded", e);
+                for (int atno = 0; atno < mf.length; atno++) {
+                    if (mf[atno] == 0)
+                        continue;
+                    IIsotope[] isotopes = isofact.getIsotopes(atno);
+                    Arrays.sort(isotopes, NAT_ABUN_COMP);
+                    mass += getDistMass(isofact, isotopes, 0, mf[atno]);
+                }
+                break;
         }
+        return mass;
+    }
+
+    /**
+     * Calculate the mass of a molecule, this function takes an optional
+     * 'mass flavour' that switches the computation type. The key distinction
+     * is how specified/unspecified isotopes are handled. A specified isotope
+     * is an atom that has either {@link IAtom#setMassNumber(Integer)}
+     * or {@link IAtom#setExactMass(Double)} set to non-null and non-zero.
+     * <br>
+     * The flavours are:
+     * <br>
+     * <ul>
+     *     <li>{@link #MolWeight} (default) - uses the exact mass of each
+     *     atom when an isotope is specified, if not specified the average mass
+     *     of the element is used.</li>
+     *     <li>{@link #MolWeightIgnoreSpecified} - uses the average mass of each
+     *     element, ignoring any isotopic/exact mass specification</li>
+     *     <li>{@link #MonoIsotopic} - uses the exact mass of each
+     *     atom when an isotope is specified, if not specified the major isotope
+     *     mass for that element is used.</li>
+     *     <li>{@link #MostAbundant} - uses the exact mass of each atom when
+     *     specified, if not specified a distribution is calculated and the
+     *     most abundant isotope pattern is used.</li>
+     * </ul>
+     *
+     * @param mol molecule to compute mass for
+     * @return the mass of the molecule
+     * @see #getMass(IAtomContainer, int)
+     * @see #MolWeight
+     * @see #MolWeightIgnoreSpecified
+     * @see #MonoIsotopic
+     * @see #MostAbundant
+     */
+    public static double getMass(IAtomContainer mol) {
+        return getMass(mol, MolWeight);
+    }
+
+    /**
+     * @deprecated uses {@link #getMass(IAtomContainer, int)} and
+     * {@link #MonoIsotopic}
+     */
+    public static double getTotalExactMass(IAtomContainer mol) {
+        return getMass(mol, MonoIsotopic);
+    }
+
+    /**
+     * @deprecated uses {@link #getMass(IAtomContainer, int)} and
+     * {@link #MolWeightIgnoreSpecified}. You probably want
+     * {@link #MolWeight}!
+     */
+    public static double getNaturalExactMass(IAtomContainer mol) {
+        return getMass(mol, MolWeightIgnoreSpecified);
+    }
+
+    /**
+     * @deprecated use {@link #getMass(IAtomContainer, int)} and
+     * {@link #MolWeight}
+     */
+    public static double getMolecularWeight(IAtomContainer mol) {
+        return getMass(mol, MolWeight);
     }
 
     /**
@@ -326,7 +553,8 @@ public class AtomContainerManipulator {
                     abundance *= hAbundance;
                 nImplH += atom.getImplicitHydrogenCount();
             }
-            return abundance / Math.pow(100, nImplH + atomContainer.getAtomCount());
+            int acount = atomContainer.getAtomCount();
+            return abundance / Math.pow(100, (double)nImplH + acount);
         } catch (IOException e) {
             throw new RuntimeException("Isotopes definitions could not be loaded", e);
         }
@@ -392,7 +620,7 @@ public class AtomContainerManipulator {
         int hydrogens = 0;
         for (IAtom atom : container.atoms()) {
 
-            if (Elements.HYDROGEN.getSymbol().equals(atom.getSymbol())) {
+            if (Elements.HYDROGEN.getAtomicNumber().equals(atom.getAtomicNumber())) {
                 hydrogens++;
             }
 
@@ -443,18 +671,11 @@ public class AtomContainerManipulator {
             throw new IllegalArgumentException("null container or atom provided");
         int hCount = 0;
         for (IAtom connected : atomContainer.getConnectedAtomsList(atom)) {
-            if (Elements.HYDROGEN.getSymbol().equals(connected.getSymbol())) {
+            if (Elements.HYDROGEN.getAtomicNumber().equals(connected.getAtomicNumber())) {
                 hCount++;
             }
         }
         return hCount;
-    }
-
-    private static final void replaceAtom(IAtom[] atoms, IAtom org, IAtom rep) {
-        for (int i = 0; i < atoms.length; i++) {
-            if (atoms[i].equals(org))
-                atoms[i] = rep;
-        }
     }
 
     /**
@@ -463,81 +684,27 @@ public class AtomContainerManipulator {
      *
      * @param atomContainer the atom container to consider
      * @cdk.keyword hydrogens, adding
+     * @see #normalizeHydrogens(IAtomContainer, HydrogenState)
      */
     public static void convertImplicitToExplicitHydrogens(IAtomContainer atomContainer) {
-        List<IAtom> hydrogens = new ArrayList<IAtom>();
-        List<IBond> newBonds = new ArrayList<IBond>();
+        Hydrogens.normalize(atomContainer, HydrogenState.Explicit);
+    }
 
-        // store a single explicit hydrogen of each original neighbor
-        Map<IAtom, IAtom> hNeighbor = Maps.newHashMapWithExpectedSize(atomContainer.getAtomCount());
-
-        for (IAtom atom : atomContainer.atoms()) {
-            if (!atom.getSymbol().equals("H")) {
-                Integer hCount = atom.getImplicitHydrogenCount();
-                if (hCount != null) {
-                    for (int i = 0; i < hCount; i++) {
-
-                        IAtom hydrogen = atom.getBuilder().newInstance(IAtom.class, "H");
-                        hydrogen.setAtomTypeName("H");
-                        hydrogen.setImplicitHydrogenCount(0);
-                        hydrogens.add(hydrogen);
-                        newBonds.add(atom.getBuilder().newInstance(IBond.class, atom, hydrogen,
-                                Order.SINGLE));
-
-                        if (hNeighbor.get(atom) == null) hNeighbor.put(atom, hydrogen);
-
-                    }
-                    atom.setImplicitHydrogenCount(0);
-                }
-            }
-        }
-        for (IAtom atom : hydrogens)
-            atomContainer.addAtom(atom);
-        for (IBond bond : newBonds)
-            atomContainer.addBond(bond);
-
-        // update stereo elements with an implicit part
-        List<IStereoElement> stereos = new ArrayList<>();
-        for (IStereoElement stereo : atomContainer.stereoElements()) {
-            if (stereo instanceof ITetrahedralChirality) {
-                ITetrahedralChirality tc = (ITetrahedralChirality) stereo;
-
-                IAtom   focus    = tc.getFocus();
-                IAtom[] carriers = tc.getCarriers().toArray(new IAtom[4]);
-                IAtom   hydrogen = hNeighbor.get(focus);
-
-                // in sulfoxide - the implicit part of the tetrahedral centre
-                // is a lone pair
-
-                if (hydrogen != null) {
-                    replaceAtom(carriers, focus, hydrogen);
-                    stereos.add(new TetrahedralChirality(focus, carriers, tc.getStereo()));
-                } else {
-                    stereos.add(stereo);
-                }
-            } else if (stereo instanceof ExtendedTetrahedral) {
-                ExtendedTetrahedral tc = (ExtendedTetrahedral) stereo;
-
-                IAtom   focus    = tc.getFocus();
-                IAtom[] carriers = tc.getCarriers().toArray(new IAtom[4]);
-                IAtom[] ends     = ExtendedTetrahedral.findTerminalAtoms(atomContainer, focus);
-                IAtom   h1       = hNeighbor.get(ends[0]);
-                IAtom   h2       = hNeighbor.get(ends[1]);
-                if (h1 != null || h2 != null) {
-                    if (h1 != null)
-                        replaceAtom(carriers, ends[0], h1);
-                    if (h2 != null)
-                        replaceAtom(carriers, ends[1], h2);
-                    stereos.add(new ExtendedTetrahedral(focus, carriers, tc.getConfigOrder()));
-                } else {
-                    stereos.add(stereo);
-                }
-            } else {
-                stereos.add(stereo);
-            }
-        }
-        atomContainer.setStereoElements(stereos);
-
+    /**
+     * Normalize the state in which hydrogens are represented/store in the
+     * provided molecule. Hydrogens can either be stored as a count on the
+     * atom ({@link IAtom#getImplicitHydrogenCount()} or as an explicit
+     * {@link IAtom} object with atomic number 1. This function is used to
+     * safely and correctly convert between these two representations with
+     * different presets for common use-case (e.g. hydrogens on all
+     * stereochemistry).
+     *
+     * @param container the molecule to normalize
+     * @param state the state to convert to
+     */
+    public static void normalizeHydrogens(IAtomContainer container,
+                                          HydrogenState state) {
+        Hydrogens.normalize(container, state);
     }
 
     /**
@@ -550,7 +717,7 @@ public class AtomContainerManipulator {
     }
 
     public static List<String> getAllIDs(IAtomContainer mol) {
-        List<String> idList = new ArrayList<String>();
+        List<String> idList = new ArrayList<>();
         if (mol != null) {
             if (mol.getID() != null) idList.add(mol.getID());
             for (IAtom atom : mol.atoms()) {
@@ -568,133 +735,35 @@ public class AtomContainerManipulator {
      * Produces an AtomContainer without explicit non stereo-relevant Hs but with H count from one with Hs.
      * The new molecule is a deep copy.
      *
-     * @param org The AtomContainer from which to remove the hydrogens
+     * @param container The AtomContainer from which to remove the hydrogens
      * @return              The molecule without non stereo-relevant Hs.
      * @cdk.keyword         hydrogens, removal
+     * @see #normalizeHydrogens(IAtomContainer, HydrogenState)
      */
-    public static IAtomContainer removeNonChiralHydrogens(IAtomContainer org) {
-
-        Map<IAtom, IAtom> map = new HashMap<IAtom, IAtom>(); // maps original atoms to clones.
-        List<IAtom> remove = new ArrayList<IAtom>(); // lists removed Hs.
-
-        // Clone atoms except those to be removed.
-        IAtomContainer cpy = org.getBuilder().newInstance(IAtomContainer.class);
-        int count = org.getAtomCount();
-
-        for (int i = 0; i < count; i++) {
-
-            // Clone/remove this atom?
-            IAtom atom = org.getAtom(i);
-            boolean addToRemove = false;
-            if (suppressibleHydrogen(org, atom)) {
-                // test whether connected to a single hetero atom only, otherwise keep
-                if (org.getConnectedAtomsList(atom).size() == 1) {
-                    IAtom neighbour = org.getConnectedAtomsList(atom).get(0);
-                    // keep if the neighbouring hetero atom has stereo information, otherwise continue checking
-                    Integer stereoParity = neighbour.getStereoParity();
-                    if (stereoParity == null || stereoParity == 0) {
-                        addToRemove = true;
-                        // keep if any of the bonds of the hetero atom have stereo information
-                        for (IBond bond : org.getConnectedBondsList(neighbour)) {
-                            IBond.Stereo bondStereo = bond.getStereo();
-                            if (bondStereo != null && bondStereo != IBond.Stereo.NONE) addToRemove = false;
-                            IAtom neighboursNeighbour = bond.getOther(neighbour);
-                            // remove in any case if the hetero atom is connected to more than one hydrogen
-                            if (neighboursNeighbour.getSymbol().equals("H") && !neighboursNeighbour.equals(atom)) {
-                                addToRemove = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (addToRemove)
-                remove.add(atom);
-            else
-                addClone(atom, cpy, map);
-        }
-
-        // rescue any false positives, i.e., hydrogens that are stereo-relevant
-        // the use of IStereoElement is not fully integrated yet to describe stereo information
-        for (IStereoElement stereoElement : org.stereoElements()) {
-            if (stereoElement instanceof ITetrahedralChirality) {
-                ITetrahedralChirality tetChirality = (ITetrahedralChirality) stereoElement;
-                for (IAtom atom : tetChirality.getLigands()) {
-                    if (atom.getSymbol().equals("H") && remove.contains(atom)) {
-                        remove.remove(atom);
-                        addClone(atom, cpy, map);
-                    }
-                }
-            } else if (stereoElement instanceof IDoubleBondStereochemistry) {
-                IDoubleBondStereochemistry dbs = (IDoubleBondStereochemistry) stereoElement;
-                IBond stereoBond = dbs.getStereoBond();
-                for (IAtom neighbor : org.getConnectedAtomsList(stereoBond.getBegin())) {
-                    if (remove.remove(neighbor)) addClone(neighbor, cpy, map);
-                }
-                for (IAtom neighbor : org.getConnectedAtomsList(stereoBond.getEnd())) {
-                    if (remove.remove(neighbor)) addClone(neighbor, cpy, map);
-                }
-            }
-        }
-
-        // Clone bonds except those involving removed atoms.
-        count = org.getBondCount();
-        for (int i = 0; i < count; i++) {
-            // Check bond.
-            final IBond bond = org.getBond(i);
-            boolean removedBond = false;
-            final int length = bond.getAtomCount();
-            for (int k = 0; k < length; k++) {
-                if (remove.contains(bond.getAtom(k))) {
-                    removedBond = true;
-                    break;
-                }
-            }
-
-            // Clone/remove this bond?
-            if (!removedBond) {
-                IBond clone = null;
-                try {
-                    clone = (IBond) org.getBond(i).clone();
-                } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
-                }
-                assert clone != null;
-                clone.setAtoms(new IAtom[]{map.get(bond.getBegin()), map.get(bond.getEnd())});
-                cpy.addBond(clone);
-            }
-        }
-
-        // Recompute hydrogen counts of neighbours of removed Hydrogens.
-        for (IAtom aRemove : remove) {
-            // Process neighbours.
-            for (IAtom iAtom : org.getConnectedAtomsList(aRemove)) {
-                final IAtom neighb = map.get(iAtom);
-                if (neighb == null) continue; // since for the case of H2, neight H has a heavy atom neighbor
-                neighb.setImplicitHydrogenCount((neighb.getImplicitHydrogenCount() == null ? 0 : neighb
-                        .getImplicitHydrogenCount()) + 1);
-            }
-        }
-        for (IAtom atom : cpy.atoms()) {
-            if (atom.getImplicitHydrogenCount() == null) atom.setImplicitHydrogenCount(0);
-        }
-        cpy.addProperties(org.getProperties());
-        cpy.setFlags(org.getFlags());
-
-        return (cpy);
+    public static IAtomContainer removeNonChiralHydrogens(IAtomContainer container) {
+        IAtomContainer copy = container.getBuilder().newAtomContainer();
+        copy(copy, container, a -> true);
+        copy.setFlags(container.getFlags());
+        copy.setProperties(container.getProperties());
+        Hydrogens.normalize(copy, HydrogenState.Stereo);
+        return copy;
     }
 
-    private static void addClone(IAtom atom, IAtomContainer mol, Map<IAtom, IAtom> map) {
-
-        IAtom clonedAtom = null;
-        try {
-            clonedAtom = (IAtom) atom.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        mol.addAtom(clonedAtom);
-        map.put(atom, clonedAtom);
+    /**
+     * Suppress any explicit hydrogens in the provided container. Only hydrogens
+     * that can be represented as a hydrogen count value on the atom are
+     * suppressed. The container is updated and no elements are copied, please
+     * use either {@link #copyAndSuppressedHydrogens} if you would to preserve
+     * the old instance.
+     *
+     * @param container the container from which to remove hydrogens
+     * @return the input for convenience
+     * @see #copyAndSuppressedHydrogens
+     * @see #normalizeHydrogens(IAtomContainer, HydrogenState)
+     */
+    public static IAtomContainer suppressHydrogens(IAtomContainer container) {
+        Hydrogens.normalize(container, HydrogenState.Minimal);
+        return container;
     }
 
     /**
@@ -706,296 +775,14 @@ public class AtomContainerManipulator {
      * @param org the container from which to remove hydrogens
      * @return a copy of the input with suppressed hydrogens
      * @see #suppressHydrogens
+     * @see #normalizeHydrogens(IAtomContainer, HydrogenState)
      */
     public static IAtomContainer copyAndSuppressedHydrogens(IAtomContainer org) {
         try {
             return suppressHydrogens(org.clone());
         } catch (CloneNotSupportedException e) {
-            throw new IllegalStateException("atom container could not be cloned");
+            throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Suppress any explicit hydrogens in the provided container. Only hydrogens
-     * that can be represented as a hydrogen count value on the atom are
-     * suppressed. The container is updated and no elements are copied, please
-     * use either {@link #copyAndSuppressedHydrogens} if you would to preserve
-     * the old instance.
-     *
-     * @param org the container from which to remove hydrogens
-     * @return the input for convenience
-     * @see #copyAndSuppressedHydrogens
-     */
-    public static IAtomContainer suppressHydrogens(IAtomContainer org) {
-
-        boolean anyHydrogenPresent = false;
-        for (IAtom atom : org.atoms()) {
-            if ("H".equals(atom.getSymbol())) {
-                anyHydrogenPresent = true;
-                break;
-            }
-        }
-
-        if (!anyHydrogenPresent)
-            return org;
-
-        // crossing atoms, positional variation atoms etc
-        Set<IAtom>         xatoms  = Collections.emptySet();
-        Collection<Sgroup> sgroups = org.getProperty(CDKConstants.CTAB_SGROUPS);
-        if (sgroups != null) {
-            xatoms = new HashSet<>();
-            for (Sgroup sgroup : sgroups) {
-                for (IBond bond : sgroup.getBonds()) {
-                    xatoms.add(bond.getBegin());
-                    xatoms.add(bond.getEnd());
-                }
-            }
-        }
-
-        // we need fast adjacency checks (to check for suppression and
-        // update hydrogen counts)
-        GraphUtil.EdgeToBondMap bondmap = GraphUtil.EdgeToBondMap.withSpaceFor(org);
-        final int[][] graph = GraphUtil.toAdjList(org, bondmap);
-
-        final int nOrgAtoms = org.getAtomCount();
-        final int nOrgBonds = org.getBondCount();
-
-        int nCpyAtoms = 0;
-        int nCpyBonds = 0;
-
-        final Set<IAtom> hydrogens        = new HashSet<IAtom>(nOrgAtoms);
-        final Set<IBond> bondsToHydrogens = new HashSet<IBond>();
-        final IAtom[] cpyAtoms = new IAtom[nOrgAtoms];
-
-        // filter the original container atoms for those that can/can't
-        // be suppressed
-        for (int v = 0; v < nOrgAtoms; v++) {
-            final IAtom atom = org.getAtom(v);
-            if (suppressibleHydrogen(org, graph, bondmap, v) &&
-                !xatoms.contains(atom)) {
-                hydrogens.add(atom);
-                incrementImplHydrogenCount(org.getAtom(graph[v][0]));
-            } else {
-                cpyAtoms[nCpyAtoms++] = atom;
-            }
-        }
-
-        // none of the hydrogens could be suppressed - no changes need to be made
-        if (hydrogens.isEmpty()) return org;
-
-        // we now update the bonds - we have auxiliary variable remaining that
-        // bypasses the set membership checks if all suppressed bonds are found
-        IBond[] cpyBonds = new IBond[nOrgBonds - hydrogens.size()];
-        int remaining = hydrogens.size();
-
-        for (final IBond bond : org.bonds()) {
-            if (remaining > 0 && (hydrogens.contains(bond.getBegin()) || hydrogens.contains(bond.getEnd()))) {
-                bondsToHydrogens.add(bond);
-                remaining--;
-                continue;
-            }
-            cpyBonds[nCpyBonds++] = bond;
-        }
-
-        // we know how many hydrogens we removed and we should have removed the
-        // same number of bonds otherwise the containers is a strange
-        if (nCpyBonds != cpyBonds.length)
-            throw new IllegalArgumentException("number of removed bonds was less than the number of removed hydrogens");
-
-        List<IStereoElement> elements = new ArrayList<IStereoElement>();
-
-        for (IStereoElement se : org.stereoElements()) {
-            if (se instanceof ITetrahedralChirality) {
-                ITetrahedralChirality tc = (ITetrahedralChirality) se;
-                IAtom focus = tc.getChiralAtom();
-                IAtom[] neighbors = tc.getLigands();
-                boolean updated = false;
-                for (int i = 0; i < neighbors.length; i++) {
-                    if (hydrogens.contains(neighbors[i])) {
-                        neighbors[i] = focus;
-                        updated = true;
-                    }
-                }
-
-                // no changes
-                if (!updated) {
-                    elements.add(tc);
-                } else {
-                    elements.add(new TetrahedralChirality(focus, neighbors, tc.getStereo()));
-                }
-            } else if (se instanceof ExtendedTetrahedral) {
-                ExtendedTetrahedral tc = (ExtendedTetrahedral) se;
-                IAtom   focus    = tc.getFocus();
-                IAtom[] carriers = tc.getCarriers().toArray(new IAtom[4]);
-                IAtom[] ends     = ExtendedTetrahedral.findTerminalAtoms(org, focus);
-                boolean updated = false;
-                for (int i = 0; i < carriers.length; i++) {
-                    if (hydrogens.contains(carriers[i])) {
-                        if (org.getBond(carriers[i], ends[0]) != null)
-                            carriers[i] = ends[0];
-                        else
-                            carriers[i] = ends[1];
-                        updated = true;
-                    }
-                }
-                // no changes
-                if (!updated) {
-                    elements.add(tc);
-                } else {
-                    elements.add(new ExtendedTetrahedral(focus, carriers, tc.getConfigOrder()));
-                }
-            } else if (se instanceof IDoubleBondStereochemistry) {
-                IDoubleBondStereochemistry db = (IDoubleBondStereochemistry) se;
-                Conformation conformation = db.getStereo();
-
-                IBond orgStereo = db.getStereoBond();
-                IBond orgLeft = db.getBonds()[0];
-                IBond orgRight = db.getBonds()[1];
-
-                // we use the following variable names to refer to the
-                // double bond atoms and substituents
-                // x       y
-                //  \     /
-                //   u = v
-
-                IAtom u = orgStereo.getBegin();
-                IAtom v = orgStereo.getEnd();
-                IAtom x = orgLeft.getOther(u);
-                IAtom y = orgRight.getOther(v);
-
-                // if xNew == x and yNew == y we don't need to find the
-                // connecting bonds
-                IAtom xNew = x;
-                IAtom yNew = y;
-
-                if (hydrogens.contains(x)) {
-                    conformation = conformation.invert();
-                    xNew = findSingleBond(org, u, x);
-                }
-
-                if (hydrogens.contains(y)) {
-                    conformation = conformation.invert();
-                    yNew = findSingleBond(org, v, y);
-                }
-
-                // no other atoms connected, invalid double-bond configuration
-                // is removed. example [2H]/C=C/[H]
-                if (x == null || y == null ||
-                    xNew == null || yNew == null) continue;
-
-                // no changes
-                if (x.equals(xNew) && y.equals(yNew)) {
-                    elements.add(db);
-                    continue;
-                }
-
-                // XXX: may perform slow operations but works for now
-                IBond cpyLeft  = !Objects.equals(xNew, x) ? org.getBond(u, xNew) : orgLeft;
-                IBond cpyRight = !Objects.equals(yNew, y) ? org.getBond(v, yNew) : orgRight;
-
-                elements.add(new DoubleBondStereochemistry(orgStereo,
-                                                           new IBond[]{cpyLeft, cpyRight},
-                                                           conformation));
-            } else if (se instanceof ExtendedCisTrans) {
-                ExtendedCisTrans db = (ExtendedCisTrans) se;
-                int config = db.getConfigOrder();
-
-                IBond focus     = db.getFocus();
-                IBond orgLeft   = db.getCarriers().get(0);
-                IBond orgRight  = db.getCarriers().get(1);
-
-                // we use the following variable names to refer to the
-                // extended double bond atoms and substituents
-                // x       y
-                //  \     /
-                //   u===v
-                IAtom[] ends = ExtendedCisTrans.findTerminalAtoms(org, focus);
-                IAtom u = ends[0];
-                IAtom v = ends[1];
-                IAtom x = orgLeft.getOther(u);
-                IAtom y = orgRight.getOther(v);
-
-                // if xNew == x and yNew == y we don't need to find the
-                // connecting bonds
-                IAtom xNew = x;
-                IAtom yNew = y;
-
-                if (hydrogens.contains(x)) {
-                    config ^= 0x3;
-                    xNew = findSingleBond(org, u, x);
-                }
-
-                if (hydrogens.contains(y)) {
-                    config ^= 0x3;
-                    yNew = findSingleBond(org, v, y);
-                }
-
-                // no other atoms connected, invalid double-bond configuration
-                // is removed. example [2H]/C=C/[H]
-                if (x == null || y == null ||
-                    xNew == null || yNew == null) continue;
-
-                // no changes
-                if (x.equals(xNew) && y.equals(yNew)) {
-                    elements.add(db);
-                    continue;
-                }
-
-                // XXX: may perform slow operations but works for now
-                IBond cpyLeft  = !Objects.equals(xNew, x) ? org.getBond(u, xNew) : orgLeft;
-                IBond cpyRight = !Objects.equals(yNew, y) ? org.getBond(v, yNew) : orgRight;
-
-                elements.add(new ExtendedCisTrans(focus,
-                                                  new IBond[]{cpyLeft, cpyRight},
-                                                  config));
-            } else if (se instanceof Atropisomeric) {
-                // can not have any H's
-                elements.add(se);
-            }
-        }
-
-        org.setAtoms(Arrays.copyOf(cpyAtoms, nCpyAtoms));
-        org.setBonds(cpyBonds);
-        org.setStereoElements(elements);
-
-        // single electron and lone pairs are not really used but we update
-        // them just in-case but we just use the inefficient AtomContainer
-        // methods
-
-        if (org.getSingleElectronCount() > 0) {
-            Set<ISingleElectron> remove = new HashSet<ISingleElectron>();
-            for (ISingleElectron se : org.singleElectrons()) {
-                if (hydrogens.contains(se.getAtom())) remove.add(se);
-            }
-            for (ISingleElectron se : remove) {
-                org.removeSingleElectron(se);
-            }
-        }
-
-        if (org.getLonePairCount() > 0) {
-            Set<ILonePair> remove = new HashSet<ILonePair>();
-            for (ILonePair lp : org.lonePairs()) {
-                if (hydrogens.contains(lp.getAtom())) remove.add(lp);
-            }
-            for (ILonePair lp : remove) {
-                org.removeLonePair(lp);
-            }
-        }
-
-        if (sgroups != null) {
-            for (Sgroup sgroup : sgroups) {
-                if (sgroup.getValue(SgroupKey.CtabParentAtomList) != null) {
-                    Collection<IAtom> pal = sgroup.getValue(SgroupKey.CtabParentAtomList);
-                    pal.removeAll(hydrogens);
-                }
-                for (IAtom hydrogen : hydrogens)
-                    sgroup.removeAtom(hydrogen);
-                for (IBond bondToHydrogen : bondsToHydrogens)
-                    sgroup.removeBond(bondToHydrogen);
-            }
-        }
-
-        return org;
     }
 
     /**
@@ -1007,112 +794,10 @@ public class AtomContainerManipulator {
      * @return The molecule without hydrogens.
      * @cdk.keyword hydrogens, removal, suppress
      * @see #copyAndSuppressedHydrogens
+     * @see #normalizeHydrogens(IAtomContainer, HydrogenState)
      */
     public static IAtomContainer removeHydrogens(IAtomContainer org) {
         return copyAndSuppressedHydrogens(org);
-    }
-
-    /**
-     * Is the {@code atom} a suppressible hydrogen and can be represented as
-     * implicit. A hydrogen is suppressible if it is not an ion, not the major
-     * isotope (i.e. it is a deuterium or tritium atom) and is not molecular
-     * hydrogen.
-     *
-     * @param container the structure
-     * @param atom      an atom in the structure
-     * @return the atom is a hydrogen and it can be suppressed (implicit)
-     */
-    private static boolean suppressibleHydrogen(final IAtomContainer container, final IAtom atom) {
-        // is the atom a hydrogen
-        if (!"H".equals(atom.getSymbol())) return false;
-        // is the hydrogen an ion?
-        if (atom.getFormalCharge() != null && atom.getFormalCharge() != 0) return false;
-        // is the hydrogen deuterium / tritium?
-        if (atom.getMassNumber() != null) return false;
-        // molecule hydrogen with implicit H?
-        if (atom.getImplicitHydrogenCount() != null && atom.getImplicitHydrogenCount() != 0) return false;
-        // molecule hydrogen
-        List<IAtom> neighbors = container.getConnectedAtomsList(atom);
-        if (neighbors.size() == 1 && (neighbors.get(0).getSymbol().equals("H") ||
-                                      neighbors.get(0) instanceof IPseudoAtom)) return false;
-        // what about bridging hydrogens?
-        // hydrogens with atom-atom mapping?
-        return true;
-    }
-
-    /**
-     * Increment the implicit hydrogen count of the provided atom. If the atom
-     * was a non-pseudo atom and had an unset hydrogen count an exception is
-     * thrown.
-     *
-     * @param atom an atom to increment the hydrogen count of
-     */
-    private static void incrementImplHydrogenCount(final IAtom atom) {
-        Integer hCount = atom.getImplicitHydrogenCount();
-
-        if (hCount == null) {
-            if (!(atom instanceof IPseudoAtom))
-                throw new IllegalArgumentException("a non-pseudo atom had an unset hydrogen count");
-            hCount = 0;
-        }
-
-        atom.setImplicitHydrogenCount(hCount + 1);
-    }
-
-    /**
-     * Is the {@code atom} a suppressible hydrogen and can be represented as
-     * implicit. A hydrogen is suppressible if it is not an ion, not the major
-     * isotope (i.e. it is a deuterium or tritium atom) and is not molecular
-     * hydrogen.
-     *
-     * @param container the structure
-     * @param graph     adjacent list representation
-     * @param v         vertex (atom index)
-     * @return the atom is a hydrogen and it can be suppressed (implicit)
-     */
-    private static boolean suppressibleHydrogen(final IAtomContainer container, final int[][] graph, final GraphUtil.EdgeToBondMap bondmap, final int v) {
-
-        IAtom atom = container.getAtom(v);
-
-        // is the atom a hydrogen
-        if (!"H".equals(atom.getSymbol())) return false;
-        // is the hydrogen an ion?
-        if (atom.getFormalCharge() != null && atom.getFormalCharge() != 0) return false;
-        // is the hydrogen deuterium / tritium?
-        if (atom.getMassNumber() != null) return false;
-        // hydrogen is either not attached to 0 or 2 neighbors
-        if (graph[v].length != 1) return false;
-        // non-single bond
-        if (bondmap.get(v, graph[v][0]).getOrder() != Order.SINGLE) return false;
-
-        // okay the hydrogen has one neighbor, if that neighbor is a
-        // hydrogen (i.e. molecular hydrogen) then we can not suppress it
-        if ("H".equals(container.getAtom(graph[v][0]).getSymbol()))
-            return false;
-        // can not nicely suppress hydrogens on pseudo atoms
-        if (container.getAtom(graph[v][0]) instanceof IPseudoAtom)
-            return false;
-        return true;
-    }
-
-    /**
-     * Finds an neighbor connected to 'atom' which is connected by a
-     * single bond and is not 'exclude'.
-     *
-     * @param container structure
-     * @param atom      atom to find a neighbor of
-     * @param exclude   the neighbor should not be this atom
-     * @return a neighbor of 'atom', null if not found
-     */
-    private static IAtom findSingleBond(IAtomContainer container, IAtom atom, IAtom exclude) {
-        for (IBond bond : container.getConnectedBondsList(atom)) {
-            if (bond.getOrder() != Order.SINGLE)
-                continue;
-            IAtom neighbor = bond.getOther(atom);
-            if (!neighbor.equals(exclude))
-                return neighbor;
-        }
-        return null;
     }
 
     /**
@@ -1121,7 +806,8 @@ public class AtomContainerManipulator {
      *
      * @return         The mol without Hs.
      * @cdk.keyword    hydrogens, removal
-     * @deprecated {@link #suppressHydrogens} will now not removed bridging hydrogens by default
+     * @deprecated {@link #suppressHydrogens} will now <u>not</u> removed bridging hydrogens by default
+     * @see #normalizeHydrogens(IAtomContainer, HydrogenState)
      */
     @Deprecated
     public static IAtomContainer removeHydrogensPreserveMultiplyBonded(IAtomContainer ac) {
@@ -1137,76 +823,24 @@ public class AtomContainerManipulator {
      * @cdk.keyword      hydrogens, removal
      * @deprecated not used by the internal API {@link #suppressHydrogens} will
      *             now only suppress hydrogens that can be represent as a h count
+     * @see #normalizeHydrogens(IAtomContainer, HydrogenState)
      */
     @Deprecated
-    private static IAtomContainer removeHydrogens(IAtomContainer ac, List<IAtom> preserve) {
-        Map<IAtom, IAtom> map = new HashMap<IAtom, IAtom>();
-        // maps original atoms to clones.
-        List<IAtom> remove = new ArrayList<IAtom>();
-        // lists removed Hs.
+    private static IAtomContainer removeHydrogens(IAtomContainer container,
+                                                  List<IAtom> preserve) {
 
-        // Clone atoms except those to be removed.
-        IAtomContainer mol = ac.getBuilder().newInstance(IAtomContainer.class);
-        int count = ac.getAtomCount();
-        for (int i = 0; i < count; i++) {
-            // Clone/remove this atom?
-            IAtom atom = ac.getAtom(i);
-            if (!suppressibleHydrogen(ac, atom) || preserve.contains(atom)) {
-                IAtom a = null;
-                try {
-                    a = (IAtom) atom.clone();
-                } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
-                }
-                a.setImplicitHydrogenCount(0);
-                mol.addAtom(a);
-                map.put(atom, a);
-            } else {
-                remove.add(atom);
-                // maintain list of removed H.
-            }
-        }
+        IAtomContainer copy = container.getBuilder().newAtomContainer();
+        copy(copy, container, a -> true);
+        copy.setFlags(container.getFlags());
+        copy.setProperties(container.getProperties());
 
-        // Clone bonds except those involving removed atoms.
-        count = ac.getBondCount();
-        for (int i = 0; i < count; i++) {
-            // Check bond.
-            final IBond bond = ac.getBond(i);
-            IAtom atom0 = bond.getBegin();
-            IAtom atom1 = bond.getEnd();
-            boolean remove_bond = false;
-            for (IAtom atom : bond.atoms()) {
-                if (remove.contains(atom)) {
-                    remove_bond = true;
-                    break;
-                }
-            }
-
-            // Clone/remove this bond?
-            if (!remove_bond) {
-                // if (!remove.contains(atoms[0]) && !remove.contains(atoms[1]))
-
-                IBond clone = null;
-                try {
-                    clone = (IBond) ac.getBond(i).clone();
-                } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
-                }
-                clone.setAtoms(new IAtom[]{map.get(atom0), map.get(atom1)});
-                mol.addBond(clone);
-            }
-        }
-
-        // Recompute hydrogen counts of neighbours of removed Hydrogens.
-        for (IAtom removeAtom : remove) {
-            // Process neighbours.
-            for (IAtom neighbor : ac.getConnectedAtomsList(removeAtom)) {
-                final IAtom neighb = map.get(neighbor);
-                neighb.setImplicitHydrogenCount(neighb.getImplicitHydrogenCount() + 1);
-            }
-        }
-
-        return (mol);
+        Set<IAtom> contract = new HashSet<>();
+        Set<IAtom> sprout = new LinkedHashSet<>();
+        Hydrogens.find(copy, HydrogenState.Minimal,
+                       contract, sprout);
+        preserve.forEach(contract::remove);
+        Hydrogens.normalize(copy, contract, sprout);
+        return copy;
     }
 
     /**
@@ -1353,10 +987,12 @@ public class AtomContainerManipulator {
      * matcher finds a matching atom type, the <code>IAtom</code> will be configured
      * to have the same properties as the <code>IAtomType</code>. If no matching atom
      * type is found, no configuration is performed.
+     * <br>
      * <b>This method overwrites existing values.</b>
      *
-     * @param container
+     * @param container the container whose atom types are to be perceived
      * @throws CDKException
+     * @see AtomTypeManipulator#configure(IAtom, IAtomType)
      */
     public static void percieveAtomTypesAndConfigureAtoms(IAtomContainer container) throws CDKException {
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(container.getBuilder());
@@ -1372,10 +1008,12 @@ public class AtomContainerManipulator {
      * matcher finds a matching atom type, the <code>IAtom</code> will be configured
      * to have the same properties as the <code>IAtomType</code>. If no matching atom
      * type is found, no configuration is performed.
-     * <b>This method overwrites existing values.</b>
+     * <br>
+     * <b>This method only sets <code>null</code> values.</b>
      *
-     * @param container
+     * @param container the container whose atom types are to be perceived
      * @throws CDKException
+     * @see AtomTypeManipulator#configureUnsetProperties(IAtom, IAtomType)
      */
     public static void percieveAtomTypesAndConfigureUnsetProperties(IAtomContainer container) throws CDKException {
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(container.getBuilder());
@@ -1387,15 +1025,15 @@ public class AtomContainerManipulator {
 
     /**
      * This method will reset all atom configuration to UNSET.
-     *
+     * <br>
      * This method is the reverse of {@link #percieveAtomTypesAndConfigureAtoms(org.openscience.cdk.interfaces.IAtomContainer)}
      * and after a call to this method all atoms will be "unconfigured".
-     *
+     * <br>
      * Note that it is not a complete reversal of {@link #percieveAtomTypesAndConfigureAtoms(org.openscience.cdk.interfaces.IAtomContainer)}
      * since the atomic symbol of the atoms remains unchanged. Also, all the flags that were set
      * by the configuration method (such as IS_HYDROGENBOND_ACCEPTOR or ISAROMATIC) will be set to False.
      *
-     * @param container The molecule, whose atoms are to be unconfigured
+     * @param container The molecule whose atoms are to be unconfigured
      * @see #percieveAtomTypesAndConfigureAtoms(org.openscience.cdk.interfaces.IAtomContainer)
      */
     public static void clearAtomConfigurations(IAtomContainer container) {
@@ -1408,10 +1046,10 @@ public class AtomContainerManipulator {
             atom.setFormalCharge((Integer) CDKConstants.UNSET);
             atom.setHybridization((IAtomType.Hybridization) CDKConstants.UNSET);
             atom.setFormalNeighbourCount((Integer) CDKConstants.UNSET);
-            atom.setFlag(CDKConstants.IS_HYDROGENBOND_ACCEPTOR, false);
-            atom.setFlag(CDKConstants.IS_HYDROGENBOND_DONOR, false);
+            atom.setFlag(IChemObject.HYDROGEN_BOND_ACCEPTOR, false);
+            atom.setFlag(IChemObject.HYDROGEN_BOND_DONOR, false);
             atom.setProperty(CDKConstants.CHEMICAL_GROUP_CONSTANT, CDKConstants.UNSET);
-            atom.setFlag(CDKConstants.ISAROMATIC, false);
+            atom.setFlag(IChemObject.AROMATIC, false);
             atom.setProperty("org.openscience.cdk.renderer.color", CDKConstants.UNSET);
             atom.setExactMass((Double) CDKConstants.UNSET);
         }
@@ -1443,9 +1081,9 @@ public class AtomContainerManipulator {
      * @cdk.keyword    hydrogens, removal
      */
     public static List<IAtom> getHeavyAtoms(IAtomContainer container) {
-        List<IAtom> newAc = new ArrayList<IAtom>();
+        List<IAtom> newAc = new ArrayList<>();
         for (int f = 0; f < container.getAtomCount(); f++) {
-            if (!container.getAtom(f).getSymbol().equals("H")) {
+            if (container.getAtom(f).getAtomicNumber() != IElement.H) {
                 newAc.add(container.getAtom(f));
             }
         }
@@ -1464,17 +1102,17 @@ public class AtomContainerManipulator {
      */
     public static IAtomContainer createAllCarbonAllSingleNonAromaticBondAtomContainer(IAtomContainer atomContainer)
             throws CloneNotSupportedException {
-        IAtomContainer query = (IAtomContainer) atomContainer.clone();
+        IAtomContainer query = atomContainer.clone();
         for (int i = 0; i < query.getBondCount(); i++) {
             query.getBond(i).setOrder(IBond.Order.SINGLE);
-            query.getBond(i).setFlag(CDKConstants.ISAROMATIC, false);
-            query.getBond(i).setFlag(CDKConstants.SINGLE_OR_DOUBLE, false);
+            query.getBond(i).setFlag(IChemObject.AROMATIC, false);
+            query.getBond(i).setFlag(IChemObject.SINGLE_OR_DOUBLE, false);
             query.getBond(i).getBegin().setSymbol("C");
             query.getBond(i).getBegin().setHybridization(null);
             query.getBond(i).getEnd().setSymbol("C");
             query.getBond(i).getEnd().setHybridization(null);
-            query.getBond(i).getBegin().setFlag(CDKConstants.ISAROMATIC, false);
-            query.getBond(i).getEnd().setFlag(CDKConstants.ISAROMATIC, false);
+            query.getBond(i).getBegin().setFlag(IChemObject.AROMATIC, false);
+            query.getBond(i).getEnd().setFlag(IChemObject.AROMATIC, false);
         }
         return query;
     }
@@ -1571,7 +1209,7 @@ public class AtomContainerManipulator {
     }
 
     /**
-     * Assigns {@link CDKConstants#SINGLE_OR_DOUBLE} flags to the bonds of
+     * Assigns {@link org.openscience.cdk.interfaces.IChemObject#SINGLE_OR_DOUBLE} flags to the bonds of
      * a container. The single or double flag indicates uncertainty of bond
      * order and in this case is assigned to all aromatic bonds (and atoms)
      * which occur in rings. If any such bonds are found the flag is also set
@@ -1596,7 +1234,7 @@ public class AtomContainerManipulator {
         RingSearch rs = new RingSearch(ac);
         boolean singleOrDouble = false;
         for (IBond bond : rs.ringFragments().bonds()) {
-            if (bond.getFlag(CDKConstants.ISAROMATIC)) {
+            if (bond.getFlag(IChemObject.AROMATIC)) {
                 bond.setFlag(SINGLE_OR_DOUBLE, true);
                 bond.getBegin().setFlag(SINGLE_OR_DOUBLE, true);
                 bond.getEnd().setFlag(SINGLE_OR_DOUBLE, true);
@@ -1604,7 +1242,7 @@ public class AtomContainerManipulator {
             }
         }
         if (singleOrDouble) {
-            ac.setFlag(CDKConstants.SINGLE_OR_DOUBLE, true);
+            ac.setFlag(IChemObject.SINGLE_OR_DOUBLE, true);
         }
         return ac;
     }

@@ -24,14 +24,12 @@ import org.openscience.cdk.interfaces.IBond;
  * {@link org.openscience.cdk.tools.diff.tree.IDifference} between two {@link org.openscience.cdk.interfaces.IBond.Order}s.
  *
  * @author     egonw
- * @cdk.module diff
- * @cdk.githash
  */
 public class BondOrderDifference implements IDifference {
 
-    private String      name;
-    private IBond.Order first;
-    private IBond.Order second;
+    private final String      name;
+    private final IBond.Order first;
+    private final IBond.Order second;
 
     private BondOrderDifference(String name, IBond.Order first, IBond.Order second) {
         this.name = name;

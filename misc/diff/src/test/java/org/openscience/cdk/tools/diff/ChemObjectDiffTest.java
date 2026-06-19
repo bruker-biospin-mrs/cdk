@@ -18,49 +18,49 @@
  */
 package org.openscience.cdk.tools.diff;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.tools.diff.tree.IDifference;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * @cdk.module test-diff
  */
-public class ChemObjectDiffTest extends CDKTestCase {
+class ChemObjectDiffTest {
 
     @Test
-    public void testMatchAgainstItself() {
+    void testMatchAgainstItself() {
         IChemObject atom1 = mock(IChemObject.class);
         String result = ChemObjectDiff.diff(atom1, atom1);
-        assertZeroLength(result);
+        Assertions.assertEquals("", result);
     }
 
     @Test
-    public void testDiff() {
+    void testDiff() {
         IChemObject atom1 = mock(IChemObject.class);
         IChemObject atom2 = mock(IChemObject.class);
         when(atom1.getFlags()).thenReturn(new boolean[]{false, false, false});
         when(atom2.getFlags()).thenReturn(new boolean[]{false, true, false});
 
         String result = ChemObjectDiff.diff(atom1, atom2);
-        Assert.assertNotNull(result);
-        Assert.assertNotSame("Expected non-zero-length result", 0, result.length());
-        assertContains(result, "ChemObjectDiff");
-        assertContains(result, "F/T");
+        Assertions.assertNotNull(result);
+        Assertions.assertNotSame(0, result.length(), "Expected non-zero-length result");
+        MatcherAssert.assertThat(result, containsString("ChemObjectDiff"));
+        MatcherAssert.assertThat(result, containsString("F/T"));
     }
 
     @Test
-    public void testDifference() {
+    void testDifference() {
         IChemObject atom1 = mock(IChemObject.class);
         IChemObject atom2 = mock(IChemObject.class);
         when(atom1.getFlags()).thenReturn(new boolean[]{false, false, false});
         when(atom2.getFlags()).thenReturn(new boolean[]{false, true, false});
 
         IDifference difference = ChemObjectDiff.difference(atom1, atom2);
-        Assert.assertNotNull(difference);
+        Assertions.assertNotNull(difference);
     }
 }

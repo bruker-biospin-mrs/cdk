@@ -18,9 +18,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -73,8 +74,6 @@ import java.util.List;
  *
  * @author      ulif
  * @cdk.created 2005-22-07
- * @cdk.module  qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:hBondacceptors
  */
 public class HBondAcceptorCountDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
@@ -153,7 +152,7 @@ public class HBondAcceptorCountDescriptor extends AbstractMolecularDescriptor im
 
         IAtomContainer ac;
         try {
-            ac = (IAtomContainer) atomContainer.clone();
+            ac = atomContainer.clone();
         } catch (CloneNotSupportedException e) {
             return getDummyDescriptorValue(e);
         }
@@ -173,33 +172,45 @@ public class HBondAcceptorCountDescriptor extends AbstractMolecularDescriptor im
         // labelled for loop to allow for labelled continue statements within the loop
         atomloop: for (IAtom atom : ac.atoms()) {
             // looking for suitable nitrogen atoms
-            if (atom.getSymbol().equals("N") && atom.getFormalCharge() <= 0) {
+            if (atom.getAtomicNumber() == IElement.N && atom.getFormalCharge() <= 0) {
 
                 // excluding nitrogens that are adjacent to an oxygen
                 List<IBond> bonds = ac.getConnectedBondsList(atom);
                 int nPiBonds = 0;
                 for (IBond bond : bonds) {
-                    if (bond.getOther(atom).getSymbol().equals("O")) continue atomloop;
+                    if (bond.getOther(atom).getAtomicNumber() == IElement.O) continue atomloop;
                     if (IBond.Order.DOUBLE.equals(bond.getOrder())) nPiBonds++;
                 }
 
                 // if the nitrogen is aromatic and there are no pi bonds then it's
                 // lone pair cannot accept any hydrogen bonds
-                if (atom.getFlag(CDKConstants.ISAROMATIC) && nPiBonds == 0) continue;
+                if (atom.getFlag(IChemObject.AROMATIC) && nPiBonds == 0) continue;
 
                 hBondAcceptors++;
             }
             // looking for suitable oxygen atoms
-            else if (atom.getSymbol().equals("O") && atom.getFormalCharge() <= 0) {
-                //excluding oxygens that are adjacent to a nitrogen or to an aromatic carbon
+            else if (atom.getAtomicNumber() == IElement.O && atom.getFormalCharge() <= 0) {
+
                 List<IBond> neighbours = ac.getConnectedBondsList(atom);
+
+                // get the "true" degree
+                int degree = 0;
+                for (IBond bond : neighbours) {
+                    IAtom nbor = bond.getOther(atom);
+                    if (nbor.getAtomicNumber() != IAtom.H)
+                        degree++;
+                }
+
                 for (IBond bond : neighbours) {
                     IAtom neighbor = bond.getOther(atom);
-                    if (neighbor.getSymbol().equals("N") ||
-                        (neighbor.getSymbol().equals("C") &&
-                         neighbor.isAromatic() &&
-                         bond.getOrder() != IBond.Order.DOUBLE))
-                        continue atomloop;;
+                    // adjacent to a nitrogen => reject
+                    if (neighbor.getAtomicNumber() == IElement.N)
+                        continue atomloop;
+                    // adjacent to an aromatic carbon and degree != 1
+                    if (neighbor.getAtomicNumber() == IElement.C &&
+                        neighbor.isAromatic() &&
+                        degree != 1)
+                        continue atomloop;
                 }
                 hBondAcceptors++;
             }

@@ -20,9 +20,10 @@
 package org.openscience.cdk.qsar.descriptors.molecular;
 
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.graph.PathTools;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -37,29 +38,29 @@ import java.util.List;
 
 /**
  * Evaluates the weighted path descriptors.
- * 
+ *
  * These decsriptors were described  by Randic ({@cdk.cite RAN84}) and characterize molecular
  * branching. Five descriptors are calculated, based on the implementation in the ADAPT
- * software package. Note that the descriptor is based on identifying <b>all</b> pahs between pairs of
+ * software package. Note that the descriptor is based on identifying <b>all</b> paths between pairs of
  * atoms and so is NP-hard. This means that it can take some time for large, complex molecules.
  * The class returns a <code>DoubleArrayResult</code> containing the five
  * descriptors in the order described below.
- * 
- * <center>
+ *
+ * <div>
  * <table border=1>
- * <caption><a name="dmwp">DMWP</a></caption>
+ * <caption><span id="dmwp">DMWP</span></caption>
  * <tr>
  * <td>WTPT1</td><td>molecular ID</td></tr><tr>
  * <td>WTPT2</td><td> molecular ID / number of atoms</td></tr><tr>
  * <td>WTPT3</td><td> sum of path lengths starting
  * from heteroatoms</td></tr><tr>
- * 
+ *
  * <td>WTPT4</td><td> sum of path lengths starting
  * from oxygens</td></tr><tr>
  * <td>WTPT5</td><td> sum of path lengths starting
  * from nitrogens</td></tr>
  * </table>
- * </center>
+ * </div>
  *
  * <table border="1"><caption>Parameters for this descriptor:</caption>
  *   <tr>
@@ -76,8 +77,6 @@ import java.util.List;
  *
  * @author Rajarshi Guha
  * @cdk.created 2006-01-15
- * @cdk.module qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:weightedPath
  */
 public class WeightedPathDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
@@ -143,106 +142,111 @@ public class WeightedPathDescriptor extends AbstractMolecularDescriptor implemen
         return (null);
     }
 
+    public static boolean unique(List<IAtom> path) {
+        return path.get(0).getIndex() < path.get(path.size()-1).getIndex();
+    }
+
+    private static final class Consumer {
+
+        private double uniqWeight;
+        private double heteroWeight;
+        private double oxygenWeight;
+        private double nitrogenWeight;
+
+        private final double[] bondWeights;
+
+        public Consumer(IAtomContainer mol) {
+            uniqWeight = mol.getAtomCount();
+            heteroWeight = 0;
+            oxygenWeight = 0;
+            nitrogenWeight = 0;
+            for (IAtom a : mol.atoms()) {
+                switch ((byte)a.getAtomicNumber().intValue()) {
+                    case IElement.C: break;
+                    case IElement.N: nitrogenWeight++; heteroWeight++; break;
+                    case IElement.O: oxygenWeight++; heteroWeight++; break;
+                    default:      heteroWeight++; break;
+                }
+            }
+            bondWeights = new double[mol.getBondCount()];
+            for (IBond bond : mol.bonds()) {
+                int begDeg = bond.getBegin().getBondCount();
+                int endDeg = bond.getEnd().getBondCount();
+                bondWeights[bond.getIndex()] = Math.sqrt((double)begDeg*endDeg);
+            }
+        }
+
+        void consume(List<IAtom> apath, double val) {
+            if (unique(apath))
+                uniqWeight += val;
+            int elem = apath.get(0).getAtomicNumber();
+            if (elem != IElement.C) {
+                heteroWeight += val;
+                if (elem == IElement.O)
+                    oxygenWeight += val;
+                else if (elem == IElement.N)
+                    nitrogenWeight += val;
+            }
+        }
+    }
+
+    private void traverseAllPaths(boolean[] visit,
+                                  Consumer consumer,
+                                  List<IAtom> apath,
+                                  double weight,
+                                  IAtom atom,
+                                  IBond prev) {
+        visit[atom.getIndex()] = true;
+        apath.add(atom);
+        if (prev != null) {
+            weight /= consumer.bondWeights[prev.getIndex()];
+            consumer.consume(apath, weight);
+        }
+        for (IBond bond : atom.bonds()) {
+            if (bond == prev)
+                continue;
+            IAtom nbor = bond.getOther(atom);
+            if (!visit[nbor.getIndex()])
+                traverseAllPaths(visit, consumer, apath, weight, nbor, bond);
+        }
+        visit[atom.getIndex()] = false;
+        apath.remove(apath.size()-1);
+    }
+
     /**
      * Calculates the weighted path descriptors.
      *
      * @param container Parameter is the atom container.
      * @return A DoubleArrayResult value representing the weighted path values
      */
-
     @Override
     public DescriptorValue calculate(IAtomContainer container) {
         IAtomContainer local = AtomContainerManipulator.removeHydrogens(container);
-        int natom = local.getAtomCount();
+
         DoubleArrayResult retval = new DoubleArrayResult();
 
-        ArrayList<List<?>> pathList = new ArrayList<List<?>>();
-
-        // unique paths
-        for (int i = 0; i < natom - 1; i++) {
-            IAtom a = local.getAtom(i);
-            for (int j = i + 1; j < natom; j++) {
-                IAtom b = local.getAtom(j);
-                pathList.addAll(PathTools.getAllPaths(local, a, b));
-            }
+        Consumer consumer = new Consumer(local);
+        boolean[] visit = new boolean[local.getAtomCount()];
+        for (IAtom a : local.atoms()) {
+            traverseAllPaths(visit, consumer, new ArrayList<>(), 1.0, a, null);
         }
 
-        // heteroatoms
-        double[] pathWts = getPathWeights(pathList, local);
-        double mid = 0.0;
-        for (double pathWt3 : pathWts)
-            mid += pathWt3;
-        mid += natom; // since we don't calculate paths of length 0 above
+        retval.add(consumer.uniqWeight);
+        retval.add(consumer.uniqWeight / local.getAtomCount());
+        retval.add(consumer.heteroWeight);
+        retval.add(consumer.oxygenWeight);
+        retval.add(consumer.nitrogenWeight);
 
-        retval.add(mid);
-        retval.add(mid / (double) natom);
-
-        pathList.clear();
-        int count = 0;
-        for (int i = 0; i < natom; i++) {
-            IAtom a = local.getAtom(i);
-            if (a.getSymbol().equalsIgnoreCase("C")) continue;
-            count++;
-            for (int j = 0; j < natom; j++) {
-                IAtom b = local.getAtom(j);
-                if (a.equals(b)) continue;
-                pathList.addAll(PathTools.getAllPaths(local, a, b));
-            }
-        }
-        pathWts = getPathWeights(pathList, local);
-        mid = 0.0;
-        for (double pathWt2 : pathWts)
-            mid += pathWt2;
-        mid += count;
-        retval.add(mid);
-
-        // oxygens
-        pathList.clear();
-        count = 0;
-        for (int i = 0; i < natom; i++) {
-            IAtom a = local.getAtom(i);
-            if (!a.getSymbol().equalsIgnoreCase("O")) continue;
-            count++;
-            for (int j = 0; j < natom; j++) {
-                IAtom b = local.getAtom(j);
-                if (a.equals(b)) continue;
-                pathList.addAll(PathTools.getAllPaths(local, a, b));
-            }
-        }
-        pathWts = getPathWeights(pathList, local);
-        mid = 0.0;
-        for (double pathWt1 : pathWts)
-            mid += pathWt1;
-        mid += count;
-        retval.add(mid);
-
-        // nitrogens
-        pathList.clear();
-        count = 0;
-        for (int i = 0; i < natom; i++) {
-            IAtom a = local.getAtom(i);
-            if (!a.getSymbol().equalsIgnoreCase("N")) continue;
-            count++;
-            for (int j = 0; j < natom; j++) {
-                IAtom b = local.getAtom(j);
-                if (a.equals(b)) continue;
-                pathList.addAll(PathTools.getAllPaths(local, a, b));
-            }
-        }
-        pathWts = getPathWeights(pathList, local);
-        mid = 0.0;
-        for (double pathWt : pathWts)
-            mid += pathWt;
-        mid += count;
-        retval.add(mid);
-
-        return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), retval,
-                getDescriptorNames());
+        return new DescriptorValue(getSpecification(),
+                                   getParameterNames(),
+                                   getParameters(),
+                                   retval,
+                                   getDescriptorNames());
     }
 
     /**
      * Returns the specific type of the DescriptorResult object.
-     * 
+     *
      * The return value from this method really indicates what type of result will
      * be obtained from the {@link org.openscience.cdk.qsar.DescriptorValue} object. Note that the same result
      * can be achieved by interrogating the {@link org.openscience.cdk.qsar.DescriptorValue} object; this method
@@ -255,21 +259,4 @@ public class WeightedPathDescriptor extends AbstractMolecularDescriptor implemen
     public IDescriptorResult getDescriptorResultType() {
         return new DoubleArrayResultType(5);
     }
-
-    private double[] getPathWeights(List<List<?>> pathList, IAtomContainer atomContainer) {
-        double[] pathWts = new double[pathList.size()];
-        for (int i = 0; i < pathList.size(); i++) {
-            List<?> p = pathList.get(i);
-            pathWts[i] = 1.0;
-            for (int j = 0; j < p.size() - 1; j++) {
-                IAtom a = (IAtom) p.get(j);
-                IAtom b = (IAtom) p.get(j + 1);
-                int n1 = atomContainer.getConnectedAtomsList(a).size();
-                int n2 = atomContainer.getConnectedAtomsList(b).size();
-                pathWts[i] /= Math.sqrt(n1 * n2);
-            }
-        }
-        return pathWts;
-    }
-
 }

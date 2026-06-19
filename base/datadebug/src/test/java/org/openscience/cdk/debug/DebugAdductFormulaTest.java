@@ -19,34 +19,33 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractAdductFormulaTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractAdductFormulaTest;
 import org.openscience.cdk.interfaces.IAdductFormula;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 
 /**
  * Checks the functionality of the {@link DebugAdductFormula}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugAdductFormulaTest extends AbstractAdductFormulaTest {
+class DebugAdductFormulaTest extends AbstractAdductFormulaTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setBuilder(DebugChemObjectBuilder.getInstance());
     }
 
     @Test
-    public void testDebugAdductFormula() {
+    void testDebugAdductFormula() {
         IAdductFormula mfS = new DebugAdductFormula();
-        Assert.assertNotNull(mfS);
+        Assertions.assertNotNull(mfS);
     }
 
     @Test
-    public void testDebugAdductFormula_IMolecularFormula() {
+    void testDebugAdductFormula_IMolecularFormula() {
         IAdductFormula mfS = new DebugAdductFormula(getBuilder().newInstance(IMolecularFormula.class));
-        Assert.assertEquals(1, mfS.size());
+        Assertions.assertEquals(1, mfS.size());
     }
 }

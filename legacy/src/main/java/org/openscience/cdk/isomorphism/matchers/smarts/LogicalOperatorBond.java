@@ -25,8 +25,6 @@ import org.openscience.cdk.isomorphism.matchers.IQueryBond;
 /**
  * This class matches a logical operator that connects two query bonds.
  *
- * @cdk.module  smarts
- * @cdk.githash
  * @cdk.keyword SMARTS
  */
 @Deprecated
@@ -101,7 +99,7 @@ public class LogicalOperatorBond extends SMARTSBond {
     @Override
     public void setAtoms(IAtom[] atoms) {
         super.setAtoms(atoms);
-        ((IBond) left).setAtoms(atoms);
-        if (right != null) ((IBond) right).setAtoms(atoms);
+        left.setAtoms(atoms);
+        if (right != null) right.setAtoms(atoms);
     }
 }

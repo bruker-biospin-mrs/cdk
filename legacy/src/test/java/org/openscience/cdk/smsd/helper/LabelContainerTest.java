@@ -21,72 +21,69 @@
  */
 package org.openscience.cdk.smsd.helper;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit testing for the {@link LabelContainer} class.
  *
  * @author     Syed Asad Rahman
- * @cdk.module test-smsd
  */
-public class LabelContainerTest {
+class LabelContainerTest {
 
     @Test
-    public void testGetInstance() {
-        Assert.assertNotNull(LabelContainer.getInstance());
+    void testGetInstance() {
+        Assertions.assertNotNull(LabelContainer.getInstance());
     }
 
     /**
      * Test of addLabel method, of class LabelContainer.
      */
     @Test
-    public void testAddLabel() {
+    void testAddLabel() {
         String label = "R3";
         LabelContainer instance = new LabelContainer();
         instance.addLabel(label);
-        assertEquals(3, instance.getSize());
+        Assertions.assertEquals(3, instance.getSize());
         Integer expectedValue = 2;
-        assertEquals(expectedValue, instance.getLabelID("R3"));
+        Assertions.assertEquals(expectedValue, instance.getLabelID("R3"));
     }
 
     /**
      * Test of getLabelID method, of class LabelContainer.
      */
     @Test
-    public void testGetLabelID() {
+    void testGetLabelID() {
         String label = "R3";
         LabelContainer instance = new LabelContainer();
         instance.addLabel(label);
         Integer expectedValue = 2;
-        assertEquals(expectedValue, instance.getLabelID("R3"));
+        Assertions.assertEquals(expectedValue, instance.getLabelID("R3"));
     }
 
     /**
      * Test of getLabel method, of class LabelContainer.
      */
     @Test
-    public void testGetLabel() {
+    void testGetLabel() {
         String label = "R3";
         LabelContainer instance = new LabelContainer();
         instance.addLabel(label);
         Integer index = 2;
         String result = instance.getLabel(index);
-        assertEquals(label, result);
+        Assertions.assertEquals(label, result);
     }
 
     /**
      * Test of getSize method, of class LabelContainer.
      */
     @Test
-    public void testGetSize() {
+    void testGetSize() {
         String label = "R3";
         LabelContainer instance = new LabelContainer();
         instance.addLabel(label);
         int expectedValue = 3;
         int result = instance.getSize();
-        assertEquals(expectedValue, result);
+        Assertions.assertEquals(expectedValue, result);
     }
 }

@@ -24,24 +24,22 @@
 
 package org.openscience.cdk.isomorphism;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtom;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
  * @author John May
- * @cdk.module test-isomorphism
  */
-public class AtomMatcherTest {
+class AtomMatcherTest {
 
     @Test
-    public void anyMatch() throws Exception {
+    void anyMatch() throws Exception {
         AtomMatcher matcher = AtomMatcher.forAny();
         IAtom atom1 = mock(IAtom.class);
         IAtom atom2 = mock(IAtom.class);
@@ -49,65 +47,68 @@ public class AtomMatcherTest {
         when(atom1.getAtomicNumber()).thenReturn(6);
         when(atom2.getAtomicNumber()).thenReturn(7);
         when(atom3.getAtomicNumber()).thenReturn(8);
-        assertTrue(matcher.matches(atom1, atom2));
-        assertTrue(matcher.matches(atom2, atom1));
-        assertTrue(matcher.matches(atom1, atom3));
-        assertTrue(matcher.matches(atom3, atom1));
-        assertTrue(matcher.matches(atom2, atom3));
-        assertTrue(matcher.matches(atom1, null));
-        assertTrue(matcher.matches(null, null));
+        Assertions.assertTrue(matcher.matches(atom1, atom2));
+        Assertions.assertTrue(matcher.matches(atom2, atom1));
+        Assertions.assertTrue(matcher.matches(atom1, atom3));
+        Assertions.assertTrue(matcher.matches(atom3, atom1));
+        Assertions.assertTrue(matcher.matches(atom2, atom3));
+        Assertions.assertTrue(matcher.matches(atom1, null));
+        Assertions.assertTrue(matcher.matches(null, null));
     }
 
     @Test
-    public void elementMatch() throws Exception {
+    void elementMatch() throws Exception {
         AtomMatcher matcher = AtomMatcher.forElement();
         IAtom atom1 = mock(IAtom.class);
         IAtom atom2 = mock(IAtom.class);
         when(atom1.getAtomicNumber()).thenReturn(6);
         when(atom2.getAtomicNumber()).thenReturn(6);
-        assertTrue(matcher.matches(atom1, atom2));
-        assertTrue(matcher.matches(atom2, atom1));
+        Assertions.assertTrue(matcher.matches(atom1, atom2));
+        Assertions.assertTrue(matcher.matches(atom2, atom1));
     }
 
     @Test
-    public void elementMismatch() throws Exception {
+    void elementMismatch() throws Exception {
         AtomMatcher matcher = AtomMatcher.forElement();
         IAtom atom1 = mock(IAtom.class);
         IAtom atom2 = mock(IAtom.class);
         when(atom1.getAtomicNumber()).thenReturn(6);
         when(atom2.getAtomicNumber()).thenReturn(8);
-        assertFalse(matcher.matches(atom1, atom2));
-        assertFalse(matcher.matches(atom2, atom1));
+        Assertions.assertFalse(matcher.matches(atom1, atom2));
+        Assertions.assertFalse(matcher.matches(atom2, atom1));
     }
 
     @Test
-    public void elementPseudo() throws Exception {
+    void elementPseudo() throws Exception {
         AtomMatcher matcher = AtomMatcher.forElement();
         IAtom atom1 = mock(IPseudoAtom.class);
         IAtom atom2 = mock(IPseudoAtom.class);
-        assertTrue(matcher.matches(atom1, atom2));
-        assertTrue(matcher.matches(atom2, atom1));
+        Assertions.assertTrue(matcher.matches(atom1, atom2));
+        Assertions.assertTrue(matcher.matches(atom2, atom1));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void elementError() throws Exception {
+    @Test
+    void elementError() throws Exception {
         AtomMatcher matcher = AtomMatcher.forElement();
         IAtom atom1 = mock(IAtom.class);
         IAtom atom2 = mock(IAtom.class);
         when(atom1.getAtomicNumber()).thenReturn(null);
         when(atom2.getAtomicNumber()).thenReturn(null);
-        matcher.matches(atom1, atom2);
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {
+                                    matcher.matches(atom1, atom2);
+                                });
     }
 
     @Test
-    public void queryMatch() throws Exception {
+    void queryMatch() throws Exception {
         AtomMatcher matcher = AtomMatcher.forQuery();
         IQueryAtom atom1 = mock(IQueryAtom.class);
         IAtom atom2 = mock(IAtom.class);
         IAtom atom3 = mock(IAtom.class);
         when(atom1.matches(atom2)).thenReturn(true);
         when(atom1.matches(atom3)).thenReturn(false);
-        assertTrue(matcher.matches(atom1, atom2));
-        assertFalse(matcher.matches(atom1, atom3));
+        Assertions.assertTrue(matcher.matches(atom1, atom2));
+        Assertions.assertFalse(matcher.matches(atom1, atom3));
     }
 }

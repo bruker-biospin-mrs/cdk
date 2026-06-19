@@ -23,9 +23,6 @@
  */
 package org.openscience.cdk.layout;
 
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
@@ -38,7 +35,10 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IRing;
@@ -76,22 +76,33 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static java.util.Comparator.comparingInt;
 
 /**
- * Generates 2D coordinates for a molecule for which only connectivity is known
- * or the coordinates have been discarded for some reason. Usage: Create an
- * instance of this class, thereby assigning a molecule, call
- * generateCoordinates() and get your molecule back:
+ * Generates 2D coordinates for a molecule.
+ *
+ * <b>Basic Usage:</b>
+ * If you just want to generate coordinate for a molecule (or reaction) you
+ * can use the following one-liner:
+ * <pre>
+ * new StructureDiagramGenerator().generateCoordinates(molecule);
+ * </pre>
+ * The older versions of the API suggested using the following a
+ * set/generate/get idiom but this performs an unnecessary (in most cases) copy.
  * <pre>
  * StructureDiagramGenerator sdg = new StructureDiagramGenerator();
- * sdg.setMolecule(someMolecule);
+ * sdg.setMolecule(molecule); // cloned!
  * sdg.generateCoordinates();
- * IAtomContainer layedOutMol = sdg.getMolecule();
+ * molecule = sdg.getMolecule();
  * </pre>
- * 
- * <p>The method will fail if the molecule is disconnected. The
- * partitionIntoMolecules(AtomContainer) can help here.
+ * This idiom only needs to be used when 'fixing' parts of an existing
+ * layout with {@link #setMolecule(IAtomContainer, boolean, Set, Set)}
+ * <br/>
  *
  * @author steinbeck
  * @cdk.created 2004-02-02
@@ -100,24 +111,62 @@ import java.util.Set;
  * @cdk.keyword 2D-coordinates
  * @cdk.keyword Coordinate generation, 2D
  * @cdk.dictref blue-obelisk:layoutMolecule
- * @cdk.module sdg
- * @cdk.githash
  * @cdk.bug 1536561
  * @cdk.bug 1788686
- * @see org.openscience.cdk.graph.ConnectivityChecker#partitionIntoMolecules(IAtomContainer)
  */
 public class StructureDiagramGenerator {
 
-    public static final double RAD_30 = Math.toRadians(-30);
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(StructureDiagramGenerator.class);
-    public static final double       DEFAULT_BOND_LENGTH = 1.5;
+    static final double DEFAULT_BOND_LENGTH           = 1.5;
+    static final double SGROUP_BRACKET_PADDING_FACTOR = 0.5;
+    private static final Vector2d                   DEFAULT_BOND_VECTOR      = new Vector2d(0, 1);
+    private static final IdentityTemplateLibrary    DEFAULT_TEMPLATE_LIBRARY = IdentityTemplateLibrary.loadFromResource("custom-templates.smi")
+                                                                                                   .add(IdentityTemplateLibrary.loadFromResource("chebi-ring-templates.smi"));
+    private static final double                     RAD_30                   = Math.toRadians(-30);
+    private static final ILoggingTool               logger                   = LoggingToolFactory.createLoggingTool(StructureDiagramGenerator.class);
+
+    public static final Comparator<IAtomContainer> COMPONENT_ORDER = new Comparator<IAtomContainer>() {
+
+        int netCharge(IAtomContainer mol) {
+            int charge = 0;
+            for (IAtom atom : mol.atoms()) {
+                if (atom.getFormalCharge() != null)
+                    charge += atom.getFormalCharge();
+            }
+            return charge;
+        }
+
+        @Override
+        public int compare(IAtomContainer o1, IAtomContainer o2) {
+
+            // for laying out R-Groups we want the root structure first
+            // followed by R1, R2, R3, etc... the labels are annotated
+            // on the atoms
+            if (o1.getAtomCount() > 0 && o2.getAtomCount() > 0) {
+                String label1 = getRgrpLabel(o1);
+                String label2 = getRgrpLabel(o2);
+                if (label1 != null && label2 != null)
+                    return label1.compareTo(label2);
+                int cmp = Boolean.compare(label1 != null, label2 != null);
+                if (cmp != 0)
+                    return cmp;
+            }
+
+            // net charge +ve => -ve
+            int cmp = Integer.compare(netCharge(o1), netCharge(o2));
+            if (cmp != 0)
+                return -cmp;
+
+            // used to sort by size big to small
+            return 0; // return Integer.compare(o2.getBondCount(), o1.getBondCount());
+        }
+    };
 
     private IAtomContainer molecule;
     private IRingSet       sssr;
     private final double bondLength = DEFAULT_BOND_LENGTH;
     private Vector2d firstBondVector;
-    private RingPlacer       ringPlacer          = new RingPlacer();
-    private AtomPlacer       atomPlacer          = new AtomPlacer();
+    private final RingPlacer       ringPlacer          = new RingPlacer();
+    private final AtomPlacer       atomPlacer          = new AtomPlacer();
     private MacroCycleLayout macroPlacer         = null;
     private List<IRingSet>   ringSystems         = null;
     private Set<IAtom>       afix                = null;
@@ -134,9 +183,7 @@ public class StructureDiagramGenerator {
      */
     private IdentityTemplateLibrary identityLibrary;
 
-    public static  Vector2d                DEFAULT_BOND_VECTOR      = new Vector2d(0, 1);
-    private static IdentityTemplateLibrary DEFAULT_TEMPLATE_LIBRARY = IdentityTemplateLibrary.loadFromResource("custom-templates.smi")
-                                                                                             .add(IdentityTemplateLibrary.loadFromResource("chebi-ring-templates.smi"));
+
 
 
     /**
@@ -179,6 +226,199 @@ public class StructureDiagramGenerator {
     }
 
     /**
+     * We will be caching coordinates on a substructure {@link Pattern} which
+     * is passed int. To ensure consistent behaviour in a multithreading
+     * environment we use a static global lock.
+     */
+    private static final ReadWriteLock RWLOCK = new ReentrantReadWriteLock();
+
+    private static Map<IChemObject, IChemObject> getFirstMapping(IAtomContainer mol, Pattern pattern) {
+        if (mol == null) return null;
+        Iterator<Map<IChemObject, IChemObject>> iterator = pattern.matchAll(mol).toAtomBondMap().iterator();
+        return iterator.hasNext() ? iterator.next() : null;
+    }
+
+    // determine out actual template part, if an atom is in a chain
+    // in the pattern but a ring in the full molecule we should not
+    // use the coordinates
+    private static IAtomContainer findPartToAlign(IAtomContainer mol, IAtomContainer cpy) {
+        Cycles.markRingAtomsAndBonds(mol);
+        for (IAtom atom : cpy.atoms())
+            atom.setFlag(IChemObject.VISITED, atom.isInRing());
+        Cycles.markRingAtomsAndBonds(cpy);
+        Set<IAtom> remove = new HashSet<>();
+        for (IAtom atom : cpy.atoms()) {
+            if (!atom.isInRing() && atom.getFlag(IChemObject.VISITED) && atom.getBondCount() > 1)
+                remove.add(atom);
+        }
+        for (IAtom atom : remove)
+            cpy.removeAtom(atom);
+
+        // largest connect component only
+        if (!ConnectivityChecker.isConnected(cpy)) {
+            IAtomContainer best = null;
+            for (IAtomContainer part : ConnectivityChecker.partitionIntoMolecules(cpy)) {
+                if (best == null || part.getBondCount() > best.getBondCount())
+                    best = part;
+            }
+            cpy = best;
+            assert cpy != null;
+        }
+        return cpy;
+    }
+
+    /**
+     * Generate coordinates aligned to a reference based on the provided
+     * pattern. The pattern is matched against both the input and reference
+     * molecules. The reference coordinates are generated and scaled
+     * accordingly if needed. The part of the pattern which can be aligned
+     * (consistent ring flags) is then copied and fixed in place before laying
+     * out the rest of the molecule.
+     * <br/>
+     * Note: An internal read/write lock is used to ensure consistency in
+     * threaded environments.
+     *
+     * @param mol     molecule
+     * @param ref     reference molecule (may be null)
+     * @param pattern the substructure pattern to match
+     * @throws CDKException there was a problem generating the layout
+     */
+    public final void generateAlignedCoordinates(IAtomContainer mol, IAtomContainer ref, Pattern pattern) throws CDKException {
+        Set<IAtom> afix = new HashSet<>();
+
+        Map<IChemObject, IChemObject> molMapping = getFirstMapping(mol, pattern);
+        Map<IChemObject, IChemObject> refMapping = getFirstMapping(ref, pattern);
+
+        if (refMapping != null) {
+            if (!GeometryUtil.has2DCoordinates(ref)) {
+                try {
+                    RWLOCK.writeLock().lock();
+                    generateCoordinates(ref);
+                } finally {
+                    RWLOCK.writeLock().unlock();
+                }
+            }
+
+            // rescale if needed
+            if (Math.abs(GeometryUtil.getBondLengthMedian(ref) - bondLength) > 0.1) {
+                try {
+                    RWLOCK.writeLock().lock();
+                    GeometryUtil.scaleMolecule(ref,
+                                               bondLength / GeometryUtil.getBondLengthMedian(ref));
+                } finally {
+                    RWLOCK.writeLock().unlock();
+                }
+            }
+        }
+
+        if (molMapping != null) {
+            IAtomContainer cpy = mol.getBuilder().newAtomContainer();
+            Set<IChemObject> include = new HashSet<>(molMapping.values());
+            AtomContainerManipulator.copy(cpy, mol, include::contains, include::contains);
+            cpy = findPartToAlign(mol, cpy);
+
+            for (IAtom atom : cpy.atoms())
+                afix.add(atom);
+
+            // Nothing to align to
+            if (afix.size() <= 1) {
+                Cycles.markRingAtomsAndBonds(mol);
+                setMolecule(mol, false);
+                generateCoordinates();
+                return;
+            }
+
+            // initialize any coordinates that are store in the pattern if
+            // there was no reference molecule provided (i.e. they have been
+            // cached for substructure layout)
+            if (refMapping == null) {
+                try {
+                    RWLOCK.readLock().lock();
+                    for (Map.Entry<IChemObject, IChemObject> e : molMapping.entrySet()) {
+                        if (!(e.getKey() instanceof IAtom))
+                            continue;
+                        IAtom key = ((IAtom) e.getKey());
+                        IAtom val = ((IAtom) e.getValue());
+                        if (key.getPoint2d() != null)
+                            val.setPoint2d(new Point2d(key.getPoint2d()));
+                        else
+                            val.setPoint2d(null);
+                    }
+                } finally {
+                    RWLOCK.readLock().unlock();
+                }
+            } else {
+                for (Map.Entry<IChemObject, IChemObject> e : molMapping.entrySet()) {
+                    if (!(e.getKey() instanceof IAtom))
+                        continue;
+                    IAtom refAtom = (IAtom)refMapping.get(e.getKey());
+                    IAtom molAtom = (IAtom)e.getValue();
+                    // maybe need the compatibility check here
+                    if (refAtom.getPoint2d() != null && afix.contains(molAtom))
+                        molAtom.setPoint2d(new Point2d(refAtom.getPoint2d()));
+                    else
+                        molAtom.setPoint2d(null);
+                }
+            }
+
+            if (!GeometryUtil.has2DCoordinates(cpy)) {
+                setMolecule(cpy, false);
+                generateCoordinates();
+            } else {
+                // if there is already coordinates, make sure the scaled is correct 
+                if (Math.abs(GeometryUtil.getBondLengthMedian(cpy) - bondLength) > 0.1) {
+                    try {
+                        RWLOCK.writeLock().lock();
+                        GeometryUtil.scaleMolecule(cpy,
+                                                   bondLength / GeometryUtil.getBondLengthMedian(cpy));
+                    } finally {
+                        RWLOCK.writeLock().unlock();
+                    }
+                }
+            }
+
+            // backup coordinates for future calls
+            if (refMapping == null) {
+                try {
+                    RWLOCK.writeLock().lock();
+                    for (Map.Entry<IChemObject, IChemObject> e : molMapping.entrySet()) {
+                        if (!(e.getKey() instanceof IAtom))
+                            continue;
+                        IAtom key = (IAtom) e.getKey();
+                        IAtom val = (IAtom) e.getValue();
+                        if (val.getPoint2d() != null) {
+                            key.setPoint2d(new Point2d(val.getPoint2d()));
+                        }
+                    }
+                } finally {
+                    RWLOCK.writeLock().unlock();
+                }
+            }
+        }
+
+        // reset the ring flags and generate the rest
+        Cycles.markRingAtomsAndBonds(mol);
+        setMolecule(mol, false, afix, Collections.emptySet());
+        generateCoordinates();
+    }
+
+
+    /**
+     * Generate coordinates aligned, the atoms in substructure pattern is used to
+     * cache/provide the coordinates. If no coordinates are present the
+     * substructure from the molecule is generated first and its coordinates
+     * cached. If an atom in the
+     *
+     * @param mol     molecule
+     * @param pattern the substructure pattern to match (will be modified)
+     * @throws CDKException there was a problem generating the layout
+     */
+    public final void generateAlignedCoordinates(IAtomContainer mol, Pattern pattern) throws CDKException {
+        generateAlignedCoordinates(mol, null, pattern);
+    }
+
+
+    /**
      * <p>Convenience method to generate 2D coordinates for a reaction. If atom-atom
      * maps are present on a reaction, the substructures are automatically aligned.</p>
      * <p>This feature can be disabled by changing the {@link #setAlignMappedReaction(boolean)}</p>
@@ -189,18 +429,22 @@ public class StructureDiagramGenerator {
     public final void generateCoordinates(final IReaction reaction) throws CDKException {
 
         // layout products and agents
-        for (IAtomContainer mol : reaction.getProducts().atomContainers())
-            generateCoordinates(mol);
+        for (IAtomContainer mol : reaction.getProducts().atomContainers()) {
+            if (!GeometryUtil.has2DCoordinates(mol))
+                generateCoordinates(mol);
+        }
+        List<IAtomContainer> leftSide = new ArrayList<>();
+        for (IAtomContainer mol : reaction.getReactants().atomContainers())
+            leftSide.add(mol);
         for (IAtomContainer mol : reaction.getAgents().atomContainers())
-            generateCoordinates(mol);
+            leftSide.add(mol);
 
         // do not align = simple layout of reactants
         if (alignMappedReaction) {
             final Set<IBond> mapped = ReactionManipulator.findMappedBonds(reaction);
+            Map<Integer, List<Map<Integer, IAtom>>> refmap = new HashMap<>();
 
-            Multimap<Integer, Map<Integer, IAtom>> refmap = HashMultimap.create();
-
-            for (IAtomContainer mol : reaction.getProducts().atomContainers()) {
+            for (IAtomContainer mol : reaction.getProducts()) {
                 Cycles.markRingAtomsAndBonds(mol);
                 final ConnectedComponents cc = new ConnectedComponents(GraphUtil.toAdjListSubgraph(mol, mapped));
                 final IAtomContainerSet parts = ConnectivityChecker.partitionIntoMolecules(mol, cc.components());
@@ -211,9 +455,9 @@ public class StructureDiagramGenerator {
                     final Map<Integer, IAtom> map = new HashMap<>();
                     for (IAtom atom : part.atoms()) {
                         // safe as substructure should only be mapped bonds and therefore atoms!
-                        int idx = atom.getProperty(CDKConstants.ATOM_ATOM_MAPPING);
+                        int idx = atom.getMapIdx();
                         if (map.put(idx, atom) == null)
-                            refmap.put(idx, map);
+                            refmap.computeIfAbsent(idx, k -> new ArrayList<>()).add(map);
                     }
                 }
             }
@@ -221,7 +465,7 @@ public class StructureDiagramGenerator {
             Map<IAtom,IAtom> afix = new HashMap<>();
             Set<IBond>       bfix = new HashSet<>();
 
-            for (IAtomContainer mol : reaction.getReactants().atomContainers()) {
+            for (IAtomContainer mol : leftSide) {
                 Cycles.markRingAtomsAndBonds(mol);
                 final ConnectedComponents cc = new ConnectedComponents(GraphUtil.toAdjListSubgraph(mol, mapped));
                 final IAtomContainerSet parts = ConnectivityChecker.partitionIntoMolecules(mol, cc.components());
@@ -240,12 +484,12 @@ public class StructureDiagramGenerator {
 
                 if (largest != null && largest.getAtomCount() > 1) {
 
-                    int idx = largest.getAtom(0).getProperty(CDKConstants.ATOM_ATOM_MAPPING);
+                    int idx = largest.getAtom(0).getMapIdx();
 
                     // select the largest and use those coordinates
-                    Map<Integer, IAtom> reference = select(refmap.get(idx));
+                    Map<Integer, IAtom> reference = select(refmap.getOrDefault(idx, Collections.emptyList()));
                     for (IAtom atom : largest.atoms()) {
-                        idx = atom.getProperty(CDKConstants.ATOM_ATOM_MAPPING);
+                        idx = atom.getMapIdx();
                         final IAtom src = reference.get(idx);
                         if (src == null) continue;
                         if (!aggresive) {
@@ -286,6 +530,7 @@ public class StructureDiagramGenerator {
                             }
                         }
                     } else {
+
                         for (IBond bond : mol.bonds()) {
                             if (afix.containsKey(bond.getBegin()) && afix.containsKey(bond.getEnd())) {
                                 // only fix bonds that match their ring membership status
@@ -294,7 +539,7 @@ public class StructureDiagramGenerator {
                                 for (IAtomContainer product : reaction.getProducts().atomContainers()) {
                                     IBond srcBond = product.getBond(srcBeg, srcEnd);
                                     if (srcBond != null) {
-                                        if (srcBond.isInRing() == bond.isInRing())
+                                        if (srcBond.isInRing() == bond.isInRing() || !bond.isInRing())
                                             bfix.add(bond);
                                         break;
                                     }
@@ -336,8 +581,8 @@ public class StructureDiagramGenerator {
                             int bestSize = 0;
                             for (int part = 1; part <= numParts; part++) {
                                 int size = 0;
-                                for (int i = 0; i < parts2.length; i++) {
-                                    if (parts2[i] == part)
+                                for (int j : parts2) {
+                                    if (j == part)
                                         ++size;
                                 }
                                 if (size > bestSize) {
@@ -361,20 +606,14 @@ public class StructureDiagramGenerator {
             }
 
             // reorder reactants such that they are in the same order they appear on the right
-            reaction.getReactants().sortAtomContainers(new Comparator<IAtomContainer>() {
-                @Override
-                public int compare(IAtomContainer a, IAtomContainer b) {
-                    Point2d aCenter = GeometryUtil.get2DCenter(a);
-                    Point2d bCenter = GeometryUtil.get2DCenter(b);
-                    if (aCenter == null || bCenter == null)
-                        return 0;
-                    else
-                        return Double.compare(aCenter.x, bCenter.x);
-                }
+            reaction.getReactants().sortAtomContainers((a, b) -> {
+                Point2d aCenter = GeometryUtil.get2DCenter(a);
+                Point2d bCenter = GeometryUtil.get2DCenter(b);
+                return Double.compare(aCenter.x, bCenter.x);
             });
 
         } else {
-            for (IAtomContainer mol : reaction.getReactants().atomContainers())
+            for (IAtomContainer mol : leftSide)
                 generateCoordinates(mol);
         }
     }
@@ -389,7 +628,7 @@ public class StructureDiagramGenerator {
     }
 
     public void setMolecule(IAtomContainer mol, boolean clone) {
-        setMolecule(mol, clone, Collections.<IAtom>emptySet(), Collections.<IBond>emptySet());
+        setMolecule(mol, clone, Collections.emptySet(), Collections.emptySet());
     }
 
     /**
@@ -408,7 +647,7 @@ public class StructureDiagramGenerator {
             if (!afix.isEmpty() || !bfix.isEmpty())
                 throw new IllegalArgumentException("Laying out a cloned molecule, can't fix atom or bonds.");
             try {
-                this.molecule = (IAtomContainer) mol.clone();
+                this.molecule = mol.clone();
             } catch (CloneNotSupportedException e) {
                 logger.error("Should clone, but exception occurred: ", e.getMessage());
                 logger.debug(e);
@@ -428,14 +667,14 @@ public class StructureDiagramGenerator {
             }
 
             if (afixed) {
-                atom.setFlag(CDKConstants.ISPLACED, true);
-                atom.setFlag(CDKConstants.VISITED, true);
+                atom.setFlag(IChemObject.PLACED, true);
+                atom.setFlag(IChemObject.VISITED, true);
             } else {
                 atom.setPoint2d(null);
-                atom.setFlag(CDKConstants.ISPLACED, false);
-                atom.setFlag(CDKConstants.VISITED, false);
-                atom.setFlag(CDKConstants.ISINRING, false);
-                atom.setFlag(CDKConstants.ISALIPHATIC, false);
+                atom.setFlag(IChemObject.PLACED, false);
+                atom.setFlag(IChemObject.VISITED, false);
+                atom.setFlag(IChemObject.IN_RING, false);
+                atom.setFlag(IChemObject.ALIPHATIC, false);
             }
         }
         atomPlacer.setMolecule(this.molecule);
@@ -563,7 +802,7 @@ public class StructureDiagramGenerator {
         // delete single-bonded H's from
         //IAtom[] atoms = shallowCopy.getAtoms();
         for (IAtom curAtom : shallowCopy.atoms()) {
-            if (curAtom.getSymbol().equals("H")) {
+            if (curAtom.getAtomicNumber() == IElement.H) {
                 if (shallowCopy.getConnectedBondsCount(curAtom) < 2) {
                     shallowCopy.removeAtom(curAtom);
                     curAtom.setPoint2d(null);
@@ -604,6 +843,10 @@ public class StructureDiagramGenerator {
      */
     private void generateCoordinates(Vector2d firstBondVector, boolean isConnected, boolean isSubLayout) throws CDKException {
 
+        // defensive copy, vectors are mutable!
+        if (firstBondVector == DEFAULT_BOND_VECTOR)
+            firstBondVector = new Vector2d(firstBondVector);
+
         final int numAtoms = molecule.getAtomCount();
         final int numBonds = molecule.getBondCount();
         this.firstBondVector = firstBondVector;
@@ -629,10 +872,29 @@ public class StructureDiagramGenerator {
 
         // intercept fragment molecules and lay them out in a grid
         if (!isConnected) {
-            final IAtomContainerSet frags = ConnectivityChecker.partitionIntoMolecules(molecule);
-            if (frags.getAtomContainerCount() > 1) {
+            IAtomContainerSet frags = isSubLayout ? ConnectivityChecker.partitionIntoMolecules(molecule, true, true)
+                                                  : ConnectivityChecker.partitionIntoMolecules(molecule, false, false);
+
+            boolean multipart = frags.getAtomContainerCount() > 1;
+            if (!multipart && !isSubLayout) {
+                frags = ConnectivityChecker.partitionIntoMolecules(molecule, true, true);
+                multipart = frags.getAtomContainerCount() > 1;
+            }
+
+            if (multipart) {
                 IAtomContainer rollback = molecule;
-                generateFragmentCoordinates(molecule, toList(frags));
+
+                // root structure, R1, R2, R3 etc
+                // large => small (e.g. salt will appear on the right)
+                List<IAtomContainer> fragList = toList(frags);
+                fragList.sort(COMPONENT_ORDER);
+
+                if (isMarkush(fragList) && !isSubLayout) {
+                    layoutMarkush(molecule, fragList);
+                } else {
+                    layoutGrid(molecule, fragList, true);
+                }
+
                 // don't call set molecule as it wipes x,y coordinates!
                 // this looks like a self assignment but actually the fragment
                 // method changes this.molecule
@@ -676,8 +938,11 @@ public class StructureDiagramGenerator {
 
         // stereo must be after refinement (due to flipping!)
         if (!isSubLayout)
-            assignStereochem(molecule);
+            generateWedges(molecule);
+    }
 
+    private static boolean isMarkush(List<IAtomContainer> fragList) {
+        return getRgrpLabel(fragList.get(fragList.size() - 1)) != null;
     }
 
     /**
@@ -704,14 +969,14 @@ public class StructureDiagramGenerator {
             // no seeding needed as the molecule has atoms with coordinates, just calc rings if needed
             if (prepareRingSystems() > 0) {
                 for (IRingSet rset : ringSystems) {
-                    if (rset.getFlag(CDKConstants.ISPLACED)) {
+                    if (rset.getFlag(IChemObject.PLACED)) {
                         ringPlacer.placeRingSubstituents(rset, bondLength);
                     } else {
                         List<IRing> placed = new ArrayList<>();
                         List<IRing> unplaced = new ArrayList<>();
 
                         for (IAtomContainer ring : rset.atomContainers()) {
-                            if (ring.getFlag(CDKConstants.ISPLACED))
+                            if (ring.getFlag(IChemObject.PLACED))
                                 placed.add((IRing) ring);
                             else
                                 unplaced.add((IRing) ring);
@@ -737,7 +1002,7 @@ public class StructureDiagramGenerator {
                             placed.clear();
                             while (unplacedIter.hasNext()) {
                                 IRing ring = unplacedIter.next();
-                                if (ring.getFlag(CDKConstants.ISPLACED)) {
+                                if (ring.getFlag(IChemObject.PLACED)) {
                                     unplacedIter.remove();
                                     placed.add(ring);
                                 }
@@ -745,7 +1010,7 @@ public class StructureDiagramGenerator {
                         }
 
                         if (allPlaced(rset)) {
-                            rset.setFlag(CDKConstants.ISPLACED, true);
+                            rset.setFlag(IChemObject.PLACED, true);
                             ringPlacer.placeRingSubstituents(rset, bondLength);
                         }
                     }
@@ -758,7 +1023,7 @@ public class StructureDiagramGenerator {
             // We got our ring systems now choose the best one based on size and
             // number of heteroatoms
             RingPlacer.countHetero(ringSystems);
-            Collections.sort(ringSystems, RingPlacer.RING_COMPARATOR);
+            ringSystems.sort(RingPlacer.RING_COMPARATOR);
 
             int respect = layoutRingSet(firstBondVector, ringSystems.get(0));
 
@@ -794,7 +1059,7 @@ public class StructureDiagramGenerator {
             logger.debug("Found linear chain of length " + longestChain.getAtomCount());
             logger.debug("Setting coordinated of first atom to 0,0");
             longestChain.getAtom(0).setPoint2d(new Point2d(0, 0));
-            longestChain.getAtom(0).setFlag(CDKConstants.ISPLACED, true);
+            longestChain.getAtom(0).setFlag(IChemObject.PLACED, true);
 
             // place the first bond such that the whole chain will be horizontally alligned on the x axis
             logger.debug("Attempting to place the first bond such that the whole chain will be horizontally alligned on the x axis");
@@ -859,7 +1124,17 @@ public class StructureDiagramGenerator {
         return numRings;
     }
 
-    private void assignStereochem(IAtomContainer molecule) {
+    /**
+     * Generate up/down wedges bonds for a molecule which already has
+     * coordinates assigned. This function is called automatically at the
+     * end of a layout. Any existing wedges are removed.
+     * <br>
+     * Note for inorganic stereochemistry (octahedral etc) this function
+     * may make some adjustments to the coordinates to depict things correctly.
+     *
+     * @param molecule the molecule
+     */
+    public void generateWedges(IAtomContainer molecule) {
         // XXX: can't check this unless we store 'unspecified' double bonds
         // if (!molecule.stereoElements().iterator().hasNext())
         //     return;
@@ -869,6 +1144,21 @@ public class StructureDiagramGenerator {
         NonplanarBonds.assign(molecule);
     }
 
+    /**
+     * Generate up/down wedges bonds for all molecules in a reaction which
+     * already has coordinates assigned. This function is called automatically
+     * at the end of a layout. Any existing wedges are removed.
+     * <br>
+     * Note for inorganic stereochemistry (octahedral etc) this function
+     * may make some adjustments to the coordinates to depict things correctly.
+     *
+     * @param reaction the molecule
+     */
+    public void generateWedges(IReaction reaction) {
+        for (IAtomContainer molecule : reaction)
+            generateWedges(molecule);
+    }
+
     private void refinePlacement(IAtomContainer molecule) {
         AtomPlacer.prioritise(molecule);
 
@@ -876,21 +1166,21 @@ public class StructureDiagramGenerator {
         LayoutRefiner refiner = new LayoutRefiner(molecule, afix, bfix);
         refiner.refine();
 
+        // check for attachment points, these override the direction which we rorate structures
+        IAtom begAttach = null;
+        for (IAtom atom : molecule.atoms()) {
+            if (atom instanceof IPseudoAtom && ((IPseudoAtom) atom).getAttachPointNum() == 1) {
+                begAttach = atom;
+                selectOrientation = true;
+                break;
+            }
+        }
+
         // choose the orientation in which to display the structure
         if (selectOrientation) {
-
-            // check for attachment points, these override the direction which we rorate structures
-            IAtom begAttach = null;
-            for (IAtom atom : molecule.atoms()) {
-                if (atom instanceof IPseudoAtom && ((IPseudoAtom) atom).getAttachPointNum() == 1) {
-                    begAttach = atom;
-                    break;
-                }
-            }
-
-            // no attachment point, rorate to maximise horizontal spread etc.
+            // no attachment point, rotate to maximise horizontal spread etc.
             if (begAttach == null) {
-                selectOrientation(molecule, 2 * DEFAULT_BOND_LENGTH, 1);
+                selectOrientation(molecule, DEFAULT_BOND_LENGTH, 1);
             }
             // use attachment point bond to rotate
             else {
@@ -944,6 +1234,80 @@ public class StructureDiagramGenerator {
     }
 
     /**
+     * Calculates a histogram of bond directions, this allows us to select an
+     * orientation that has bonds at nice angles (e.g. 60/120 deg). The limit
+     * parameter is used to quantize the vectors within a range. For example
+     * a limit of 60 will fill the histogram 0..59 and Bond's orientated at 0,
+     * 60, 120 degrees will all be counted in the 0 bucket.
+     *
+     * @param bonds molecule
+     * @param counts the histogram is stored here, will be cleared
+     * @param lim wrap angles to the (180 max)
+     * @return number of aligned bonds
+     */
+    private static void calcDirectionHistogram(Iterable<IBond> bonds,
+                                               int[] counts,
+                                               int lim) {
+        if (lim > 180)
+            throw new IllegalArgumentException("limit must be ≤ 180");
+        Arrays.fill(counts, 0);
+        for (IBond bond : bonds) {
+            Point2d beg = bond.getBegin().getPoint2d();
+            Point2d end = bond.getEnd().getPoint2d();
+            Vector2d vec = new Vector2d(end.x - beg.x, end.y - beg.y);
+            if (vec.x < 0)
+                vec.negate();
+            double angle = Math.PI/2 + Math.atan2(vec.y, vec.x);
+            counts[(int)(Math.round(Math.toDegrees(angle))%lim)]++;
+        }
+    }
+
+    private List<IBond> getNonContractedNonTerminalBonds(IAtomContainer mol, boolean includeRingBonds) {
+        List<Sgroup> sgroups = mol.getProperty(CDKConstants.CTAB_SGROUPS);
+        List<IBond> result = new ArrayList<>();
+        Set<IBond> xbonds = new HashSet<>();
+        if (sgroups != null) {
+            Set<IAtom> hidden = new HashSet<>();
+            for (Sgroup sgroup : sgroups) {
+                if (sgroup.getType() == SgroupType.CtabAbbreviation) {
+                    hidden.addAll(sgroup.getAtoms());
+                    xbonds.addAll(sgroup.getBonds());
+                }
+            }
+            for (IBond bond : mol.bonds()) {
+                if (hidden.contains(bond.getBegin()) &&
+                    hidden.contains(bond.getEnd()) &&
+                    !xbonds.contains(bond))
+                    continue;
+                int begDeg = mol.getConnectedBondsCount(bond.getBegin());
+                int endDeg = mol.getConnectedBondsCount(bond.getEnd());
+                if ((begDeg == 1 && endDeg > 2) ||
+                    (endDeg == 1 && begDeg > 2))
+                    continue;
+                if (!includeRingBonds && bond.isInRing() || begDeg != 2 && endDeg != 2)
+                    continue;
+                result.add(bond);
+            }
+        } else {
+            for (IBond bond : mol.bonds()) {
+                int begDeg = mol.getConnectedBondsCount(bond.getBegin());
+                int endDeg = mol.getConnectedBondsCount(bond.getEnd());
+                if ((begDeg == 1 && endDeg > 2) ||
+                    (endDeg == 1 && begDeg > 2))
+                    continue;
+                if (!includeRingBonds && bond.isInRing() || begDeg != 2 && endDeg != 2)
+                    continue;
+                result.add(bond);
+            }
+            if (result.isEmpty()) {
+                for (IBond bond : mol.bonds())
+                    result.add(bond);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Select the global orientation of the layout. We click round at 30 degree increments
      * and select the orientation that a) is the widest or b) has the most bonds aligned to
      * +/- 30 degrees {@cdk.cite Clark06}.
@@ -952,32 +1316,66 @@ public class StructureDiagramGenerator {
      * @param widthDiff parameter at which to consider orientations equally good (wide select)
      * @param alignDiff parameter at which we consider orientations equally good (bond align select)
      */
-    private static void selectOrientation(IAtomContainer mol, double widthDiff, int alignDiff) {
-        double[] minmax = GeometryUtil.getMinMax(mol);
+    private void selectOrientation(IAtomContainer mol, double widthDiff, int alignDiff) {
+
+        // only select based on non-contracted non-terminal bonds
+        List<IBond> bonds = getNonContractedNonTerminalBonds(mol, true);
+        if (bonds.isEmpty())
+            return;
+
+        double[] minmax  = GeometryUtil.getMinMax(mol);
         Point2d pivot = new Point2d(minmax[0] + ((minmax[2] - minmax[0]) / 2),
                                     minmax[1] + ((minmax[3] - minmax[1]) / 2));
 
+        // n=1
+        if (bonds.size() == 1) {
+            IBond bond = bonds.get(0);
+            Point2d beg = bond.getBegin().getPoint2d();
+            Point2d end = bond.getEnd().getPoint2d();
+            double dx = beg.x - end.x;
+            double dy = beg.y - end.y;
+            GeometryUtil.rotate(mol, pivot, Math.atan2(dx, dy) + Math.PI/2);
+            return;
+        }
+
+        int[] dirhist = new int[180];
+
+        // initial alignment to snapping bonds 60 degrees
+        calcDirectionHistogram(bonds, dirhist, 60);
+        int max = 0;
+        for (int i = 1; i < dirhist.length; i++)
+            if (dirhist[i] > dirhist[max])
+                max = i;
+
+        // only apply if 50% of the bonds are pointing the same 'wrapped'
+        // direction, max=0 means already aligned
+        if (max != 0 && dirhist[max]/(double)mol.getBondCount() > 0.5)
+            GeometryUtil.rotate(mol, pivot, Math.toRadians(60.0-max));
 
         double maxWidth = minmax[2] - minmax[0];
-        int maxAligned = countAlignedBonds(mol);
+        double begWidth = maxWidth;
+        calcDirectionHistogram(bonds, dirhist, 180);
+        int maxAligned = dirhist[60]+dirhist[120];
 
         Point2d[] coords = new Point2d[mol.getAtomCount()];
         for (int i = 0; i < mol.getAtomCount(); i++)
             coords[i] = new Point2d(mol.getAtom(i).getPoint2d());
 
-        final double step = Math.toRadians(30);
-        final int numSteps = (360 / 30) - 1;
-        for (int i = 0; i < numSteps; i++) {
+        double step = Math.PI/3;
+        double tau = 2*Math.PI;
+        double total = 0;
 
+        while (total < tau) {
+            total += step;
             GeometryUtil.rotate(mol, pivot, step);
             minmax = GeometryUtil.getMinMax(mol);
 
             double width = minmax[2] - minmax[0];
-            double delta = Math.abs(width - maxWidth);
+            double delta = Math.abs(width - begWidth);
 
             // if this orientation is significantly wider than the
             // best so far select it
-            if (delta > widthDiff && width > maxWidth) {
+            if (delta >= widthDiff && width > maxWidth) {
                 maxWidth = width;
                 for (int j = 0; j < mol.getAtomCount(); j++)
                     coords[j] = new Point2d(mol.getAtom(j).getPoint2d());
@@ -985,9 +1383,12 @@ public class StructureDiagramGenerator {
             // width is not significantly better or worse so check
             // the number of bonds aligned to 30 deg (aesthetics)
             else if (delta <= widthDiff) {
-                int aligned = countAlignedBonds(mol);
+                calcDirectionHistogram(bonds, dirhist, 180);
+                int aligned = dirhist[60]+dirhist[120];
                 int alignDelta = aligned - maxAligned;
-                if (alignDelta > alignDiff || (alignDelta == 0 && width > maxWidth)) {
+                if (alignDelta > alignDiff ||
+                        aligned == bonds.size() ||
+                        (alignDelta == 0 && width > maxWidth)) {
                     maxAligned = aligned;
                     maxWidth = width;
                     for (int j = 0; j < mol.getAtomCount(); j++)
@@ -999,34 +1400,6 @@ public class StructureDiagramGenerator {
         // set the best coordinates we found
         for (int i = 0; i < mol.getAtomCount(); i++)
             mol.getAtom(i).setPoint2d(coords[i]);
-    }
-
-    /**
-     * Count the number of bonds aligned to 30 degrees.
-     *
-     * @param mol molecule
-     * @return number of aligned bonds
-     */
-    private static int countAlignedBonds(IAtomContainer mol) {
-        final double ref = Math.toRadians(30);
-        final double diff = Math.toRadians(1);
-        int count = 0;
-        for (IBond bond : mol.bonds()) {
-            Point2d beg = bond.getBegin().getPoint2d();
-            Point2d end = bond.getEnd().getPoint2d();
-            if (beg.x > end.x) {
-                Point2d tmp = beg;
-                beg = end;
-                end = tmp;
-            }
-            Vector2d vec = new Vector2d(end.x - beg.x, end.y - beg.y);
-            double angle = Math.atan2(vec.y, vec.x);
-
-            if (Math.abs(angle) - ref < diff) {
-                count++;
-            }
-        }
-        return count;
     }
 
     private final double adjustForHydrogen(IAtom atom, IAtomContainer mol) {
@@ -1072,7 +1445,7 @@ public class StructureDiagramGenerator {
      * @param mol molecule
      * @return the min/max x and y bounds
      */
-    private final double[] getAprxBounds(IAtomContainer mol) {
+    private double[] getAprxBounds(IAtomContainer mol) {
         double maxX = -Double.MAX_VALUE;
         double maxY = -Double.MAX_VALUE;
         double minX = Double.MAX_VALUE;
@@ -1105,26 +1478,73 @@ public class StructureDiagramGenerator {
         minmax[2] = maxX;
         minmax[3] = maxY;
         double minXAdjust = adjustForHydrogen(boundedAtoms[0], mol);
-        double maxXAdjust = adjustForHydrogen(boundedAtoms[1], mol);
+        double maxXAdjust = adjustForHydrogen(boundedAtoms[2], mol);
         if (minXAdjust < 0) minmax[0] += minXAdjust;
-        if (maxXAdjust > 0) minmax[1] += maxXAdjust;
+        if (maxXAdjust > 0) minmax[2] += maxXAdjust;
+
+        List<Sgroup> sgroups = mol.getProperty(CDKConstants.CTAB_SGROUPS);
+        if (sgroups != null && !sgroups.isEmpty()) {
+            // TODO better logic we can place the bracket then work out the
+            //  bounds!
+            boolean hasBracket = false;
+            for (Sgroup sgroup : sgroups) {
+                if (!hasBrackets(sgroup))
+                    continue;
+                hasBracket = true;
+            }
+            if (hasBracket) {
+                // consider potential Sgroup brackets
+                minmax[0] -= SGROUP_BRACKET_PADDING_FACTOR * bondLength;
+                minmax[1] -= SGROUP_BRACKET_PADDING_FACTOR * bondLength;
+                minmax[2] += SGROUP_BRACKET_PADDING_FACTOR * bondLength;
+                minmax[3] += SGROUP_BRACKET_PADDING_FACTOR * bondLength;
+            }
+        }
+
+        if (minmax[2] - minmax[0] < bondLength) {
+            minmax[2] += bondLength/2;
+            minmax[0] -= bondLength/2;
+        }
+        if (minmax[3] - minmax[1] < bondLength) {
+            minmax[3] += bondLength/2;
+            minmax[1] -= bondLength/2;
+        }
+
         return minmax;
     }
 
-    private void generateFragmentCoordinates(IAtomContainer mol, List<IAtomContainer> frags) throws CDKException {
+    private double[] getAprxBounds(List<IAtomContainer> mols) {
+        double maxX = -Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        for (IAtomContainer mol : mols) {
+            double[] bounds = getAprxBounds(mol);
+            minX = Math.min(bounds[0], minX);
+            minY = Math.min(bounds[1], minY);
+            maxX = Math.max(bounds[2], maxX);
+            maxY = Math.max(bounds[3], maxY);
+        }
+        double[] minmax = new double[4];
+        minmax[0] = minX;
+        minmax[1] = minY;
+        minmax[2] = maxX;
+        minmax[3] = maxY;
+        return minmax;
+    }
+
+    private void layoutGrid(IAtomContainer mol,
+                            List<IAtomContainer> frags,
+                            boolean finalize) throws CDKException {
+        // FIXME: This may not be correct any more
         final List<IBond> ionicBonds = makeIonicBonds(frags);
 
+        // add tmp bonds and re-fragment
+        int rollback = mol.getBondCount();
         if (!ionicBonds.isEmpty()) {
-            // add tmp bonds and re-fragment
-            int rollback = mol.getBondCount();
             for (IBond bond : ionicBonds)
                 mol.addBond(bond);
             frags = toList(ConnectivityChecker.partitionIntoMolecules(mol));
-
-            // rollback temporary bonds
-            int numBonds = mol.getBondCount();
-            while (numBonds-- > rollback)
-                mol.removeBond(numBonds);
         }
 
         List<double[]> limits = new ArrayList<>();
@@ -1137,7 +1557,7 @@ public class StructureDiagramGenerator {
         // generate the sub-layouts
         for (IAtomContainer fragment : frags) {
             setMolecule(fragment, false, afix, bfix);
-            generateCoordinates(DEFAULT_BOND_VECTOR, true, true);
+            generateCoordinates(DEFAULT_BOND_VECTOR, false, true);
             lengthenIonicBonds(ionicBonds, fragment);
             limits.add(getAprxBounds(fragment));
         }
@@ -1158,7 +1578,7 @@ public class StructureDiagramGenerator {
         for (int i = 0; i < numFragments; i++) {
             // +1 because first offset is always 0
             int col = 1 + i % nCol;
-            int row = 1 + i / nCol;
+            int row = i / nCol;
 
             double[] minmax = limits.get(i);
             final double width = spacing + (minmax[2] - minmax[0]);
@@ -1173,12 +1593,12 @@ public class StructureDiagramGenerator {
         // cumulative counts
         for (int i = 1; i < xOffsets.length; i++)
             xOffsets[i] += xOffsets[i - 1];
-        for (int i = 1; i < yOffsets.length; i++)
-            yOffsets[i] += yOffsets[i - 1];
+        // note: y-axis has 0 at the bottom
+        for (int i = yOffsets.length - 2; i >= 0; i--)
+            yOffsets[i] += yOffsets[i + 1];
 
-        // translate the molecules, note need to flip y axis
         for (int i = 0; i < limits.size(); i++) {
-            final int row = nRow - (i / nCol) - 1;
+            final int row = i / nCol;
             final int col = i % nCol;
             Point2d dest = new Point2d((xOffsets[col] + xOffsets[col + 1]) / 2,
                                        (yOffsets[row] + yOffsets[row + 1]) / 2);
@@ -1188,14 +1608,86 @@ public class StructureDiagramGenerator {
                                      dest.x - curr.x, dest.y - curr.y);
         }
 
+        // finalize
+        if (finalize) {
+            // correct double-bond stereo, this changes the layout and in reality
+            // should be done during the initial placement
+            if (mol.stereoElements().iterator().hasNext())
+                CorrectGeometricConfiguration.correct(mol);
+            generateWedges(mol);
+            finalizeLayout(mol);
+        }
+
+        // rollback temporary ionic bonds
+        int numBonds = mol.getBondCount();
+        while (numBonds-- > rollback)
+            mol.removeBond(numBonds);
+    }
+
+    private void layoutMarkush(IAtomContainer mol, List<IAtomContainer> parts) throws CDKException {
+
+        // the input fragments should already be sorted, Core structure < R1 < R2 < R3 etc
+        // we now partition them into sets and lay each one out in a grid
+        List<List<IAtomContainer>> groups = new ArrayList<>();
+        List<IAtomContainer> tmp = new ArrayList<>();
+        String currLabel = null;
+        for (IAtomContainer part : parts) {
+            String label = getRgrpLabel(part);
+            if (!Objects.equals(currLabel, label)) {
+                groups.add(tmp);
+                currLabel = label;
+                tmp = new ArrayList<>();
+            }
+            tmp.add(part);
+        }
+        if (!tmp.isEmpty())
+            groups.add(tmp);
+
+        List<double[]> bounds = new ArrayList<>();
+        for (List<IAtomContainer> group : groups) {
+            layoutGrid(mol, group, false);
+            bounds.add(getAprxBounds(group));
+        }
+
+        final double[] yOffsets = new double[groups.size() + 1];
+
+        // calc the max widths/height of each row, we also add some
+        // spacing
+        double spacing = bondLength;
+        for (int row=0; row<groups.size(); row++) {
+            double[] minmax = bounds.get(row);
+            final double width = spacing + (minmax[2] - minmax[0]);
+            final double height = spacing + (minmax[3] - minmax[1]);
+            if (height > yOffsets[row])
+                yOffsets[row] = height;
+        }
+
+        // cumulative counts
+        // note: y-axis has 0 at the bottom
+        for (int i = yOffsets.length - 2; i >= 0; i--)
+            yOffsets[i] += yOffsets[i + 1];
+
+        for (int row = 0; row < groups.size(); row++) {
+            Point2d dest = new Point2d(0, (yOffsets[row] + yOffsets[row + 1]) / 2);
+            double[] minmax = bounds.get(row);
+            Point2d curr = new Point2d((minmax[0] + minmax[2]) / 2, (minmax[1] + minmax[3]) / 2);
+            for (IAtomContainer part : groups.get(row)) {
+                GeometryUtil.translate2D(part, dest.x - curr.x, dest.y - curr.y);
+            }
+        }
+
         // correct double-bond stereo, this changes the layout and in reality
         // should be done during the initial placement
         if (mol.stereoElements().iterator().hasNext())
             CorrectGeometricConfiguration.correct(mol);
-
-        // finalize
-        assignStereochem(mol);
+        generateWedges(mol);
         finalizeLayout(mol);
+    }
+
+    private static String getRgrpLabel(IAtomContainer part) {
+        return part.isEmpty() ? null
+                              : part.getAtom(0)
+                                    .getProperty(CDKConstants.RGROUP_MEMBERSHIP);
     }
 
     private void lengthenIonicBonds(List<IBond> ionicBonds, IAtomContainer fragment) {
@@ -1437,8 +1929,8 @@ public class StructureDiagramGenerator {
             };
 
             // greedy selection
-            Collections.sort(posFrags, comparator);
-            Collections.sort(negFrags, comparator);
+            posFrags.sort(comparator);
+            negFrags.sort(comparator);
 
             for (IAtomContainer posFrag : posFrags)
                 cations.addAll(selectIons(posFrag, +1));
@@ -1456,6 +1948,11 @@ public class StructureDiagramGenerator {
         for (int i = 0; i < cations.size(); i++) {
             final IAtom beg = cations.get(i);
             final IAtom end = anions.get(i);
+
+            // do not create the ionic bond if the ions are D<3 - otherwise
+            // we are very likely to have an overlap
+            if (beg.getBondCount() > 2 || end.getBondCount() > 2)
+                continue;
 
             boolean unique = true;
             for (IBond bond : ionicBonds)
@@ -1492,7 +1989,9 @@ public class StructureDiagramGenerator {
      * @return list of fragments
      */
     private List<IAtomContainer> toList(IAtomContainerSet frags) {
-        return new ArrayList<>(FluentIterable.from(frags.atomContainers()).toList());
+        List<IAtomContainer> res = new ArrayList<>(frags.getAtomContainerCount());
+        frags.atomContainers().forEach(res::add);
+        return res;
     }
 
     /**
@@ -1565,7 +2064,7 @@ public class StructureDiagramGenerator {
                 for (int i = 0; i < ringSystem.getAtomCount(); i++) {
                     IAtom atom = ringSystem.getAtom(i);
                     atom.setPoint2d(container.getAtom(i).getPoint2d());
-                    atom.setFlag(CDKConstants.ISPLACED, true);
+                    atom.setFlag(IChemObject.PLACED, true);
                 }
                 return true;
             }
@@ -1582,7 +2081,7 @@ public class StructureDiagramGenerator {
      */
     private static boolean isHydrogen(IAtom atom) {
         if (atom.getAtomicNumber() != null) return atom.getAtomicNumber() == 1;
-        return "H".equals(atom.getSymbol());
+        return atom.getAtomicNumber() == IElement.H;
     }
 
     /**
@@ -1619,30 +2118,31 @@ public class StructureDiagramGenerator {
         final IRing first = RingSetManipulator.getMostComplexRing(rs);
 
         final boolean macro         = isMacroCycle(first, rs);
-        final boolean macroDbStereo = macro && first.stereoElements().iterator().hasNext();
         int result = 0;
 
         // Check for an exact match (identity) on the entire ring system
-        if (!macroDbStereo) {
-            if (lookupRingSystem(rs, molecule, rs.getAtomContainerCount() > 1)) {
+        if (lookupRingSystem(rs, molecule, rs.getAtomContainerCount() > 1)) {
+            if (hasCorrectDoubleBondConfig(first)) {
                 for (IAtomContainer container : rs.atomContainers())
-                    container.setFlag(CDKConstants.ISPLACED, true);
-                rs.setFlag(CDKConstants.ISPLACED, true);
+                    container.setFlag(IChemObject.PLACED, true);
+                rs.setFlag(IChemObject.PLACED, true);
                 return macro ? 2 : 1;
-            } else {
-                // attempt ring peeling and retemplate
-                final IRingSet core = getRingSetCore(rs);
-                if (core.getAtomContainerCount() > 0 &&
-                    core.getAtomContainerCount() < rs.getAtomContainerCount() &&
-                    lookupRingSystem(core, molecule, !macro || rs.getAtomContainerCount() > 1)) {
+            }
+        } else {
+            // attempt ring peeling and re-template
+            final IRingSet core = getRingSetCore(rs);
+            if (core.getAtomContainerCount() > 0 &&
+                core.getAtomContainerCount() < rs.getAtomContainerCount() &&
+                lookupRingSystem(core, molecule, !macro || rs.getAtomContainerCount() > 1)) {
+                if (hasCorrectDoubleBondConfig(first)) {
                     for (IAtomContainer container : core.atomContainers())
-                        container.setFlag(CDKConstants.ISPLACED, true);
+                        container.setFlag(IChemObject.PLACED, true);
                 }
             }
         }
 
         // Place the most complex ring at the origin of the coordinate system
-        if (!first.getFlag(CDKConstants.ISPLACED)) {
+        if (!first.getFlag(IChemObject.PLACED)) {
             IAtomContainer sharedAtoms = placeFirstBond(first.getBond(0), firstBondVector);
             if (!macro || !macroPlacer.layout(first, rs)) {
                 // de novo layout of ring as a regular polygon
@@ -1651,7 +2151,7 @@ public class StructureDiagramGenerator {
             } else {
                 result = 2;
             }
-            first.setFlag(CDKConstants.ISPLACED, true);
+            first.setFlag(IChemObject.PLACED, true);
         }
 
         // hint to RingPlacer
@@ -1664,7 +2164,7 @@ public class StructureDiagramGenerator {
         int thisRing = 0;
         IRing ring = first;
         do {
-            if (ring.getFlag(CDKConstants.ISPLACED)) {
+            if (ring.getFlag(IChemObject.PLACED)) {
                 ringPlacer.placeConnectedRings(rs, ring, RingPlacer.FUSED, bondLength);
                 ringPlacer.placeConnectedRings(rs, ring, RingPlacer.BRIDGED, bondLength);
                 ringPlacer.placeConnectedRings(rs, ring, RingPlacer.SPIRO, bondLength);
@@ -1679,6 +2179,17 @@ public class StructureDiagramGenerator {
         return result;
     }
 
+    private boolean hasCorrectDoubleBondConfig(IAtomContainer container) {
+        for (IStereoElement<?,?> se : container.stereoElements()) {
+            if (se instanceof IDoubleBondStereochemistry) {
+                IDoubleBondStereochemistry db = (IDoubleBondStereochemistry)se;
+                if (db.getStereo() != CorrectGeometricConfiguration.getConformation2d(db))
+                    return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Peel back terminal rings to the complex 'core': {@cdk.cite Helson99}, {@cdk.cite Clark06}.
      *
@@ -1687,13 +2198,14 @@ public class StructureDiagramGenerator {
      */
     private IRingSet getRingSetCore(IRingSet rs) {
 
-        Multimap<IBond, IRing> ringlookup = HashMultimap.create();
+        Map<IBond, List<IRing>> ringlookup = new HashMap<>();
         Set<IRing> ringsystem = new LinkedHashSet<>();
 
         for (IAtomContainer ring : rs.atomContainers()) {
             ringsystem.add((IRing) ring);
             for (IBond bond : ring.bonds())
-                ringlookup.put(bond, (IRing) ring);
+                ringlookup.computeIfAbsent(bond, k -> new ArrayList<>())
+                          .add((IRing) ring);
         }
 
         // iteratively reduce ring system by removing ring that only share one bond
@@ -1703,7 +2215,7 @@ public class StructureDiagramGenerator {
             for (IRing ring : ringsystem) {
                 int numAttach = 0;
                 for (IBond bond : ring.bonds()) {
-                    for (IRing attached : ringlookup.get(bond)) {
+                    for (IRing attached : ringlookup.getOrDefault(bond, Collections.emptyList())) {
                         if (attached != ring && ringsystem.contains(attached)) {
                             numAttach++;
                             break;
@@ -1762,13 +2274,13 @@ public class StructureDiagramGenerator {
         logger.debug("Start of handleAliphatics");
 
         int safetyCounter = 0;
-        IAtomContainer unplacedAtoms = null;
-        IAtomContainer placedAtoms = null;
-        IAtomContainer longestUnplacedChain = null;
-        IAtom atom = null;
+        IAtomContainer unplacedAtoms;
+        IAtomContainer placedAtoms;
+        IAtomContainer longestUnplacedChain;
+        IAtom atom;
 
-        Vector2d direction = null;
-        Vector2d startVector = null;
+        Vector2d direction;
+        Vector2d startVector;
         boolean done;
         do {
             safetyCounter++;
@@ -1809,7 +2321,7 @@ public class StructureDiagramGenerator {
                     }
 
                     for (int f = 1; f < longestUnplacedChain.getAtomCount(); f++) {
-                        longestUnplacedChain.getAtom(f).setFlag(CDKConstants.ISPLACED, false);
+                        longestUnplacedChain.getAtom(f).setFlag(IChemObject.PLACED, false);
                     }
                     atomPlacer.placeLinearChain(longestUnplacedChain, direction, bondLength);
 
@@ -1850,8 +2362,11 @@ public class StructureDiagramGenerator {
             IAtom ringAttachmentAtom = getRingAtom(nextRingAttachmentBond);
             IAtom chainAttachmentAtom = getOtherBondAtom(ringAttachmentAtom, nextRingAttachmentBond);
 
+            Objects.requireNonNull(ringAttachmentAtom, "No unplaced ring atom!");
+
             // Get ring system which ringAttachmentAtom is part of
             IRingSet nextRingSystem = getRingSystemOfAtom(ringSystems, ringAttachmentAtom);
+            assert nextRingSystem != null;
 
             // Get all rings of nextRingSytem as one IAtomContainer
             IAtomContainer ringSystem = RingSetManipulator.getAllInOneContainer(nextRingSystem);
@@ -1945,9 +2460,9 @@ public class StructureDiagramGenerator {
         IAtomContainer unplacedAtoms = atom.getBuilder().newInstance(IAtomContainer.class);
         List bonds = molecule.getConnectedBondsList(atom);
         IAtom connectedAtom;
-        for (int f = 0; f < bonds.size(); f++) {
-            connectedAtom = ((IBond) bonds.get(f)).getOther(atom);
-            if (!connectedAtom.getFlag(CDKConstants.ISPLACED)) {
+        for (Object bond : bonds) {
+            connectedAtom = ((IBond) bond).getOther(atom);
+            if (!connectedAtom.getFlag(IChemObject.PLACED)) {
                 unplacedAtoms.addAtom(connectedAtom);
             }
         }
@@ -1966,9 +2481,9 @@ public class StructureDiagramGenerator {
         IAtomContainer placedAtoms = atom.getBuilder().newInstance(IAtomContainer.class);
         List bonds = molecule.getConnectedBondsList(atom);
         IAtom connectedAtom;
-        for (int f = 0; f < bonds.size(); f++) {
-            connectedAtom = ((IBond) bonds.get(f)).getOther(atom);
-            if (connectedAtom.getFlag(CDKConstants.ISPLACED)) {
+        for (Object bond : bonds) {
+            connectedAtom = ((IBond) bond).getOther(atom);
+            if (connectedAtom.getFlag(IChemObject.PLACED)) {
                 placedAtoms.addAtom(connectedAtom);
             }
         }
@@ -1985,11 +2500,11 @@ public class StructureDiagramGenerator {
         for (int f = 0; f < molecule.getBondCount(); f++) {
             bond = molecule.getBond(f);
 
-            if (bond.getEnd().getFlag(CDKConstants.ISPLACED) && !bond.getBegin().getFlag(CDKConstants.ISPLACED)) {
+            if (bond.getEnd().getFlag(IChemObject.PLACED) && !bond.getBegin().getFlag(IChemObject.PLACED)) {
                 return bond.getEnd();
             }
 
-            if (bond.getBegin().getFlag(CDKConstants.ISPLACED) && !bond.getEnd().getFlag(CDKConstants.ISPLACED)) {
+            if (bond.getBegin().getFlag(IChemObject.PLACED) && !bond.getEnd().getFlag(IChemObject.PLACED)) {
                 return bond.getBegin();
             }
         }
@@ -2006,10 +2521,10 @@ public class StructureDiagramGenerator {
             IAtom beg = bond.getBegin();
             IAtom end = bond.getEnd();
             if (beg.getPoint2d() != null && end.getPoint2d() != null) {
-                if (end.getFlag(CDKConstants.ISPLACED) && !beg.getFlag(CDKConstants.ISPLACED) && beg.isInRing()) {
+                if (end.getFlag(IChemObject.PLACED) && !beg.getFlag(IChemObject.PLACED) && beg.isInRing()) {
                     return bond;
                 }
-                if (beg.getFlag(CDKConstants.ISPLACED) && !end.getFlag(CDKConstants.ISPLACED) && end.isInRing()) {
+                if (beg.getFlag(IChemObject.PLACED) && !end.getFlag(IChemObject.PLACED) && end.isInRing()) {
                     return bond;
                 }
             }
@@ -2027,7 +2542,7 @@ public class StructureDiagramGenerator {
      * @return an IAtomContainer with the atoms of the bond and the bond itself
      */
     private IAtomContainer placeFirstBond(IBond bond, Vector2d bondVector) {
-        IAtomContainer sharedAtoms = null;
+        IAtomContainer sharedAtoms;
 
         bondVector.normalize();
         logger.debug("placeFirstBondOfFirstRing->bondVector.length():" + bondVector.length());
@@ -2038,13 +2553,13 @@ public class StructureDiagramGenerator {
         atom = bond.getBegin();
         logger.debug("Atom 1 of first Bond: " + (molecule.indexOf(atom) + 1));
         atom.setPoint2d(point);
-        atom.setFlag(CDKConstants.ISPLACED, true);
+        atom.setFlag(IChemObject.PLACED, true);
         point = new Point2d(0, 0);
         atom = bond.getEnd();
         logger.debug("Atom 2 of first Bond: " + (molecule.indexOf(atom) + 1));
         point.add(bondVector);
         atom.setPoint2d(point);
-        atom.setFlag(CDKConstants.ISPLACED, true);
+        atom.setFlag(IChemObject.PLACED, true);
         /*
          * The new ring is layed out relativ to some shared atoms that have
          * already been placed. Usually this is another ring, that has
@@ -2067,7 +2582,7 @@ public class StructureDiagramGenerator {
      */
     private boolean allPlaced(IRingSet rings) {
         for (int f = 0; f < rings.getAtomContainerCount(); f++) {
-            if (!((IRing) rings.getAtomContainer(f)).getFlag(CDKConstants.ISPLACED)) {
+            if (!rings.getAtomContainer(f).getFlag(IChemObject.PLACED)) {
                 logger.debug("allPlaced->Ring " + f + " not placed");
                 return false;
             }
@@ -2082,10 +2597,10 @@ public class StructureDiagramGenerator {
      * @return the unplaced ring atom in this bond
      */
     private IAtom getRingAtom(IBond bond) {
-        if (bond.getBegin().getFlag(CDKConstants.ISINRING) && !bond.getBegin().getFlag(CDKConstants.ISPLACED)) {
+        if (bond.getBegin().getFlag(IChemObject.IN_RING) && !bond.getBegin().getFlag(IChemObject.PLACED)) {
             return bond.getBegin();
         }
-        if (bond.getEnd().getFlag(CDKConstants.ISINRING) && !bond.getEnd().getFlag(CDKConstants.ISPLACED)) {
+        if (bond.getEnd().getFlag(IChemObject.IN_RING) && !bond.getEnd().getFlag(IChemObject.PLACED)) {
             return bond.getEnd();
         }
         return null;
@@ -2099,9 +2614,9 @@ public class StructureDiagramGenerator {
      * @return the ring system the given atom is part of
      */
     private IRingSet getRingSystemOfAtom(List ringSystems, IAtom ringAtom) {
-        IRingSet ringSet = null;
-        for (int f = 0; f < ringSystems.size(); f++) {
-            ringSet = (IRingSet) ringSystems.get(f);
+        IRingSet ringSet;
+        for (Object ringSystem : ringSystems) {
+            ringSet = (IRingSet) ringSystem;
             if (ringSet.contains(ringAtom)) {
                 return ringSet;
             }
@@ -2113,18 +2628,18 @@ public class StructureDiagramGenerator {
      * Set all the atoms in unplaced rings to be unplaced
      */
     private void resetUnplacedRings() {
-        IRing ring = null;
+        IRing ring;
         if (sssr == null) {
             return;
         }
         int unplacedCounter = 0;
         for (int f = 0; f < sssr.getAtomContainerCount(); f++) {
             ring = (IRing) sssr.getAtomContainer(f);
-            if (!ring.getFlag(CDKConstants.ISPLACED)) {
+            if (!ring.getFlag(IChemObject.PLACED)) {
                 logger.debug("Ring with " + ring.getAtomCount() + " atoms is not placed.");
                 unplacedCounter++;
                 for (int g = 0; g < ring.getAtomCount(); g++) {
-                    ring.getAtom(g).setFlag(CDKConstants.ISPLACED, false);
+                    ring.getAtom(g).setFlag(IChemObject.PLACED, false);
                 }
             }
         }
@@ -2372,7 +2887,7 @@ public class StructureDiagramGenerator {
         if (sgroups == null)
             return;
 
-        Multimap<Set<IAtom>, IAtom> mapping = aggregateMulticenterSgroups(sgroups);
+        Map<Set<IAtom>, List<IAtom>> mapping = aggregateMulticenterSgroups(sgroups);
 
         if (mapping.isEmpty())
             return;
@@ -2384,7 +2899,7 @@ public class StructureDiagramGenerator {
         for (IAtom atom : mol.atoms())
             idxs.put(atom, idxs.size());
 
-        for (Map.Entry<Set<IAtom>,Collection<IAtom>> e : mapping.asMap().entrySet()) {
+        for (Map.Entry<Set<IAtom>,List<IAtom>> e : mapping.entrySet()) {
             List<IBond> bonds = new ArrayList<>();
 
             IAtomContainer shared = mol.getBuilder().newInstance(IAtomContainer.class);
@@ -2399,15 +2914,15 @@ public class StructureDiagramGenerator {
                 }
             }
 
-            Collections.sort(bonds, new Comparator<IBond>() {
+            bonds.sort(new Comparator<IBond>() {
                 @Override
                 public int compare(IBond a, IBond b) {
                     int atype = getPositionalRingBondPref(a, mol);
                     int btype = getPositionalRingBondPref(b, mol);
                     if (atype != btype)
                         return Integer.compare(atype, btype);
-                    int aord  = a.getOrder().numeric();
-                    int bord  = b.getOrder().numeric();
+                    int aord = a.getOrder().numeric();
+                    int bord = b.getOrder().numeric();
                     if (aord > 0 && bord > 0) {
                         return Integer.compare(aord, bord);
                     }
@@ -2485,16 +3000,18 @@ public class StructureDiagramGenerator {
                             IAtom visitedAtom = mol.getAtom(idx);
                             if (e.getKey().contains(visitedAtom) || e.getValue().contains(visitedAtom))
                                 continue;
-                            for (Map.Entry<Set<IAtom>, IAtom> e2 : mapping.entries()) {
-                                if (e2.getKey().contains(visitedAtom)) {
-                                    int other = idxs.get(e2.getValue());
-                                    if (!visited.contains(other) && newvisit.add(other)) {
-                                        visit(newvisit, adjlist, other);
-                                    }
-                                } else if (e2.getValue().equals(visitedAtom)) {
-                                    int other = idxs.get(e2.getKey().iterator().next());
-                                    if (!visited.contains(other) && newvisit.add(other)) {
-                                        visit(newvisit, adjlist, other);
+                            for (Map.Entry<Set<IAtom>, List<IAtom>> e2 : mapping.entrySet()) {
+                                for (IAtom val : e2.getValue()) {
+                                    if (e2.getKey().contains(visitedAtom)) {
+                                        int other = idxs.get(val);
+                                        if (!visited.contains(other) && newvisit.add(other)) {
+                                            visit(newvisit, adjlist, other);
+                                        }
+                                    } else if (val.equals(visitedAtom)) {
+                                        int other = idxs.get(e2.getKey().iterator().next());
+                                        if (!visited.contains(other) && newvisit.add(other)) {
+                                            visit(newvisit, adjlist, other);
+                                        }
                                     }
                                 }
                             }
@@ -2539,8 +3056,8 @@ public class StructureDiagramGenerator {
         }
     }
 
-    private static Multimap<Set<IAtom>, IAtom> aggregateMulticenterSgroups(List<Sgroup> sgroups) {
-        Multimap<Set<IAtom>,IAtom> mapping = HashMultimap.create();
+    private static Map<Set<IAtom>, List<IAtom>> aggregateMulticenterSgroups(List<Sgroup> sgroups) {
+        Map<Set<IAtom>,List<IAtom>> mapping = new HashMap<>();
         for (Sgroup sgroup : sgroups) {
             if (sgroup.getType() != SgroupType.ExtMulticenter)
                 continue;
@@ -2563,8 +3080,9 @@ public class StructureDiagramGenerator {
             if (beg == null || ends.isEmpty())
                 continue;
 
-            mapping.put(ends, beg);
-        } return mapping;
+            mapping.computeIfAbsent(ends, k -> new ArrayList<>()).add(beg);
+        }
+        return mapping;
     }
 
 
@@ -2577,6 +3095,12 @@ public class StructureDiagramGenerator {
         return cnt;
     }
 
+    private void updateMinMax(double[] minmax, Point2d p) {
+        minmax[0] = Math.min(p.x, minmax[0]);
+        minmax[1] = Math.min(p.y, minmax[1]);
+        minmax[2] = Math.max(p.x, minmax[2]);
+        minmax[3] = Math.max(p.y, minmax[3]);
+    }
 
     /**
      * Place and update brackets for polymer Sgroups.
@@ -2588,30 +3112,22 @@ public class StructureDiagramGenerator {
         if (sgroups == null) return;
 
         // index all crossing bonds
-        final Multimap<IBond,Sgroup> bondMap = HashMultimap.create();
+        final Map<IBond,List<Sgroup>> bondMap = new HashMap<>();
+        final Map<Sgroup,List<Sgroup>> childMap = new HashMap<>();
         final Map<IBond,Integer> counter = new HashMap<>();
         for (Sgroup sgroup : sgroups) {
             if (!hasBrackets(sgroup))
                 continue;
             for (IBond bond : sgroup.getBonds()) {
-                bondMap.put(bond, sgroup);
+                bondMap.computeIfAbsent(bond, k -> new ArrayList<>()).add(sgroup);
                 counter.put(bond, 0);
             }
+            for (Sgroup parent : sgroup.getParents())
+                childMap.computeIfAbsent(parent, k -> new ArrayList<>()).add(sgroup);
         }
         sgroups = new ArrayList<>(sgroups);
-        // place child sgroups first
-        Collections.sort(sgroups,
-                         new Comparator<Sgroup>() {
-                             @Override
-                             public int compare(Sgroup o1, Sgroup o2) {
-                                 if (o1.getParents().isEmpty() != o2.getParents().isEmpty()) {
-                                     if (o1.getParents().isEmpty())
-                                         return +1;
-                                     return -1;
-                                 }
-                                 return 0;
-                             }
-                         });
+        // place child sgroups first, or those with less total children
+        sgroups.sort(comparingInt(o -> childMap.getOrDefault(o, Collections.emptyList()).size()));
 
         for (Sgroup sgroup : sgroups) {
             if (!hasBrackets(sgroup))
@@ -2648,7 +3164,20 @@ public class StructureDiagramGenerator {
                 for (IAtom atom : atoms)
                     tmp.addAtom(atom);
                 double[] minmax = GeometryUtil.getMinMax(tmp);
-                double padding  = 0.7 * bondLength;
+
+                // if a child Sgroup also has brackets, account for that in our
+                // bounds calculation
+                for (Sgroup child : childMap.getOrDefault(sgroup, Collections.emptyList())) {
+                    List<SgroupBracket> brackets = child.getValue(SgroupKey.CtabBracket);
+                    if (brackets != null) {
+                        for (SgroupBracket bracket : brackets) {
+                            updateMinMax(minmax, bracket.getFirstPoint());
+                            updateMinMax(minmax, bracket.getSecondPoint());
+                        }
+                    }
+                }
+
+                double padding  = SGROUP_BRACKET_PADDING_FACTOR * bondLength;
                 sgroup.addBracket(new SgroupBracket(minmax[0] - padding, minmax[1] - padding,
                                                     minmax[0] - padding, minmax[3] + padding));
                 sgroup.addBracket(new SgroupBracket(minmax[2] + padding, minmax[1] - padding,
@@ -2673,7 +3202,7 @@ public class StructureDiagramGenerator {
      * @param vert vertical align bonds
      * @return the new bracket
      */
-    private SgroupBracket newCrossingBracket(IBond bond, Multimap<IBond,Sgroup> bonds, Map<IBond,Integer> counter, boolean vert) {
+    private SgroupBracket newCrossingBracket(IBond bond, Map<IBond,List<Sgroup>> bonds, Map<IBond,Integer> counter, boolean vert) {
         final IAtom beg = bond.getBegin();
         final IAtom end = bond.getEnd();
         final Point2d begXy = beg.getPoint2d();
@@ -2684,7 +3213,7 @@ public class StructureDiagramGenerator {
         bndCrossVec.normalize();
         bndCrossVec.scale(((0.9 * bondLength)) / 2);
 
-        final List<Sgroup> sgroups = new ArrayList<>(bonds.get(bond));
+        final List<Sgroup> sgroups = new ArrayList<>(bonds.getOrDefault(bond, Collections.emptyList()));
 
         // bond in sgroup, place it in the middle of the bond
         if (sgroups.size() == 1) {

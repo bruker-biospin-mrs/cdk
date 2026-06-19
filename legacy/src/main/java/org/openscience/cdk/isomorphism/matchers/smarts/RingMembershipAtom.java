@@ -27,9 +27,7 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
  * Smallest Rings (SSSR) is used then changing the order of atoms
  * <i>may</i> change which atoms match in a pattern.
  *
- * @cdk.module smarts
  * @cdk.keyword SMARTS
- * @cdk.githash
  */
 @Deprecated
 public class RingMembershipAtom extends SMARTSAtom {
@@ -38,7 +36,7 @@ public class RingMembershipAtom extends SMARTSAtom {
      * Number of rings to which this atom belongs, if < 0 check any ring
      * membership.
      */
-    private int ringNumber;
+    private final int ringNumber;
 
     /**
      * Ring membership query atom. Check if the an atom belongs to <i>num</i> of

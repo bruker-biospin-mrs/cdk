@@ -25,19 +25,19 @@
  */
 package org.openscience.cdk.isomorphism.mcss;
 
+import java.util.Objects;
+
 /**
  *  An RMap implements the association between an edge (bond) in G1 and an edge
  *  (bond) in G2, G1 and G2 being the compared graphs in a RGraph context.
  *
  * @author Stephane Werner, IXELIS &lt;mail@ixelis.net&gt;
  * @cdk.created 2002-07-24
- * @cdk.module  standard
- * @cdk.githash
  */
 public class RMap {
 
-    int id1 = 0;
-    int id2 = 0;
+    int id1;
+    int id2;
 
     /**
      *  Constructor for the RMap.
@@ -94,10 +94,14 @@ public class RMap {
      */
     @Override
     public boolean equals(Object o) {
-        if (((RMap) o).id1 == id1 && ((RMap) o).id2 == id2) {
-            return (true);
-        } else {
-            return (false);
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RMap rMap = (RMap) o;
+        return id1 == rMap.id1 && id2 == rMap.id2;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id1, id2);
     }
 }

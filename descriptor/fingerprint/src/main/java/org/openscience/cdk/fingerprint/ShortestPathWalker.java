@@ -30,11 +30,11 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.graph.AllPairsShortestPaths;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 
 /**
  *
@@ -42,8 +42,6 @@ import org.openscience.cdk.interfaces.IBond;
  * @author John May (2013)
  * @cdk.keyword fingerprint
  * @cdk.keyword similarity
- * @cdk.module fingerprint
- * @cdk.githash
  *
  */
 public final class ShortestPathWalker {
@@ -193,7 +191,7 @@ public final class ShortestPathWalker {
      * Returns true if the bond binds two atoms, and both atoms are SP2 in a ring system.
      */
     private boolean isSP2Bond(IBond bond) {
-        return bond.getFlag(CDKConstants.ISAROMATIC);
+        return bond.getFlag(IChemObject.AROMATIC);
     }
 
     /**

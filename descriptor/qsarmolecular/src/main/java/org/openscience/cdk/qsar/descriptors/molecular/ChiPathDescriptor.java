@@ -19,7 +19,6 @@
 package org.openscience.cdk.qsar.descriptors.molecular;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
@@ -40,6 +39,7 @@ import org.openscience.cdk.qsar.result.DoubleArrayResultType;
 import org.openscience.cdk.qsar.result.IDescriptorResult;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 
@@ -64,8 +64,6 @@ import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
  *
  * @author Rajarshi Guha
  * @cdk.created 2006-11-12
- * @cdk.module qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:chiPath
  * @cdk.keyword chi path index
  * @cdk.keyword descriptor
@@ -119,9 +117,7 @@ public class ChiPathDescriptor extends AbstractMolecularDescriptor implements IM
 
         IAtomContainer localAtomContainer = AtomContainerManipulator.removeHydrogens(container);
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(container.getBuilder());
-        Iterator<IAtom> atoms = localAtomContainer.atoms().iterator();
-        while (atoms.hasNext()) {
-            IAtom atom = atoms.next();
+        for (IAtom atom : localAtomContainer.atoms()) {
             IAtomType type;
             try {
                 type = matcher.findMatchingAtomType(localAtomContainer, atom);
@@ -218,9 +214,9 @@ public class ChiPathDescriptor extends AbstractMolecularDescriptor implements IM
     }
 
     private List<List<Integer>> order0(IAtomContainer atomContainer) {
-        List<List<Integer>> fragments = new ArrayList<List<Integer>>();
+        List<List<Integer>> fragments = new ArrayList<>();
         for (IAtom atom : atomContainer.atoms()) {
-            List<Integer> tmp = new ArrayList<Integer>();
+            List<Integer> tmp = new ArrayList<>();
             tmp.add(atomContainer.indexOf(atom));
             fragments.add(tmp);
         }
@@ -228,10 +224,10 @@ public class ChiPathDescriptor extends AbstractMolecularDescriptor implements IM
     }
 
     private List<List<Integer>> order1(IAtomContainer atomContainer) throws CDKException {
-        List<List<Integer>> fragments = new ArrayList<List<Integer>>();
+        List<List<Integer>> fragments = new ArrayList<>();
         for (IBond bond : atomContainer.bonds()) {
             if (bond.getAtomCount() != 2) throw new CDKException("We only consider 2 center bonds");
-            List<Integer> tmp = new ArrayList<Integer>();
+            List<Integer> tmp = new ArrayList<>();
             tmp.add(atomContainer.indexOf(bond.getBegin()));
             tmp.add(atomContainer.indexOf(bond.getEnd()));
             fragments.add(tmp);
@@ -244,7 +240,8 @@ public class ChiPathDescriptor extends AbstractMolecularDescriptor implements IM
         try {
             queries[0] = QueryAtomContainerCreator.createAnyAtomAnyBondContainer(sp.parseSmiles("CCC"), false);
         } catch (InvalidSmilesException e) {
-            e.printStackTrace(); //To change body of catch statement use File | Settings | File Templates.
+            LoggingToolFactory.createLoggingTool(ChiPathDescriptor.class)
+                              .warn("Unexpected Error:", e);
         }
         return ChiIndexUtils.getFragments(atomContainer, queries);
     }
@@ -254,7 +251,8 @@ public class ChiPathDescriptor extends AbstractMolecularDescriptor implements IM
         try {
             queries[0] = QueryAtomContainerCreator.createAnyAtomAnyBondContainer(sp.parseSmiles("CCCC"), false);
         } catch (InvalidSmilesException e) {
-            e.printStackTrace(); //To change body of catch statement use File | Settings | File Templates.
+            LoggingToolFactory.createLoggingTool(ChiPathDescriptor.class)
+                              .warn("Unexpected Error:", e);
         }
         return ChiIndexUtils.getFragments(atomContainer, queries);
     }
@@ -264,7 +262,8 @@ public class ChiPathDescriptor extends AbstractMolecularDescriptor implements IM
         try {
             queries[0] = QueryAtomContainerCreator.createAnyAtomAnyBondContainer(sp.parseSmiles("CCCCC"), false);
         } catch (InvalidSmilesException e) {
-            e.printStackTrace(); //To change body of catch statement use File | Settings | File Templates.
+            LoggingToolFactory.createLoggingTool(ChiPathDescriptor.class)
+                              .warn("Unexpected Error:", e);
         }
         return ChiIndexUtils.getFragments(atomContainer, queries);
     }
@@ -274,7 +273,8 @@ public class ChiPathDescriptor extends AbstractMolecularDescriptor implements IM
         try {
             queries[0] = QueryAtomContainerCreator.createAnyAtomAnyBondContainer(sp.parseSmiles("CCCCCC"), false);
         } catch (InvalidSmilesException e) {
-            e.printStackTrace(); //To change body of catch statement use File | Settings | File Templates.
+            LoggingToolFactory.createLoggingTool(ChiPathDescriptor.class)
+                              .warn("Unexpected Error:", e);
         }
         return ChiIndexUtils.getFragments(atomContainer, queries);
     }
@@ -284,7 +284,8 @@ public class ChiPathDescriptor extends AbstractMolecularDescriptor implements IM
         try {
             queries[0] = QueryAtomContainerCreator.createAnyAtomAnyBondContainer(sp.parseSmiles("CCCCCCC"), false);
         } catch (InvalidSmilesException e) {
-            e.printStackTrace(); //To change body of catch statement use File | Settings | File Templates.
+            LoggingToolFactory.createLoggingTool(ChiPathDescriptor.class)
+                              .warn("Unexpected Error:", e);
         }
         return ChiIndexUtils.getFragments(atomContainer, queries);
     }
@@ -294,7 +295,8 @@ public class ChiPathDescriptor extends AbstractMolecularDescriptor implements IM
         try {
             queries[0] = QueryAtomContainerCreator.createAnyAtomAnyBondContainer(sp.parseSmiles("CCCCCCCC"), false);
         } catch (InvalidSmilesException e) {
-            e.printStackTrace(); //To change body of catch statement use File | Settings | File Templates.
+            LoggingToolFactory.createLoggingTool(ChiPathDescriptor.class)
+                              .warn("Unexpected Error:", e);
         }
         return ChiIndexUtils.getFragments(atomContainer, queries);
     }

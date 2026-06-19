@@ -24,14 +24,12 @@ import org.openscience.cdk.interfaces.IAtomType;
  * {@link org.openscience.cdk.tools.diff.tree.IDifference} between two {@link org.openscience.cdk.interfaces.IAtomType.Hybridization}s.
  *
  * @author     egonw
- * @cdk.module diff
- * @cdk.githash
  */
 public class AtomTypeHybridizationDifference implements IDifference {
 
-    private String                  name;
-    private IAtomType.Hybridization first;
-    private IAtomType.Hybridization second;
+    private final String                  name;
+    private final IAtomType.Hybridization first;
+    private final IAtomType.Hybridization second;
 
     private AtomTypeHybridizationDifference(String name, IAtomType.Hybridization first, IAtomType.Hybridization second) {
         this.name = name;

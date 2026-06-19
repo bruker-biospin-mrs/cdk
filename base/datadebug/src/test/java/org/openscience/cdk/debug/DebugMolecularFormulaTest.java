@@ -19,27 +19,26 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractMolecularFormulaTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractMolecularFormulaTest;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 
 /**
  * Checks the functionality of the {@link DebugMolecularFormula}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugMolecularFormulaTest extends AbstractMolecularFormulaTest {
+class DebugMolecularFormulaTest extends AbstractMolecularFormulaTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setBuilder(DebugChemObjectBuilder.getInstance());
     }
 
     @Test
-    public void testDebugMolecularFormula() {
+    void testDebugMolecularFormula() {
         IMolecularFormula mf = new DebugMolecularFormula();
-        Assert.assertNotNull(mf);
+        Assertions.assertNotNull(mf);
     }
 }

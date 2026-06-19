@@ -33,8 +33,6 @@ import org.xml.sax.Attributes;
 /**
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
  *
- * @cdk.module io
- * @cdk.githash
  */
 public class JMOLANIMATIONConvention extends CMLCoreModule {
 
@@ -43,7 +41,7 @@ public class JMOLANIMATIONConvention extends CMLCoreModule {
 
     private int                 current;
     private String              frame_energy;
-    private static ILoggingTool logger  = LoggingToolFactory.createLoggingTool(JMOLANIMATIONConvention.class);
+    private static final ILoggingTool logger  = LoggingToolFactory.createLoggingTool(JMOLANIMATIONConvention.class);
 
     public JMOLANIMATIONConvention(IChemFile chemFile) {
         super(chemFile);
@@ -110,7 +108,7 @@ public class JMOLANIMATIONConvention extends CMLCoreModule {
     }
 
     @Override
-    public void characterData(CMLStack xpath, char ch[], int start, int length) {
+    public void characterData(CMLStack xpath, char[] ch, int start, int length) {
         if (current == ENERGY) {
             frame_energy = new String(ch, start, length);
         } else {

@@ -34,14 +34,13 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  *
  *
  * @author maclean
- * @cdk.module group
  */
 class BondDiscretePartitionRefiner extends AtomContainerDiscretePartitionRefinerImpl {
 
     /**
      * Specialised option to allow generating automorphisms that ignore the bond order.
      */
-    private boolean ignoreBondOrders;
+    private final boolean ignoreBondOrders;
 
     /**
      * Make a bond partition refiner that takes bond-orders into account.

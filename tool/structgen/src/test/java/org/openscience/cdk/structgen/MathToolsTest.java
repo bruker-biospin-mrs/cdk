@@ -19,53 +19,52 @@
  */
 package org.openscience.cdk.structgen;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
- * @cdk.module test-standard
  */
-public class MathToolsTest extends CDKTestCase {
+class MathToolsTest extends CDKTestCase {
 
-    public MathToolsTest() {
+    MathToolsTest() {
         super();
     }
 
-    public void testMax_arraydouble() {
+    void testMax_arraydouble() {
         double[] doubles = {2.0, 1.0, 3.0, 5.0, 4.0};
-        Assert.assertEquals(5.0, MathTools.max(doubles), 0.001);
+        Assertions.assertEquals(5.0, MathTools.max(doubles), 0.001);
     }
 
     @Test
-    public void testMin_arraydouble() {
+    void testMin_arraydouble() {
         double[] doubles = {2.0, 1.0, 3.0, 5.0, 4.0};
-        Assert.assertEquals(1.0, MathTools.min(doubles), 0.001);
+        Assertions.assertEquals(1.0, MathTools.min(doubles), 0.001);
     }
 
     @Test
-    public void testMax_arrayint() {
+    void testMax_arrayint() {
         int[] ints = {1, 2, 3, 4, 5};
-        Assert.assertEquals(5, MathTools.max(ints));
+        Assertions.assertEquals(5, MathTools.max(ints));
     }
 
     @Test
-    public void testMin_arrayint() {
+    void testMin_arrayint() {
         int[] ints = {1, 2, 3, 4, 5};
-        Assert.assertEquals(1, MathTools.min(ints));
+        Assertions.assertEquals(1, MathTools.min(ints));
     }
 
     @Test
-    public void testIsEven_int() {
-        Assert.assertTrue(MathTools.isEven(2));
-        Assert.assertTrue(MathTools.isEven(208));
+    void testIsEven_int() {
+        Assertions.assertTrue(MathTools.isEven(2));
+        Assertions.assertTrue(MathTools.isEven(208));
     }
 
     @Test
-    public void testIsOdd_int() {
-        Assert.assertTrue(MathTools.isOdd(1));
-        Assert.assertTrue(MathTools.isOdd(3));
-        Assert.assertTrue(MathTools.isOdd(209));
+    void testIsOdd_int() {
+        Assertions.assertTrue(MathTools.isOdd(1));
+        Assertions.assertTrue(MathTools.isOdd(3));
+        Assertions.assertTrue(MathTools.isOdd(209));
     }
 
 }

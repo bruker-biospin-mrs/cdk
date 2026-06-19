@@ -36,8 +36,6 @@ import org.openscience.cdk.io.setting.StringIOSetting;
  * Allows processing of IOSetting quesions which are passed to the user
  * by using Swing dialogs.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
  * @cdk.created 2003-07-18
@@ -45,8 +43,8 @@ import org.openscience.cdk.io.setting.StringIOSetting;
  */
 public class SwingGUIListener implements IReaderListener, IWriterListener {
 
-    private Component  frame = null;
-    private Importance level = Importance.HIGH;
+    private Component  frame;
+    private Importance level;
 
     /**
      * 0 = ask no questions

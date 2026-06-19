@@ -18,12 +18,12 @@
  */
 package org.openscience.cdk.reaction.type;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.reaction.IReactionProcess;
@@ -35,7 +35,6 @@ import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * <p>IReactionProcess which participate in movement resonance.
@@ -65,13 +64,11 @@ import java.util.Iterator;
  * @author         Miguel Rojas
  *
  * @cdk.created    2006-05-05
- * @cdk.module     reaction
- * @cdk.githash
  *
  **/
 public class SharingLonePairReaction extends ReactionEngine implements IReactionProcess {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(SharingLonePairReaction.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(SharingLonePairReaction.class);
 
     /**
      * Constructor of the SharingLonePairReaction object.
@@ -123,25 +120,21 @@ public class SharingLonePairReaction extends ReactionEngine implements IReaction
         IParameterReact ipr = super.getParameterClass(SetReactionCenter.class);
         if (ipr != null && !ipr.isSetParameter()) setActiveCenters(reactant);
 
-        Iterator<IAtom> atomis = reactant.atoms().iterator();
-        while (atomis.hasNext()) {
-            IAtom atomi = atomis.next();
-            if (atomi.getFlag(CDKConstants.REACTIVE_CENTER) && atomi.getFormalCharge() == 0
+        for (IAtom atomi : reactant.atoms()) {
+            if (atomi.getFlag(IChemObject.REACTIVE_CENTER) && atomi.getFormalCharge() == 0
                     && reactant.getConnectedSingleElectronsCount(atomi) == 0
                     && reactant.getConnectedLonePairsList(atomi).size() > 0) {
 
-                Iterator<IBond> bondis = reactant.getConnectedBondsList(atomi).iterator();
-                while (bondis.hasNext()) {
-                    IBond bondi = bondis.next();
-                    if (bondi.getFlag(CDKConstants.REACTIVE_CENTER) && bondi.getOrder() == IBond.Order.SINGLE) {
+                for (IBond bondi : reactant.getConnectedBondsList(atomi)) {
+                    if (bondi.getFlag(IChemObject.REACTIVE_CENTER) && bondi.getOrder() == IBond.Order.SINGLE) {
                         IAtom atomj = bondi.getOther(atomi);
-                        if (atomj.getFlag(CDKConstants.REACTIVE_CENTER) && atomj.getFormalCharge() == 1
+                        if (atomj.getFlag(IChemObject.REACTIVE_CENTER) && atomj.getFormalCharge() == 1
                                 && reactant.getConnectedSingleElectronsCount(atomj) == 0) {
 
-                            ArrayList<IAtom> atomList = new ArrayList<IAtom>();
+                            ArrayList<IAtom> atomList = new ArrayList<>();
                             atomList.add(atomi);
                             atomList.add(atomj);
-                            ArrayList<IBond> bondList = new ArrayList<IBond>();
+                            ArrayList<IBond> bondList = new ArrayList<>();
                             bondList.add(bondi);
 
                             IAtomContainerSet moleculeSet = reactant.getBuilder().newInstance(IAtomContainerSet.class);
@@ -174,21 +167,17 @@ public class SharingLonePairReaction extends ReactionEngine implements IReaction
      * @throws CDKException
      */
     private void setActiveCenters(IAtomContainer reactant) throws CDKException {
-        Iterator<IAtom> atomis = reactant.atoms().iterator();
-        while (atomis.hasNext()) {
-            IAtom atomi = atomis.next();
+        for (IAtom atomi : reactant.atoms()) {
             if (atomi.getFormalCharge() == 0 && reactant.getConnectedSingleElectronsCount(atomi) == 0
                     && reactant.getConnectedLonePairsList(atomi).size() > 0) {
 
-                Iterator<IBond> bondis = reactant.getConnectedBondsList(atomi).iterator();
-                while (bondis.hasNext()) {
-                    IBond bondi = bondis.next();
+                for (IBond bondi : reactant.getConnectedBondsList(atomi)) {
                     if (bondi.getOrder() == IBond.Order.SINGLE) {
                         IAtom atomj = bondi.getOther(atomi);
                         if (atomj.getFormalCharge() == 1 && reactant.getConnectedSingleElectronsCount(atomj) == 0) {
-                            atomi.setFlag(CDKConstants.REACTIVE_CENTER, true);
-                            atomj.setFlag(CDKConstants.REACTIVE_CENTER, true);
-                            bondi.setFlag(CDKConstants.REACTIVE_CENTER, true);
+                            atomi.setFlag(IChemObject.REACTIVE_CENTER, true);
+                            atomj.setFlag(IChemObject.REACTIVE_CENTER, true);
+                            bondi.setFlag(IChemObject.REACTIVE_CENTER, true);
                         }
                     }
                 }

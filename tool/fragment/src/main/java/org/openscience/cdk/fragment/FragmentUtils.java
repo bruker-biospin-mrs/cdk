@@ -37,7 +37,6 @@ import java.util.List;
  * not be used by the rest of the API or by other users of the library.
  *
  * @author Rajarshi Guha
- * @cdk.module fragment
  */
 public class FragmentUtils {
 
@@ -52,7 +51,7 @@ public class FragmentUtils {
      * @return A list containing the two parts of the molecule
      */
     protected static List<IAtomContainer> splitMolecule(IAtomContainer atomContainer, IBond bond) {
-        List<IAtomContainer> ret = new ArrayList<IAtomContainer>();
+        List<IAtomContainer> ret = new ArrayList<>();
 
         for (IAtom atom : bond.atoms()) {
 
@@ -64,7 +63,7 @@ public class FragmentUtils {
             else
                 excludedAtom = bond.getBegin();
 
-            List<IBond> part = new ArrayList<IBond>();
+            List<IBond> part = new ArrayList<>();
             part.add(bond);
             part = traverse(atomContainer, atom, part);
 

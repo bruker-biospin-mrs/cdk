@@ -24,9 +24,9 @@ package org.openscience.cdk.io.cml;
 
 import java.io.InputStream;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemFile;
@@ -41,11 +41,10 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * in data/cmltest as found in the original Jumbo3 release
  * (http://www.xml-cml.org/).
  *
- * @cdk.module test-io
  */
-public class JumboTest extends CDKTestCase {
+class JumboTest extends CDKTestCase {
 
-    private ILoggingTool logger = LoggingToolFactory.createLoggingTool(JumboTest.class);
+    private final ILoggingTool logger = LoggingToolFactory.createLoggingTool(JumboTest.class);
 
     /**
      * Now come the actual tests...
@@ -57,31 +56,31 @@ public class JumboTest extends CDKTestCase {
      * - X2D only
      */
     @Test
-    public void testCuran() throws Exception {
-        String filename = "data/cml/curan.xml";
+    void testCuran() throws Exception {
+        String filename = "curan.xml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CMLReader reader = new CMLReader(ins);
-        IChemFile chemFile = (IChemFile) reader.read(new org.openscience.cdk.ChemFile());
+        IChemFile chemFile = reader.read(new org.openscience.cdk.ChemFile());
         reader.close();
 
         // test the resulting ChemFile content
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(chemFile.getChemSequenceCount(), 1);
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(chemFile.getChemSequenceCount(), 1);
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(seq.getChemModelCount(), 1);
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(seq.getChemModelCount(), 1);
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
-        Assert.assertEquals(model.getMoleculeSet().getAtomContainerCount(), 1);
+        Assertions.assertNotNull(model);
+        Assertions.assertEquals(model.getMoleculeSet().getAtomContainerCount(), 1);
 
         // test the molecule
         IAtomContainer mol = model.getMoleculeSet().getAtomContainer(0);
-        Assert.assertNotNull(mol);
-        Assert.assertEquals(mol.getAtomCount(), 24);
-        Assert.assertEquals(mol.getBondCount(), 28);
-        Assert.assertFalse(GeometryUtil.has3DCoordinates(mol));
-        Assert.assertTrue(GeometryUtil.has2DCoordinates(mol));
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(mol.getAtomCount(), 24);
+        Assertions.assertEquals(mol.getBondCount(), 28);
+        Assertions.assertFalse(GeometryUtil.has3DCoordinates(mol));
+        Assertions.assertTrue(GeometryUtil.has2DCoordinates(mol));
     }
 
     /**
@@ -90,31 +89,31 @@ public class JumboTest extends CDKTestCase {
      * - X2D only
      */
     @Test
-    public void testCephNS() throws Exception {
-        String filename = "data/cml/ceph-ns.xml";
+    void testCephNS() throws Exception {
+        String filename = "ceph-ns.xml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CMLReader reader = new CMLReader(ins);
-        IChemFile chemFile = (IChemFile) reader.read(new org.openscience.cdk.ChemFile());
+        IChemFile chemFile = reader.read(new org.openscience.cdk.ChemFile());
         reader.close();
 
         // test the resulting ChemFile content
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(chemFile.getChemSequenceCount(), 1);
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(chemFile.getChemSequenceCount(), 1);
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(seq.getChemModelCount(), 1);
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(seq.getChemModelCount(), 1);
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
-        Assert.assertEquals(model.getMoleculeSet().getAtomContainerCount(), 1);
+        Assertions.assertNotNull(model);
+        Assertions.assertEquals(model.getMoleculeSet().getAtomContainerCount(), 1);
 
         // test the molecule
         IAtomContainer mol = model.getMoleculeSet().getAtomContainer(0);
-        Assert.assertNotNull(mol);
-        Assert.assertEquals(mol.getAtomCount(), 15);
-        Assert.assertEquals(mol.getBondCount(), 16);
-        Assert.assertFalse(GeometryUtil.has3DCoordinates(mol));
-        Assert.assertTrue(GeometryUtil.has2DCoordinates(mol));
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(mol.getAtomCount(), 15);
+        Assertions.assertEquals(mol.getBondCount(), 16);
+        Assertions.assertFalse(GeometryUtil.has3DCoordinates(mol));
+        Assertions.assertTrue(GeometryUtil.has2DCoordinates(mol));
     }
 
     /**
@@ -124,31 +123,31 @@ public class JumboTest extends CDKTestCase {
      * - no coords
      */
     @Test
-    public void testNucleustest() throws Exception {
-        String filename = "data/cml/nucleustest.xml";
+    void testNucleustest() throws Exception {
+        String filename = "nucleustest.xml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CMLReader reader = new CMLReader(ins);
-        IChemFile chemFile = (IChemFile) reader.read(new org.openscience.cdk.ChemFile());
+        IChemFile chemFile = reader.read(new org.openscience.cdk.ChemFile());
         reader.close();
 
         // test the resulting ChemFile content
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(chemFile.getChemSequenceCount(), 1);
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(chemFile.getChemSequenceCount(), 1);
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(seq.getChemModelCount(), 1);
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(seq.getChemModelCount(), 1);
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
-        Assert.assertEquals(model.getMoleculeSet().getAtomContainerCount(), 1);
+        Assertions.assertNotNull(model);
+        Assertions.assertEquals(model.getMoleculeSet().getAtomContainerCount(), 1);
 
         // test the molecule
         IAtomContainer mol = model.getMoleculeSet().getAtomContainer(0);
-        Assert.assertNotNull(mol);
-        Assert.assertEquals("Incorrect number of atoms", 11, mol.getAtomCount());
-        Assert.assertEquals("Incorrect number of bonds", 12, mol.getBondCount());
-        Assert.assertFalse("File does not have 3D coordinates", GeometryUtil.has3DCoordinates(mol));
-        Assert.assertFalse("File does not have 2D coordinates", GeometryUtil.has2DCoordinates(mol));
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(11, mol.getAtomCount(), "Incorrect number of atoms");
+        Assertions.assertEquals(12, mol.getBondCount(), "Incorrect number of bonds");
+        Assertions.assertFalse(GeometryUtil.has3DCoordinates(mol), "File does not have 3D coordinates");
+        Assertions.assertFalse(GeometryUtil.has2DCoordinates(mol), "File does not have 2D coordinates");
     }
 
 }

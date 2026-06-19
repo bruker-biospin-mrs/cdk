@@ -43,8 +43,8 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * of the individual descriptors are presented in the following table. This class
  * returns a <code>DoubleArrayResult</code> containing the 29 descriptors in the order
  * described in the table.
- * <table border=1 cellpadding=2>
- * <caption><a name="cpsa">A Summary of the 29 CPSA Descriptors</a></caption>
+ * <table border=1 style="padding: 2px;">
+ * <caption><span id="cpsa">A Summary of the 29 CPSA Descriptors</span></caption>
  * <thead>
  * <tr>
  * <th>IDescriptor</th><th>Meaning</th>
@@ -130,8 +130,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * @author Rajarshi Guha
  * @cdk.created 2005-05-16
- * @cdk.module qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:CPSA
  */
 public class CPSADescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
@@ -140,7 +138,7 @@ public class CPSADescriptor extends AbstractMolecularDescriptor implements IMole
             "DPSA-2", "DPSA-3", "FPSA-1", "FPSA-2", "FPSA-3", "FNSA-1", "FNSA-2", "FNSA-3", "WPSA-1", "WPSA-2",
             "WPSA-3", "WNSA-1", "WNSA-2", "WNSA-3", "RPCG", "RNCG", "RPCS", "RNCS", "THSA", "TPSA", "RHSA", "RPSA"};
 
-    private static ILoggingTool   logger = LoggingToolFactory.createLoggingTool(CPSADescriptor.class);
+    private static final ILoggingTool   logger = LoggingToolFactory.createLoggingTool(CPSADescriptor.class);
 
     public CPSADescriptor() {}
 
@@ -221,7 +219,7 @@ public class CPSADescriptor extends AbstractMolecularDescriptor implements IMole
 
         IAtomContainer container;
         try {
-            container = (IAtomContainer) atomContainer.clone();
+            container = atomContainer.clone();
         } catch (CloneNotSupportedException e) {
             logger.debug("Error during clone");
             for (int i = 0; i < 29; i++)
@@ -339,8 +337,8 @@ public class CPSADescriptor extends AbstractMolecularDescriptor implements IMole
         }
 
         // relative descriptors
-        double rpcg = maxpcharge / totpcharge;
-        double rncg = maxncharge / totncharge;
+        double rpcg = totpcharge == 0d ? 0 : maxpcharge / totpcharge;
+        double rncg = totncharge == 0d ? 0 : maxncharge / totncharge;
         double rpcs = atomSurfaces[pidx] * rpcg;
         double rncs = atomSurfaces[nidx] * rncg;
 

@@ -19,20 +19,19 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class WHIMDescriptorTest extends MolecularDescriptorTest {
+class WHIMDescriptorTest extends MolecularDescriptorTest {
 
-    public WHIMDescriptorTest() {}
+    WHIMDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(WHIMDescriptor.class);
     }
 }

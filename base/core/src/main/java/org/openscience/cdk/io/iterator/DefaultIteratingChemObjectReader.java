@@ -22,24 +22,23 @@ package org.openscience.cdk.io.iterator;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.io.ChemObjectIO;
+import org.openscience.cdk.io.DefaultChemObjectReaderErrorHandler;
 import org.openscience.cdk.io.IChemObjectReaderErrorHandler;
 
 /**
  * Abstract class that IteratingChemObjectReader's can implement to have it
  * take care of basic stuff, like managing the ReaderListeners.
  *
- * @cdk.module io
- * @cdk.githash
  */
 public abstract class DefaultIteratingChemObjectReader<T extends IChemObject> extends ChemObjectIO implements
         IIteratingChemObjectReader<T> {
 
     protected Mode        mode         = Mode.RELAXED;
-    protected IChemObjectReaderErrorHandler errorHandler = null;
+    protected IChemObjectReaderErrorHandler errorHandler = new DefaultChemObjectReaderErrorHandler(getClass());
 
     @Override
     public boolean accepts(Class<? extends IChemObject> objectClass) {
-        return false; // it's an iterator, idiot.
+        return false; // it's an iterator
     }
 
     /* Extra convenience methods */

@@ -22,9 +22,9 @@
  */
 package org.openscience.cdk.smsd;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Bond;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
@@ -40,17 +40,16 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
-public class SMSDBondInsensitiveTest {
+class SMSDBondInsensitiveTest {
 
     private static IAtomContainer Napthalene;
     private static IAtomContainer Cyclohexane;
     private static IAtomContainer Benzene;
 
-    @BeforeClass
-    public static void setUp() throws CDKException {
+    @BeforeAll
+    static void setUp() throws CDKException {
         Napthalene = createNaphthalene();
         Cyclohexane = createCyclohexane();
         Benzene = createBenzene();
@@ -64,81 +63,81 @@ public class SMSDBondInsensitiveTest {
     }
 
     @Test
-    public void testVFLib() throws Exception {
+    void testVFLib() throws Exception {
         Isomorphism sbf = new Isomorphism(Algorithm.SubStructure, false);
         sbf.init(Benzene, Benzene, true, true);
         sbf.setChemFilters(true, true, true);
-        Assert.assertTrue(sbf.isSubgraph());
+        Assertions.assertTrue(sbf.isSubgraph());
 
     }
 
     @Test
-    public void testSubgraph() throws Exception {
+    void testSubgraph() throws Exception {
         Isomorphism sbf = new Isomorphism(Algorithm.SubStructure, false);
         sbf.init(Benzene, Benzene, true, true);
         sbf.setChemFilters(false, false, false);
-        Assert.assertTrue(sbf.isSubgraph());
+        Assertions.assertTrue(sbf.isSubgraph());
     }
 
     @Test
-    public void testCDKMCS() throws Exception {
+    void testCDKMCS() throws Exception {
         Isomorphism ebimcs = new Isomorphism(Algorithm.CDKMCS, false);
         ebimcs.init(Cyclohexane, Benzene, true, true);
         ebimcs.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs.getFirstMapping().size());
-        Assert.assertTrue(ebimcs.isSubgraph());
+        Assertions.assertEquals(6, ebimcs.getFirstMapping().size());
+        Assertions.assertTrue(ebimcs.isSubgraph());
     }
 
     @Test
-    public void testMCSPlus() throws Exception {
+    void testMCSPlus() throws Exception {
         //TO DO fix me this error
         Isomorphism ebimcs = new Isomorphism(Algorithm.MCSPlus, false);
         ebimcs.init(Cyclohexane, Benzene, true, true);
         ebimcs.setChemFilters(true, true, true);
-        Assert.assertTrue(ebimcs.isSubgraph());
+        Assertions.assertTrue(ebimcs.isSubgraph());
     }
 
     @Test
-    public void testSMSD() throws Exception {
+    void testSMSD() throws Exception {
         Isomorphism ebimcs = new Isomorphism(Algorithm.DEFAULT, false);
         ebimcs.init(Cyclohexane, Benzene, true, true);
         ebimcs.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs.getFirstMapping().size());
+        Assertions.assertEquals(6, ebimcs.getFirstMapping().size());
     }
 
     @Test
-    public void testSMSDCyclohexaneBenzeneSubgraph() throws Exception {
+    void testSMSDCyclohexaneBenzeneSubgraph() throws Exception {
 
         Isomorphism ebimcs1 = new Isomorphism(Algorithm.SubStructure, false);
         ebimcs1.init(Cyclohexane, Benzene, true, true);
         ebimcs1.setChemFilters(true, true, true);
-        Assert.assertTrue(ebimcs1.isSubgraph());
+        Assertions.assertTrue(ebimcs1.isSubgraph());
     }
 
     @Test
-    public void testSMSDBondInSensitive() throws Exception {
+    void testSMSDBondInSensitive() throws Exception {
         Isomorphism ebimcs1 = new Isomorphism(Algorithm.DEFAULT, false);
         ebimcs1.init(Cyclohexane, Benzene, true, true);
         ebimcs1.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
 
         Isomorphism ebimcs2 = new Isomorphism(Algorithm.DEFAULT, false);
         ebimcs2.init(Benzene, Napthalene, true, true);
         ebimcs2.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs2.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs2.getFirstAtomMapping().size());
     }
 
     @Test
-    public void testSMSDChemicalFilters() throws Exception {
+    void testSMSDChemicalFilters() throws Exception {
         Isomorphism ebimcs = new Isomorphism(Algorithm.DEFAULT, false);
         ebimcs.init(Cyclohexane, Benzene, true, true);
         ebimcs.setChemFilters(true, true, true);
-        Assert.assertEquals(12, ebimcs.getAllMapping().size());
-        Assert.assertTrue(ebimcs.isSubgraph());
+        Assertions.assertEquals(12, ebimcs.getAllMapping().size());
+        Assertions.assertTrue(ebimcs.isSubgraph());
     }
 
     @Test
-    public void testCyclopropaneNotASubgraphOfIsoButane() throws Exception {
+    void testCyclopropaneNotASubgraphOfIsoButane() throws Exception {
         IAtomContainer cycloPropane = createCyclopropane();
         IAtomContainer isobutane = createIsobutane();
 
@@ -163,12 +162,12 @@ public class SMSDBondInsensitiveTest {
         comparison.setChemFilters(stereoMatch, fragmentMinimization, energyMinimization);
 
         //        Cyclopropane is not a subgraph of Isobutane
-        Assert.assertFalse(comparison.isSubgraph());
-        Assert.assertEquals(new Double(0.625), new Double(comparison.getTanimotoSimilarity()));
+        Assertions.assertFalse(comparison.isSubgraph());
+        Assertions.assertEquals(Double.valueOf(0.625), Double.valueOf(comparison.getTanimotoSimilarity()));
     }
 
     @Test
-    public void testSingleMappingTesting() throws Exception {
+    void testSingleMappingTesting() throws Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer atomContainer = sp.parseSmiles("C");
@@ -188,8 +187,8 @@ public class SMSDBondInsensitiveTest {
         comparison.init(atomContainer, mol2, removeHydrogen, true);
         comparison.setChemFilters(stereoMatch, fragmentMinimization, energyMinimization);
 
-        Assert.assertTrue(comparison.isSubgraph());
-        Assert.assertEquals(7, comparison.getAllMapping().size());
+        Assertions.assertTrue(comparison.isSubgraph());
+        Assertions.assertEquals(7, comparison.getAllMapping().size());
 
     }
 
@@ -198,7 +197,7 @@ public class SMSDBondInsensitiveTest {
      * @throws Exception
      */
     @Test
-    public void testSMSDFragHetSubgraph() throws Exception {
+    void testSMSDFragHetSubgraph() throws Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         String file1 = "O=C1NC(=O)C2=C(N1)NC(=O)C=N2";
@@ -228,8 +227,8 @@ public class SMSDBondInsensitiveTest {
         comparison.init(source, target, removeHydrogen, true);
         comparison.setChemFilters(stereoMatch, fragmentMinimization, energyMinimization);
 
-        Assert.assertTrue(comparison.isSubgraph());
-        Assert.assertEquals(13, comparison.getFirstMapping().size());
+        Assertions.assertTrue(comparison.isSubgraph());
+        Assertions.assertEquals(13, comparison.getFirstMapping().size());
 
     }
 
@@ -279,7 +278,7 @@ public class SMSDBondInsensitiveTest {
         return result;
     }
 
-    public IAtomContainer createMethane() {
+    IAtomContainer createMethane() {
         IAtomContainer result = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom c1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
         result.addAtom(c1);
@@ -287,7 +286,7 @@ public class SMSDBondInsensitiveTest {
         return result;
     }
 
-    public IAtomContainer createPropane() {
+    IAtomContainer createPropane() {
         IAtomContainer result = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
         IAtom c1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
         IAtom c2 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
@@ -306,7 +305,7 @@ public class SMSDBondInsensitiveTest {
         return result;
     }
 
-    public IAtomContainer createHexane() throws CDKException {
+    IAtomContainer createHexane() throws CDKException {
         IAtomContainer result = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
 
         IAtom c1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
@@ -346,7 +345,7 @@ public class SMSDBondInsensitiveTest {
         return result;
     }
 
-    public static IAtomContainer createBenzene() throws CDKException {
+    static IAtomContainer createBenzene() throws CDKException {
         IAtomContainer result = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
 
         IAtom c1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
@@ -449,7 +448,7 @@ public class SMSDBondInsensitiveTest {
     //        return result;
     //    }
 
-    public static IAtomContainer createNaphthalene() throws CDKException {
+    static IAtomContainer createNaphthalene() throws CDKException {
         IAtomContainer result = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
 
         IAtom c1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
@@ -610,7 +609,7 @@ public class SMSDBondInsensitiveTest {
     //        return result;
     //    }
 
-    public static IAtomContainer createCyclohexane() throws CDKException {
+    static IAtomContainer createCyclohexane() throws CDKException {
 
         IAtomContainer result = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
 
@@ -654,7 +653,7 @@ public class SMSDBondInsensitiveTest {
 
     }
 
-    public static IAtomContainer createCyclopropane() {
+    static IAtomContainer createCyclopropane() {
         IAtomContainer result = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
 
         IAtom c1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");
@@ -676,7 +675,7 @@ public class SMSDBondInsensitiveTest {
         return result;
     }
 
-    public static IAtomContainer createIsobutane() {
+    static IAtomContainer createIsobutane() {
         IAtomContainer result = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class);
 
         IAtom c1 = DefaultChemObjectBuilder.getInstance().newInstance(IAtom.class, "C");

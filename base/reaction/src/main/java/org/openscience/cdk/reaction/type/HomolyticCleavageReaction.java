@@ -24,6 +24,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.reaction.IReactionProcess;
@@ -36,7 +37,6 @@ import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * <p>IReactionProcess which breaks the bond homogeneously leading to radical ions.
@@ -64,14 +64,12 @@ import java.util.Iterator;
  * @author         Miguel Rojas
  *
  * @cdk.created    2006-10-27
- * @cdk.module     reaction
- * @cdk.githash
  *
  * @see HomolyticCleavageMechanism
  **/
 public class HomolyticCleavageReaction extends ReactionEngine implements IReactionProcess {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(HomolyticCleavageReaction.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(HomolyticCleavageReaction.class);
 
     /**
      * Constructor of the HomolyticCleavageReaction object.
@@ -123,22 +121,20 @@ public class HomolyticCleavageReaction extends ReactionEngine implements IReacti
         IParameterReact ipr = super.getParameterClass(SetReactionCenter.class);
         if (ipr != null && !ipr.isSetParameter()) setActiveCenters(reactant);
 
-        Iterator<IBond> bondis = reactant.bonds().iterator();
-        while (bondis.hasNext()) {
-            IBond bondi = bondis.next();
+        for (IBond bondi : reactant.bonds()) {
             IAtom atom1 = bondi.getBegin();
             IAtom atom2 = bondi.getEnd();
-            if (bondi.getFlag(CDKConstants.REACTIVE_CENTER) && atom1.getFlag(CDKConstants.REACTIVE_CENTER)
-                    && atom2.getFlag(CDKConstants.REACTIVE_CENTER)
+            if (bondi.getFlag(IChemObject.REACTIVE_CENTER) && atom1.getFlag(IChemObject.REACTIVE_CENTER)
+                    && atom2.getFlag(IChemObject.REACTIVE_CENTER)
                     && (atom1.getFormalCharge() == CDKConstants.UNSET ? 0 : atom1.getFormalCharge()) == 0
                     && (atom2.getFormalCharge() == CDKConstants.UNSET ? 0 : atom2.getFormalCharge()) == 0
                     && reactant.getConnectedSingleElectronsCount(atom1) == 0
                     && reactant.getConnectedSingleElectronsCount(atom2) == 0) {
 
-                ArrayList<IAtom> atomList = new ArrayList<IAtom>();
+                ArrayList<IAtom> atomList = new ArrayList<>();
                 atomList.add(atom1);
                 atomList.add(atom2);
-                ArrayList<IBond> bondList = new ArrayList<IBond>();
+                ArrayList<IBond> bondList = new ArrayList<>();
                 bondList.add(bondi);
                 IAtomContainerSet moleculeSet = reactant.getBuilder().newInstance(IAtomContainerSet.class);
                 moleculeSet.addAtomContainer(reactant);
@@ -169,18 +165,16 @@ public class HomolyticCleavageReaction extends ReactionEngine implements IReacti
      * @throws CDKException
      */
     private void setActiveCenters(IAtomContainer reactant) throws CDKException {
-        Iterator<IBond> bondis = reactant.bonds().iterator();
-        while (bondis.hasNext()) {
-            IBond bond = bondis.next();
+        for (IBond bond : reactant.bonds()) {
             IAtom atom1 = bond.getBegin();
             IAtom atom2 = bond.getEnd();
             if ((atom1.getFormalCharge() == CDKConstants.UNSET ? 0 : atom1.getFormalCharge()) == 0
                     && (atom2.getFormalCharge() == CDKConstants.UNSET ? 0 : atom2.getFormalCharge()) == 0
                     && reactant.getConnectedSingleElectronsCount(atom1) == 0
                     && reactant.getConnectedSingleElectronsCount(atom2) == 0) {
-                bond.setFlag(CDKConstants.REACTIVE_CENTER, true);
-                atom1.setFlag(CDKConstants.REACTIVE_CENTER, true);
-                atom2.setFlag(CDKConstants.REACTIVE_CENTER, true);
+                bond.setFlag(IChemObject.REACTIVE_CENTER, true);
+                atom1.setFlag(IChemObject.REACTIVE_CENTER, true);
+                atom2.setFlag(IChemObject.REACTIVE_CENTER, true);
             }
         }
     }

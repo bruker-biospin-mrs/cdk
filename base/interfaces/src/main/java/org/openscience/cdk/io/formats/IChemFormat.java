@@ -25,8 +25,6 @@ package org.openscience.cdk.io.formats;
 /**
  * This class is the interface that all ChemFormat's should implement.
  *
- * @cdk.module ioformats
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
  * @cdk.created 2004-10-25
@@ -38,14 +36,14 @@ public interface IChemFormat extends IResourceFormat {
      *
      * @return null if no CDK Reader is available.
      */
-    public String getReaderClassName();
+    String getReaderClassName();
 
     /**
      * Returns the class name of the CDK Writer for this format.
      *
      * @return null if no CDK Writer is available.
      */
-    public String getWriterClassName();
+    String getWriterClassName();
 
     /**
      * Returns an integer indicating the data features that this
@@ -54,7 +52,7 @@ public interface IChemFormat extends IResourceFormat {
      *
      * @see org.openscience.cdk.tools.DataFeatures
      */
-    public int getSupportedDataFeatures();
+    int getSupportedDataFeatures();
 
     /**
      * Returns an integer indicating the data features that this
@@ -63,5 +61,5 @@ public interface IChemFormat extends IResourceFormat {
      *
      * @see org.openscience.cdk.tools.DataFeatures
      */
-    public int getRequiredDataFeatures();
+    int getRequiredDataFeatures();
 }

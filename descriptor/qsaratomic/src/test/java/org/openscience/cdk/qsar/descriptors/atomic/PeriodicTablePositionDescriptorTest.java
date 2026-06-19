@@ -18,11 +18,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.atomic;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.IAtomicDescriptor;
 import org.openscience.cdk.qsar.result.IntegerResult;
@@ -31,22 +30,21 @@ import org.openscience.cdk.smiles.SmilesParser;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsaratomic
  */
-public class PeriodicTablePositionDescriptorTest extends AtomicDescriptorTest {
+class PeriodicTablePositionDescriptorTest extends AtomicDescriptorTest {
 
-    public PeriodicTablePositionDescriptorTest() {}
+    PeriodicTablePositionDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(PeriodicTablePositionDescriptor.class);
     }
 
     @Test
-    public void testPeriodicTablePositionDescriptor() throws ClassNotFoundException, CDKException, java.lang.Exception {
+    void testPeriodicTablePositionDescriptor() throws java.lang.Exception {
         IAtomicDescriptor descriptor = new PeriodicTablePositionDescriptor();
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CCCl"); //
-        Assert.assertEquals(3, ((IntegerResult) descriptor.calculate(mol.getAtom(2), mol).getValue()).intValue());
+        Assertions.assertEquals(3, ((IntegerResult) descriptor.calculate(mol.getAtom(2), mol).getValue()).intValue());
     }
 }

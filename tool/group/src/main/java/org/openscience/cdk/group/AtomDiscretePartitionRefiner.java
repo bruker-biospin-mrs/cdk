@@ -28,20 +28,19 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  * An {@link AtomContainerDiscretePartitionRefiner} for atoms.
  * 
  * @author maclean
- * @cdk.module group
  */
 class AtomDiscretePartitionRefiner extends AtomContainerDiscretePartitionRefinerImpl {
     
     /**
      * Ignore the elements when creating the initial partition.
      */
-    private boolean ignoreElements;
+    private final boolean ignoreElements;
     
     /**
      * Specialised option to allow generating automorphisms
      * that ignore the bond order.
      */
-    private boolean ignoreBondOrders;
+    private final boolean ignoreBondOrders;
     
     /**
      * Default constructor - does not ignore elements or bond orders

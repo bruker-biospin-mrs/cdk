@@ -28,14 +28,13 @@ package org.openscience.cdk.math;
 /**
  * This class handles complex values.
  *
- * @cdk.module qm
  */
 public class Complex {
 
     /** The real part of this value */
-    public double real = 0;
+    public double real;
     /** The imaginary part of this value */
-    public double imag = 0;
+    public double imag;
 
     /**
      * Creates a complex number

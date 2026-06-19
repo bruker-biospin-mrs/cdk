@@ -42,8 +42,6 @@ import java.util.ArrayList;
  *
  * @author         miguelrojasch
  * @cdk.created    2008-02-10
- * @cdk.module     reaction
- * @cdk.githash
  */
 public class AdductionPBMechanism implements IReactionMechanism {
 
@@ -77,8 +75,8 @@ public class AdductionPBMechanism implements IReactionMechanism {
 
         IAtomContainer reactantCloned;
         try {
-            reactantCloned = (IAtomContainer) atomContainerSet.getAtomContainer(0).clone();
-            reactantCloned.add((IAtomContainer) atomContainerSet.getAtomContainer(1).clone());
+            reactantCloned = atomContainerSet.getAtomContainer(0).clone();
+            reactantCloned.add(atomContainerSet.getAtomContainer(1).clone());
         } catch (CloneNotSupportedException e) {
             throw new CDKException("Could not clone IAtomContainer!", e);
         }

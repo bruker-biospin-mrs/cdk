@@ -18,14 +18,11 @@
  */
 package org.openscience.cdk.tools;
 
-import java.util.Iterator;
-
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.interfaces.IAtom;
@@ -38,23 +35,22 @@ import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 /**
  * Tests CDK's valency checker capabilities in terms of example molecules.
  *
- * @cdk.module  test-valencycheck
  *
  * @author Egon Willighagen &lt;egonw@users.sf.net&gt;
  * @cdk.created 2007-07-28
  */
-public class CDKValencyCheckerTest extends CDKTestCase {
+class CDKValencyCheckerTest extends CDKTestCase {
 
     @Test
-    public void testInstance() {
+    void testInstance() {
         CDKValencyChecker checker = CDKValencyChecker.getInstance(DefaultChemObjectBuilder.getInstance());
-        Assert.assertNotNull(checker);
+        Assertions.assertNotNull(checker);
     }
 
     @Test
-    public void testIsSaturated_IAtomContainer() throws Exception {
+    void testIsSaturated_IAtomContainer() throws Exception {
         // test methane with explicit hydrogen
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         CDKValencyChecker checker = CDKValencyChecker.getInstance(mol.getBuilder());
         Atom c = new Atom("C");
         Atom h1 = new Atom("H");
@@ -71,21 +67,21 @@ public class CDKValencyCheckerTest extends CDKTestCase {
         mol.addBond(new Bond(c, h3));
         mol.addBond(new Bond(c, h4));
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertTrue(checker.isSaturated(mol));
+        Assertions.assertTrue(checker.isSaturated(mol));
 
         // test methane with implicit hydrogen
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         c = new Atom("C");
         c.setImplicitHydrogenCount(4);
         mol.addAtom(c);
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertTrue(checker.isSaturated(mol));
+        Assertions.assertTrue(checker.isSaturated(mol));
     }
 
     @Test
-    public void testIsSaturatedPerAtom() throws Exception {
+    void testIsSaturatedPerAtom() throws Exception {
         // test methane with explicit hydrogen
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         CDKValencyChecker checker = CDKValencyChecker.getInstance(mol.getBuilder());
         Atom c = new Atom("C");
         Atom h1 = new Atom("H");
@@ -102,38 +98,38 @@ public class CDKValencyCheckerTest extends CDKTestCase {
         mol.addBond(new Bond(c, h3));
         mol.addBond(new Bond(c, h4));
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertTrue(checker.isSaturated(mol));
+        Assertions.assertTrue(checker.isSaturated(mol));
 
         // test methane with implicit hydrogen
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         c = new Atom("C");
         c.setImplicitHydrogenCount(4);
         mol.addAtom(c);
         findAndConfigureAtomTypesForAllAtoms(mol);
         for (IAtom atom : mol.atoms()) {
-            Assert.assertTrue(checker.isSaturated(atom, mol));
+            Assertions.assertTrue(checker.isSaturated(atom, mol));
         }
     }
 
     @Test
-    public void testIsSaturated_MissingHydrogens_Methane() throws Exception {
+    void testIsSaturated_MissingHydrogens_Methane() throws Exception {
         // test methane with explicit hydrogen
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         CDKValencyChecker checker = CDKValencyChecker.getInstance(mol.getBuilder());
         Atom c = new Atom("C");
         mol.addAtom(c);
         c.setImplicitHydrogenCount(3);
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertFalse(checker.isSaturated(mol));
+        Assertions.assertFalse(checker.isSaturated(mol));
     }
 
     /**
      * Tests if the saturation checker considers negative charges.
      */
     @Test
-    public void testIsSaturated_NegativelyChargedOxygen() throws Exception {
+    void testIsSaturated_NegativelyChargedOxygen() throws Exception {
         // test methane with explicit hydrogen
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         CDKValencyChecker checker = CDKValencyChecker.getInstance(mol.getBuilder());
         Atom c = new Atom("C");
         Atom h1 = new Atom("H");
@@ -151,7 +147,7 @@ public class CDKValencyCheckerTest extends CDKTestCase {
         mol.addBond(new Bond(c, h3));
         mol.addBond(new Bond(c, o));
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertTrue(checker.isSaturated(mol));
+        Assertions.assertTrue(checker.isSaturated(mol));
     }
 
     /**
@@ -159,9 +155,9 @@ public class CDKValencyCheckerTest extends CDKTestCase {
      * charges.
      */
     @Test
-    public void testIsSaturated_PositivelyChargedNitrogen() throws Exception {
+    void testIsSaturated_PositivelyChargedNitrogen() throws Exception {
         // test methane with explicit hydrogen
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         CDKValencyChecker checker = CDKValencyChecker.getInstance(mol.getBuilder());
         Atom n = new Atom("N");
         Atom h1 = new Atom("H");
@@ -179,16 +175,16 @@ public class CDKValencyCheckerTest extends CDKTestCase {
         mol.addBond(new Bond(n, h3));
         mol.addBond(new Bond(n, h4));
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertTrue(checker.isSaturated(mol));
+        Assertions.assertTrue(checker.isSaturated(mol));
     }
 
     /**
      * Test sulfuric acid.
      */
     @Test
-    public void testBug772316() throws Exception {
+    void testBug772316() throws Exception {
         // test methane with explicit hydrogen
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         CDKValencyChecker checker = CDKValencyChecker.getInstance(mol.getBuilder());
         Atom sulphur = new Atom("S");
         Atom o1 = new Atom("O");
@@ -211,30 +207,30 @@ public class CDKValencyCheckerTest extends CDKTestCase {
         mol.addBond(new Bond(h1, o3, IBond.Order.SINGLE));
         mol.addBond(new Bond(h2, o4, IBond.Order.SINGLE));
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertTrue(checker.isSaturated(mol));
+        Assertions.assertTrue(checker.isSaturated(mol));
     }
 
     /**
      * Tests if the saturation checker gets a proton right.
      */
     @Test
-    public void testIsSaturated_Proton() throws Exception {
+    void testIsSaturated_Proton() throws Exception {
         // test H+
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         CDKValencyChecker checker = CDKValencyChecker.getInstance(mol.getBuilder());
         Atom hydrogen = new Atom("H");
         hydrogen.setFormalCharge(+1);
         mol.addAtom(hydrogen);
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertTrue(checker.isSaturated(mol));
+        Assertions.assertTrue(checker.isSaturated(mol));
     }
 
     /** TODO: check who added this test. I think Miguel; it seems to be a
      *  resonance structure.
      */
     @Test
-    public void test1() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void test1() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom f1 = new Atom("F");
         Atom c2 = new Atom("C");
         Atom c3 = new Atom("C");
@@ -247,13 +243,13 @@ public class CDKValencyCheckerTest extends CDKTestCase {
         CDKValencyChecker checker = CDKValencyChecker.getInstance(mol.getBuilder());
         findAndConfigureAtomTypesForAllAtoms(mol);
         mol.getAtom(2).setImplicitHydrogenCount(2); // third atom
-        Assert.assertTrue(checker.isSaturated(mol));
+        Assertions.assertTrue(checker.isSaturated(mol));
     }
 
     @Test
-    public void testIsSaturated_MissingBondOrders_Ethane() throws Exception {
+    void testIsSaturated_MissingBondOrders_Ethane() throws Exception {
         // test ethane with explicit hydrogen
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         CDKValencyChecker checker = CDKValencyChecker.getInstance(mol.getBuilder());
         Atom c1 = new Atom("C");
         c1.setImplicitHydrogenCount(2);
@@ -266,19 +262,17 @@ public class CDKValencyCheckerTest extends CDKTestCase {
         IBond bond = new Bond(c1, c2, Order.SINGLE);
         mol.addBond(bond);
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertFalse(checker.isSaturated(mol));
+        Assertions.assertFalse(checker.isSaturated(mol));
 
         // sanity check
         bond.setOrder(Order.DOUBLE);
         findAndConfigureAtomTypesForAllAtoms(mol);
-        Assert.assertTrue(checker.isSaturated(mol));
+        Assertions.assertTrue(checker.isSaturated(mol));
     }
 
     private void findAndConfigureAtomTypesForAllAtoms(IAtomContainer container) throws Exception {
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(container.getBuilder());
-        Iterator<IAtom> atoms = container.atoms().iterator();
-        while (atoms.hasNext()) {
-            IAtom atom = atoms.next();
+        for (IAtom atom : container.atoms()) {
             IAtomType type = matcher.findMatchingAtomType(container, atom);
             if (type != null) AtomTypeManipulator.configure(atom, type);
         }

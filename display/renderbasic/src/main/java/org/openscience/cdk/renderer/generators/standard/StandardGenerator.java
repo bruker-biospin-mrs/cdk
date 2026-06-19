@@ -24,12 +24,14 @@
 
 package org.openscience.cdk.renderer.generators.standard;
 
+import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.renderer.RendererModel;
 import org.openscience.cdk.renderer.SymbolVisibility;
 import org.openscience.cdk.renderer.color.IAtomColorer;
@@ -41,43 +43,47 @@ import org.openscience.cdk.renderer.elements.IRenderingElement;
 import org.openscience.cdk.renderer.elements.LineElement;
 import org.openscience.cdk.renderer.elements.MarkedElement;
 import org.openscience.cdk.renderer.elements.OvalElement;
+import org.openscience.cdk.renderer.elements.path.Close;
+import org.openscience.cdk.renderer.elements.path.LineTo;
+import org.openscience.cdk.renderer.elements.path.MoveTo;
+import org.openscience.cdk.renderer.elements.path.PathElement;
 import org.openscience.cdk.renderer.generators.BasicSceneGenerator;
 import org.openscience.cdk.renderer.generators.IGenerator;
 import org.openscience.cdk.renderer.generators.IGeneratorParameter;
 import org.openscience.cdk.renderer.generators.parameter.AbstractGeneratorParameter;
+import org.openscience.cdk.sgroup.Sgroup;
+import org.openscience.cdk.sgroup.SgroupType;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Shape;
+import java.awt.*;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import static org.openscience.cdk.renderer.generators.standard.HydrogenPosition.Left;
+import static org.openscience.cdk.renderer.generators.standard.HydrogenPosition.Right;
 
 /**
  * The standard generator creates {@link IRenderingElement}s for the atoms and bonds of a structure
  * diagram. These are generated together allowing the bonds to drawn cleanly without overlap. The
  * generate is heavily based on ideas documented in {@cdk.cite Brecher08} and {@cdk.cite Clark13}.
  *
- * 
- *
  * Atom symbols are provided as {@link GeneralPath} outlines. This allows the depiction to be
  * independent of the system used to view the diagram (primarily important for vector graphic
- * depictions). The font used to generate the diagram must be provided to the constructor. 
+ * depictions). The font used to generate the diagram must be provided to the constructor.
  *
  * Atoms and bonds can be highlighted by setting the {@link #HIGHLIGHT_COLOR}. The style of
  * highlight is set with the {@link Highlighting} parameter.
- *
- * 
  *
  * The <a href="https://github.com/cdk/cdk/wiki/Standard-Generator">Standard Generator - CDK Wiki
  * page</a> provides extended details of using and configuring this generator.
@@ -111,6 +117,12 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
     public final static String          ANNOTATION_LABEL      = "stdgen.annotation.label";
 
     /**
+     * Override the alignment of an atom symbol, the value should be
+     * {@link org.openscience.cdk.renderer.generators.standard.StandardGenerator.Alignment}
+     */
+    public final static String LABEL_ALIGN = "stdgen.label.alignment";
+
+    /**
      * A special markup for annotation labels that hints the generator to renderer
      * the annotation label in italic. The primary use case is for Cahn-Ingold-Prelog
      * descriptors.
@@ -133,10 +145,29 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
     private final Font                  font;
     private final StandardAtomGenerator atomGenerator;
 
+    public enum Alignment {
+        /**
+         * Atom is left aligned.
+         * <pre>
+         *  |
+         *  OH
+         * </pre>
+         */
+        Left,
+        /**
+         * Atom is right aligned.
+         * <pre>
+         *   |
+         *  HO
+         * </pre>
+         */
+        Right
+    }
+
     /**
      * Enumeration of highlight style.
      */
-    public static enum HighlightStyle {
+    public enum HighlightStyle {
 
         /**
          * Ignore highlight hints.
@@ -156,6 +187,13 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
         OuterGlow,
 
         /**
+         * An outer glow is placed in the background behind the depiction.
+         *
+         * @see StandardGenerator.OuterGlowWidth
+         */
+        OuterGlowFillRings,
+
+        /**
          * Same as outer glow but puts a white edge around element symbols.
          * This is useful if color atoms are used in combination with an
          * outer glow highlight.
@@ -166,14 +204,16 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
     }
 
     private final IGeneratorParameter<?> atomColor = new AtomColor(), visibility = new Visibility(),
-            strokeRatio = new StrokeRatio(), separationRatio = new BondSeparation(), wedgeRatio = new WedgeRatio(),
-            marginRatio = new SymbolMarginRatio(), hatchSections = new HashSpacing(), dashSections = new DashSection(),
-            waveSections = new WaveSpacing(), fancyBoldWedges = new FancyBoldWedges(),
-            fancyHashedWedges = new FancyHashedWedges(), highlighting = new Highlighting(),
-            glowWidth = new OuterGlowWidth(), annCol = new AnnotationColor(), annDist = new AnnotationDistance(),
-            annFontSize = new AnnotationFontScale(), sgroupBracketDepth = new SgroupBracketDepth(),
-            sgroupFontScale = new SgroupFontScale(), omitMajorIsotopes = new OmitMajorIsotopes(),
-            forceDonuts = new ForceDelocalisedBondDisplay();
+            strokeRatio                            = new StrokeRatio(), separationRatio = new BondSeparation(), wedgeRatio = new WedgeRatio(),
+            marginRatio                            = new SymbolMarginRatio(), hatchSections = new HashSpacing(), dashSections = new DashSection(),
+            waveSections                           = new WaveSpacing(), fancyBoldWedges = new FancyBoldWedges(),
+            fancyHashedWedges                      = new FancyHashedWedges(), highlighting = new Highlighting(),
+            glowWidth                              = new OuterGlowWidth(), annCol = new AnnotationColor(), annDist = new AnnotationDistance(),
+            annFontSize                            = new AnnotationFontScale(), sgroupBracketDepth = new SgroupBracketDepth(),
+            sgroupFontScale                        = new SgroupFontScale(), omitMajorIsotopes = new OmitMajorIsotopes(),
+            forceDelocalised                       = new ForceDelocalisedBondDisplay(), delocaliseDonuts = new DelocalisedDonutsBondDisplay(),
+            deuteriumSymbol                        = new DeuteriumSymbol(), pseudoFontStyle = new PseudoFontStyle(),
+            rGroupBoxColors                        = new RGroupBoxColors();
 
     /**
      * Create a new standard generator that utilises the specified font to display atom symbols.
@@ -211,9 +251,26 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
 
         ElementGroup annotations = new ElementGroup();
 
-        AtomSymbol[] symbols = generateAtomSymbols(container, symbolRemap, visibility, parameters, annotations, foreground, stroke);
-        IRenderingElement[] bondElements = StandardBondGenerator.generateBonds(container, symbols, parameters, stroke,
-                                                                               font, annotations);
+        StandardDonutGenerator donutGenerator;
+        donutGenerator = new StandardDonutGenerator(container, font, parameters,
+                                                    stroke);
+        IRenderingElement donuts = donutGenerator.generate();
+
+        String enantiomerText = determineEnantiomerText(container);
+        if (enantiomerText == null) {
+            // no global 'enantiomer text' add them per atom if exists
+            addStereoGroupAnnotations(container);
+        }
+
+        AtomSymbol[] symbols = generateAtomSymbols(container, symbolRemap,
+                                                   visibility, parameters,
+                                                   annotations, foreground,
+                                                   stroke, donutGenerator);
+        IRenderingElement[] bondElements;
+        bondElements = StandardBondGenerator.generateBonds(container, symbols,
+                                                           parameters, stroke,
+                                                           font, annotations,
+                                                           donutGenerator);
 
         final HighlightStyle style = parameters.get(Highlighting.class);
         final double glowWidth = parameters.get(OuterGlowWidth.class);
@@ -221,6 +278,44 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
         ElementGroup backLayer = new ElementGroup();
         ElementGroup middleLayer = new ElementGroup();
         ElementGroup frontLayer = new ElementGroup();
+
+
+        if (style == HighlightStyle.OuterGlowFillRings) {
+            Cycles cycles = Cycles.mcb(container); // MCB/SSSR normally harmful but perfect here
+            for (IAtomContainer ring : cycles.toRingSet()) {
+                if (ring.getAtomCount() > 8)
+                    continue;
+
+                Color highlight = null;
+
+                for (IBond bond : ring.bonds()) {
+                    Color color = getHighlightColor(bond, parameters);
+                    if (color == null)
+                        continue;
+                    if (isHidden(bond)) {
+                        highlight = null;
+                        break;
+                    } else if (highlight == null) {
+                        highlight = color;
+                    } else if (!highlight.equals(color)) {
+                        highlight = null;
+                        break;
+                    }
+                }
+
+
+                if (highlight == null)
+                    continue;
+
+                List<PathElement> path = new ArrayList<>();
+                path.add(new MoveTo(ring.getAtom(0).getPoint2d()));
+                for (int j = 1; j < ring.getAtomCount(); j++)
+                    path.add(new LineTo(ring.getAtom(j).getPoint2d()));
+                path.add(new Close());
+                backLayer.add(MarkedElement.markup(new GeneralPath(path, highlight),
+                                                   "outerflow"));
+            }
+        }
 
         // bond elements can simply be added to the element group
         for (int i = 0; i < container.getBondCount(); i++) {
@@ -231,9 +326,10 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
                 continue;
 
             Color highlight = getHighlightColor(bond, parameters);
-            if (highlight != null && (style == HighlightStyle.OuterGlow || style == HighlightStyle.OuterGlowWhiteEdge)) {
+            if (highlight != null && isOuterglow(style)) {
                 backLayer.add(MarkedElement.markup(outerGlow(bondElements[i], highlight, glowWidth, stroke), "outerglow"));
             }
+
             if (highlight != null && style == HighlightStyle.Colored) {
                 frontLayer.add(MarkedElement.markupBond(recolor(bondElements[i], highlight), bond));
             } else {
@@ -241,9 +337,13 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
             }
         }
 
+        // bonds for delocalised aromatic
+        frontLayer.add(donuts);
+
         // convert the atom symbols to IRenderingElements
         for (int i = 0; i < container.getAtomCount(); i++) {
             IAtom atom = container.getAtom(i);
+            atom.removeProperty(CDKConstants.RENDER_BOUNDS);
 
             if (isHidden(atom))
                 continue;
@@ -252,13 +352,24 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
             Color color = getColorOfAtom(symbolRemap, coloring, foreground, style, atom, highlight);
 
             if (symbols[i] == null) {
+
+                // do not highlight if one of our bonds is the same colour
+                for (IBond bond : atom.bonds()) {
+                    Color bondHighlight = getHighlightColor(bond, parameters);
+                    if (bondHighlight != null && bondHighlight.equals(highlight)) {
+                        highlight = null;
+                        break;
+                    }
+                }
+
                 // we add a 'ball' around atoms with no symbols (e.g. carbons)
-                if (highlight != null && (style == HighlightStyle.OuterGlow || style == HighlightStyle.OuterGlowWhiteEdge)) {
+                if (highlight != null && isOuterglow(style)) {
                 	double glowWidthExt = glowWidth;
                 	if (style == HighlightStyle.OuterGlowWhiteEdge && highlight.equals(Color.WHITE)) {
                 		glowWidthExt *= 1.75;
                 	}
-                    backLayer.add(MarkedElement.markup(new OvalElement(atom.getPoint2d().x, atom.getPoint2d().y,1.75 * glowWidthExt * stroke, true, highlight),
+                    backLayer.add(MarkedElement.markup(new OvalElement(atom.getPoint2d().x,
+                                                                       atom.getPoint2d().y,1.75 * glowWidthExt * stroke, true, highlight),
                                                        "outerglow"));
                 }
                 continue;
@@ -269,13 +380,15 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
                 GeneralPath path = GeneralPath.shapeOf(shape, color);
                 symbolElements.add(path);
             }
+            atom.setProperty(CDKConstants.RENDER_BOUNDS,
+                             new Bounds(symbolElements));
 
             // add the annotations of the symbol to the annotations ElementGroup
             for (Shape shape : symbols[i].getAnnotationOutlines()) {
                 annotations.add(MarkedElement.markup(GeneralPath.shapeOf(shape, annotationColor), "annotation"));
             }
 
-            if (highlight != null && (style == HighlightStyle.OuterGlow || style == HighlightStyle.OuterGlowWhiteEdge)) {
+            if (highlight != null && isOuterglow(style)) {
             	double glowWidthExt = glowWidth;
             	if (style == HighlightStyle.OuterGlowWhiteEdge && highlight.equals(Color.WHITE)) {
             		glowWidthExt *= 1.75;
@@ -289,31 +402,31 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
                 middleLayer.add(MarkedElement.markupAtom(symbolElements, atom));
             }
         }
-        
+
         if (style == HighlightStyle.OuterGlowWhiteEdge) {
 	        for (int i = 0; i < container.getAtomCount(); i++) {
 	            IAtom atom = container.getAtom(i);
-	
+
 	            if (isHidden(atom))
 	                continue;
-	
+
 	            Color highlight = getHighlightColor(atom, parameters);
 	            Color color = highlight != null ? highlight : coloring.getAtomColor(atom);
 
 	            if (symbols[i] == null) {
 	                continue;
 	            }
-	
+
 	            ElementGroup symbolElements = new ElementGroup();
 	            for (Shape shape : symbols[i].getOutlines()) {
 	                GeneralPath path = GeneralPath.shapeOf(shape, color);
 	                symbolElements.add(path);
 	            }
-	
+
 	            if (highlight != null && !highlight.equals(Color.WHITE)) {
 	            	backLayer.add(MarkedElement.markup(outerGlow(symbolElements, Color.WHITE, 10*stroke, stroke), "outerglow"));
 	            }
-	        }  
+	        }
         }
 
         // Add the Sgroups display elements to the front layer
@@ -323,13 +436,183 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
         // Annotations are added to the front layer.
         frontLayer.add(annotations);
 
+        backLayer.add(generateRGrpLabels(container, bondElements, parameters, font, foreground, scale, 2*stroke));
+
         ElementGroup group = new ElementGroup();
 
         group.add(backLayer);
         group.add(middleLayer);
         group.add(frontLayer);
 
+        // maybe move somewhere else (e.g. annotations)
+        Bounds bounds = new Bounds();
+        bounds.add(group);
+
+        if (enantiomerText != null) {
+            TextOutline chiralInfo = new TextOutline(enantiomerText, font).resize(1 / scale, -1 / scale);
+            if (chiralInfo.getBounds().getWidth() > bounds.width()) {
+                // position center right
+                double centerY = (bounds.minY + bounds.maxY) / 2;
+                chiralInfo = chiralInfo.translate(bounds.maxX - (chiralInfo.getBounds().getMinX() - (10*stroke)),
+                                                  centerY - (chiralInfo.getBounds().getCenterY()));
+            } else {
+                // position bottom right corner
+                chiralInfo = chiralInfo.translate(bounds.maxX - ((chiralInfo.getBounds().getMaxX() + chiralInfo.getCenter().getX()) / 2),
+                                                  bounds.minY - (chiralInfo.getBounds().getMaxY() + (5*stroke)));
+            }
+            group.add(GeneralPath.shapeOf(chiralInfo.getOutline(), foreground));
+        }
         return MarkedElement.markupMol(group, container);
+    }
+
+    private List<IRenderingElement> generateRGrpLabels(IAtomContainer container,
+                                                       IRenderingElement[] bondElements,
+                                                       RendererModel model,
+                                                       Font font,
+                                                       Color foreground,
+                                                       double scale,
+                                                       double padding) {
+        List<IRenderingElement> renderingElements = new ArrayList<>();
+
+        Map<String,Bounds> rGrpsBounds = new TreeMap<>();
+        for (IAtom atom : container.atoms()) {
+            if (isHidden(atom))
+                continue;
+            String rlabel = atom.getProperty(CDKConstants.RGROUP_MEMBERSHIP);
+            if (rlabel != null) {
+                Bounds atomBounds = atom.getProperty(CDKConstants.RENDER_BOUNDS);
+                Bounds rGrpBounds = rGrpsBounds.computeIfAbsent(rlabel, k -> new Bounds());
+                if (atomBounds != null)
+                    rGrpBounds.add(atomBounds);
+                else
+                    rGrpBounds.add(atom.getPoint2d().x, atom.getPoint2d().y);
+                // consider the bounds of connected bonds as well
+                for (IBond bond : container.getConnectedBondsList(atom)) {
+                    if (bondElements[container.indexOf(bond)] != null)
+                        rGrpBounds.add(bondElements[container.indexOf(bond)]);
+                }
+            }
+        }
+
+        int colorIndex = 0;
+        Color[] boxColors = model.getParameter(RGroupBoxColors.class)
+                                 .getValue();
+
+        for (Map.Entry<String,Bounds> e : rGrpsBounds.entrySet()) {
+            Bounds bounds = e.getValue();
+            String rLab = e.getKey();
+            ElementGroup rText = createRGroupLabel(model, font, foreground,
+                                                   scale, padding, rLab, bounds);
+            if (boxColors != null) {
+                Shape s = new RoundRectangle2D.Double(bounds.minX - 2 * padding,
+                                                      bounds.minY - 2 * padding,
+                                                      bounds.width() + 4 * padding,
+                                                      bounds.height() + 4 * padding,
+                                                      8 * padding, 8 * padding);
+                Color boxColor = boxColors[colorIndex++ % boxColors.length];
+                renderingElements.add(GeneralPath.shapeOf(s, boxColor));
+            }
+            renderingElements.add(rText);
+        }
+        return renderingElements;
+    }
+
+    private ElementGroup createRGroupLabel(RendererModel model,
+                                           Font font,
+                                           Color foreground,
+                                           double scale,
+                                           double padding,
+                                           String label,
+                                           Bounds b) {
+        AtomSymbol symbol = atomGenerator.generatePseudoSymbol(label, Right, model)
+                                         .resize(1 / scale, -1 / scale);
+        TextOutline isText = new TextOutline("is", font).resize(1 / scale, -1 / scale);
+        Rectangle2D symbolBounds = symbol.getBounds();
+        isText = isText.translate(b.minX - isText.getBounds().getMaxX() - 4 * padding,
+                                  ((b.minY + b.maxY) / 2) - isText.getBounds().getCenterY());
+        symbol = symbol.translate(isText.getBounds().getMinX() - symbolBounds.getMaxX() - 2 * padding,
+                                  isText.getBounds().getMinY() - symbolBounds.getMinY());
+
+        ElementGroup rText = new ElementGroup();
+        rText.add(GeneralPath.shapeOf(isText.getOutline(), foreground));
+        for (Shape s : symbol.getOutlines()) {
+            rText.add(GeneralPath.shapeOf(s, foreground));
+        }
+        return rText;
+    }
+
+    private static boolean isOuterglow(HighlightStyle style) {
+        return style == HighlightStyle.OuterGlow ||
+                style == HighlightStyle.OuterGlowFillRings ||
+                style == HighlightStyle.OuterGlowWhiteEdge;
+    }
+
+    /**
+     * Adds &1 and or1 to each atom in the those stereo groups.
+     * @param container the container
+     */
+    private void addStereoGroupAnnotations(IAtomContainer container) {
+        for (IStereoElement<?,?> se : container.stereoElements()) {
+            // tetrahedral only
+            if (se.getConfigClass() == IStereoElement.TH) {
+                int groupInfo = se.getGroupInfo();
+                if (groupInfo != 0) {
+
+                    // generate the label &1, or1
+                    String label = null;
+                    switch ((groupInfo & IStereoElement.GRP_TYPE_MASK)) {
+                        case IStereoElement.GRP_RAC:
+                            label = "&";
+                            break;
+                        case IStereoElement.GRP_REL:
+                            label = "or";
+                            break;
+                        case IStereoElement.GRP_ABS:
+                            continue;
+                    }
+                    label += Integer.toString(groupInfo >> IStereoElement.GRP_NUM_SHIFT);
+
+                    // attach it to the central atom
+                    IAtom focus = (IAtom) se.getFocus();
+                    String annotation = focus.getProperty(StandardGenerator.ANNOTATION_LABEL);
+                    if (annotation == null)
+                        annotation = label;
+                    else
+                        annotation += ";" + label;
+                    focus.setProperty(StandardGenerator.ANNOTATION_LABEL,
+                                      annotation);
+                }
+            }
+        }
+    }
+
+    /**
+     * Determines the text to enantiomer text to display next to the structure, "and enantiomer" for racemic mixtures
+     * or "or enantiomer" for relative stereochemistry. These are generated if all grouped stereo is in the same group,
+     * i.e. all &1, all or1, all &2 etc.
+     *
+     * @param container the molecule
+     * @return the text
+     */
+    private String determineEnantiomerText(IAtomContainer container) {
+        int ref_grp = 0;
+        for (IStereoElement<?, ?> elem : container.stereoElements()) {
+            if (elem.getConfigClass() == IStereoElement.TH) {
+                if (elem.getGroupInfo() == 0)
+                    return null;
+                if (ref_grp == 0)
+                    ref_grp = elem.getGroupInfo();
+                else if (ref_grp != elem.getGroupInfo())
+                    return null;
+            }
+        }
+        switch ((ref_grp & IStereoElement.GRP_TYPE_MASK)) {
+            case IStereoElement.GRP_RAC:
+                return "and enantiomer";
+            case IStereoElement.GRP_REL:
+                return "or enantiomer";
+        }
+        return null;
     }
 
     private Color getColorOfAtom(Map<IAtom, String> symbolRemap, IAtomColorer coloring, Color foreground,
@@ -358,7 +641,8 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
                                              RendererModel parameters,
                                              ElementGroup annotations,
                                              Color foreground,
-                                             double stroke) {
+                                             double stroke,
+                                             StandardDonutGenerator donutGen) {
 
         final double scale = parameters.get(BasicSceneGenerator.Scale.class);
         final double annDist = parameters.get(AnnotationDistance.class)
@@ -368,7 +652,6 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
         final double halfStroke = stroke / 2;
 
         AtomSymbol[] symbols = new AtomSymbol[container.getAtomCount()];
-        IChemObjectBuilder builder = container.getBuilder();
 
         // check if we should annotate attachment point numbers (maxAttach>1)
         // and queue them all up for processing
@@ -408,16 +691,30 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
             // only generate if the symbol is visible
             if (visibility.visible(atom, bonds, parameters) || remapped) {
 
-                final HydrogenPosition hPosition = HydrogenPosition.position(atom, visNeighbors);
+                final HydrogenPosition hPosition;
+                final Alignment align = atom.getProperty(StandardGenerator.LABEL_ALIGN);
+                if (align == Alignment.Left)
+                    hPosition = Right;
+                else if (align == Alignment.Right)
+                    hPosition = Left;
+                else
+                    hPosition = HydrogenPosition.position(atom, visNeighbors);
 
                 if (atom.getImplicitHydrogenCount() != null && atom.getImplicitHydrogenCount() > 0)
                     auxVectors.add(hPosition.vector());
 
                 if (remapped) {
                     symbols[i] = atomGenerator.generateAbbreviatedSymbol(symbolRemap.get(atom), hPosition);
-                } else {
+                } else if (donutGen.isChargeDelocalised(atom)) {
+                    Integer charge = atom.getFormalCharge();
+                    atom.setFormalCharge(0);
+                    // can't think of a better way to handle this without API
+                    // change to symbol visibility
+                    if (atom.getAtomicNumber() != 6)
+                        symbols[i] = atomGenerator.generateSymbol(container, atom, hPosition, parameters);
+                    atom.setFormalCharge(charge);
+                } else
                     symbols[i] = atomGenerator.generateSymbol(container, atom, hPosition, parameters);
-                }
 
                 if (symbols[i] != null) {
 
@@ -441,9 +738,10 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
                 }
             }
 
-            String label = getAnnotationLabel(atom);
-
-            if (label != null) {
+            String label = null;
+            if (!isHidden(atom))
+                label = getAnnotationLabel(atom);
+            if (label != null && !label.isEmpty()) {
 
                 // to ensure consistent draw distance we need to adjust the annotation distance
                 // depending on whether we are drawing next to an atom symbol or not.
@@ -471,6 +769,8 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
             double maxRadius = 0;
 
             for (IPseudoAtom atom : attachPoints) {
+                if (isHidden(atom))
+                    continue;
                 int attachNum = atom.getAttachPointNum();
 
                 // to ensure consistent draw distance we need to adjust the annotation distance
@@ -479,15 +779,15 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
 
                 final Vector2d vector = newAttachPointAnnotationVector(atom,
                                                                        container.getConnectedBondsList(atom),
-                                                                       new ArrayList<Vector2d>());
+                        new ArrayList<>());
 
                 final TextOutline outline = generateAnnotation(atom.getPoint2d(),
-                                                                  Integer.toString(attachNum),
-                                                                  vector,
-                                                                  1.75 * annDist + strokeAdjust,
-                                                                  annScale,
-                                                                  font.deriveFont(Font.BOLD),
-                                                                  null);
+                                                               Integer.toString(attachNum),
+                                                               vector,
+                                                               1.75 * annDist + strokeAdjust,
+                                                               annScale,
+                                                               font.deriveFont(Font.BOLD),
+                                                               null);
 
                 attachNumOutlines.add(outline);
 
@@ -500,7 +800,7 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
 
             for (TextOutline outline : attachNumOutlines) {
                 ElementGroup group = new ElementGroup();
-                double radius = 2*stroke + maxRadius;
+                double radius = 1.2*stroke + maxRadius;
                 Shape shape = new Ellipse2D.Double(outline.getCenter().getX() - radius,
                                                    outline.getCenter().getY() - radius,
                                                    2*radius,
@@ -510,7 +810,59 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
                 group.add(GeneralPath.shapeOf(area1, foreground));
                 annotations.add(group);
             }
+        }
 
+        // ligand/attachment ordering annotations on bonds
+        List<Sgroup> sgroups = container.getProperty(CDKConstants.CTAB_SGROUPS);
+        if (sgroups != null) {
+
+            List<TextOutline> attachNumOutlines = new ArrayList<>();
+            double maxRadius = 0;
+
+            for (Sgroup sgroup : sgroups) {
+                if (sgroup.getType() == SgroupType.ExtAttachOrdering) {
+                    int number = 1;
+                    Set<IBond> bonds = sgroup.getBonds();
+                    // if there is only a single bond we do not need to annotate
+                    // the ordering.
+                    if (bonds.size() == 1)
+                        continue;
+                    for (IBond bond : bonds) {
+                        Point2d beg = bond.getBegin().getPoint2d();
+                        Point2d end = bond.getEnd().getPoint2d();
+                        Point2d mid = VecmathUtil.midpoint(beg, end);
+
+                        final TextOutline outline = generateAnnotation(mid,
+                                                                       Integer.toString(number++),
+                                                                       new Vector2d(0,0),
+                                                                       0,
+                                                                       annScale,
+                                                                       font.deriveFont(Font.BOLD),
+                                                                       null);
+
+                        attachNumOutlines.add(outline);
+
+                        double w = outline.getBounds().getWidth();
+                        double h = outline.getBounds().getHeight();
+                        double r = Math.sqrt(w * w + h * h)/2;
+                        if (r > maxRadius)
+                            maxRadius = r;
+                    }
+                }
+            }
+
+            for (TextOutline outline : attachNumOutlines) {
+                ElementGroup group = new ElementGroup();
+                double radius = 1.2*stroke + maxRadius;
+                Shape shape = new Ellipse2D.Double(outline.getCenter().getX() - radius,
+                                                   outline.getCenter().getY() - radius,
+                                                   2*radius,
+                                                   2*radius);
+                group.add(GeneralPath.shapeOf(shape, Color.white));
+                group.add(GeneralPath.outlineOf(shape, 0.2*stroke, foreground));
+                group.add(GeneralPath.shapeOf(outline.getOutline(), foreground));
+                annotations.add(group);
+            }
         }
 
         return symbols;
@@ -601,8 +953,9 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
     @Override
     public List<IGeneratorParameter<?>> getParameters() {
         return Arrays.asList(atomColor, visibility, strokeRatio, separationRatio, wedgeRatio, marginRatio,
-                hatchSections, dashSections, waveSections, fancyBoldWedges, fancyHashedWedges, highlighting, glowWidth,
-                annCol, annDist, annFontSize, sgroupBracketDepth, sgroupFontScale, omitMajorIsotopes, forceDonuts);
+                             hatchSections, dashSections, waveSections, fancyBoldWedges, fancyHashedWedges, highlighting, glowWidth,
+                             annCol, annDist, annFontSize, sgroupBracketDepth, sgroupFontScale, omitMajorIsotopes, forceDelocalised, delocaliseDonuts,
+                             deuteriumSymbol, pseudoFontStyle, rGroupBoxColors);
     }
 
     static String getAnnotationLabel(IChemObject chemObject) {
@@ -715,7 +1068,7 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
      */
     static Vector2d newAtomAnnotationVector(IAtom atom, List<IBond> bonds, List<Vector2d> auxVectors) {
 
-        final List<Vector2d> vectors = new ArrayList<Vector2d>(bonds.size());
+        final List<Vector2d> vectors = new ArrayList<>(bonds.size());
         for (IBond bond : bonds)
             vectors.add(VecmathUtil.newUnitVector(atom, bond));
 
@@ -762,8 +1115,8 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
                 // (i.e. non-stereo sigma bonds) and use those. This gives good
                 // placement for fused conjugated rings
 
-                List<Vector2d> plainVectors = new ArrayList<Vector2d>();
-                List<Vector2d> wedgeVectors = new ArrayList<Vector2d>();
+                List<Vector2d> plainVectors = new ArrayList<>();
+                List<Vector2d> wedgeVectors = new ArrayList<>();
 
                 for (IBond bond : bonds) {
                     if (isPlainBond(bond)) plainVectors.add(VecmathUtil.newUnitVector(atom, bond));
@@ -812,7 +1165,7 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
      */
     static boolean isPlainBond(IBond bond) {
         return bond.getOrder() == IBond.Order.SINGLE
-                && (bond.getStereo() == IBond.Stereo.NONE || bond.getStereo() == null);
+                && (bond.getDisplay() == IBond.Display.Solid || bond.getDisplay() == null);
     }
 
     /**
@@ -822,8 +1175,17 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
      * @return the bond is wedge (bold or hashed)
      */
     static boolean isWedged(IBond bond) {
-        return (bond.getStereo() == IBond.Stereo.UP || bond.getStereo() == IBond.Stereo.DOWN
-                || bond.getStereo() == IBond.Stereo.UP_INVERTED || bond.getStereo() == IBond.Stereo.DOWN_INVERTED);
+        switch (bond.getDisplay()) {
+            case WedgeBegin:
+            case WedgeEnd:
+            case WedgedHashBegin:
+            case WedgedHashEnd:
+            case HollowWedgeBegin:
+            case HollowWedgeEnd:
+                return true;
+            default:
+                return false;
+        }
     }
 
     /**
@@ -929,7 +1291,7 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
          */
         @Override
         public Double getDefault() {
-            return 0.18;
+            return 0.16;
         }
     }
 
@@ -973,7 +1335,7 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
          */
         @Override
         public Double getDefault() {
-            return 5d;
+            return 3.25;
         }
     }
 
@@ -987,7 +1349,7 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
          */
         @Override
         public Double getDefault() {
-            return 5d;
+            return 3.25;
         }
     }
 
@@ -1135,18 +1497,83 @@ public final class StandardGenerator implements IGenerator<IAtomContainer> {
      * there is a valid Kekule structure. Delocalised bonds will either be
      * rendered as a dashed bond to the side or as a circle/donut/life buoy
      * inside small rings. This depiction is used by default when a bond does
-     * not have an order assigned (e.g. null/unset). Turning this option on
-     * means all delocalised bonds will be rendered this way.
+     * not have an order assigned (e.g. null/unset), for example: c1cccc1.
+     * Turning this option on means all delocalised bonds will be rendered this
+     * way even when they have bond orders correctly assigned: e.g. c1ccccc1,
+     * [cH-]1cccc1.
      * <br>
      * <b>As recommended by IUPAC, their usage is discouraged and the Kekule
      * representation is more clear.</b>
      */
-    public static final class ForceDelocalisedBondDisplay extends AbstractGeneratorParameter<Boolean> {
+    public static final class ForceDelocalisedBondDisplay
+            extends AbstractGeneratorParameter<Boolean> {
 
         /**{@inheritDoc} */
         @Override
         public Boolean getDefault() {
             return false;
+        }
+    }
+
+    /**
+     * Render small delocalised rings as bonds/life buoys? This can sometimes
+     * be misleading for fused rings but is commonly used.
+     */
+    public static final class DelocalisedDonutsBondDisplay
+            extends AbstractGeneratorParameter<Boolean> {
+
+        /**{@inheritDoc} */
+        @Override
+        public Boolean getDefault() {
+            return true;
+        }
+    }
+
+    /**
+     * Display deuterium {@code [2H]} as 'D'.
+     */
+    public static final class DeuteriumSymbol
+        extends AbstractGeneratorParameter<Boolean> {
+
+        /**{@inheritDoc} */
+        @Override
+        public Boolean getDefault() {
+            return true;
+        }
+    }
+
+    /**
+     * The default font style for pseudo-atoms, is Bold and Italic. This
+     * allows one to distinguish a 'Y/W' for an R group 'Y' Yttrium etc. To
+     * render symbols the same as other atoms set this to '0'.
+     */
+    public static final class PseudoFontStyle
+        extends AbstractGeneratorParameter<Integer> {
+
+        /**{@inheritDoc} */
+        @Override
+        public Integer getDefault() {
+            return 3; // Font.BOLD|Font.ITALIC;
+        }
+    }
+
+    /**
+     * This set of colors is used to add a colored the background box
+     * around R-Group definitions. The colours are cycled so adding a single
+     * color means all R-Groups will be coloured like that, setting it to null
+     * will mean the box is omitted completely.
+     */
+    public static final class RGroupBoxColors
+            extends AbstractGeneratorParameter<Color[]> {
+
+        /**{@inheritDoc} */
+        @Override
+        public Color[] getDefault() {
+            return new Color[]{new Color(230, 237, 255),
+                               new Color(233, 255, 232),
+                               new Color(255, 240, 214),
+                               new Color(255, 224, 224),
+                               new Color(254, 217, 255)};
         }
     }
 }

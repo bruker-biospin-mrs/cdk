@@ -30,8 +30,6 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  * molecule.
  *
  * @author John May
- * @cdk.module interfaces
- * @cdk.githash
  */
 public interface AtomHashGenerator {
 
@@ -41,6 +39,6 @@ public interface AtomHashGenerator {
      * @param container a molecule
      * @return atomic hash codes
      */
-    public long[] generate(IAtomContainer container);
+    long[] generate(IAtomContainer container);
 
 }

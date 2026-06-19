@@ -89,15 +89,13 @@ import java.util.List;
   * @author      Stephane Werner from IXELIS mail@ixelis.net
   * @cdk.created 2002-07-17
   * @cdk.require java1.4+
-  * @cdk.module  standard
- * @cdk.githash
   */
 public class RGraph {
 
     // an RGraph is a list of RGraph nodes
     // each node keeping track of its
     // neighbors.
-    List<RNode>  graph            = null;
+    List<RNode>  graph;
 
     // maximal number of iterations before
     // search break
@@ -112,7 +110,7 @@ public class RGraph {
     BitSet       c2               = null;
 
     // current solution list
-    List<BitSet> solutionList     = null;
+    List<BitSet> solutionList;
 
     // flag to define if we want to get all possible 'mappings'
     boolean      findAllMap       = false;
@@ -123,7 +121,7 @@ public class RGraph {
     // working variables
     boolean      stop             = false;
     int          nbIteration      = 0;
-    BitSet       graphBitSet      = null;
+    BitSet       graphBitSet;
 
     private long timeout          = -1;
     private long start;
@@ -132,8 +130,8 @@ public class RGraph {
      * Constructor for the RGraph object and creates an empty RGraph.
      */
     public RGraph() {
-        graph = new ArrayList<RNode>();
-        solutionList = new ArrayList<BitSet>();
+        graph = new ArrayList<>();
+        solutionList = new ArrayList<>();
         graphBitSet = new BitSet();
     }
 
@@ -239,10 +237,10 @@ public class RGraph {
      * @param  forbiden   node forbidden (set of node incompatible with the current solution)
      */
     private void parseRec(BitSet traversed, BitSet extension, BitSet forbidden) {
-        BitSet newTraversed = null;
-        BitSet newExtension = null;
-        BitSet newForbidden = null;
-        BitSet potentialNode = null;
+        BitSet newTraversed;
+        BitSet newExtension;
+        BitSet newForbidden;
+        BitSet potentialNode;
 
         // Test whether the timeout is reached. Stop searching.
         if (this.timeout > -1 && (System.currentTimeMillis() - this.start) > this.timeout) {
@@ -276,20 +274,20 @@ public class RGraph {
                     // by including the nodes not compatible with the
                     // newly accepted node.
                     newForbidden = (BitSet) forbidden.clone();
-                    newForbidden.or(((RNode) graph.get(x)).forbidden);
+                    newForbidden.or(graph.get(x).forbidden);
 
                     // if it is the first time we are here then
                     // traversed is empty and we initialize the set of
                     // possible extensions to the extension of the first
                     // accepted node in the solution.
                     if (traversed.isEmpty()) {
-                        newExtension = (BitSet) (((RNode) graph.get(x)).extension.clone());
+                        newExtension = (BitSet) (graph.get(x).extension.clone());
                     }
                     // else we simply update the set of solution by
                     // including the neighbors of the newly accepted node
                     else {
                         newExtension = (BitSet) extension.clone();
-                        newExtension.or(((RNode) graph.get(x)).extension);
+                        newExtension.or(graph.get(x).extension);
                     }
 
                     // extension my not contain forbidden nodes
@@ -425,9 +423,7 @@ public class RGraph {
 
         // only nodes that fulfill the initial constrains
         // are allowed in the initial extension set : B
-        for (Iterator<RNode> i = graph.iterator(); i.hasNext();) {
-            RNode rn = i.next();
-
+        for (RNode rn : graph) {
             if ((c1.get(rn.rMap.id1) || c1.isEmpty()) && (c2.get(rn.rMap.id2) || c2.isEmpty())) {
                 bs.set(graph.indexOf(rn));
             }
@@ -455,7 +451,7 @@ public class RGraph {
      * @return      the RMap list
      */
     public List<RMap> bitSetToRMap(BitSet set) {
-        List<RMap> rMapList = new ArrayList<RMap>();
+        List<RMap> rMapList = new ArrayList<>();
 
         for (int x = set.nextSetBit(0); x >= 0; x = set.nextSetBit(x + 1)) {
             RNode xNode = graph.get(x);
@@ -508,8 +504,7 @@ public class RGraph {
         String message = "";
         int j = 0;
 
-        for (Iterator<RNode> i = graph.iterator(); i.hasNext();) {
-            RNode rn = i.next();
+        for (RNode rn : graph) {
             message += "-------------\n" + "RNode " + j + "\n" + rn.toString() + "\n";
             j++;
         }
@@ -525,10 +520,10 @@ public class RGraph {
      */
     public BitSet projectG1(BitSet set) {
         BitSet projection = new BitSet(firstGraphSize);
-        RNode xNode = null;
+        RNode xNode;
 
         for (int x = set.nextSetBit(0); x >= 0; x = set.nextSetBit(x + 1)) {
-            xNode = (RNode) graph.get(x);
+            xNode = graph.get(x);
             projection.set(xNode.rMap.id1);
         }
         return projection;
@@ -541,10 +536,10 @@ public class RGraph {
      */
     public BitSet projectG2(BitSet set) {
         BitSet projection = new BitSet(secondGraphSize);
-        RNode xNode = null;
+        RNode xNode;
 
         for (int x = set.nextSetBit(0); x >= 0; x = set.nextSetBit(x + 1)) {
-            xNode = (RNode) graph.get(x);
+            xNode = graph.get(x);
             projection.set(xNode.rMap.id2);
         }
         return projection;

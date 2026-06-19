@@ -23,11 +23,10 @@
 package org.openscience.cdk.io.formats;
 
 /**
- * @cdk.module test-ioformats
  */
-public class ZindoFormatTest extends ChemFormatTest {
+class ZindoFormatTest extends ChemFormatTest {
 
-    public ZindoFormatTest() {
+    ZindoFormatTest() {
         super.setChemFormat((IChemFormat) ZindoFormat.getInstance());
     }
 

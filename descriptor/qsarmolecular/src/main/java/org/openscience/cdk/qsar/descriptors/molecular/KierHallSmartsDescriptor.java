@@ -50,7 +50,7 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  * here</a> for the corresponding chemical groups).
  * 
  * 
- * <table border=1 cellpadding=5>
+ * <table border=1 style="padding: 5px;">
  * <caption>SMARTS patterns used by the descriptor</caption>
  * <thead>
  * <tr>
@@ -300,8 +300,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  * </tbody></table>
  *
  * @author Rajarshi Guha
- * @cdk.module qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:kierHallSmarts
  */
 public class KierHallSmartsDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
@@ -389,7 +387,7 @@ public class KierHallSmartsDescriptor extends AbstractMolecularDescriptor implem
 
         IAtomContainer atomContainer;
         try {
-            atomContainer = (IAtomContainer) container.clone();
+            atomContainer = container.clone();
             for (IAtom atom : atomContainer.atoms()) {
                 if (atom.getImplicitHydrogenCount() == null)
                     atom.setImplicitHydrogenCount(0);

@@ -31,10 +31,8 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
  *  match for the most common halogens).
  *
  *@author        kha
- * @cdk.githash
  *@cdk.created   2004-09-16
  *@see           InverseSymbolSetQueryAtom
- *@cdk.module    isomorphism
  * @deprecated Use {@code new Expr(Element, 6).and(new Expr(Element, 8))} etc
  */
 @Deprecated
@@ -42,7 +40,7 @@ public class SymbolSetQueryAtom extends QueryAtom implements IQueryAtom {
 
     private static final long serialVersionUID = 7539577277779603551L;
 
-    private Set<String>       symbols          = new HashSet<String>();
+    private final Set<String>       symbols          = new HashSet<>();
 
     /**
      *  Constructor for the SymbolSetQueryAtom object
@@ -111,7 +109,7 @@ public class SymbolSetQueryAtom extends QueryAtom implements IQueryAtom {
         StringBuilder s = new StringBuilder();
         s.append("SymbolSetQueryAtom(");
         s.append(this.hashCode() + ", ");
-        s.append(symbols.toString());
+        s.append(symbols);
         s.append(')');
         return s.toString();
     }

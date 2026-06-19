@@ -22,42 +22,40 @@
  */
 package org.openscience.cdk.smsd.algorithm.mcsplus;
 
-import static org.junit.Assert.assertNotNull;
-
-import org.openscience.cdk.AtomContainer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-smsd
  * @author Asad
  */
-public class MCSPlusTest {
+class MCSPlusTest {
 
     public MCSPlusTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     @Test
-    public void testSomeMethod() throws CDKException {
+    void testSomeMethod() throws CDKException {
 
         // TODO review the generated test code and remove the default call to fail.
-        assertNotNull(new MCSPlus().getOverlaps(new AtomContainer(), new AtomContainer(), true));
+        Assertions.assertNotNull(new MCSPlus().getOverlaps(DefaultChemObjectBuilder.getInstance().newAtomContainer(), DefaultChemObjectBuilder.getInstance().newAtomContainer(), true));
 
     }
 }

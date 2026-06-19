@@ -18,24 +18,14 @@
  */
 package org.openscience.cdk.tools.manipulator;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKTestCase;
-import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.Reaction;
-import org.openscience.cdk.ReactionSet;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.*;
+import org.openscience.cdk.interfaces.*;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IBond.Order;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.IChemObjectBuilder;
-import org.openscience.cdk.interfaces.IMapping;
-import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.io.MDLRXNReader;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmiFlavor;
@@ -43,58 +33,56 @@ import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
 
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @cdk.module test-standard
- *
- * @author     Egon Willighagen
- * @cdk.created    2003-07-23
+ * @author Egon Willighagen
+ * @author uli-f
+ * @cdk.created 2003-07-23
  */
-public class ReactionManipulatorTest extends CDKTestCase {
+class ReactionManipulatorTest extends CDKTestCase {
 
-    private IReaction          reaction;
-    private IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
+    private IReaction reaction;
+    private final IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
 
-    public ReactionManipulatorTest() {
+    ReactionManipulatorTest() {
         super();
     }
 
-    @Before
-    public void setUp() throws Exception {
-        String filename1 = "data/mdl/reaction-1.rxn";
-        InputStream ins1 = this.getClass().getClassLoader().getResourceAsStream(filename1);
+    @BeforeEach
+    void setUp() throws Exception {
+        String filename1 = "reaction-1.rxn";
+        InputStream ins1 = this.getClass().getResourceAsStream(filename1);
         MDLRXNReader reader1 = new MDLRXNReader(ins1);
-        ReactionSet set = (ReactionSet) reader1.read(new ReactionSet());
+        ReactionSet set = reader1.read(new ReactionSet());
         reaction = set.getReaction(0);
         reader1.close();
     }
 
     @Test
-    public void testReverse_IReaction() {
+    void testReverse_IReaction() {
         Reaction reaction = new Reaction();
         reaction.setDirection(IReaction.Direction.BACKWARD);
-        IAtomContainer water = new AtomContainer();
+        IAtomContainer water = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         reaction.addReactant(water, 3.0);
-        reaction.addReactant(new AtomContainer());
-        reaction.addProduct(new AtomContainer());
+        reaction.addReactant(DefaultChemObjectBuilder.getInstance().newAtomContainer());
+        reaction.addProduct(DefaultChemObjectBuilder.getInstance().newAtomContainer());
 
         Reaction reversedReaction = (Reaction) ReactionManipulator.reverse(reaction);
-        Assert.assertEquals(IReaction.Direction.FORWARD, reversedReaction.getDirection());
-        Assert.assertEquals(2, reversedReaction.getProductCount());
-        Assert.assertEquals(1, reversedReaction.getReactantCount());
-        Assert.assertEquals(3.0, reversedReaction.getProductCoefficient(water), 0.00001);
+        Assertions.assertEquals(IReaction.Direction.FORWARD, reversedReaction.getDirection());
+        Assertions.assertEquals(2, reversedReaction.getProductCount());
+        Assertions.assertEquals(1, reversedReaction.getReactantCount());
+        Assertions.assertEquals(3.0, reversedReaction.getProductCoefficient(water), 0.00001);
     }
 
     @Test
-    public void testGetAllIDs_IReaction() {
+    void testGetAllIDs_IReaction() {
         Reaction reaction = new Reaction();
         reaction.setID("r1");
-        IAtomContainer water = new AtomContainer();
+        IAtomContainer water = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         water.setID("m1");
         Atom oxygen = new Atom("O");
         oxygen.setID("a1");
@@ -103,17 +91,15 @@ public class ReactionManipulatorTest extends CDKTestCase {
         reaction.addProduct(water);
 
         List<String> ids = ReactionManipulator.getAllIDs(reaction);
-        Assert.assertNotNull(ids);
-        Assert.assertEquals(5, ids.size());
+        Assertions.assertNotNull(ids);
+        Assertions.assertEquals(5, ids.size());
     }
 
     /**
      * A unit test suite for JUnit. Test of mapped IAtoms
-     *
-     * @return    The test suite
      */
     @Test
-    public void testGetMappedChemObject_IReaction_IAtom() throws Exception {
+    void testGetMappedChemObject_IReaction_IAtom() throws Exception {
         IReaction reaction = builder.newInstance(IReaction.class);
         IAtomContainer reactant = (new SmilesParser(builder)).parseSmiles("[C+]-C=C");
         IAtomContainer product = (new SmilesParser(builder)).parseSmiles("C=C=C");
@@ -129,20 +115,18 @@ public class ReactionManipulatorTest extends CDKTestCase {
         reaction.addProduct(product);
 
         IAtom mappedAtom = (IAtom) ReactionManipulator.getMappedChemObject(reaction, reactant.getAtom(0));
-        Assert.assertEquals(mappedAtom, product.getAtom(0));
+        Assertions.assertEquals(mappedAtom, product.getAtom(0));
 
         mappedAtom = (IAtom) ReactionManipulator.getMappedChemObject(reaction, product.getAtom(1));
-        Assert.assertEquals(mappedAtom, reactant.getAtom(1));
+        Assertions.assertEquals(mappedAtom, reactant.getAtom(1));
 
     }
 
     /**
      * A unit test suite for JUnit. Test of mapped IBond
-     *
-     * @return    The test suite
      */
     @Test
-    public void testGetMappedChemObject_IReaction_IBond() throws ClassNotFoundException, CDKException,
+    void testGetMappedChemObject_IReaction_IBond() throws
             java.lang.Exception {
         IReaction reaction = builder.newInstance(IReaction.class);
         IAtomContainer reactant = (new SmilesParser(builder)).parseSmiles("[C+]-C=C");
@@ -159,79 +143,71 @@ public class ReactionManipulatorTest extends CDKTestCase {
         reaction.addProduct(product);
 
         IBond mappedBond = (IBond) ReactionManipulator.getMappedChemObject(reaction, reactant.getBond(0));
-        Assert.assertEquals(mappedBond, product.getBond(0));
+        Assertions.assertEquals(mappedBond, product.getBond(0));
 
         mappedBond = (IBond) ReactionManipulator.getMappedChemObject(reaction, product.getBond(1));
-        Assert.assertEquals(mappedBond, reactant.getBond(1));
+        Assertions.assertEquals(mappedBond, reactant.getBond(1));
     }
 
     @Test
-    public void testGetAtomCount_IReaction() throws Exception {
-        Assert.assertEquals(19, ReactionManipulator.getAtomCount(reaction));
+    void testGetAtomCount_IReaction() {
+        Assertions.assertEquals(19, ReactionManipulator.getAtomCount(reaction));
     }
 
     @Test
-    public void testGetBondCount_IReaction() throws Exception {
-        Assert.assertEquals(18, ReactionManipulator.getBondCount(reaction));
+    void testGetBondCount_IReaction() {
+        Assertions.assertEquals(18, ReactionManipulator.getBondCount(reaction));
     }
 
     @Test
-    public void testGetAllAtomContainers_IReaction() throws Exception {
-        Assert.assertEquals(3, ReactionManipulator.getAllAtomContainers(reaction).size());
+    void testGetAllAtomContainers_IReaction() {
+        Assertions.assertEquals(3, ReactionManipulator.getAllAtomContainers(reaction).size());
     }
 
     @Test
-    public void testSetAtomProperties_IReactionSet_Object_Object() throws Exception {
+    void testSetAtomProperties_IReactionSet_Object_Object() {
         ReactionManipulator.setAtomProperties(reaction, "test", "ok");
-        Iterator<IAtomContainer> atomContainers = ReactionManipulator.getAllAtomContainers(reaction).iterator();
-        while (atomContainers.hasNext()) {
-            IAtomContainer container = atomContainers.next();
-            Iterator<IAtom> atoms = container.atoms().iterator();
-            while (atoms.hasNext()) {
-                IAtom atom = atoms.next();
-                Assert.assertNotNull(atom.getProperty("test"));
-                Assert.assertEquals("ok", atom.getProperty("test"));
+        for (IAtomContainer container : ReactionManipulator.getAllAtomContainers(reaction)) {
+            for (IAtom atom : container.atoms()) {
+                Assertions.assertNotNull(atom.getProperty("test"));
+                Assertions.assertEquals("ok", atom.getProperty("test"));
             }
         }
     }
 
     @Test
-    public void testGetAllChemObjects_IReactionSet() {
+    void testGetAllChemObjects_IReactionSet() {
         List<IChemObject> allObjects = ReactionManipulator.getAllChemObjects(reaction);
         // does not recurse beyond the IAtomContainer, so:
         // reaction, 2xreactant, 1xproduct
-        Assert.assertEquals(4, allObjects.size());
+        Assertions.assertEquals(4, allObjects.size());
     }
 
     @Test
-    public void testGetRelevantAtomContainer_IReaction_IAtom() {
-        Iterator<IAtomContainer> atomContainers = ReactionManipulator.getAllAtomContainers(reaction).iterator();
-        while (atomContainers.hasNext()) {
-            IAtomContainer container = atomContainers.next();
+    void testGetRelevantAtomContainer_IReaction_IAtom() {
+        for (IAtomContainer container : ReactionManipulator.getAllAtomContainers(reaction)) {
             IAtom anAtom = container.getAtom(0);
-            Assert.assertEquals(container, ReactionManipulator.getRelevantAtomContainer(reaction, anAtom));
+            Assertions.assertEquals(container, ReactionManipulator.getRelevantAtomContainer(reaction, anAtom));
         }
     }
 
     @Test
-    public void testGetRelevantAtomContainer_IReaction_IBond() {
-        Iterator<IAtomContainer> atomContainers = ReactionManipulator.getAllAtomContainers(reaction).iterator();
-        while (atomContainers.hasNext()) {
-            IAtomContainer container = atomContainers.next();
+    void testGetRelevantAtomContainer_IReaction_IBond() {
+        for (IAtomContainer container : ReactionManipulator.getAllAtomContainers(reaction)) {
             IBond aBond = container.getBond(0);
-            Assert.assertEquals(container, ReactionManipulator.getRelevantAtomContainer(reaction, aBond));
+            Assertions.assertEquals(container, ReactionManipulator.getRelevantAtomContainer(reaction, aBond));
         }
     }
 
     @Test
-    public void testRemoveElectronContainer_IReaction_IElectronContainer() {
+    void testRemoveElectronContainer_IReaction_IElectronContainer() {
         IReaction reaction = builder.newInstance(IReaction.class);
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         mol.addAtom(builder.newInstance(IAtom.class, "C"));
         mol.addAtom(builder.newInstance(IAtom.class, "C"));
         mol.addBond(0, 1, Order.SINGLE);
-        Assert.assertEquals(2, mol.getAtomCount());
-        Assert.assertEquals(1, mol.getBondCount());
+        Assertions.assertEquals(2, mol.getAtomCount());
+        Assertions.assertEquals(1, mol.getBondCount());
         reaction.addReactant(mol);
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
@@ -239,20 +215,20 @@ public class ReactionManipulatorTest extends CDKTestCase {
         reaction.addProduct(builder.newInstance(IAtomContainer.class));
         ReactionManipulator.removeElectronContainer(reaction, mol.getBond(0));
 
-        Assert.assertEquals(2, mol.getAtomCount());
-        Assert.assertEquals(0, mol.getBondCount());
+        Assertions.assertEquals(2, mol.getAtomCount());
+        Assertions.assertEquals(0, mol.getBondCount());
 
     }
 
     @Test
-    public void testRemoveAtomAndConnectedElectronContainers_IReaction_IAtom() {
+    void testRemoveAtomAndConnectedElectronContainers_IReaction_IAtom() {
         IReaction reaction = builder.newInstance(IReaction.class);
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         mol.addAtom(builder.newInstance(IAtom.class, "C"));
         mol.addAtom(builder.newInstance(IAtom.class, "C"));
         mol.addBond(0, 1, Order.SINGLE);
-        Assert.assertEquals(2, mol.getAtomCount());
-        Assert.assertEquals(1, mol.getBondCount());
+        Assertions.assertEquals(2, mol.getAtomCount());
+        Assertions.assertEquals(1, mol.getBondCount());
         reaction.addReactant(mol);
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
@@ -260,44 +236,45 @@ public class ReactionManipulatorTest extends CDKTestCase {
         reaction.addProduct(builder.newInstance(IAtomContainer.class));
         ReactionManipulator.removeAtomAndConnectedElectronContainers(reaction, mol.getAtom(0));
 
-        Assert.assertEquals(1, mol.getAtomCount());
-        Assert.assertEquals(0, mol.getBondCount());
+        Assertions.assertEquals(1, mol.getAtomCount());
+        Assertions.assertEquals(0, mol.getBondCount());
     }
 
     @Test
-    public void testGetAllMolecules_IReaction() {
+    void testGetAllMolecules_IReaction() {
         IReaction reaction = builder.newInstance(IReaction.class);
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addProduct(builder.newInstance(IAtomContainer.class));
         reaction.addProduct(builder.newInstance(IAtomContainer.class));
-        Assert.assertEquals(5, ReactionManipulator.getAllMolecules(reaction).getAtomContainerCount());
+        Assertions.assertEquals(5, ReactionManipulator.getAllMolecules(reaction).getAtomContainerCount());
     }
 
     @Test
-    public void testGetAllProducts_IReaction() {
+    void testGetAllProducts_IReaction() {
         IReaction reaction = builder.newInstance(IReaction.class);
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addProduct(builder.newInstance(IAtomContainer.class));
         reaction.addProduct(builder.newInstance(IAtomContainer.class));
-        Assert.assertEquals(3, ReactionManipulator.getAllReactants(reaction).getAtomContainerCount());
+        Assertions.assertEquals(3, ReactionManipulator.getAllReactants(reaction).getAtomContainerCount());
     }
 
     @Test
-    public void testGetAllReactants_IReaction() {
+    void testGetAllReactants_IReaction() {
         IReaction reaction = builder.newInstance(IReaction.class);
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addReactant(builder.newInstance(IAtomContainer.class));
         reaction.addProduct(builder.newInstance(IAtomContainer.class));
         reaction.addProduct(builder.newInstance(IAtomContainer.class));
-        Assert.assertEquals(2, ReactionManipulator.getAllProducts(reaction).getAtomContainerCount());
+        Assertions.assertEquals(2, ReactionManipulator.getAllProducts(reaction).getAtomContainerCount());
     }
 
-    @Test public void inliningReactions() throws CDKException {
+    @Test
+    void inliningReactions() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IReaction reaction = smipar.parseReactionSmiles("CCO.CC(=O)O>[H+]>CCOC(=O)C.O ethyl esterification");
@@ -305,12 +282,13 @@ public class ReactionManipulatorTest extends CDKTestCase {
         // convert to molecule
         IAtomContainer mol = ReactionManipulator.toMolecule(reaction);
         assertThat(smigen.create(mol),
-                   is("CCO.CC(=O)O.[H+].CCOC(=O)C.O"));
-        assertThat(smigen.createReactionSMILES(ReactionManipulator.toReaction(mol)),
-                   is("CCO.CC(=O)O>[H+]>CCOC(=O)C.O"));
+                is("CCO.CC(=O)O.[H+].CCOC(=O)C.O"));
+        assertThat(smigen.create(ReactionManipulator.toReaction(mol)),
+                is("CCO.CC(=O)O>[H+]>CCOC(=O)C.O"));
     }
 
-    @Test public void inliningReactionsWithRadicals() throws CDKException {
+    @Test
+    void inliningReactionsWithRadicals() throws CDKException {
         IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
         SmilesParser smipar = new SmilesParser(bldr);
         IReaction reaction = smipar.parseReactionSmiles("[CH2]CO.CC(=O)O>[H+]>CCOC(=O)C.O |^1:0| ethyl esterification");
@@ -318,9 +296,338 @@ public class ReactionManipulatorTest extends CDKTestCase {
         // convert to molecule
         IAtomContainer mol = ReactionManipulator.toMolecule(reaction);
         assertThat(smigen.create(mol),
-                   is("[CH2]CO.CC(=O)O.[H+].CCOC(=O)C.O |^1:0|"));
-        assertThat(smigen.createReactionSMILES(ReactionManipulator.toReaction(mol)),
-                   is("[CH2]CO.CC(=O)O>[H+]>CCOC(=O)C.O |^1:0|"));
+                is("[CH2]CO.CC(=O)O.[H+].CCOC(=O)C.O |^1:0|"));
+        assertThat(smigen.create(ReactionManipulator.toReaction(mol)),
+                is("[CH2]CO.CC(=O)O>[H+]>CCOC(=O)C.O |^1:0|"));
+    }
+
+    @Test
+    void perceiveAtomTypesAndConfigureAtomsReactionNullTest() throws CDKException {
+        ReactionManipulator.perceiveAtomTypesAndConfigureAtoms(null);
+    }
+
+    @Test
+    void perceiveAtomTypesAndConfigureAtomsUnknownAtomTypeTest() throws CDKException {
+        // arrange
+        IAtomContainer reactant = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        reactant.addAtom(new Atom("R"));
+        IAtomContainer product = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        reactant.addAtom(new Atom("C"));
+        IReaction reaction = new Reaction();
+        reaction.addReactant(reactant);
+        reaction.addProduct(product);
+
+        // act
+        ReactionManipulator.perceiveAtomTypesAndConfigureAtoms(reaction);
+
+        // assert
+        // nothing to do, no exception should be thrown if unknown atom types are encountered
+    }
+
+    @Test
+    void perceiveAtomTypesAndConfigureAtomsSimpleReactionTest() throws CDKException {
+        // arrange
+        // reactant one: CC=C
+        IAtom reactantOneAtomOne = new Atom("C");
+        IAtom reactantOneAtomTwo = new Atom("C");
+        IAtom reactantOneAtomThree = new Atom("C");
+        IBond reactantOneBondOne = new Bond(reactantOneAtomOne, reactantOneAtomTwo, Order.SINGLE);
+        IBond reactantOneBondTwo = new Bond(reactantOneAtomTwo, reactantOneAtomThree, Order.DOUBLE);
+        IAtomContainer reactantOne = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        reactantOne.addAtom(reactantOneAtomOne);
+        reactantOne.addAtom(reactantOneAtomTwo);
+        reactantOne.addAtom(reactantOneAtomThree);
+        reactantOne.addBond(reactantOneBondOne);
+        reactantOne.addBond(reactantOneBondTwo);
+
+        // reactant two: Br
+        IAtom reactantTwoAtom1 = new Atom("Br");
+        IAtomContainer reactantTwo = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        reactantTwo.addAtom(reactantTwoAtom1);
+
+        // agent one: O
+        IAtom agentOneAtomOne = new Atom("O");
+        IAtomContainer agentOne = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        agentOne.addAtom(agentOneAtomOne);
+
+        // product one: CC(Br)C
+        IAtom productOneAtomOne = new Atom("C");
+        IAtom productOneAtomTwo = new Atom("C");
+        IAtom productOneAtomThree = new Atom("Br");
+        IAtom productOneAtomFour = new Atom("C");
+        IBond productOneBondOne = new Bond(productOneAtomOne, productOneAtomTwo, Order.SINGLE);
+        IBond productOneBondTwo = new Bond(productOneAtomTwo, productOneAtomThree, Order.SINGLE);
+        IBond productOneBondThree = new Bond(productOneAtomTwo, productOneAtomFour, Order.SINGLE);
+        IAtomContainer productOne = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        productOne.addAtom(productOneAtomOne);
+        productOne.addAtom(productOneAtomTwo);
+        productOne.addAtom(productOneAtomThree);
+        productOne.addAtom(productOneAtomFour);
+        productOne.addBond(productOneBondOne);
+        productOne.addBond(productOneBondTwo);
+        productOne.addBond(productOneBondThree);
+
+        // add reactant, agent and product to the reaction
+        IReaction reaction = new Reaction();
+        reaction.addReactant(reactantOne);
+        reaction.addReactant(reactantTwo);
+        reaction.addAgent(agentOne);
+        reaction.addProduct(productOne);
+
+        // collect all IAtomContainers of the reaction in a single IAtomContainerSet
+        IAtomContainerSet atomContainerSet = new AtomContainerSet();
+        atomContainerSet.add(reaction.getProducts());
+        atomContainerSet.add(reaction.getAgents());
+        atomContainerSet.add(reaction.getAgents());
+
+        // verify that atom types are not configured
+        for (IAtomContainer atomContainer : atomContainerSet.atomContainers()) {
+            for (IAtom atom : atomContainer.atoms()) {
+                if (atom.getAtomTypeName() != CDKConstants.UNSET ||
+                        atom.getMaxBondOrder() != CDKConstants.UNSET ||
+                        atom.getBondOrderSum() != CDKConstants.UNSET ||
+                        atom.getValency() != CDKConstants.UNSET ||
+                        atom.getHybridization() != CDKConstants.UNSET ||
+                        atom.getFormalNeighbourCount() != CDKConstants.UNSET
+                ) {
+                    Assertions.fail("The atom types should not be configured.");
+                }
+            }
+        }
+
+        // act
+        ReactionManipulator.perceiveAtomTypesAndConfigureAtoms(reaction);
+
+        // assert that atom types are now configured
+        for (IAtomContainer atomContainer : atomContainerSet.atomContainers()) {
+            for (IAtom atom : atomContainer.atoms()) {
+                if (atom.getAtomTypeName() == CDKConstants.UNSET ||
+                        atom.getMaxBondOrder() == CDKConstants.UNSET ||
+                        atom.getBondOrderSum() == CDKConstants.UNSET ||
+                        atom.getValency() == CDKConstants.UNSET ||
+                        atom.getHybridization() == CDKConstants.UNSET ||
+                        atom.getFormalNeighbourCount() == CDKConstants.UNSET
+                ) {
+                    Assertions.fail("The atom types should be configured after calling the method ReactionManipulator.perceiveAtomTypesAndConfigureAtoms(IReaction).");
+                }
+            }
+        }
+    }
+
+    @Test
+    void perceiveAtomTypesAndConfigureUnsetPropertiesReactionNullTest() throws CDKException {
+        ReactionManipulator.perceiveAtomTypesAndConfigureAtoms(null);
+    }
+
+    @Test
+    void perceiveAtomTypesAndConfigureUnsetPropertiesSimpleReactionTest() throws CDKException {
+        // arrange
+        // reactant one: CC=C
+        IAtom reactantOneAtomOne = new Atom("C");
+        IAtom reactantOneAtomTwo = new Atom("C");
+        IAtom reactantOneAtomThree = new Atom("C");
+        // set a property and then assess later whether this property has been changed
+        reactantOneAtomThree.setFormalNeighbourCount(2);
+        IBond reactantOneBondOne = new Bond(reactantOneAtomOne, reactantOneAtomTwo, Order.SINGLE);
+        IBond reactantOneBondTwo = new Bond(reactantOneAtomTwo, reactantOneAtomThree, Order.DOUBLE);
+        IAtomContainer reactantOne = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        reactantOne.addAtom(reactantOneAtomOne);
+        reactantOne.addAtom(reactantOneAtomTwo);
+        reactantOne.addAtom(reactantOneAtomThree);
+        reactantOne.addBond(reactantOneBondOne);
+        reactantOne.addBond(reactantOneBondTwo);
+
+        // reactant two: Br
+        IAtom reactantTwoAtom1 = new Atom("Br");
+        IAtomContainer reactantTwo = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        reactantTwo.addAtom(reactantTwoAtom1);
+
+        // agent one: O
+        IAtom agentOneAtomOne = new Atom("O");
+        IAtomContainer agentOne = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        agentOne.addAtom(agentOneAtomOne);
+
+        // product one: CC(Br)C
+        IAtom productOneAtomOne = new Atom("C");
+        IAtom productOneAtomTwo = new Atom("C");
+        IAtom productOneAtomThree = new Atom("Br");
+        IAtom productOneAtomFour = new Atom("C");
+        // set a property and then assess later whether this property has been changed
+        productOneAtomFour.setFormalNeighbourCount(2);
+        IBond productOneBondOne = new Bond(productOneAtomOne, productOneAtomTwo, Order.SINGLE);
+        IBond productOneBondTwo = new Bond(productOneAtomTwo, productOneAtomThree, Order.SINGLE);
+        IBond productOneBondThree = new Bond(productOneAtomTwo, productOneAtomFour, Order.SINGLE);
+        IAtomContainer productOne = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        productOne.addAtom(productOneAtomOne);
+        productOne.addAtom(productOneAtomTwo);
+        productOne.addAtom(productOneAtomThree);
+        productOne.addAtom(productOneAtomFour);
+        productOne.addBond(productOneBondOne);
+        productOne.addBond(productOneBondTwo);
+        productOne.addBond(productOneBondThree);
+
+        // add reactant, agent and product to the reaction
+        IReaction reaction = new Reaction();
+        reaction.addReactant(reactantOne);
+        reaction.addReactant(reactantTwo);
+        reaction.addAgent(agentOne);
+        reaction.addProduct(productOne);
+
+        // collect all IAtomContainers of the reaction in a single IAtomContainerSet
+        IAtomContainerSet atomContainerSet = new AtomContainerSet();
+        atomContainerSet.add(reaction.getProducts());
+        atomContainerSet.add(reaction.getAgents());
+        atomContainerSet.add(reaction.getAgents());
+
+        // verify that atom types are not configured
+        for (IAtomContainer atomContainer : atomContainerSet.atomContainers()) {
+            for (IAtom atom : atomContainer.atoms()) {
+                if (atom.equals(reactantOneAtomThree) || atom.equals(productOneAtomFour)) {
+                    if (atom.getAtomTypeName() != CDKConstants.UNSET ||
+                            atom.getMaxBondOrder() != CDKConstants.UNSET ||
+                            atom.getBondOrderSum() != CDKConstants.UNSET ||
+                            atom.getValency() != CDKConstants.UNSET ||
+                            atom.getHybridization() != CDKConstants.UNSET
+                    ) {
+                        Assertions.fail("The atom types should not be configured.");
+                    }
+                } else {
+                    if (atom.getAtomTypeName() != CDKConstants.UNSET ||
+                            atom.getMaxBondOrder() != CDKConstants.UNSET ||
+                            atom.getBondOrderSum() != CDKConstants.UNSET ||
+                            atom.getValency() != CDKConstants.UNSET ||
+                            atom.getHybridization() != CDKConstants.UNSET ||
+                            atom.getFormalNeighbourCount() != CDKConstants.UNSET
+                    ) {
+                        Assertions.fail("The atom types should not be configured.");
+                    }
+                }
+            }
+        }
+
+        // act
+        ReactionManipulator.perceiveAtomTypesAndConfigureUnsetProperties(reaction);
+
+        // assert that atom types are now configured
+        for (IAtomContainer atomContainer : atomContainerSet.atomContainers()) {
+            for (IAtom atom : atomContainer.atoms()) {
+
+                // assert that the atom property of the two atoms that has been pre-configured hasn't been changed
+                if (atom.equals(reactantOneAtomThree) || atom.equals(productOneAtomFour)) {
+                    if (atom.getFormalNeighbourCount() != 2) {
+                        Assertions.fail("An already configured atom property should not have been modified.");
+                    }
+                }
+
+                if (atom.getAtomTypeName() == CDKConstants.UNSET ||
+                        atom.getMaxBondOrder() == CDKConstants.UNSET ||
+                        atom.getBondOrderSum() == CDKConstants.UNSET ||
+                        atom.getValency() == CDKConstants.UNSET ||
+                        atom.getHybridization() == CDKConstants.UNSET ||
+                        atom.getFormalNeighbourCount() == CDKConstants.UNSET
+                ) {
+                    Assertions.fail("The atom types should be configured after calling the method ReactionManipulator.perceiveAtomTypesAndConfigureAtoms(IReaction).");
+                }
+            }
+        }
+    }
+
+    @Test
+    void clearAtomConfigurationsReactionNullTest() throws CDKException {
+        ReactionManipulator.perceiveAtomTypesAndConfigureAtoms(null);
+    }
+
+    @Test
+    void clearAtomConfigurationsSimpleReactionTest() throws CDKException {
+        // arrange
+        // reactant one: CC=C
+        IAtom reactantOneAtomOne = new Atom("C");
+        IAtom reactantOneAtomTwo = new Atom("C");
+        IAtom reactantOneAtomThree = new Atom("C");
+        IBond reactantOneBondOne = new Bond(reactantOneAtomOne, reactantOneAtomTwo, Order.SINGLE);
+        IBond reactantOneBondTwo = new Bond(reactantOneAtomTwo, reactantOneAtomThree, Order.DOUBLE);
+        IAtomContainer reactantOne = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        reactantOne.addAtom(reactantOneAtomOne);
+        reactantOne.addAtom(reactantOneAtomTwo);
+        reactantOne.addAtom(reactantOneAtomThree);
+        reactantOne.addBond(reactantOneBondOne);
+        reactantOne.addBond(reactantOneBondTwo);
+
+        // reactant two: Br
+        IAtom reactantTwoAtom1 = new Atom("Br");
+        IAtomContainer reactantTwo = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        reactantTwo.addAtom(reactantTwoAtom1);
+
+        // agent one: O
+        IAtom agentOneAtomOne = new Atom("O");
+        IAtomContainer agentOne = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        agentOne.addAtom(agentOneAtomOne);
+
+        // product one: CC(Br)C
+        IAtom productOneAtomOne = new Atom("C");
+        IAtom productOneAtomTwo = new Atom("C");
+        IAtom productOneAtomThree = new Atom("Br");
+        IAtom productOneAtomFour = new Atom("C");
+        IBond productOneBondOne = new Bond(productOneAtomOne, productOneAtomTwo, Order.SINGLE);
+        IBond productOneBondTwo = new Bond(productOneAtomTwo, productOneAtomThree, Order.SINGLE);
+        IBond productOneBondThree = new Bond(productOneAtomTwo, productOneAtomFour, Order.SINGLE);
+        IAtomContainer productOne = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        productOne.addAtom(productOneAtomOne);
+        productOne.addAtom(productOneAtomTwo);
+        productOne.addAtom(productOneAtomThree);
+        productOne.addAtom(productOneAtomFour);
+        productOne.addBond(productOneBondOne);
+        productOne.addBond(productOneBondTwo);
+        productOne.addBond(productOneBondThree);
+
+        // add reactant, agent and product to the reaction
+        IReaction reaction = new Reaction();
+        reaction.addReactant(reactantOne);
+        reaction.addReactant(reactantTwo);
+        reaction.addAgent(agentOne);
+        reaction.addProduct(productOne);
+
+        // collect all IAtomContainers of the reaction in a single IAtomContainerSet
+        IAtomContainerSet atomContainerSet = new AtomContainerSet();
+        atomContainerSet.add(reaction.getProducts());
+        atomContainerSet.add(reaction.getAgents());
+        atomContainerSet.add(reaction.getAgents());
+
+        // perceive atom types and configure the atoms of all reaction components
+        ReactionManipulator.perceiveAtomTypesAndConfigureAtoms(reaction);
+
+        // assert that atom types are now configured
+        for (IAtomContainer atomContainer : atomContainerSet.atomContainers()) {
+            for (IAtom atom : atomContainer.atoms()) {
+                if (atom.getAtomTypeName() == CDKConstants.UNSET ||
+                        atom.getMaxBondOrder() == CDKConstants.UNSET ||
+                        atom.getBondOrderSum() == CDKConstants.UNSET ||
+                        atom.getValency() == CDKConstants.UNSET ||
+                        atom.getHybridization() == CDKConstants.UNSET ||
+                        atom.getFormalNeighbourCount() == CDKConstants.UNSET
+                ) {
+                    Assertions.fail("The atom types should be configured after calling the method ReactionManipulator.perceiveAtomTypesAndConfigureAtoms(IReaction).");
+                }
+            }
+        }
+
+        // act
+        ReactionManipulator.clearAtomConfigurations(reaction);
+
+        // verify that atom types were cleared
+        for (IAtomContainer atomContainer : atomContainerSet.atomContainers()) {
+            for (IAtom atom : atomContainer.atoms()) {
+                if (atom.getAtomTypeName() != CDKConstants.UNSET ||
+                        atom.getMaxBondOrder() != CDKConstants.UNSET ||
+                        atom.getBondOrderSum() != CDKConstants.UNSET ||
+                        atom.getValency() != CDKConstants.UNSET ||
+                        atom.getHybridization() != CDKConstants.UNSET ||
+                        atom.getFormalNeighbourCount() != CDKConstants.UNSET
+                ) {
+                    Assertions.fail("The atom types should have been cleared.");
+                }
+            }
+        }
     }
 
 }

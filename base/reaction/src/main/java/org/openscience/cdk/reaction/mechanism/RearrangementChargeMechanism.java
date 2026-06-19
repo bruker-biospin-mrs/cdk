@@ -21,7 +21,6 @@ package org.openscience.cdk.reaction.mechanism;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.ConnectivityChecker;
@@ -30,6 +29,7 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.ILonePair;
 import org.openscience.cdk.interfaces.IMapping;
 import org.openscience.cdk.interfaces.IReaction;
@@ -46,8 +46,6 @@ import org.openscience.cdk.tools.manipulator.BondManipulator;
  *
  * @author         miguelrojasch
  * @cdk.created    2008-02-10
- * @cdk.module     reaction
- * @cdk.githash
  */
 public class RearrangementChargeMechanism implements IReactionMechanism {
 
@@ -83,7 +81,7 @@ public class RearrangementChargeMechanism implements IReactionMechanism {
         IAtomContainer molecule = atomContainerSet.getAtomContainer(0);
         IAtomContainer reactantCloned;
         try {
-            reactantCloned = (IAtomContainer) molecule.clone();
+            reactantCloned = molecule.clone();
         } catch (CloneNotSupportedException e) {
             throw new CDKException("Could not clone IAtomContainer!", e);
         }
@@ -121,12 +119,12 @@ public class RearrangementChargeMechanism implements IReactionMechanism {
             atom1C.setFormalCharge(charge + 1);
             List<ILonePair> ln = reactantCloned.getConnectedLonePairsList(atom1C);
             reactantCloned.removeLonePair(ln.get(ln.size() - 1));
-            atom1C.setFlag(CDKConstants.ISAROMATIC, false);
+            atom1C.setFlag(IChemObject.AROMATIC, false);
 
             charge = atom3C.getFormalCharge();
             atom3C.setFormalCharge(charge - 1);
             reactantCloned.addLonePair(bond2.getBuilder().newInstance(ILonePair.class, atom3C));
-            atom3C.setFlag(CDKConstants.ISAROMATIC, false);
+            atom3C.setFlag(IChemObject.AROMATIC, false);
         } else
             return null;
 
@@ -154,7 +152,7 @@ public class RearrangementChargeMechanism implements IReactionMechanism {
         } else {
             IAtomContainerSet moleculeSetP = ConnectivityChecker.partitionIntoMolecules(reactantCloned);
             for (int z = 0; z < moleculeSetP.getAtomContainerCount(); z++) {
-                reaction.addProduct((IAtomContainer) moleculeSetP.getAtomContainer(z));
+                reaction.addProduct(moleculeSetP.getAtomContainer(z));
             }
         }
 

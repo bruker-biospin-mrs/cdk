@@ -23,8 +23,6 @@ import org.openscience.cdk.tools.DataFeatures;
 /**
  * See <a href="http://www.iupac.org/inchi/">here</a>.
  *
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class INChIFormat extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 
@@ -76,7 +74,7 @@ public class INChIFormat extends SimpleChemFormatMatcher implements IChemFormatM
     /** {@inheritDoc} */
     @Override
     public boolean matches(int lineNumber, String line) {
-        if (line.indexOf("<INChI") != -1) {
+        if (line.contains("<INChI")) {
             return true;
         }
         return false;

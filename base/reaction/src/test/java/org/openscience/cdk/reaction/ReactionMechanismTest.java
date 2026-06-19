@@ -18,19 +18,18 @@
  */
 package org.openscience.cdk.reaction;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * Tests for IReactionProcess implementations.
  *
- * @cdk.module test-reaction
  */
 public abstract class ReactionMechanismTest extends CDKTestCase {
 
-    protected static IReactionMechanism reactionMechanism;
+    private static IReactionMechanism reactionMechanism;
 
     /**
      * Defining reaction mechanism.
@@ -38,9 +37,9 @@ public abstract class ReactionMechanismTest extends CDKTestCase {
      * @param descriptorClass
      * @throws Exception
      */
-    public static void setMechanism(Class<?> descriptorClass) throws Exception {
+    protected static void setMechanism(Class<?> descriptorClass) throws Exception {
         if (ReactionMechanismTest.reactionMechanism == null) {
-            Object descriptor = (Object) descriptorClass.newInstance();
+            Object descriptor = descriptorClass.newInstance();
             if (!(descriptor instanceof IReactionMechanism)) {
                 throw new CDKException("The passed reaction class must be a IReactionMechanism");
             }
@@ -63,9 +62,8 @@ public abstract class ReactionMechanismTest extends CDKTestCase {
      * </pre>
      */
     @Test
-    public void testHasSetSuperDotDescriptor() {
-        Assert.assertNotNull("The extending class must set the super.descriptor in its setUp() method.",
-                reactionMechanism);
+    void testHasSetSuperDotDescriptor() {
+        Assertions.assertNotNull(reactionMechanism, "The extending class must set the super.descriptor in its setUp() method.");
     }
 
 }

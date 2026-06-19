@@ -22,39 +22,30 @@
  */
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IReaction;
-import org.openscience.cdk.interfaces.AbstractReactionTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractReactionTest;
 
 /**
  * TestCase for the Reaction class.
  *
- * @cdk.module test-data
  */
-public class ReactionTest extends AbstractReactionTest {
+class ReactionTest extends AbstractReactionTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new Reaction();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(Reaction::new);
     }
 
     @Test
-    public void testReaction() {
+    void testReaction() {
         IReaction reaction = new Reaction();
-        Assert.assertNotNull(reaction);
-        Assert.assertEquals(0, reaction.getReactantCount());
-        Assert.assertEquals(0, reaction.getProductCount());
-        Assert.assertEquals(IReaction.Direction.FORWARD, reaction.getDirection());
+        Assertions.assertNotNull(reaction);
+        Assertions.assertEquals(0, reaction.getReactantCount());
+        Assertions.assertEquals(0, reaction.getProductCount());
+        Assertions.assertEquals(IReaction.Direction.FORWARD, reaction.getDirection());
     }
 
 }

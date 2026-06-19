@@ -21,15 +21,12 @@
  */
 package org.openscience.cdk.renderer.elements;
 
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
-/**
- * @cdk.module test-renderbasic
- */
-public class ElementGroupTest extends AbstractElementTest {
+class ElementGroupTest extends AbstractElementTest {
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         IRenderingElement element = new ElementGroup();
         setRenderingElement(element);
     }

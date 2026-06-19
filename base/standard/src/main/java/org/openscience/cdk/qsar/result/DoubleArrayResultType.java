@@ -22,14 +22,12 @@ package org.openscience.cdk.qsar.result;
 /**
  * IDescriptorResult type for doubles.
  *
- * @cdk.module standard
- * @cdk.githash
  */
 public class DoubleArrayResultType implements IDescriptorResult {
 
     private static final long serialVersionUID = -8255004284721233969L;
 
-    private int               size;
+    private final int               size;
 
     public DoubleArrayResultType(int size) {
         this.size = size;

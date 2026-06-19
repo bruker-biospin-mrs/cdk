@@ -33,18 +33,16 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * with closed shells
  *
  * @author Stephan Michels &lt;stephan@vern.chem.tu-berlin.de&gt;
- * @cdk.githash
  * @cdk.created 2001-06-14
- * @cdk.module  qm
  */
 public class ClosedShellJob {
 
-    private Orbitals            orbitals;
+    private final Orbitals            orbitals;
     private Vector              E;
 
-    private static ILoggingTool log        = LoggingToolFactory.createLoggingTool(ClosedShellJob.class);
+    private static final ILoggingTool log        = LoggingToolFactory.createLoggingTool(ClosedShellJob.class);
 
-    private int                 iterations = 0;
+    private final int                 iterations = 0;
 
     public ClosedShellJob(Orbitals orbitals) {
         this.orbitals = orbitals;
@@ -174,14 +172,13 @@ public class ClosedShellJob {
     }
 
     private Matrix calculateJ(IBasis basis, double[][][][] I, Matrix matrixD) {
-        int i, j, k, l;
-        int size = basis.getSize();
+        final int size = basis.getSize();
         Matrix matrixJ = new Matrix(size, size);
-        for (i = 0; i < size; i++)
-            for (j = 0; j < size; j++) {
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++) {
                 matrixJ.matrix[i][j] = 0;
-                for (k = 0; k < size; k++)
-                    for (l = 0; l < size; l++) {
+                for (int k = 0; k < size; k++)
+                    for (int l = 0; l < size; l++) {
                         if (i >= j) {
                             if (k >= l)
                                 matrixJ.matrix[i][j] += matrixD.matrix[k][l] * I[i][j][k][l];
@@ -200,14 +197,13 @@ public class ClosedShellJob {
     }
 
     private Matrix calculateK(IBasis basis, double[][][][] I, Matrix matrixD) {
-        int i, j, k, l;
-        int size = basis.getSize();
+        final int size = basis.getSize();
         Matrix matrixK = new Matrix(size, size);
-        for (i = 0; i < size; i++)
-            for (j = 0; j < size; j++) {
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++) {
                 matrixK.matrix[i][j] = 0;
-                for (k = 0; k < size; k++)
-                    for (l = 0; l < size; l++) {
+                for (int k = 0; k < size; k++)
+                    for (int l = 0; l < size; l++) {
                         if (i >= j) {
                             if (k >= l)
                                 matrixK.matrix[i][j] += matrixD.matrix[k][l] * I[i][j][k][l];

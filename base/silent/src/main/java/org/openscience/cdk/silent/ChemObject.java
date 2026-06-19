@@ -28,8 +28,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
-import com.google.common.base.Objects;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -42,8 +42,6 @@ import org.openscience.cdk.interfaces.IChemObjectListener;
  *  table for administration of physical or chemical properties
  *
  *@author        steinbeck
- * @cdk.githash
- *@cdk.module    silent
  */
 public class ChemObject implements Serializable, IChemObject, Cloneable {
 
@@ -69,7 +67,7 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
      *  flag array with self-defined constants (flags[VISITED] = true). 100 flags
      *  per object should be more than enough.
      */
-    private short               flags;                                  // flags are currently stored as a single short value MAX_FLAG_INDEX < 16
+    private int                 flags;
 
     /**
      *  The ID is null by default.
@@ -92,7 +90,7 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
      */
     public ChemObject(IChemObject chemObject) {
         // copy the flags
-        flags = chemObject.getFlagValue().shortValue();
+        flags = chemObject.flags();
         // copy the identifier
         identifier = chemObject.getID();
     }
@@ -260,7 +258,7 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
         // this does not deep copy all objects but this was not done
         // originally
         if (properties != null) {
-            clone.properties = new HashMap<Object, Object>(getProperties());
+            clone.properties = new HashMap<>(getProperties());
         }
 
         return clone;
@@ -277,7 +275,7 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
             return false;
         }
         ChemObject chemObj = (ChemObject) object;
-        return Objects.equal(identifier, chemObj.identifier);
+        return Objects.equals(identifier, chemObj.identifier);
     }
 
     /**
@@ -333,8 +331,28 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
      *{@inheritDoc}
      */
     @Override
-    public Short getFlagValue() {
-        return flags; // auto-boxing
+    public Integer getFlagValue() {
+        return flags;
+    }
+
+    @Override
+    public void set(int flags) {
+        this.flags |= flags;
+    }
+
+    @Override
+    public boolean is(int flags) {
+        return (this.flags&flags) == flags;
+    }
+
+    @Override
+    public void clear(int flags) {
+        this.flags &= ~flags;
+    }
+
+    @Override
+    public int flags() {
+        return this.flags;
     }
 
     /**{@inheritDoc} */

@@ -23,11 +23,10 @@
 package org.openscience.cdk.io.formats;
 
 /**
- * @cdk.module test-ioformats
  */
-public class MMODFormatTest extends ChemFormatTest {
+class MMODFormatTest extends ChemFormatTest {
 
-    public MMODFormatTest() {
+    MMODFormatTest() {
         super.setChemFormat((IChemFormat) MMODFormat.getInstance());
     }
 

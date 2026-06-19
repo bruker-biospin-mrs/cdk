@@ -25,7 +25,6 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.atomtype.SybylAtomTypeMatcher;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -43,8 +42,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * <a href="http://www.tripos.com/data/support/mol2.pdf">Tripos Mol2 format</a>.
  * Writes the atoms and the bonds only at this moment.
  *
- * @cdk.module io
- * @cdk.githash
  * @cdk.iooptions
  *
  * @author     Egon Willighagen
@@ -52,7 +49,7 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 public class Mol2Writer extends DefaultChemObjectWriter {
 
     private BufferedWriter       writer;
-    private static ILoggingTool  logger = LoggingToolFactory.createLoggingTool(Mol2Writer.class);
+    private static final ILoggingTool  logger = LoggingToolFactory.createLoggingTool(Mol2Writer.class);
     private SybylAtomTypeMatcher matcher;
 
     public Mol2Writer() {
@@ -201,7 +198,8 @@ public class Mol2Writer extends DefaultChemObjectWriter {
                 try {
                     sybylType = matcher.findMatchingAtomType(mol, atom);
                 } catch (CDKException e) {
-                    e.printStackTrace();
+                    LoggingToolFactory.createLoggingTool(Mol2Writer.class)
+                                      .warn("Atom Type Error:", e);
                 }
                 if (sybylType != null) {
                     writer.write(sybylType.getAtomTypeName());
@@ -229,7 +227,7 @@ public class Mol2Writer extends DefaultChemObjectWriter {
                 else if (bond.getOrder().equals(IBond.Order.DOUBLE))
                     sybylBondOrder = "2";
                 else if (bond.getOrder().equals(IBond.Order.TRIPLE)) sybylBondOrder = "3";
-                if (bond.getFlag(CDKConstants.ISAROMATIC)) sybylBondOrder = "ar";
+                if (bond.getFlag(IChemObject.AROMATIC)) sybylBondOrder = "ar";
 
                 // we need to check the atom types to see if we have an amide bond
                 // and we're assuming a 2-centered bond
@@ -244,7 +242,8 @@ public class Mol2Writer extends DefaultChemObjectWriter {
                         sybylBondOrder = "am";
                     }
                 } catch (CDKException e) {
-                    e.printStackTrace();
+                    LoggingToolFactory.createLoggingTool(Mol2Writer.class)
+                                      .warn("Atom Type Error:", e);
                 }
 
                 writer.write((counter + 1) + " " + (mol.indexOf(bond.getBegin()) + 1) + " "

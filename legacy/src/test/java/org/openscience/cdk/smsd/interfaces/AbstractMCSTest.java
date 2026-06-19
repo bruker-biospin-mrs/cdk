@@ -33,11 +33,10 @@ import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  */
-public abstract class AbstractMCSTest {
+abstract class AbstractMCSTest {
 
-    public class AbstractMCSImpl extends AbstractMCS {
+    private class AbstractMCSImpl extends AbstractMCS {
 
         @Override
         public void init(IAtomContainer source, IAtomContainer target, boolean removeHydrogen, boolean cleanMol)

@@ -93,8 +93,6 @@ import org.openscience.cdk.smsd.tools.TimeManager;
  *              Syed Asad Rahman &gt;asad@ebi.ac.uk&lt; (modified the orignal code)
  * @cdk.created 2002-07-17
  * @cdk.require java1.4+
- * @cdk.module  smsd
- * @cdk.githash
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
  *             access to internal implementation details. SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -106,7 +104,7 @@ public class CDKRGraph {
     // each node keeping track of its
     // neighbors.
 
-    private List<CDKRNode> graph            = null;
+    private List<CDKRNode> graph;
     // maximal number of iterations before
     // search break
     private int            maxIteration     = -1;
@@ -117,7 +115,7 @@ public class CDKRGraph {
     private BitSet         sourceBitSet     = null;
     private BitSet         targetBitSet     = null;
     // current solution list
-    private List<BitSet>   solutionList     = null;
+    private List<BitSet>   solutionList;
     // flag to define if we want to get all possible 'mappings'
     private boolean        findAllMap       = false;
     // flag to define if we want to get all possible 'structures'
@@ -125,7 +123,7 @@ public class CDKRGraph {
     // working variables
     private boolean        stop             = false;
     private int            nbIteration      = 0;
-    private BitSet         graphBitSet      = null;
+    private BitSet         graphBitSet;
 
     // -1 for infinite search and one min is 1
 
@@ -133,8 +131,8 @@ public class CDKRGraph {
      * Constructor for the CDKRGraph object and creates an empty CDKRGraph.
      */
     public CDKRGraph() {
-        graph = new ArrayList<CDKRNode>();
-        solutionList = new ArrayList<BitSet>();
+        graph = new ArrayList<>();
+        solutionList = new ArrayList<>();
         graphBitSet = new BitSet();
     }
 
@@ -253,10 +251,10 @@ public class CDKRGraph {
      * @param  forbiden   node forbidden (set of node incompatible with the current solution)
      */
     private void parseRec(BitSet traversed, BitSet extension, BitSet forbidden) throws CDKException {
-        BitSet newTraversed = null;
-        BitSet newExtension = null;
-        BitSet newForbidden = null;
-        BitSet potentialNode = null;
+        BitSet newTraversed;
+        BitSet newExtension;
+        BitSet newForbidden;
+        BitSet potentialNode;
 
         checkTimeOut();
 
@@ -431,9 +429,7 @@ public class CDKRGraph {
 
         // only nodes that fulfill the initial constrains
         // are allowed in the initial extension set : targetBitSet
-        for (Iterator<CDKRNode> i = getGraph().iterator(); i.hasNext();) {
-            CDKRNode rNode = i.next();
-
+        for (CDKRNode rNode : getGraph()) {
             checkTimeOut();
 
             if ((sourceBitSet.get(rNode.getRMap().getId1()) || sourceBitSet.isEmpty())
@@ -464,7 +460,7 @@ public class CDKRGraph {
      * @return      the CDKRMap list
      */
     public List<CDKRMap> bitSetToRMap(BitSet set) {
-        List<CDKRMap> rMapList = new ArrayList<CDKRMap>();
+        List<CDKRMap> rMapList = new ArrayList<>();
 
         for (int x = set.nextSetBit(0); x >= 0; x = set.nextSetBit(x + 1)) {
             CDKRNode xNode = getGraph().get(x);
@@ -517,8 +513,7 @@ public class CDKRGraph {
         String message = "";
         int jIndex = 0;
 
-        for (Iterator<CDKRNode> i = getGraph().iterator(); i.hasNext();) {
-            CDKRNode rNode = i.next();
+        for (CDKRNode rNode : getGraph()) {
             message += "-------------\n" + "CDKRNode " + jIndex + "\n" + rNode.toString() + "\n";
             jIndex++;
         }
@@ -534,7 +529,7 @@ public class CDKRGraph {
      */
     public BitSet projectG1(BitSet set) {
         BitSet projection = new BitSet(getFirstGraphSize());
-        CDKRNode xNode = null;
+        CDKRNode xNode;
 
         for (int x = set.nextSetBit(0); x >= 0; x = set.nextSetBit(x + 1)) {
             xNode = getGraph().get(x);
@@ -550,7 +545,7 @@ public class CDKRGraph {
      */
     public BitSet projectG2(BitSet set) {
         BitSet projection = new BitSet(getSecondGraphSize());
-        CDKRNode xNode = null;
+        CDKRNode xNode;
 
         for (int x = set.nextSetBit(0); x >= 0; x = set.nextSetBit(x + 1)) {
             xNode = getGraph().get(x);

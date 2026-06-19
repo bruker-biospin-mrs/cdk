@@ -18,31 +18,30 @@
  */
 package org.openscience.cdk.reaction.mechanism;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.reaction.IReactionMechanism;
 import org.openscience.cdk.reaction.ReactionMechanismTest;
 
 /**
  * Tests for AdductionLPMechanism implementations.
  *
- * @cdk.module test-reaction
  */
-public class AdductionLPMechanismTest extends ReactionMechanismTest {
+class AdductionLPMechanismTest extends ReactionMechanismTest {
 
     /**
      *  The JUnit setup method
      */
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         setMechanism(AdductionLPMechanism.class);
     }
 
     /**
      *  Constructor for the AdductionLPMechanismTest object.
      */
-    public AdductionLPMechanismTest() {
+    AdductionLPMechanismTest() {
         super();
     }
 
@@ -52,9 +51,9 @@ public class AdductionLPMechanismTest extends ReactionMechanismTest {
      * @throws Exception
      */
     @Test
-    public void testAdductionLPMechanism() {
+    void testAdductionLPMechanism() {
         IReactionMechanism mechanism = new AdductionLPMechanism();
-        Assert.assertNotNull(mechanism);
+        Assertions.assertNotNull(mechanism);
     }
 
     /**
@@ -64,9 +63,9 @@ public class AdductionLPMechanismTest extends ReactionMechanismTest {
      * @throws Exception
      */
     @Test
-    public void testInitiate_IAtomContainerSet_ArrayList_ArrayList() {
+    void testInitiate_IAtomContainerSet_ArrayList_ArrayList() {
         IReactionMechanism mechanism = new AdductionLPMechanism();
 
-        Assert.assertNotNull(mechanism);
+        Assertions.assertNotNull(mechanism);
     }
 }

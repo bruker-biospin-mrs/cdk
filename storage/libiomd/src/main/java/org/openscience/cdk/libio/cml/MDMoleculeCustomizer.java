@@ -22,8 +22,6 @@
  */
 package org.openscience.cdk.libio.cml;
 
-import java.util.Iterator;
-
 import nu.xom.Attribute;
 
 import org.openscience.cdk.exception.CDKException;
@@ -42,8 +40,6 @@ import org.xmlcml.cml.element.CMLScalar;
  * Customize persistence of MDMolecule by adding support for residues and charge groups.
  *
  * @author ola
- * @cdk.module libiomd
- * @cdk.githash
  *
  * @cdk.set       libio-cml-customizers
  */
@@ -82,9 +78,7 @@ public class MDMoleculeCustomizer implements ICMLCustomizer {
 
             //Residues
             if (mdmol.getResidues().size() > 0) {
-                Iterator it = mdmol.getResidues().iterator();
-                while (it.hasNext()) {
-                    Residue residue = (Residue) it.next();
+                for (Residue residue : mdmol.getResidues()) {
                     int number = residue.getNumber();
 
                     CMLMolecule resMol = new CMLMolecule();
@@ -120,9 +114,7 @@ public class MDMoleculeCustomizer implements ICMLCustomizer {
 
             //Chargegroups
             if (mdmol.getChargeGroups().size() > 0) {
-                Iterator it = mdmol.getChargeGroups().iterator();
-                while (it.hasNext()) {
-                    ChargeGroup chargeGroup = (ChargeGroup) it.next();
+                for (ChargeGroup chargeGroup : mdmol.getChargeGroups()) {
                     int number = chargeGroup.getNumber();
 
                     //FIXME: persist the ChargeGroup

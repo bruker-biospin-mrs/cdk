@@ -40,14 +40,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author egonw
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugAtomContainer extends AtomContainer implements IAtomContainer {
 
     private static final long serialVersionUID = 7584711255625778345L;
 
-    ILoggingTool logger = LoggingToolFactory.createLoggingTool(DebugAtomContainer.class);
+    static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(DebugAtomContainer.class);
 
     public DebugAtomContainer() {
         super();
@@ -624,6 +622,13 @@ public class DebugAtomContainer extends AtomContainer implements IAtomContainer 
         super.addBond(atom1, atom2, order, stereo);
     }
 
+    @Override
+    public void addBond(int atom1, int atom2, IBond.Order order,
+                        IBond.Display display) {
+        logger.debug("Adding bond: atom1=" + atom1 + " atom2=" + atom2, " order=" + order + " display=" + display);
+        super.addBond(atom1, atom2, order, display);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -868,8 +873,8 @@ public class DebugAtomContainer extends AtomContainer implements IAtomContainer 
      */
     @Override
     public boolean isEmpty() {
-        logger.debug("AtomContainer.isEmpty(): ", atomCount == 0);
-        return atomCount == 0;
+        logger.debug("AtomContainer.isEmpty(): ", super.isEmpty());
+        return super.isEmpty();
     }
 
 }

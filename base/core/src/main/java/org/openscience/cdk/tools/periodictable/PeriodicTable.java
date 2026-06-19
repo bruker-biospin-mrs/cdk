@@ -41,16 +41,11 @@ import static org.openscience.cdk.config.Elements.*;
  * @cdk.keyword periodic table
  * @cdk.keyword radius, vanderwaals
  * @cdk.keyword electronegativity
- * @cdk.module core
- * @cdk.githash
  */
 public final class PeriodicTable {
 
     /** CAS ID Mapping. */
-    private static volatile Map<Elements, String> ids;
-
-    /** A lock used for locking CAD ID initialisation. */
-    private final static Object                   LOCK = new Object();
+    private final static Map<Elements, String> casIds = initCasIds();
 
     /**
      * Get the Van der Waals radius for the element in question.
@@ -79,7 +74,7 @@ public final class PeriodicTable {
      * @return the CAS ID
      */
     public static String getCASId(String symbol) {
-        return casIds().get(Elements.ofString(symbol));
+        return casIds.get(Elements.ofString(symbol));
     }
 
     /**
@@ -228,7 +223,8 @@ public final class PeriodicTable {
 
         Synthetic(Fermium, Seaborgium, Plutonium, Roentgenium, Lawrencium, Meitnerium, Einsteinium, Nobelium, Actinium,
                 Rutherfordium, Americium, Curium, Bohrium, Berkelium, Promethium, Copernicium, Technetium, Hassium,
-                Californium, Mendelevium, Neptunium, Darmstadtium, Dubnium);
+                Californium, Mendelevium, Neptunium, Darmstadtium, Dubnium, Copernicium, Flerovium, Nihonium,
+                Moscovium, Livermorium, Tennessine, Oganesson);
 
         private final Set<Elements> elements;
 
@@ -241,27 +237,10 @@ public final class PeriodicTable {
         }
     }
 
-    /**
-     * Lazily obtain the CAS ID Mapping.
-     *
-     * @return CAS id mapping
-     */
-    private static Map<Elements, String> casIds() {
-        Map<Elements, String> result = ids;
-        if (result == null) {
-            synchronized (LOCK) {
-                result = ids;
-                if (result == null) {
-                    ids = result = initCasIds();
-                }
-            }
-        }
-        return result;
-    }
 
     /** Obtain the CAS ID Mapping. */
     private static Map<Elements, String> initCasIds() {
-        Map<Elements, String> ids = new EnumMap<Elements, String>(Elements.class);
+        Map<Elements, String> ids = new EnumMap<>(Elements.class);
         ids.put(Unknown, "");
         ids.put(Hydrogen, "1333-74-0");
         ids.put(Helium, "7440-59-7");
@@ -375,12 +354,12 @@ public final class PeriodicTable {
         ids.put(Darmstadtium, "54083-77-1");
         ids.put(Roentgenium, "54386-24-2");
         ids.put(Copernicium, "54084-26-3");
-        ids.put(Ununtrium, "");
+        ids.put(Nihonium, "54084-70-7");
         ids.put(Flerovium, "54085-16-4");
-        ids.put(Ununpentium, "");
+        ids.put(Moscovium, "54085-64-2");
         ids.put(Livermorium, "54100-71-9");
-        ids.put(Ununseptium, "");
-        ids.put(Ununoctium, "");
+        ids.put(Tennessine, "54101-14-3");
+        ids.put(Oganesson, "54144-19-3");
         return ids;
     }
 

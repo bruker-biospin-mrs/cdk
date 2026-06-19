@@ -20,56 +20,47 @@
 
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.AbstractMoleculeTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractMoleculeTest;
 
 /**
  * Checks the functionality of the Molecule class.
  *
- * @cdk.module test-data
  *
  * @see org.openscience.cdk.Molecule
  */
-public class MoleculeTest extends AbstractMoleculeTest {
+class MoleculeTest extends AbstractMoleculeTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new AtomContainer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(AtomContainer::new);
     }
 
     // test constructors
 
     @Test
-    public void testMolecule() {
+    void testMolecule() {
         IAtomContainer m = new AtomContainer();
-        Assert.assertNotNull(m);
+        Assertions.assertNotNull(m);
     }
 
     @Test
-    public void testMolecule_int_int_int_int() {
+    void testMolecule_int_int_int_int() {
         IAtomContainer m = new AtomContainer(5, 5, 1, 1);
-        Assert.assertNotNull(m);
-        Assert.assertEquals(0, m.getAtomCount());
-        Assert.assertEquals(0, m.getBondCount());
-        Assert.assertEquals(0, m.getLonePairCount());
-        Assert.assertEquals(0, m.getSingleElectronCount());
+        Assertions.assertNotNull(m);
+        Assertions.assertEquals(0, m.getAtomCount());
+        Assertions.assertEquals(0, m.getBondCount());
+        Assertions.assertEquals(0, m.getLonePairCount());
+        Assertions.assertEquals(0, m.getSingleElectronCount());
     }
 
     @Test
-    public void testMolecule_IAtomContainer() {
+    void testMolecule_IAtomContainer() {
         IAtomContainer acetone = new org.openscience.cdk.AtomContainer();
         IAtom c1 = acetone.getBuilder().newInstance(IAtom.class, "C");
         IAtom c2 = acetone.getBuilder().newInstance(IAtom.class, "C");
@@ -87,9 +78,9 @@ public class MoleculeTest extends AbstractMoleculeTest {
         acetone.addBond(b3);
 
         IAtomContainer m = new AtomContainer(acetone);
-        Assert.assertNotNull(m);
-        Assert.assertEquals(4, m.getAtomCount());
-        Assert.assertEquals(3, m.getBondCount());
+        Assertions.assertNotNull(m);
+        Assertions.assertEquals(4, m.getAtomCount());
+        Assertions.assertEquals(3, m.getBondCount());
     }
 
 }

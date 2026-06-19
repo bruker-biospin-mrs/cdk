@@ -32,12 +32,10 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 /**
  * Debugging implementation of {@link IAdductFormula}.
  *
- * @cdk.module datadebug
- * @cdk.githash tag
  */
 public class DebugAdductFormula extends AdductFormula implements IAdductFormula {
 
-    private ILoggingTool logger = LoggingToolFactory.createLoggingTool(DebugAdductFormula.class);
+    private final ILoggingTool logger = LoggingToolFactory.createLoggingTool(DebugAdductFormula.class);
 
     public DebugAdductFormula() {
         super();

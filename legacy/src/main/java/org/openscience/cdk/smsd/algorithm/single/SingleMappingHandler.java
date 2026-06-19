@@ -42,8 +42,6 @@ import org.openscience.cdk.smsd.tools.MolHandler;
 /**
  * This is a handler class for single atom mapping
  * ({@link org.openscience.cdk.smsd.algorithm.single.SingleMapping}).
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
  *             access to internal implementation details. SMSD has been deprecated from the CDK with a newer, more recent
@@ -59,7 +57,7 @@ public class SingleMappingHandler extends AbstractMCSAlgorithm implements IMCSBa
     private IAtomContainer                     source         = null;
     private IQueryAtomContainer                smartSource    = null;
     private IAtomContainer                     target         = null;
-    private boolean                            removeHydrogen = false;
+    private boolean                            removeHydrogen;
 
     /**
      *
@@ -68,10 +66,10 @@ public class SingleMappingHandler extends AbstractMCSAlgorithm implements IMCSBa
     public SingleMappingHandler(boolean removeH) {
 
         this.removeHydrogen = removeH;
-        allAtomMCS = new ArrayList<Map<IAtom, IAtom>>();
-        atomsMCS = new HashMap<IAtom, IAtom>();
-        firstMCS = new TreeMap<Integer, Integer>();
-        allMCS = new ArrayList<Map<Integer, Integer>>();
+        allAtomMCS = new ArrayList<>();
+        atomsMCS = new HashMap<>();
+        firstMCS = new TreeMap<>();
+        allMCS = new ArrayList<>();
 
     }
 
@@ -129,11 +127,11 @@ public class SingleMappingHandler extends AbstractMCSAlgorithm implements IMCSBa
      *
      * Set the mappings
      */
-    private void setAllMapping(List<Map<IAtom, IAtom>> mappings) {
+    private synchronized void setAllMapping(List<Map<IAtom, IAtom>> mappings) {
         try {
             int counter = 0;
             for (Map<IAtom, IAtom> solution : mappings) {
-                Map<Integer, Integer> atomMappings = new TreeMap<Integer, Integer>();
+                Map<Integer, Integer> atomMappings = new TreeMap<>();
                 for (Map.Entry<IAtom, IAtom> map : solution.entrySet()) {
                     IAtom sourceAtom = map.getKey();
                     IAtom targetAtom = map.getValue();
@@ -151,7 +149,7 @@ public class SingleMappingHandler extends AbstractMCSAlgorithm implements IMCSBa
         try {
             int counter = 0;
             for (Map<IAtom, IAtom> solution : mappings) {
-                Map<IAtom, IAtom> atomMappings = new HashMap<IAtom, IAtom>();
+                Map<IAtom, IAtom> atomMappings = new HashMap<>();
                 for (Map.Entry<IAtom, IAtom> map : solution.entrySet()) {
 
                     IAtom sourceAtom = map.getKey();
@@ -167,20 +165,20 @@ public class SingleMappingHandler extends AbstractMCSAlgorithm implements IMCSBa
 
     private synchronized void setFirstMapping() {
         if (allMCS.size() > 0) {
-            firstMCS = new TreeMap<Integer, Integer>(allMCS.iterator().next());
+            firstMCS = new TreeMap<>(allMCS.iterator().next());
         }
 
     }
 
     private synchronized void setFirstAtomMapping() {
         if (allAtomMCS.size() > 0) {
-            atomsMCS = new HashMap<IAtom, IAtom>(allAtomMCS.iterator().next());
+            atomsMCS = new HashMap<>(allAtomMCS.iterator().next());
         }
     }
 
     /** {@inheritDoc} */
     @Override
-    public List<Map<Integer, Integer>> getAllMapping() {
+    public synchronized List<Map<Integer, Integer>> getAllMapping() {
         return Collections.unmodifiableList(allMCS);
     }
 
@@ -192,7 +190,7 @@ public class SingleMappingHandler extends AbstractMCSAlgorithm implements IMCSBa
 
     /** {@inheritDoc} */
     @Override
-    public List<Map<IAtom, IAtom>> getAllAtomMapping() {
+    public synchronized List<Map<IAtom, IAtom>> getAllAtomMapping() {
         return Collections.unmodifiableList(allAtomMCS);
     }
 

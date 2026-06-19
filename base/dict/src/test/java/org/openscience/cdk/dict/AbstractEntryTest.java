@@ -20,97 +20,96 @@ package org.openscience.cdk.dict;
 
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
- * @cdk.module test-dict
  */
-public abstract class AbstractEntryTest extends CDKTestCase {
+abstract class AbstractEntryTest extends CDKTestCase {
 
     private Entry testClass;
 
-    protected void setTestClass(Entry testClass) {
+    void setTestClass(Entry testClass) {
         this.testClass = testClass;
     }
 
-    protected Entry getTestClass() {
+    Entry getTestClass() {
         return this.testClass;
     }
 
     @Test
-    public void testSetTestClass() {
-        Assert.assertNotNull(this.testClass);
+    void testSetTestClass() {
+        Assertions.assertNotNull(this.testClass);
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         Entry entry = getTestClass();
         entry.setID("testid");
         entry.setLabel("testTerm");
-        Assert.assertNotNull(entry);
-        Assert.assertEquals("Entry[testid](testTerm)", entry.toString());
+        Assertions.assertNotNull(entry);
+        Assertions.assertEquals("Entry[testid](testTerm)", entry.toString());
     }
 
     @Test
-    public void testLabel() {
+    void testLabel() {
         Entry entry = getTestClass();
-        Assert.assertEquals("", entry.getLabel());
+        Assertions.assertEquals("", entry.getLabel());
         entry.setLabel("label");
-        Assert.assertEquals("label", entry.getLabel());
+        Assertions.assertEquals("label", entry.getLabel());
     }
 
     @Test
-    public void testID() {
+    void testID() {
         Entry entry = getTestClass();
-        Assert.assertEquals("", entry.getID());
+        Assertions.assertEquals("", entry.getID());
         entry.setID("identifier");
-        Assert.assertEquals("identifier", entry.getID());
+        Assertions.assertEquals("identifier", entry.getID());
     }
 
     @Test
-    public void testDefinition() {
+    void testDefinition() {
         Entry entry = getTestClass();
-        Assert.assertNull(entry.getDefinition());
+        Assertions.assertNull(entry.getDefinition());
         entry.setDefinition("This is a definition.");
-        Assert.assertEquals("This is a definition.", entry.getDefinition());
+        Assertions.assertEquals("This is a definition.", entry.getDefinition());
     }
 
     @Test
-    public void testDescriptorMetadata() {
+    void testDescriptorMetadata() {
         Entry entry = getTestClass();
-        Assert.assertNotNull(entry.getDescriptorMetadata());
+        Assertions.assertNotNull(entry.getDescriptorMetadata());
         List<String> metadata = entry.getDescriptorMetadata();
-        Assert.assertEquals(0, metadata.size());
+        Assertions.assertEquals(0, metadata.size());
         entry.setDescriptorMetadata("This entry was written by me.");
         metadata = entry.getDescriptorMetadata();
-        Assert.assertEquals(1, metadata.size());
+        Assertions.assertEquals(1, metadata.size());
     }
 
     @Test
-    public void testDescription() {
+    void testDescription() {
         Entry entry = getTestClass();
-        Assert.assertNull(entry.getDescription());
+        Assertions.assertNull(entry.getDescription());
         entry.setDescription("This is a description.");
-        Assert.assertEquals("This is a description.", entry.getDescription());
+        Assertions.assertEquals("This is a description.", entry.getDescription());
     }
 
     @Test
-    public void testClassName() {
+    void testClassName() {
         Entry entry = getTestClass();
-        Assert.assertNull(entry.getClassName());
+        Assertions.assertNull(entry.getClassName());
         entry.setClassName("org.openscience.cdk.DoesNotExist");
-        Assert.assertEquals("org.openscience.cdk.DoesNotExist", entry.getClassName());
+        Assertions.assertEquals("org.openscience.cdk.DoesNotExist", entry.getClassName());
     }
 
     @Test
-    public void testRawContent() {
+    void testRawContent() {
         Entry entry = getTestClass();
-        Assert.assertNull(entry.getRawContent());
-        Object someObject = new Double(5);
+        Assertions.assertNull(entry.getRawContent());
+        Object someObject = 5.0;
         entry.setRawContent(someObject);
-        Assert.assertEquals(someObject, entry.getRawContent());
+        Assertions.assertEquals(someObject, entry.getRawContent());
     }
 
 }

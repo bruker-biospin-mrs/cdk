@@ -18,12 +18,12 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.SlowTest;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond.Order;
@@ -39,28 +39,28 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarionpot
  */
-public class IPMolecularLearningDescriptorTest extends MolecularDescriptorTest {
+class IPMolecularLearningDescriptorTest extends CDKTestCase {
 
-    private SmilesParser            sp      = new SmilesParser(DefaultChemObjectBuilder.getInstance());
-    private IChemObjectBuilder      builder = SilentChemObjectBuilder.getInstance();
-    private LonePairElectronChecker lpcheck = new LonePairElectronChecker();
+    private IPMolecularLearningDescriptor descriptor;
+    private final SmilesParser            sp      = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+    private final IChemObjectBuilder      builder = SilentChemObjectBuilder.getInstance();
+    private final LonePairElectronChecker lpcheck = new LonePairElectronChecker();
 
     /**
      *  Constructor for the IPMolecularLearningDescriptorTest object
      *
      */
-    public IPMolecularLearningDescriptorTest() {}
+    IPMolecularLearningDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
-        super.setDescriptor(IPMolecularLearningDescriptor.class);
+    @BeforeEach
+    void setUp() throws Exception {
+        descriptor = new IPMolecularLearningDescriptor();
     }
 
     @Test
-    public void testIPMolecularLearningDescriptor() throws Exception {
-        Assert.assertNotNull(descriptor);
+    void testIPMolecularLearningDescriptor() throws Exception {
+        Assertions.assertNotNull(descriptor);
     }
 
     /**
@@ -69,8 +69,8 @@ public class IPMolecularLearningDescriptorTest extends MolecularDescriptorTest {
      *  @cdk.inchi InChI=1/C6H14/c1-5(2)6(3)4/h5-6H,1-4H3
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPDescriptor0() throws Exception {
+    @Tag("SlowTest")
+    void testIPDescriptor0() throws Exception {
 
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         mol.addAtom(builder.newInstance(IAtom.class, "C"));
@@ -93,7 +93,7 @@ public class IPMolecularLearningDescriptorTest extends MolecularDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue();
         double resultAccordingNIST = 0.0;
 
-        Assert.assertEquals(resultAccordingNIST, result, 0.0001);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.0001);
     }
 
     /**
@@ -101,8 +101,8 @@ public class IPMolecularLearningDescriptorTest extends MolecularDescriptorTest {
      *
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPDescriptor_1() throws Exception {
+    @Tag("SlowTest")
+    void testIPDescriptor_1() throws Exception {
 
         IAtomContainer mol = sp.parseSmiles("C-Cl");
 
@@ -114,15 +114,15 @@ public class IPMolecularLearningDescriptorTest extends MolecularDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue();
         double resultAccordingNIST = 11.26;
 
-        Assert.assertEquals(resultAccordingNIST, result, 0.53);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.53);
     }
 
     /**
      *  A unit test for JUnit with COCCCC=O
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPDescriptor_2() throws Exception {
+    @Tag("SlowTest")
+    void testIPDescriptor_2() throws Exception {
 
         IAtomContainer mol = sp.parseSmiles("COCCCC=O");
 
@@ -135,16 +135,16 @@ public class IPMolecularLearningDescriptorTest extends MolecularDescriptorTest {
 
         double resultAccordingNIST = 9.37;
 
-        Assert.assertEquals(2, dar.length());
-        Assert.assertEquals(resultAccordingNIST, dar.get(0), 0.3);
+        Assertions.assertEquals(2, dar.length());
+        Assertions.assertEquals(resultAccordingNIST, dar.get(0), 0.3);
     }
 
     /**
      *  A unit test for JUnit with C=CCC(=O)CC
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPDescriptor_3() throws Exception {
+    @Tag("SlowTest")
+    void testIPDescriptor_3() throws Exception {
 
         IAtomContainer mol = sp.parseSmiles("C=CCCC(=O)C");
 
@@ -153,12 +153,12 @@ public class IPMolecularLearningDescriptorTest extends MolecularDescriptorTest {
         lpcheck.saturate(mol);
 
         IPMolecularLearningDescriptor descriptor = new IPMolecularLearningDescriptor();
-        DoubleArrayResult dar = ((DoubleArrayResult) ((IPMolecularLearningDescriptor) descriptor).calculatePlus(mol)
-                .getValue());
+        DoubleArrayResult dar = ((DoubleArrayResult) descriptor.calculatePlus(mol)
+                                                               .getValue());
 
         double resultAccordingNIST = 9.50;
-        Assert.assertEquals(2, dar.length());
-        Assert.assertEquals(resultAccordingNIST, dar.get(0), 0.6);
+        Assertions.assertEquals(2, dar.length());
+        Assertions.assertEquals(resultAccordingNIST, dar.get(0), 0.6);
 
     }
 
@@ -255,8 +255,8 @@ public class IPMolecularLearningDescriptorTest extends MolecularDescriptorTest {
      * @throws org.openscience.cdk.exception.CDKException
      */
     @Test
-    @Category(SlowTest.class)
-    public void testBug_2787332_triclosan() throws Exception {
+    @Tag("SlowTest")
+    void testBug_2787332_triclosan() throws Exception {
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         mol.addAtom(builder.newInstance(IAtom.class, "C"));//0
         mol.addAtom(builder.newInstance(IAtom.class, "C"));//1
@@ -301,9 +301,9 @@ public class IPMolecularLearningDescriptorTest extends MolecularDescriptorTest {
         AtomContainerManipulator.convertImplicitToExplicitHydrogens(mol);
 
         IPMolecularLearningDescriptor descriptor = new IPMolecularLearningDescriptor();
-        DoubleArrayResult dar = ((DoubleArrayResult) ((IPMolecularLearningDescriptor) descriptor).calculatePlus(mol)
-                .getValue());
+        DoubleArrayResult dar = ((DoubleArrayResult) descriptor.calculatePlus(mol)
+                                                               .getValue());
 
-        Assert.assertEquals(6, dar.length());
+        Assertions.assertEquals(6, dar.length());
     }
 }

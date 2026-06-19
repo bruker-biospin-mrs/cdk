@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
@@ -30,55 +30,54 @@ import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 /**
- * @cdk.module test-qsarmolecular
  */
-public class FMFDescriptorTest extends MolecularDescriptorTest {
+class FMFDescriptorTest extends MolecularDescriptorTest {
 
-    public FMFDescriptorTest() {}
+    FMFDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(FMFDescriptor.class);
     }
 
     @Test
-    public void testClenbuterol() throws Exception {
+    void testClenbuterol() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("Clc1cc(cc(Cl)c1N)C(O)CNC(C)(C)C");
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
         Aromaticity.cdkLegacy().apply(mol);
         DoubleResult result = (DoubleResult) descriptor.calculate(mol).getValue();
-        Assert.assertEquals(0.353, result.doubleValue(), 0.01);
+        Assertions.assertEquals(0.353, result.doubleValue(), 0.01);
     }
 
     @Test
-    public void testCarbinoxamine() throws Exception {
+    void testCarbinoxamine() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CN(C)CCOC(C1=CC=C(Cl)C=C1)C1=CC=CC=N1");
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
         Aromaticity.cdkLegacy().apply(mol);
         DoubleResult result = (DoubleResult) descriptor.calculate(mol).getValue();
-        Assert.assertEquals(0.65, result.doubleValue(), 0.01);
+        Assertions.assertEquals(0.65, result.doubleValue(), 0.01);
     }
 
     @Test
-    public void testIsamoltane() throws CDKException {
+    void testIsamoltane() throws CDKException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CC(C)NCC(O)COC1=C(C=CC=C1)N1C=CC=C1");
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
         Aromaticity.cdkLegacy().apply(mol);
         DoubleResult result = (DoubleResult) descriptor.calculate(mol).getValue();
-        Assert.assertEquals(0.55, result.doubleValue(), 0.01);
+        Assertions.assertEquals(0.55, result.doubleValue(), 0.01);
     }
 
     @Test
-    public void testPirenperone() throws CDKException {
+    void testPirenperone() throws CDKException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("Fc1ccc(cc1)C(=O)C4CCN(CCC\\3=C(\\N=C2\\C=C/C=C\\N2C/3=O)C)CC4");
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
         Aromaticity.cdkLegacy().apply(mol);
         DoubleResult result = (DoubleResult) descriptor.calculate(mol).getValue();
-        Assert.assertEquals(0.862, result.doubleValue(), 0.001);
+        Assertions.assertEquals(0.862, result.doubleValue(), 0.001);
     }
 
 }

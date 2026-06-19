@@ -18,13 +18,13 @@
  */
 package org.openscience.cdk.qsar.descriptors.bond;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.SlowTest;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.result.DoubleResult;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -34,40 +34,39 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * TestSuite that runs all QSAR bond tests.
  *
- * @cdk.module test-qsarionpot
  */
-public class IPBondLearningDescriptorTest extends BondDescriptorTest {
+class IPBondLearningDescriptorTest extends CDKTestCase {
 
     private IPBondLearningDescriptor descriptor;
-    private LonePairElectronChecker  lpcheck = new LonePairElectronChecker();
+    private final LonePairElectronChecker  lpcheck = new LonePairElectronChecker();
 
     /**
      *  Constructor for the IPBondLearningDescriptorTest object
      *
      */
-    public IPBondLearningDescriptorTest() {
+    IPBondLearningDescriptorTest() {
         descriptor = new IPBondLearningDescriptor();
     }
 
-    @Before
-    public void setUp() throws Exception {
-        setDescriptor(IPBondLearningDescriptor.class);
+    @BeforeEach
+    void setUp() throws Exception {
+        descriptor = new IPBondLearningDescriptor();
     }
 
     /**
     *  A unit test for JUnit
     */
     @Test
-    public void testIPBondLearningDescriptor() {
-        Assert.assertNotNull(descriptor);
+    void testIPBondLearningDescriptor() {
+        Assertions.assertNotNull(descriptor);
     }
 
     /**
      *  A unit test for JUnit with CCCC=CCCCC
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPDescriptor_1() throws Exception {
+    @Tag("SlowTest")
+    void testIPDescriptor_1() throws Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CCCC=CCCCC");
@@ -77,15 +76,15 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
 
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(3), mol).getValue()).doubleValue();
         double resultAccordingNIST = 8.80;
-        Assert.assertEquals(result, resultAccordingNIST, 0.051);
+        Assertions.assertEquals(result, resultAccordingNIST, 0.051);
     }
 
     /**
      *  A unit test for JUnit with CC1CCC=C1
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPDescriptor_2() throws java.lang.Exception {
+    @Tag("SlowTest")
+    void testIPDescriptor_2() throws java.lang.Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CC1CCC=C1");
@@ -95,15 +94,15 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
 
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(4), mol).getValue()).doubleValue();
         double resultAccordingNIST = 8.95;
-        Assert.assertEquals(result, resultAccordingNIST, 0.1);
+        Assertions.assertEquals(result, resultAccordingNIST, 0.1);
     }
 
     /**
      *  A unit test for JUnit with C=CCCCC
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPDescriptor_3() throws java.lang.Exception {
+    @Tag("SlowTest")
+    void testIPDescriptor_3() throws java.lang.Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("C=CCCCC");
@@ -113,7 +112,7 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
 
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(0), mol).getValue()).doubleValue();
         double resultAccordingNIST = 9.44;
-        Assert.assertEquals(result, resultAccordingNIST, 0.3);
+        Assertions.assertEquals(result, resultAccordingNIST, 0.3);
     }
 
     /**
@@ -121,8 +120,8 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
      *
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPDescriptorReaction1() throws java.lang.Exception {
+    @Tag("SlowTest")
+    void testIPDescriptorReaction1() throws java.lang.Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("C=CCCCC");
@@ -133,7 +132,7 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(0), mol).getValue()).doubleValue();
         double resultAccordingNIST = 9.44;
 
-        Assert.assertEquals(resultAccordingNIST, result, 0.3);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.3);
 
     }
 
@@ -142,8 +141,8 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
      *
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPDescriptorReaction2() throws java.lang.Exception {
+    @Tag("SlowTest")
+    void testIPDescriptorReaction2() throws java.lang.Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CCCCCC");
@@ -154,7 +153,7 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(0), mol).getValue()).doubleValue();
         double resultAccordingNIST = 0.0;
 
-        Assert.assertEquals(resultAccordingNIST, result, 0.0001);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.0001);
     }
 
     /**
@@ -162,8 +161,8 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
      *
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPTripleDescriptor1() throws java.lang.Exception {
+    @Tag("SlowTest")
+    void testIPTripleDescriptor1() throws java.lang.Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("C#CCC");
@@ -173,7 +172,7 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
 
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(0), mol).getValue()).doubleValue();
         double resultAccordingNIST = 9.44;
-        Assert.assertEquals(resultAccordingNIST, result, 0.75);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.75);
     }
 
     /**
@@ -181,8 +180,8 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
      *
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPTripleDescriptor2() throws java.lang.Exception {
+    @Tag("SlowTest")
+    void testIPTripleDescriptor2() throws java.lang.Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("C(#CC(C)(C)C)C(C)(C)C");
@@ -192,15 +191,15 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
 
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(0), mol).getValue()).doubleValue();
         double resultAccordingNIST = 8.98;
-        Assert.assertEquals(resultAccordingNIST, result, 0.1);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.1);
     }
 
     /**
      * A unit test for JUnit with C=C(C=CC)C
      *
      */
-    @Ignore("IonizationPotentialTool now deprecated due to bugs")
-    public void testIPConjugatedDescriptor1() throws java.lang.Exception {
+    @Disabled("IonizationPotentialTool now deprecated due to bugs")
+    void testIPConjugatedDescriptor1() throws java.lang.Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("C=C(C=CC)C");
@@ -210,11 +209,11 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
 
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(0), mol).getValue()).doubleValue();
         double resultAccordingNIST = 8.47;
-        Assert.assertEquals(resultAccordingNIST, result, 0.6);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.6);
 
         result = ((DoubleResult) descriptor.calculate(mol.getBond(2), mol).getValue()).doubleValue();
         resultAccordingNIST = 8.47;
-        Assert.assertEquals(resultAccordingNIST, result, 0.4);
+        Assertions.assertEquals(resultAccordingNIST, result, 0.4);
     }
 
     /**
@@ -222,8 +221,8 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
      *
      */
     @Test
-    @Category(SlowTest.class)
-    public void testIPPySystemReaction1() throws java.lang.Exception {
+    @Tag("SlowTest")
+    void testIPPySystemReaction1() throws java.lang.Exception {
 
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("C=CC=C");
@@ -233,7 +232,7 @@ public class IPBondLearningDescriptorTest extends BondDescriptorTest {
 
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(0), mol).getValue()).doubleValue();
         double resultAccordingNIST = 9.072;
-        Assert.assertEquals(resultAccordingNIST, result, 2.11);
+        Assertions.assertEquals(resultAccordingNIST, result, 2.11);
 
     }
 

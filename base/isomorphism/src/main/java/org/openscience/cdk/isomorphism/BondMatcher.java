@@ -27,13 +27,12 @@ package org.openscience.cdk.isomorphism;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.isomorphism.matchers.IQueryBond;
 
-import static org.openscience.cdk.CDKConstants.ISAROMATIC;
+import static org.openscience.cdk.interfaces.IChemObject.AROMATIC;
 
 /**
  * Defines compatibility checking of bonds for (subgraph)-isomorphism mapping.
  *
  * @author John May
- * @cdk.module isomorphism
  */
 public abstract class BondMatcher {
 
@@ -96,7 +95,7 @@ public abstract class BondMatcher {
         /**{@inheritDoc} */
         @Override
         public boolean matches(IBond bond1, IBond bond2) {
-            return bond1.getFlag(ISAROMATIC) && bond2.getFlag(ISAROMATIC) || bond1.getOrder() == bond2.getOrder();
+            return bond1.getFlag(AROMATIC) && bond2.getFlag(AROMATIC) || bond1.getOrder() == bond2.getOrder();
         }
     }
 
@@ -110,8 +109,8 @@ public abstract class BondMatcher {
         /**{@inheritDoc} */
         @Override
         public boolean matches(IBond bond1, IBond bond2) {
-            return bond1.getFlag(ISAROMATIC) == bond2.getFlag(ISAROMATIC)
-                    && (bond1.getOrder() == bond2.getOrder() || bond1.getFlag(ISAROMATIC) && bond2.getFlag(ISAROMATIC));
+            return bond1.getFlag(AROMATIC) == bond2.getFlag(AROMATIC)
+                    && (bond1.getOrder() == bond2.getOrder() || bond1.getFlag(AROMATIC) && bond2.getFlag(AROMATIC));
         }
     }
 

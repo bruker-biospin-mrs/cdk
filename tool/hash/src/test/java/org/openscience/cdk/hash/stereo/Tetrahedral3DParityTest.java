@@ -24,30 +24,32 @@
 
 package org.openscience.cdk.hash.stereo;
 
-import org.junit.Test;
-import org.openscience.cdk.hash.stereo.Tetrahedral3DParity;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import javax.vecmath.Point3d;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class Tetrahedral3DParityTest {
+class Tetrahedral3DParityTest {
 
-    private static int CLOCKWISE     = -1;
-    private static int ANTICLOCKWISE = +1;
+    private static final int CLOCKWISE     = -1;
+    private static final int ANTICLOCKWISE = +1;
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testConstruction_Empty() throws Exception {
-        new Tetrahedral3DParity(new Point3d[0]);
+    @Test
+    void testConstruction_Empty() throws Exception {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    new Tetrahedral3DParity(new Point3d[0]);
+                                });
     }
 
     @Test
-    public void testParity_Three_Clockwise() {
+    void testParity_Three_Clockwise() {
         Point3d[] coords = new Point3d[]{new Point3d(1.70, 0.98, -0.51), // -O
                 new Point3d(2.65, -0.83, 0.62), // -N
                 new Point3d(0.26, -0.33, 0.95), // -C
@@ -57,7 +59,7 @@ public class Tetrahedral3DParityTest {
     }
 
     @Test
-    public void testParity_Three_Anticlockwise() {
+    void testParity_Three_Anticlockwise() {
         Point3d[] coords = new Point3d[]{new Point3d(1.70, 0.98, -0.51), // -O
                 new Point3d(0.26, -0.33, 0.95), // -C
                 new Point3d(2.65, -0.83, 0.62), // -N
@@ -67,7 +69,7 @@ public class Tetrahedral3DParityTest {
     }
 
     @Test
-    public void testParity_Four_Clockwise() {
+    void testParity_Four_Clockwise() {
         Point3d[] coords = new Point3d[]{new Point3d(1.70, 0.98, -0.51), // -O
                 new Point3d(2.65, -0.83, 0.62), // -N
                 new Point3d(0.26, -0.33, 0.95), // -C
@@ -77,7 +79,7 @@ public class Tetrahedral3DParityTest {
     }
 
     @Test
-    public void testParity_Four_Anticlockwise() {
+    void testParity_Four_Anticlockwise() {
         Point3d[] coords = new Point3d[]{new Point3d(1.70, 0.98, -0.51), // -O
                 new Point3d(0.26, -0.33, 0.95), // -C
                 new Point3d(2.65, -0.83, 0.62), // -N

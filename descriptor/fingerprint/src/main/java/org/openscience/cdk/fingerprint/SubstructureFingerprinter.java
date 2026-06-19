@@ -26,10 +26,8 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.isomorphism.Pattern;
 import org.openscience.cdk.isomorphism.matchers.QueryAtomContainer;
-import org.openscience.cdk.smarts.Smarts;
 import org.openscience.cdk.smarts.SmartsPattern;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -364,8 +362,6 @@ import java.util.*;
  * @cdk.keyword  fingerprint
  * @cdk.keyword  similarity
  *
- * @cdk.module   fingerprint
- * @cdk.githash
  */
 
 
@@ -381,7 +377,7 @@ public class SubstructureFingerprinter extends AbstractFingerprinter implements 
         }
     }
 
-    private List<Key> keys = new ArrayList<>();
+    private final List<Key> keys = new ArrayList<>();
 
     /**
      * Set up the fingerprinter to use a user-defined set of fragments.
@@ -412,7 +408,7 @@ public class SubstructureFingerprinter extends AbstractFingerprinter implements 
         keys.clear();
         for (String key : smarts) {
             QueryAtomContainer qmol = new QueryAtomContainer(null);
-            SmartsPattern ptrn = null;
+            SmartsPattern ptrn;
             ptrn = SmartsPattern.create(key);
             ptrn.setPrepare(false); // prepare is done once
             keys.add(new Key(key, ptrn));
@@ -446,12 +442,12 @@ public class SubstructureFingerprinter extends AbstractFingerprinter implements 
         // init SMARTS invariants (connectivity, degree, etc)
         SmartsPattern.prepare(atomContainer);
 
-        final Map<Integer, Integer> map = new TreeMap<Integer, Integer>();
+        final Map<Integer, Integer> map = new TreeMap<>();
         for (int i = 0; i < keys.size(); i++) {
             Pattern ptrn = keys.get(i).pattern;
-            map.put(i,
-                    ptrn.matchAll(atomContainer)
-                        .countUnique());
+            int count = ptrn.matchAll(atomContainer)
+                            .countUnique();
+            map.put(i, count);
         }
 
         final int length = keys.size();

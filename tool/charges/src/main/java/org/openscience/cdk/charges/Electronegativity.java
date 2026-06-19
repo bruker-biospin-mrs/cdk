@@ -29,18 +29,16 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * @author         Miguel Rojas Cherto
  * @cdk.created    2008-104-31
- * @cdk.module  charges
  * @cdk.keyword electronegativity
- * @cdk.githash
  */
 public class Electronegativity {
 
-    private GasteigerMarsiliPartialCharges peoe  = null;
+    private GasteigerMarsiliPartialCharges peoe;
 
     /**Number of maximum iterations*/
-    private int                            maxI  = 6;
+    private int                            maxI;
     /**Number of maximum resonance structures*/
-    private int                            maxRS = 50;
+    private int                            maxRS;
 
     private IAtomContainer                 molSigma;
     private IAtomContainer                 acOldS;

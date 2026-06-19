@@ -22,8 +22,11 @@
  */
 package org.openscience.cdk.smsd.interfaces;
 
-import static org.junit.Assert.assertEquals;
-
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -31,16 +34,11 @@ import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.smsd.algorithm.vflib.VFlibSubStructureHandler;
 import org.openscience.cdk.smsd.tools.MolHandler;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  */
 public abstract class AbstractSubGraphTest {
 
@@ -50,23 +48,23 @@ public abstract class AbstractSubGraphTest {
      *
      * @param algorithm
      */
-    public static void setMCSAlgorithm(AbstractSubGraphTest algorithm) {
+    static void setMCSAlgorithm(AbstractSubGraphTest algorithm) {
         AbstractSubGraphTest.algorithm = algorithm;
     }
 
     public AbstractSubGraphTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     /**
      * Test of isSubgraph method, of class AbstractSubGraph.
@@ -82,10 +80,10 @@ public abstract class AbstractSubGraphTest {
         MolHandler mol1 = new MolHandler(queryac, true, true);
         MolHandler mol2 = new MolHandler(target, true, true);
         smsd1.set(mol1, mol2);
-        assertEquals(true, smsd1.isSubgraph(true));
+        Assertions.assertEquals(true, smsd1.isSubgraph(true));
     }
 
-    public class ISubGraphImpl extends AbstractSubGraph {
+    private class ISubGraphImpl extends AbstractSubGraph {
 
         @Override
         public boolean isSubgraph(boolean bondMatch) {

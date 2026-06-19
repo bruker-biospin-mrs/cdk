@@ -22,15 +22,14 @@
  */
 package org.openscience.cdk.io.formats;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-ioformats
  */
 public class PubChemSubstancesXMLFormatTest extends ChemFormatMatcherTest {
 
-    public PubChemSubstancesXMLFormatTest() {
+    PubChemSubstancesXMLFormatTest() {
         super.setChemFormatMatcher((IChemFormatMatcher) PubChemSubstancesXMLFormat.getInstance());
     }
 
@@ -39,9 +38,9 @@ public class PubChemSubstancesXMLFormatTest extends ChemFormatMatcherTest {
      */
     @Test
     @Override
-    public void testMatches() throws Exception {
+    void testMatches() throws Exception {
         String header = "<?xml version=\"\"?><PC-Substances/>";
-        Assert.assertTrue(matches(header));
+        Assertions.assertTrue(matches(header));
     }
 
 }

@@ -22,39 +22,30 @@
  *  */
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IMonomer;
-import org.openscience.cdk.interfaces.AbstractMonomerTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractMonomerTest;
 
 /**
  * TestCase for the Monomer class.
  *
- * @cdk.module test-data
  *
  * @author Edgar Luttman &lt;edgar@uni-paderborn.de&gt;
  * @cdk.created 2001-08-09
  */
-public class MonomerTest extends AbstractMonomerTest {
+class MonomerTest extends AbstractMonomerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new Monomer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(Monomer::new);
     }
 
     @Test
-    public void testMonomer() {
+    void testMonomer() {
         IMonomer oMonomer = new Monomer();
-        Assert.assertNotNull(oMonomer);
+        Assertions.assertNotNull(oMonomer);
     }
 
 }

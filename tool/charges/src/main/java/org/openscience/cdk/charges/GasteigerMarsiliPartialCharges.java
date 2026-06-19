@@ -18,12 +18,11 @@
  */
 package org.openscience.cdk.charges;
 
-import java.util.Iterator;
-
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IElement;
 
 /**
  * <p>The calculation of the Gasteiger Marsili (PEOE) partial charges is based on
@@ -34,8 +33,6 @@ import org.openscience.cdk.interfaces.IBond;
  * @author      chhoppe
  * @author      rojas
  *
- * @cdk.module  charges
- * @cdk.githash
  * @cdk.created 2004-11-03
  * @cdk.keyword partial atomic charges
  * @cdk.keyword charge distribution
@@ -137,8 +134,8 @@ public class GasteigerMarsiliPartialCharges implements IChargeCalculator {
         double deoc;
 
         IAtom[] atoms = null;
-        int atom1 = 0;
-        int atom2 = 0;
+        int atom1;
+        int atom2;
 
         double[] q_old = new double[ac.getAtomCount()];
         for (int i = 0; i < q_old.length; i++)
@@ -161,21 +158,18 @@ public class GasteigerMarsiliPartialCharges implements IChargeCalculator {
             break out;
 
             //            bonds = ac.getBonds();
-            Iterator<IBond> bonds = ac.bonds().iterator();
-            while (bonds.hasNext()) {
-                IBond bond = (IBond) bonds.next();
-
+            for (IBond bond : ac.bonds()) {
                 atom1 = ac.indexOf(bond.getBegin());
                 atom2 = ac.indexOf(bond.getEnd());
 
                 if (gasteigerFactors[STEP_SIZE * atom1 + atom1 + 4] >= gasteigerFactors[STEP_SIZE * atom2 + atom2 + 4]) {
-                    if (ac.getAtom(atom2).getSymbol().equals("H")) {
+                    if (ac.getAtom(atom2).getAtomicNumber() == IElement.H) {
                         deoc = DEOC_HYDROGEN;
                     } else {
                         deoc = gasteigerFactors[STEP_SIZE * atom2 + atom2 + 3];
                     }
                 } else {
-                    if (ac.getAtom(atom1).getSymbol().equals("H")) {
+                    if (ac.getAtom(atom1).getAtomicNumber() == IElement.H) {
                         deoc = DEOC_HYDROGEN;
                     } else {
                         deoc = gasteigerFactors[STEP_SIZE * atom1 + atom1 + 3];

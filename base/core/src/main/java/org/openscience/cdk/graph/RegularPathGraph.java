@@ -23,14 +23,12 @@
  */
 package org.openscience.cdk.graph;
 
-import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A path graph (<b>P-Graph</b>) for graphs with less than 64 vertices - the
@@ -42,8 +40,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author John May
  * @author Till Schäfer (predefined vertex ordering)
- * @cdk.module core
- * @cdk.githash
  * @see org.openscience.cdk.ringsearch.RingSearch
  * @see GraphUtil
  * @see <a href="http://en.wikipedia.org/wiki/Biconnected_component">Wikipedia:
@@ -77,8 +73,8 @@ final class RegularPathGraph extends PathGraph {
     @SuppressWarnings("unchecked")
     RegularPathGraph(final int[][] mGraph, final int[] rank, final int limit) {
 
-        checkNotNull(mGraph, "no molecule graph");
-        checkNotNull(rank, "no rank provided");
+        Objects.requireNonNull(mGraph, "no molecule graph");
+        Objects.requireNonNull(rank, "no rank provided");
 
         this.graph = new List[mGraph.length];
         this.rank = rank;
@@ -86,12 +82,12 @@ final class RegularPathGraph extends PathGraph {
         int ord = graph.length;
 
         // check configuration
-        checkArgument(ord > 2, "graph was acyclic");
-        checkArgument(limit >= 3 && limit <= ord, "limit should be from 3 to |V|");
-        checkArgument(ord < 64, "graph has 64 or more atoms, use JumboPathGraph");
+        if (ord <= 2) throw new IllegalArgumentException("graph was acyclic");
+        if (limit < 3 || limit > ord) throw new IllegalArgumentException("limit should be from 3 to |V|");
+        if (ord >= 64) throw new IllegalArgumentException("graph has 64 or more atoms, use JumboPathGraph");
 
         for (int v = 0; v < ord; v++)
-            graph[v] = Lists.newArrayList();
+            graph[v] = new ArrayList<>();
 
         // construct the path-graph
         for (int v = 0; v < ord; v++) {
@@ -146,7 +142,7 @@ final class RegularPathGraph extends PathGraph {
     private List<PathEdge> combine(final List<PathEdge> edges, final int x) {
 
         final int n = edges.size();
-        final List<PathEdge> reduced = new ArrayList<PathEdge>(n);
+        final List<PathEdge> reduced = new ArrayList<>(n);
 
         for (int i = 0; i < n; i++) {
             PathEdge e = edges.get(i);

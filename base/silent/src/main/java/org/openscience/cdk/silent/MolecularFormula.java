@@ -36,7 +36,6 @@ import org.openscience.cdk.interfaces.IMolecularFormula;
  *   <li><code><sup>12</sup>C<sub>5</sub><sup>13</sup>CH<sub>6</sub></code></li>
  * </ul>
  *
- * @cdk.module  silent
  * @author      miguelrojasch
  * @cdk.created 2007-11-20
  * @cdk.keyword molecular formula
@@ -53,11 +52,11 @@ public class MolecularFormula implements IMolecularFormula {
      */
     private static final long      serialVersionUID = -2011407700837295287L;
 
-    private Map<IIsotope, Integer> isotopes;
+    private final Map<IIsotope, Integer> isotopes;
     /**
      *  The partial charge of the molecularFormula. The default value is Double.NaN.
      */
-    private Integer                charge           = (Integer) CDKConstants.UNSET;
+    private Integer                charge           = null;
 
     /**
      *  A hashtable for the storage of any kind of properties of this IChemObject.
@@ -68,7 +67,7 @@ public class MolecularFormula implements IMolecularFormula {
      *  Constructs an empty MolecularFormula.
      */
     public MolecularFormula() {
-        isotopes = new HashMap<IIsotope, Integer>();
+        isotopes = new HashMap<>();
     }
 
     /**
@@ -110,6 +109,8 @@ public class MolecularFormula implements IMolecularFormula {
      */
     @Override
     public IMolecularFormula addIsotope(IIsotope isotope, int count) {
+        if (count == 0)
+            return this;
         boolean flag = false;
         for (IIsotope thisIsotope : isotopes()) {
             if (isTheSame(thisIsotope, isotope)) {
@@ -264,7 +265,7 @@ public class MolecularFormula implements IMolecularFormula {
      */
     private Map<Object, Object> lazyProperties() {
         if (properties == null) {
-            properties = new Hashtable<Object, Object>();
+            properties = new Hashtable<>();
         }
         return properties;
     }
@@ -355,9 +356,7 @@ public class MolecularFormula implements IMolecularFormula {
     @Override
     public void setProperties(Map<Object, Object> properties) {
 
-        Iterator<Object> keys = properties.keySet().iterator();
-        while (keys.hasNext()) {
-            Object key = keys.next();
+        for (Object key : properties.keySet()) {
             lazyProperties().put(key, properties.get(key));
         }
     }
@@ -387,7 +386,7 @@ public class MolecularFormula implements IMolecularFormula {
         if (exactMass1 == null) exactMass1 = -1.0;
         if (exactMass2 == null) exactMass2 = -1.0;
 
-        if (!isotopeOne.getSymbol().equals(isotopeTwo.getSymbol())) return false;
+        if (!isotopeOne.getAtomicNumber().equals(isotopeTwo.getAtomicNumber())) return false;
         if (natAbund1.doubleValue() != natAbund2) return false;
         return exactMass1.doubleValue() == exactMass2;
     }

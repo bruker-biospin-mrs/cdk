@@ -34,8 +34,6 @@ import org.openscience.cdk.interfaces.IBond;
  *   IBond.Order singleBondOrder = CDKConstants.BONDORDER_SINGLE;
  * </pre>
  *
- * @cdk.module  core
- * @cdk.githash
  *
  * @cdk.keyword bond order
  * @cdk.keyword stereochemistry
@@ -202,6 +200,7 @@ public class CDKConstants {
      */
     public final static String NMRSPECTYPE_2D_HMBC = "2D NMR spectrum: HMBC";
 
+
     /**
      * Property key to store the CIP descriptor label for an atom / bond. The
      * label is a string.
@@ -213,42 +212,82 @@ public class CDKConstants {
      * purposes ***************************************
      */
 
-    /** Flag that is set if the chemobject is placed (somewhere).
+    /**
+     * Flag that is set if the chemobject is placed (somewhere).
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#PLACED}
      */
-    public final static int         ISPLACED                     = 0x0001;                           // 1 << 0
-    /** Flag that is set when the chemobject is part of a ring.
+    @Deprecated
+    public final static int         ISPLACED                     = 0x0001;
+    /**
+     * Flag that is set when the chemobject is part of a ring.
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#IN_RING}
      */
-    public final static int         ISINRING                     = 0x0002;                           // 1 << 1
-    /** Flag that is set when the chemobject is part of a ring.
+    @Deprecated
+    public final static int         ISINRING                     = 0x0002;
+    /**
+     * Flag that is set when the chemobject is part of a ring.
+     * @deprecated Now negated from {@link org.openscience.cdk.interfaces.IChemObject#IN_RING}
      */
-    public final static int         ISNOTINRING                  = 0x0004;                           // 1 << 2
-    /** Flag that is set if a chemobject is part of an aliphatic chain.
+    @Deprecated
+    public final static int         ISNOTINRING                  = 0x0004;
+    /**
+     * Flag that is set if a chemobject is part of an aliphatic chain.
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#ALIPHATIC} but should really use not(AROMATIC)
      */
-    public final static int         ISALIPHATIC                  = 0x0008;                           // 1 << 3 etc.
-    /** Flag is set if chemobject has been visited.
+    @Deprecated
+    public final static int         ISALIPHATIC                  = 0x0008;
+    /**
+     * Flag is set if chemobject has been visited.
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#VISITED}
      */
-    public final static int         VISITED                      = 0x0010;                           // Use in tree searches // 1 << 4
-    /** Flag is set if chemobject is part of an aromatic system. */
-    public final static int         ISAROMATIC                   = 0x0020;                           // 1 << 5
-    /** Flag is set if chemobject is part of a conjugated system. */
-    public final static int         ISCONJUGATED                 = 0x0040;                           // 1 << 6
-    /** Flag is set if a chemobject is mapped to another chemobject.
-     *  It is used for example in subgraph isomorphism search.
+    @Deprecated
+    public final static int         VISITED                      = 0x0010;
+    /**
+     * Flag is set if chemobject is part of an aromatic system
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#AROMATIC}
      */
-    public final static int         MAPPED                       = 0x0080;                           // 1 << 7
+    @Deprecated
+    public final static int         ISAROMATIC                   = 0x0020;
+    /**
+     * Flag is set if chemobject is part of a conjugated system.
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#CONJUGATED}
+     */
+    @Deprecated
+    public final static int         ISCONJUGATED                 = 0x0040;
+    /**
+     * Flag is set if a chemobject is mapped to another chemobject.
+     * It is used for example in subgraph isomorphism search.
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#MAPPED}
+     */
+    @Deprecated
+    public final static int         MAPPED                       = 0x0080;
 
-    /** Sets to true if the atom is an hydrogen bond donor. */
-    public final static int         IS_HYDROGENBOND_DONOR        = 0x0100;                           // 1 << 8
-    /** Sets to true if the atom is an hydrogen bond acceptor. */
-    public final static int         IS_HYDROGENBOND_ACCEPTOR     = 0x0200;                           // 1 << 9
+    /**
+     * Sets to true if the atom is an hydrogen bond donor.
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#HYDROGEN_BOND_DONOR}
+     */
+    @Deprecated
+    public final static int         IS_HYDROGENBOND_DONOR        = 0x0100;
+    /**
+     * Sets to true if the atom is an hydrogen bond acceptor.
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#HYDROGEN_BOND_ACCEPTOR}
+     */
+    @Deprecated
+    public final static int         IS_HYDROGENBOND_ACCEPTOR     = 0x0200;
 
-    /** Flag is set if a chemobject has reactive center.
-     *  It is used for example in reaction.
+    /**
+     * Flag is set if a chemobject has reactive center.
+     * It is used for example in reaction.
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#REACTIVE_CENTER}
      */
-    public static final int         REACTIVE_CENTER              = 0x0400;                           // 1 << 10
-    /** Flag is set if an atom could be typed.
+    @Deprecated
+    public static final int         REACTIVE_CENTER              = 0x0400;
+    /**
+     * Flag is set if an atom could be typed.
+     * @deprecated Now {@link org.openscience.cdk.interfaces.IChemObject#TYPEABLE}
      */
-    public static final int         IS_TYPEABLE                  = 0x0800;                           // 1 << 11
+    @Deprecated
+    public static final int         IS_TYPEABLE                  = 0x0800;
 
     /**
      * Flag used for marking uncertainty of the bond order.
@@ -351,21 +390,38 @@ public class CDKConstants {
      */
     public static final String      RELEVANT_RINGS               = "cdk:RelevantRings";
 
+    public static final String      COMPONENT_GROUP              = "cdk:ComponentGroup";
+
     /**
-     * Property used for reactions when converted to/from molecules. It defines what role and atom
-     * has an a reaction.
+     * Property used for reactions when converted to/from molecules. It defines
+     * what role and atom has in a reaction.
      *
      * Used in. ReactionManipulator.toMolecule and ReactionManipulator.toReaction.
      */
     public static final String      REACTION_ROLE                = "cdk:ReactionRole";
 
+
     /**
-     * Property used for reactions when converted to/from molecules. It defines fragment grouping, for example
-     * when handling ionic components.
-     *
+     * Property used for reactions when converted to/from molecules. It defines
+     * fragment grouping, for example when handling ionic components.
+     * <p/>
      * Used in. ReactionManipulator.toMolecule and ReactionManipulator.toReaction.
      */
-    public static final String      REACTION_GROUP               = "cdk:ReactionGroup";
+    public static final String      REACTION_GROUP               = COMPONENT_GROUP;
+
+    /**
+     * This property is set on atoms of an RGroup substitute definition to
+     * indicate which RGroup the definition is for.
+     */
+    public static final String     RGROUP_MEMBERSHIP             = "cdk:RGroupMembership";
+
+    /**
+     * The Z-Order controls the relative ordering in 2D depictions when bonds
+     * overlap/intersect. Some sketch formats (e.g. CDX/CDXML) capture the
+     * Z-order as a property.
+     */
+    public static final Object      Z_ORDER                      = "cdk:ZOrder";
+
 
     /* **************************************
      * Some predefined property names for * Atoms *
@@ -424,11 +480,32 @@ public class CDKConstants {
      */
     public static final String      CTAB_SGROUPS                 = "cdk:CtabSgroups";
 
+    /**
+     * Enumeration of all valid radical values.
+     */
+    public static final String      SPIN_MULTIPLICITY            = "cdk:SpinMultiplicity";
 
     /**
      * Property for reaction objects where the conditions of reactions can be placed.
      */
     public static final String      REACTION_CONDITIONS          = "cdk:ReactionConditions";
+
+    /**
+     * Arrow display type
+     */
+    public static final String      REACTION_ARROW                = "cdk:Arrow";
+
+
+    /**
+     * Bounds object for when an IChemObject has been generated by
+     * another generator.
+     */
+    public static final Object      RENDER_BOUNDS                 =  "cdk:RenderBounds";
+
+    /**
+     * Used to attach an {@link org.openscience.cdk.renderer.selection.IChemObjectSelection}
+     */
+    public static final Object      SELECTION                     =  "cdk:Selection";
 
 
     /* **************************************

@@ -22,8 +22,6 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 /**
- * @cdk.module  isomorphism
- * @cdk.githash
  */
 @Deprecated
 public class SymbolAndChargeQueryAtom extends QueryAtom implements IQueryAtom {
@@ -46,7 +44,7 @@ public class SymbolAndChargeQueryAtom extends QueryAtom implements IQueryAtom {
         int requiredCharge = this.getFormalCharge() == null ? 0 : this.getFormalCharge();
         int foundCharge = atom.getFormalCharge() == null ? 0 : atom.getFormalCharge();
         return this.getSymbol().equals(atom.getSymbol()) && requiredCharge == foundCharge;
-    };
+    }
 
     @Override
     public String toString() {

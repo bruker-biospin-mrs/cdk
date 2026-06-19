@@ -26,7 +26,6 @@ import java.util.GregorianCalendar;
  *  A set of utilities which did not really fit into any other category.
  *
  * @author     steinbeck
- * @cdk.githash
  * @cdk.created    2001-06-19
  */
 @Deprecated
@@ -58,7 +57,7 @@ public class SwissArmyKnife {
     public static String getDuration(long diff) {
         GregorianCalendar calendar = new GregorianCalendar();
         calendar.setTime(new Date(diff));
-        StringBuffer s = new StringBuffer();
+        StringBuilder s = new StringBuilder();
         if (calendar.get(Calendar.HOUR) > 1) {
             s.append("hours: " + (calendar.get(Calendar.HOUR) - 1) + ", ");
         }
@@ -82,9 +81,9 @@ public class SwissArmyKnife {
      */
     public static String printInt2D(int[][] contab) {
         String line = "";
-        for (int f = 0; f < contab.length; f++) {
+        for (int[] ints : contab) {
             for (int g = 0; g < contab.length; g++) {
-                line += contab[f][g] + " ";
+                line += ints[g] + " ";
             }
             line += "\n";
         }

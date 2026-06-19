@@ -32,14 +32,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author miguelrojasch &lt;miguelrojasch@yahoo.es&gt;
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugReactionScheme extends ReactionScheme implements IReactionScheme {
 
     private static final long serialVersionUID = 705803374163613819L;
 
-    ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugReactionScheme.class);
+    final ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugReactionScheme.class);
 
     /** {@inheritDoc} */
     @Override

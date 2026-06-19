@@ -34,14 +34,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author     egonw
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugSubstance extends AtomContainerSet implements ISubstance {
 
     private static final long serialVersionUID = 7729610512495602788L;
 
-    ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugSubstance.class);
+    final ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugSubstance.class);
 
     /** {@inheritDoc} */
     @Override

@@ -18,15 +18,13 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import java.util.Iterator;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.openscience.cdk.CDKConstants;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.qsar.result.IntegerResult;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.templates.TestMoleculeFactory;
@@ -34,33 +32,32 @@ import org.openscience.cdk.templates.TestMoleculeFactory;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class AromaticAtomsCountDescriptorTest extends MolecularDescriptorTest {
+class AromaticAtomsCountDescriptorTest extends MolecularDescriptorTest {
 
-    public AromaticAtomsCountDescriptorTest() {}
+    AromaticAtomsCountDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(AromaticAtomsCountDescriptor.class);
     }
 
     @Test
-    public void testAromaticAtomsCountDescriptor() throws java.lang.Exception {
+    void testAromaticAtomsCountDescriptor() throws java.lang.Exception {
         Object[] params = {true};
         descriptor.setParameters(params);
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CCOc1ccccc1"); // ethanol
-        Assert.assertEquals(6, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
+        Assertions.assertEquals(6, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
     }
 
     @Test
-    public void testViaFlags() throws Exception {
+    void testViaFlags() throws Exception {
         IAtomContainer molecule = TestMoleculeFactory.makeBenzene();
-        for (Iterator atoms = molecule.atoms().iterator(); atoms.hasNext();) {
-            ((IAtom) atoms.next()).setFlag(CDKConstants.ISAROMATIC, true);
+        for (IAtom iAtom : molecule.atoms()) {
+            iAtom.setFlag(IChemObject.AROMATIC, true);
         }
-        Assert.assertEquals(6, ((IntegerResult) descriptor.calculate(molecule).getValue()).intValue());
+        Assertions.assertEquals(6, ((IntegerResult) descriptor.calculate(molecule).getValue()).intValue());
     }
 }

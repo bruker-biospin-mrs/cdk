@@ -25,10 +25,12 @@
  */
 package org.openscience.cdk.io;
 
-import com.google.common.collect.ImmutableSet;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IBond;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -42,16 +44,14 @@ public class V2000BlockHandler {
     /**
      * @deprecated Incorrect spelling
      */
-    private static final Set<String> PSUEDO_LABELS = ImmutableSet.<String>builder().add("*").add("A").add("Q")
-            .add("L").add("LP").add("R") // XXX: not in spec
-            .add("R#").build();
+    private static final Set<String> PSUEDO_LABELS = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList("*", "A", "Q", "L", "LP", "R", "R#")));
 
     /**
      * Valid pseudo labels.
      */
-    private static final Set<String> PSEUDO_LABELS = ImmutableSet.<String>builder().add("*").add("A").add("Q")
-            .add("L").add("LP").add("R") // XXX: not in spec
-            .add("R#").build();
+    private static final Set<String> PSEUDO_LABELS = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList("*", "A", "Q", "L", "LP", "R", "R#")));
 
     public V2000BlockHandler(MDLV2000Reader reader) {
         this.reader = reader;

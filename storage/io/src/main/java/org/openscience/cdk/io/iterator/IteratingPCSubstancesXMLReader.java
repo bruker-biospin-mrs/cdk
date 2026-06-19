@@ -44,8 +44,6 @@ import javax.xml.stream.events.XMLEvent;
 /**
  * Iterating PubChem PC-Substances ASN.1 XML reader.
  *
- * @cdk.module   io
- * @cdk.githash
  * @cdk.iooptions
  *
  * @author Egon Willighagen &lt;egonw@users.sf.net&gt;
@@ -58,7 +56,7 @@ public class IteratingPCSubstancesXMLReader extends DefaultIteratingChemObjectRe
 
     private Reader           primarySource;
     private XMLStreamReader  parser;
-    private PubChemXMLHelper parserHelper;
+    private final PubChemXMLHelper parserHelper;
     private final XMLInputFactory xmlfact;
 
 
@@ -141,7 +139,7 @@ public class IteratingPCSubstancesXMLReader extends DefaultIteratingChemObjectRe
     @Override
     public IChemModel next() {
         if (!nextAvailableIsKnown) {
-            hasNext();
+            hasNext = hasNext();
         }
         nextAvailableIsKnown = false;
         if (!hasNext) {

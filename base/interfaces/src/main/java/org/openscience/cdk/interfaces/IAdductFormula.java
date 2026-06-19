@@ -27,11 +27,9 @@ package org.openscience.cdk.interfaces;
  *   <li><code>[C2H4O2+Na]+</code></li>
  * </ul>
  *
- * @cdk.module  interfaces
  * @author      miguelrojasch
  * @cdk.created 2007-11-20
  * @cdk.keyword molecular formula
- * @cdk.githash
  */
 public interface IAdductFormula extends IMolecularFormulaSet {
 
@@ -43,7 +41,7 @@ public interface IAdductFormula extends IMolecularFormulaSet {
      * @return                   The occurrence of this isotope in this adduct
      * @see                      #getIsotopeCount()
      */
-    public int getIsotopeCount(IIsotope isotope);
+    int getIsotopeCount(IIsotope isotope);
 
     /**
      *  Checks a set of Nodes for the number of different isotopes in the
@@ -52,14 +50,14 @@ public interface IAdductFormula extends IMolecularFormulaSet {
      * @return        The the number of different isotopes in this adduct formula
      * @see           #getIsotopeCount(IIsotope)
      */
-    public int getIsotopeCount();
+    int getIsotopeCount();
 
     /**
      *  Returns an Iterator for looping over all isotopes in this adduct formula.
      *
      * @return    An Iterator with the isotopes in this adduct formula
      */
-    public Iterable<IIsotope> isotopes();
+    Iterable<IIsotope> isotopes();
 
     /**
      *  Returns the partial charge of this Adduct. If the charge
@@ -69,7 +67,7 @@ public interface IAdductFormula extends IMolecularFormulaSet {
      *
      * @see    #setCharge
      */
-    public Integer getCharge();
+    Integer getCharge();
 
     /**
      *  True, if the AdductFormula contains the given IIsotope object.
@@ -77,7 +75,7 @@ public interface IAdductFormula extends IMolecularFormulaSet {
      * @param  isotope  The IIsotope this AdductFormula is searched for
      * @return          True, if the AdductFormula contains the given isotope object
      */
-    public boolean contains(IIsotope isotope);
+    boolean contains(IIsotope isotope);
 
     /**
      *  Sets the partial charge of this adduct formula.
@@ -86,7 +84,7 @@ public interface IAdductFormula extends IMolecularFormulaSet {
      *
      * @see    #getCharge
      */
-    public void setCharge(Integer charge);
+    void setCharge(Integer charge);
 
     /**
      * Clones this IAdductFormula object and its content.
@@ -94,6 +92,6 @@ public interface IAdductFormula extends IMolecularFormulaSet {
      * @return    The cloned object
      */
     @Override
-    public Object clone() throws CloneNotSupportedException;
+    Object clone() throws CloneNotSupportedException;
 
 }

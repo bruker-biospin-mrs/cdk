@@ -25,12 +25,10 @@ import java.util.Iterator;
  * Difference between two boolean[]'s.
  *
  * @author     egonw
- * @cdk.module diff
- * @cdk.githash
  */
 public class Point3dDifference extends AbstractDifferenceList implements IDifferenceList {
 
-    private String name;
+    private final String name;
 
     private Point3dDifference(String name) {
         this.name = name;
@@ -69,7 +67,7 @@ public class Point3dDifference extends AbstractDifferenceList implements IDiffer
     public String toString() {
         if (differences.size() == 0) return "";
 
-        StringBuffer diffBuffer = new StringBuffer();
+        StringBuilder diffBuffer = new StringBuilder();
         diffBuffer.append(this.name).append('{');
         Iterator<IDifference> children = getChildren().iterator();
         while (children.hasNext()) {

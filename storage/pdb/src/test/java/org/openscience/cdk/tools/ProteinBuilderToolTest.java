@@ -18,27 +18,25 @@
  */
 package org.openscience.cdk.tools;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IBioPolymer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
-import org.openscience.cdk.tools.ProteinBuilderTool;
 
 /**
- * @cdk.module test-pdb
  */
-public class ProteinBuilderToolTest extends CDKTestCase {
+class ProteinBuilderToolTest extends CDKTestCase {
 
     @Test
-    public void testCreateProtein() throws Exception {
+    void testCreateProtein() throws Exception {
         IBioPolymer protein = ProteinBuilderTool.createProtein("GAGA", SilentChemObjectBuilder.getInstance());
-        Assert.assertNotNull(protein);
-        Assert.assertEquals(4, protein.getMonomerCount());
-        Assert.assertEquals(1, protein.getStrandCount());
-        Assert.assertEquals(18 + 1, protein.getAtomCount());
+        Assertions.assertNotNull(protein);
+        Assertions.assertEquals(4, protein.getMonomerCount());
+        Assertions.assertEquals(1, protein.getStrandCount());
+        Assertions.assertEquals(18 + 1, protein.getAtomCount());
         // 1=terminal oxygen
-        Assert.assertEquals(14 + 3 + 1, protein.getBondCount());
+        Assertions.assertEquals(14 + 3 + 1, protein.getBondCount());
         // 3 = extra back bone bonds, 1=bond to terminal oxygen
     }
 

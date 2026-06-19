@@ -36,8 +36,6 @@ import java.util.List;
  *  RingSet are considered connected.
  *
  *
- * @cdk.module standard
- * @cdk.githash
  */
 public class RingPartitioner {
 
@@ -62,7 +60,7 @@ public class RingPartitioner {
      *@return          A {@link List} of connected RingSets
      */
     public static List<IRingSet> partitionRings(IRingSet ringSet) {
-        List<IRingSet> ringSets = new ArrayList<IRingSet>();
+        List<IRingSet> ringSets = new ArrayList<>();
         if (ringSet.getAtomContainerCount() == 0) return ringSets;
         IRing ring = (IRing) ringSet.getAtomContainer(0);
         if (ring == null) return ringSets;

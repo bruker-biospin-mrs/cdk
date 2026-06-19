@@ -22,14 +22,12 @@ package org.openscience.cdk.graph.rebond;
 /**
  * @author      Miguel Howard
  * @cdk.created 2003-05
- * @cdk.module  standard
- * @cdk.githash
  */
 public class Point implements Bspt.Tuple {
 
-    double x;
-    double y;
-    double z;
+    final double x;
+    final double y;
+    final double z;
 
     public Point(double x, double y, double z) {
         this.x = x;

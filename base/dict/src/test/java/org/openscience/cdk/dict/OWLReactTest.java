@@ -18,23 +18,22 @@
  */
 package org.openscience.cdk.dict;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
- * @cdk.module test-dict
  */
-public class OWLReactTest extends AbstractDictionaryTest {
+class OWLReactTest extends AbstractDictionaryTest {
 
-    @Before
-    public void setTestClass() {
+    @BeforeEach
+    void setTestClass() {
         super.setTestClass(new OWLReact());
     }
 
-    @After
-    public void testTestClass() {
-        Assert.assertTrue(getTestClass().getClass().getName().endsWith(".OWLReact"));
+    @AfterEach
+    void testTestClass() {
+        Assertions.assertTrue(getTestClass().getClass().getName().endsWith(".OWLReact"));
     }
 
 }

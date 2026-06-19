@@ -23,6 +23,7 @@ import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IMapping;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * A Mapping is an relation between two ChemObjects in a non-chemical
@@ -30,8 +31,6 @@ import java.util.Iterator;
  * An example of such a mapping, is the mapping between corresponding atoms
  * in a Reaction.
  *
- * @cdk.module  silent
- * @cdk.githash
  *
  * @cdk.keyword reaction, atom mapping
  *
@@ -72,13 +71,7 @@ public class Mapping extends ChemObject implements java.io.Serializable, Cloneab
      */
     @Override
     public Iterable<IChemObject> relatedChemObjects() {
-        return new Iterable<IChemObject>() {
-
-            @Override
-            public Iterator<IChemObject> iterator() {
-                return new ChemObjectIterator();
-            }
-        };
+        return ChemObjectIterator::new;
     }
 
     /**
@@ -96,6 +89,8 @@ public class Mapping extends ChemObject implements java.io.Serializable, Cloneab
 
         @Override
         public IChemObject next() {
+            if (pointer >= 2)
+                throw new NoSuchElementException();
             return relation[pointer++];
         }
 

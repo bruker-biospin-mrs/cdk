@@ -26,8 +26,6 @@ import java.lang.reflect.InvocationTargetException;
  *
  * @author Dazhi Jiao
  * @cdk.created 2007-04-24
- * @cdk.module smarts
- * @cdk.githash
  * @cdk.keyword SMARTS AST
  */
 @Deprecated
@@ -56,22 +54,19 @@ class SimpleNode implements Node, Cloneable {
      */
     @Override
     public Object clone() {
-        Constructor constructor = null;
-        Node clone = null;
         try {
-            constructor = this.getClass().getConstructor(new Class[]{SMARTSParser.class, Integer.TYPE});
-            clone = (Node) constructor.newInstance(new Object[]{parser, Integer.valueOf(id)});
-        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-            ex.printStackTrace();
-        }
-
-        clone.jjtSetParent(parent);
-        if (this.jjtGetNumChildren() > 0) {
-            for (int i = 0; i < children.length; i++) {
-                clone.jjtAddChild((Node) ((SimpleNode) children[i]).clone(), i);
+            Constructor<?> constructor = this.getClass().getConstructor(new Class[]{SMARTSParser.class, Integer.TYPE});
+            Node clone = (Node) constructor.newInstance(new Object[]{parser, id});
+            clone.jjtSetParent(parent);
+            if (this.jjtGetNumChildren() > 0) {
+                for (int i = 0; i < children.length; i++) {
+                    clone.jjtAddChild((Node) ((SimpleNode) children[i]).clone(), i);
+                }
             }
+            return clone;
+        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+            throw new IllegalStateException("Node could not be cloned", ex);
         }
-        return clone;
     }
 
     @Override
@@ -95,7 +90,7 @@ class SimpleNode implements Node, Cloneable {
         if (children == null) {
             children = new Node[i + 1];
         } else if (i >= children.length) {
-            Node c[] = new Node[i + 1];
+            Node[] c = new Node[i + 1];
             System.arraycopy(children, 0, c, 0, children.length);
             children = c;
         }
@@ -132,8 +127,8 @@ class SimpleNode implements Node, Cloneable {
     /** Accept the visitor. * */
     public Object childrenAccept(SMARTSParserVisitor visitor, Object data) {
         if (children != null) {
-            for (int i = 0; i < children.length; ++i) {
-                children[i].jjtAccept(visitor, data);
+            for (Node child : children) {
+                child.jjtAccept(visitor, data);
             }
         }
         return data;
@@ -152,7 +147,7 @@ class SimpleNode implements Node, Cloneable {
     }
 
     public String toString(String prefix) {
-        return prefix + toString();
+        return prefix + this;
     }
 
     /*
@@ -163,8 +158,8 @@ class SimpleNode implements Node, Cloneable {
     public void dump(String prefix) {
         System.out.println(toString(prefix));
         if (children != null) {
-            for (int i = 0; i < children.length; ++i) {
-                SimpleNode n = (SimpleNode) children[i];
+            for (Node child : children) {
+                SimpleNode n = (SimpleNode) child;
                 if (n != null) {
                     n.dump(prefix + " ");
                 }

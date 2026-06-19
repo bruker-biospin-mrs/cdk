@@ -18,9 +18,10 @@
  */
 package org.openscience.cdk.tools;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.interfaces.IElement;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.interfaces.IAtom;
@@ -29,22 +30,20 @@ import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * TestSuite that runs all tests.
  *
- * @cdk.module test-ionpot
  */
-public class IonizationPotentialToolTest extends CDKTestCase {
+class IonizationPotentialToolTest extends CDKTestCase {
 
-    LonePairElectronChecker lpcheck = new LonePairElectronChecker();
+    private final LonePairElectronChecker lpcheck = new LonePairElectronChecker();
 
     /**
      * Constructor of the IonizationPotentialToolTest.
      */
-    public IonizationPotentialToolTest() {
+    IonizationPotentialToolTest() {
         super();
     }
 
@@ -54,13 +53,13 @@ public class IonizationPotentialToolTest extends CDKTestCase {
      * @return The test suite
      */
     @Test
-    public void testIonizationPotentialTool() {
+    void testIonizationPotentialTool() {
 
-        Assert.assertNotNull(new IonizationPotentialTool());
+        Assertions.assertNotNull(new IonizationPotentialTool());
     }
 
     @Test
-    public void testBenzene() throws Exception {
+    void testBenzene() throws Exception {
         String smiles = "c1ccccc1";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer molecule = sp.parseSmiles(smiles);
@@ -69,17 +68,15 @@ public class IonizationPotentialToolTest extends CDKTestCase {
         Aromaticity.cdkLegacy().apply(molecule);
         lpcheck.saturate(molecule);
 
-        List<Double> carbonIPs = new ArrayList<Double>();
-        Iterator<IAtom> atoms = molecule.atoms().iterator();
-        while (atoms.hasNext()) {
-            IAtom atom = atoms.next();
-            if (atom.getSymbol().equals("H")) continue;
+        List<Double> carbonIPs = new ArrayList<>();
+        for (IAtom atom : molecule.atoms()) {
+            if (atom.getAtomicNumber() == IElement.H) continue;
             carbonIPs.add(IonizationPotentialTool.predictIP(molecule, atom));
         }
 
         double firstIP = carbonIPs.get(0);
         for (double ip : carbonIPs) {
-            Assert.assertEquals(firstIP, ip, 0.0001);
+            Assertions.assertEquals(firstIP, ip, 0.0001);
         }
     }
 

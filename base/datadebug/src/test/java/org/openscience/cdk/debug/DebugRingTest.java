@@ -19,65 +19,56 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractRingTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractRingTest;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IRing;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugRing}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugRingTest extends AbstractRingTest {
+class DebugRingTest extends AbstractRingTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugRing();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugRing::new);
     }
 
     @Test
-    public void testDebugRing_int_String() {
+    void testDebugRing_int_String() {
         IRing r = new DebugRing(5, "C");
-        Assert.assertEquals(5, r.getAtomCount());
-        Assert.assertEquals(5, r.getBondCount());
+        Assertions.assertEquals(5, r.getAtomCount());
+        Assertions.assertEquals(5, r.getBondCount());
     }
 
     @Test
-    public void testDebugRing_int() {
+    void testDebugRing_int() {
         IRing r = new DebugRing(5);
-        Assert.assertEquals(0, r.getAtomCount());
-        Assert.assertEquals(0, r.getBondCount());
+        Assertions.assertEquals(0, r.getAtomCount());
+        Assertions.assertEquals(0, r.getBondCount());
     }
 
     @Test
-    public void testDebugRing() {
+    void testDebugRing() {
         IRing ring = new DebugRing();
-        Assert.assertNotNull(ring);
-        Assert.assertEquals(0, ring.getAtomCount());
-        Assert.assertEquals(0, ring.getBondCount());
+        Assertions.assertNotNull(ring);
+        Assertions.assertEquals(0, ring.getAtomCount());
+        Assertions.assertEquals(0, ring.getBondCount());
     }
 
     @Test
-    public void testDebugRing_IAtomContainer() {
+    void testDebugRing_IAtomContainer() {
         IAtomContainer container = newChemObject().getBuilder().newInstance(IAtomContainer.class);
         container.addAtom(container.getBuilder().newInstance(IAtom.class, "C"));
         container.addAtom(container.getBuilder().newInstance(IAtom.class, "C"));
 
         IRing ring = new DebugRing(container);
-        Assert.assertNotNull(ring);
-        Assert.assertEquals(2, ring.getAtomCount());
-        Assert.assertEquals(0, ring.getBondCount());
+        Assertions.assertNotNull(ring);
+        Assertions.assertEquals(2, ring.getAtomCount());
+        Assertions.assertEquals(0, ring.getBondCount());
     }
 }

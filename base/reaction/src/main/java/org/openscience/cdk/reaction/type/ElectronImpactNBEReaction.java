@@ -18,11 +18,11 @@
  */
 package org.openscience.cdk.reaction.type;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.reaction.IReactionProcess;
@@ -35,7 +35,6 @@ import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * <p>IReactionProcess which make an electron impact for for Non-Bonding Electron Lost.
@@ -62,8 +61,6 @@ import java.util.Iterator;
  * @author         Miguel Rojas
  *
  * @cdk.created    2006-04-01
- * @cdk.module     reaction
- * @cdk.githash
  * @cdk.dictref    reaction-types:electronImpact
  *
  * @see RemovingSEofNBMechanism
@@ -71,7 +68,7 @@ import java.util.Iterator;
  **/
 public class ElectronImpactNBEReaction extends ReactionEngine implements IReactionProcess {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(ElectronImpactNBEReaction.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(ElectronImpactNBEReaction.class);
 
     /**
      * Constructor of the ElectronImpactNBEReaction object.
@@ -126,13 +123,11 @@ public class ElectronImpactNBEReaction extends ReactionEngine implements IReacti
         IParameterReact ipr = super.getParameterClass(SetReactionCenter.class);
         if (ipr != null && !ipr.isSetParameter()) setActiveCenters(reactant);
 
-        Iterator<IAtom> atoms = reactant.atoms().iterator();
-        while (atoms.hasNext()) {
-            IAtom atom = atoms.next();
-            if (atom.getFlag(CDKConstants.REACTIVE_CENTER) && reactant.getConnectedLonePairsCount(atom) > 0
+        for (IAtom atom : reactant.atoms()) {
+            if (atom.getFlag(IChemObject.REACTIVE_CENTER) && reactant.getConnectedLonePairsCount(atom) > 0
                     && reactant.getConnectedSingleElectronsCount(atom) == 0) {
 
-                ArrayList<IAtom> atomList = new ArrayList<IAtom>();
+                ArrayList<IAtom> atomList = new ArrayList<>();
                 atomList.add(atom);
                 IAtomContainerSet moleculeSet = reactant.getBuilder().newInstance(IAtomContainerSet.class);
                 moleculeSet.addAtomContainer(reactant);
@@ -156,11 +151,9 @@ public class ElectronImpactNBEReaction extends ReactionEngine implements IReacti
      * @throws CDKException
      */
     private void setActiveCenters(IAtomContainer reactant) throws CDKException {
-        Iterator<IAtom> atoms = reactant.atoms().iterator();
-        while (atoms.hasNext()) {
-            IAtom atom = atoms.next();
+        for (IAtom atom : reactant.atoms()) {
             if (reactant.getConnectedLonePairsCount(atom) > 0 && reactant.getConnectedSingleElectronsCount(atom) == 0)
-                atom.setFlag(CDKConstants.REACTIVE_CENTER, true);
+                atom.setFlag(IChemObject.REACTIVE_CENTER, true);
 
         }
     }

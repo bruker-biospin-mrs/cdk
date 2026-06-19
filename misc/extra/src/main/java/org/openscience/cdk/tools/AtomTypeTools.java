@@ -26,6 +26,8 @@ import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.smiles.SmilesGenerator;
@@ -40,8 +42,6 @@ import java.util.Set;
 *
 * @author         cho
 * @cdk.created    2005-18-07
-* @cdk.module     extra
- * @cdk.githash
 */
 
 public class AtomTypeTools {
@@ -52,15 +52,15 @@ public class AtomTypeTools {
     public static final int PYRIDINE_RING   = 10;
     public static final int PYRIMIDINE_RING = 12;
     public static final int BENZENE_RING = 5;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(AtomTypeTools.class);
-    HOSECodeGenerator hcg = null;
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(AtomTypeTools.class);
+    HOSECodeGenerator hcg;
     SmilesGenerator   sg  = null;
 
     /**
      * Constructor for the MMFF94AtomTypeMatcher object.
      */
     public AtomTypeTools() {
-        hcg = new HOSECodeGenerator();
+        hcg = new HOSECodeGenerator(HOSECodeGenerator.LEGACY_MODE);
     }
 
     public IRingSet assignAtomTypePropertiesToAtom(IAtomContainer molecule) throws Exception {
@@ -87,8 +87,8 @@ public class AtomTypeTools {
 
         //logger.debug("assignAtomTypePropertiesToAtom Start ...");
         logger.debug("assignAtomTypePropertiesToAtom Start ...");
-        String hoseCode = "";
-        IRingSet ringSetA = null;
+        String hoseCode;
+        IRingSet ringSetA;
         IRingSet ringSetMolecule = Cycles.sssr(molecule).toRingSet();
         logger.debug(ringSetMolecule);
 
@@ -97,7 +97,7 @@ public class AtomTypeTools {
                 Aromaticity.cdkLegacy().apply(molecule);
             } catch (Exception cdk1) {
                 //logger.debug("AROMATICITYError: Cannot determine aromaticity due to: " + cdk1.toString());
-                logger.error("AROMATICITYError: Cannot determine aromaticity due to: " + cdk1.toString());
+                logger.error("AROMATICITYError: Cannot determine aromaticity due to: " + cdk1);
             }
         }
 
@@ -110,23 +110,23 @@ public class AtomTypeTools {
                 ringSetA = ringSetMolecule.getRings(atom2);
                 RingSetManipulator.sort(ringSetA);
                 IRing sring = (IRing) ringSetA.getAtomContainer(ringSetA.getAtomContainerCount() - 1);
-                atom2.setProperty(CDKConstants.PART_OF_RING_OF_SIZE, Integer.valueOf(sring.getRingSize()));
+                atom2.setProperty(CDKConstants.PART_OF_RING_OF_SIZE, sring.getRingSize());
                 atom2.setProperty(
                         CDKConstants.CHEMICAL_GROUP_CONSTANT,
-                        Integer.valueOf(ringSystemClassifier(sring, getSubgraphSmiles(sring, molecule))));
-                atom2.setFlag(CDKConstants.ISINRING, true);
-                atom2.setFlag(CDKConstants.ISALIPHATIC, false);
+                        ringSystemClassifier(sring, getSubgraphSmiles(sring, molecule)));
+                atom2.setFlag(IChemObject.IN_RING, true);
+                atom2.setFlag(IChemObject.ALIPHATIC, false);
             } else {
-                atom2.setProperty(CDKConstants.CHEMICAL_GROUP_CONSTANT, Integer.valueOf(CDKConstants.ISNOTINRING));
-                atom2.setFlag(CDKConstants.ISINRING, false);
-                atom2.setFlag(CDKConstants.ISALIPHATIC, true);
+                atom2.setProperty(CDKConstants.CHEMICAL_GROUP_CONSTANT, IChemObject.NOT_IN_RING);
+                atom2.setFlag(IChemObject.IN_RING, false);
+                atom2.setFlag(IChemObject.ALIPHATIC, true);
             }
             try {
                 hoseCode = hcg.getHOSECode(molecule, atom2, 3);
                 hoseCode = removeAromaticityFlagsFromHoseCode(hoseCode);
                 atom2.setProperty(CDKConstants.SPHERICAL_MATCHER, hoseCode);
             } catch (CDKException ex1) {
-                throw new CDKException("Could not build HOSECode from atom " + i + " due to " + ex1.toString(), ex1);
+                throw new CDKException("Could not build HOSECode from atom " + i + " due to " + ex1, ex1);
             }
         }
         return ringSetMolecule;
@@ -229,7 +229,7 @@ public class AtomTypeTools {
 
         int ncount = 0;
         for (int i = 0; i < ring.getAtomCount(); i++) {
-            if (ring.getAtom(i).getSymbol().equals("N")) {
+            if (ring.getAtom(i).getAtomicNumber() == IElement.N) {
                 ncount = ncount + 1;
             }
         }

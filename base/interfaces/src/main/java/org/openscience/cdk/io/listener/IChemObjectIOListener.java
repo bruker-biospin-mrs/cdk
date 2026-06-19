@@ -25,8 +25,6 @@ import org.openscience.cdk.io.setting.IOSetting;
 /**
  * Allows monitoring of progress of file reader activities.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author Egon Willighagen
  */
@@ -38,6 +36,6 @@ public interface IChemObjectIOListener extends EventListener {
      * user, disregard it (and let the Reader take the default),
      * or answer it itself.
      */
-    public void processIOSettingQuestion(IOSetting setting);
+    void processIOSettingQuestion(IOSetting setting);
 
 }

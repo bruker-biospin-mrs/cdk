@@ -22,9 +22,9 @@
  */
 package org.openscience.cdk.io;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.io.formats.IChemFormat;
 import org.openscience.cdk.io.formats.XYZFormat;
 import org.openscience.cdk.tools.DataFeatures;
@@ -32,38 +32,37 @@ import org.openscience.cdk.tools.DataFeatures;
 /**
  * TestCase for the writing files.
  *
- * @cdk.module test-io
  */
-public class WriterFactoryTest extends CDKTestCase {
+class WriterFactoryTest extends CDKTestCase {
 
-    private WriterFactory factory = new WriterFactory();
+    private final WriterFactory factory = new WriterFactory();
 
     @Test
-    public void testFormatCount() {
-        Assert.assertTrue(factory.formatCount() > 0);
+    void testFormatCount() {
+        Assertions.assertTrue(factory.formatCount() > 0);
     }
 
     @Test
-    public void testFindChemFormats() {
+    void testFindChemFormats() {
         IChemFormat[] formats = factory.findChemFormats(DataFeatures.HAS_3D_COORDINATES);
-        Assert.assertNotNull(formats);
-        Assert.assertTrue(formats.length > 0);
+        Assertions.assertNotNull(formats);
+        Assertions.assertTrue(formats.length > 0);
     }
 
     @Test
-    public void testCreateWriter_IChemFormat() {
+    void testCreateWriter_IChemFormat() {
         IChemFormat format = (IChemFormat) XYZFormat.getInstance();
         IChemObjectWriter writer = factory.createWriter(format);
-        Assert.assertNotNull(writer);
-        Assert.assertEquals(format.getFormatName(), writer.getFormat().getFormatName());
+        Assertions.assertNotNull(writer);
+        Assertions.assertEquals(format.getFormatName(), writer.getFormat().getFormatName());
     }
 
     @Test
-    public void testCustomWriter() {
+    void testCustomWriter() {
         WriterFactory factory = new WriterFactory();
         factory.registerWriter(CustomWriter.class);
         IChemObjectWriter writer = factory.createWriter(new CustomFormat());
-        Assert.assertNotNull(writer);
-        Assert.assertEquals(new CustomWriter().getClass().getName(), writer.getClass().getName());
+        Assertions.assertNotNull(writer);
+        Assertions.assertEquals(new CustomWriter().getClass().getName(), writer.getClass().getName());
     }
 }

@@ -29,12 +29,12 @@ import javax.vecmath.Point3d;
  * fashion.
  *
  * @author Rajarshi Guha
- * @cdk.module  qsarmolecular
- * @cdk.githash
  */
 public class Triangle {
 
-    Point3d p1, p2, p3;
+    final Point3d p1;
+    final Point3d p2;
+    final Point3d p3;
 
     public Triangle(Point3d p1, Point3d p2, Point3d p3) {
         this.p1 = p1;

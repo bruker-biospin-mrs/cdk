@@ -24,48 +24,49 @@ package org.openscience.cdk.io;
 
 import java.io.InputStream;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.silent.AtomContainer;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
- * @cdk.module test-io
  */
-public class PCSubstanceXMLReaderTest extends SimpleChemObjectReaderTest {
+class PCSubstanceXMLReaderTest extends SimpleChemObjectReaderTest {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(PCSubstanceXMLReaderTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(PCSubstanceXMLReaderTest.class);
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        setSimpleChemObjectReader(new PCSubstanceXMLReader(), "data/asn/pubchem/sid577309.xml");
+    @BeforeAll
+    static void setup() throws Exception {
+        setSimpleChemObjectReader(new PCSubstanceXMLReader(), "sid577309.xml");
     }
 
     @Test
-    public void testAccepts() throws Exception {
+    void testAccepts() throws Exception {
         PCSubstanceXMLReader reader = new PCSubstanceXMLReader();
-        Assert.assertTrue(reader.accepts(AtomContainer.class));
+        Assertions.assertTrue(reader.accepts(AtomContainer.class));
     }
 
     @Test
-    public void testReading() throws Exception {
-        String filename = "data/asn/pubchem/sid577309.xml";
+    void testReading() throws Exception {
+        String filename = "sid577309.xml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         PCSubstanceXMLReader reader = new PCSubstanceXMLReader(ins);
-        IAtomContainer molecule = (IAtomContainer) reader.read(new AtomContainer());
-        Assert.assertNotNull(molecule);
+        IAtomContainer molecule = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
+        Assertions.assertNotNull(molecule);
 
         // check atom stuff
-        Assert.assertEquals(19, molecule.getAtomCount());
-        Assert.assertTrue(molecule.getAtom(0) instanceof IPseudoAtom);
+        Assertions.assertEquals(19, molecule.getAtomCount());
+        Assertions.assertTrue(molecule.getAtom(0) instanceof IPseudoAtom);
 
         // check bond stuff
-        Assert.assertEquals(19, molecule.getBondCount());
-        Assert.assertNotNull(molecule.getBond(3));
+        Assertions.assertEquals(19, molecule.getBondCount());
+        Assertions.assertNotNull(molecule.getBond(3));
     }
 }

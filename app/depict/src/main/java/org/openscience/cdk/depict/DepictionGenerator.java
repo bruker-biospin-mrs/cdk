@@ -18,7 +18,7 @@
  */
 package org.openscience.cdk.depict;
 
-import com.google.common.collect.FluentIterable;
+import org.openscience.cdk.CDK;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.geometry.GeometryUtil;
@@ -27,7 +27,9 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IReaction;
+import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.layout.StructureDiagramGenerator;
 import org.openscience.cdk.renderer.RendererModel;
 import org.openscience.cdk.renderer.SymbolVisibility;
@@ -43,7 +45,11 @@ import org.openscience.cdk.renderer.generators.IGenerator;
 import org.openscience.cdk.renderer.generators.IGeneratorParameter;
 import org.openscience.cdk.renderer.generators.standard.SelectionVisibility;
 import org.openscience.cdk.renderer.generators.standard.StandardGenerator;
+import org.openscience.cdk.renderer.generators.standard.StandardGenerator.DelocalisedDonutsBondDisplay;
+import org.openscience.cdk.renderer.generators.standard.StandardGenerator.ForceDelocalisedBondDisplay;
+import org.openscience.cdk.renderer.selection.IChemObjectSelection;
 import org.openscience.cdk.tools.LoggingToolFactory;
+import org.openscience.cdk.tools.manipulator.ReactionManipulator;
 
 import javax.vecmath.Point2d;
 import java.awt.Color;
@@ -54,8 +60,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.StreamSupport;
 
 /**
  * A high-level API for depicting molecules and reactions.
@@ -83,19 +93,19 @@ import java.util.Map;
  * through a variety of API calls.
  * <pre>{@code
  * Depiction depiction = new DepictionGenerator().depict(mol);
- * 
+ *
  * // quick use, format determined by name by path
  * depiction.writeTo("~/mol.png");
  * depiction.writeTo("~/mol.svg");
  * depiction.writeTo("~/mol.pdf");
  * depiction.writeTo("~/mol.jpg");
- * 
+ *
  * // manually specify the format
  * depiction.writeTo(Depiction.SVG_FMT, "~/mol");
- * 
+ *
  * // convert to a Java buffered image
  * BufferedImage img = depiction.toImg();
- * 
+ *
  * // get the SVG XML string
  * String svg = depiction.toSvgStr();
  * }</pre>
@@ -139,21 +149,28 @@ public final class DepictionGenerator {
             new Color(0x232C16), // Dark Olive Green (sub-optimal for defective color vision)
     };
 
+    Color[] PASTAL = new Color[]{new Color(211, 228, 255),
+                                 new Color(222, 255, 214),
+                                 new Color(255, 191, 191),
+                                 new Color(248, 211, 255),
+                                 new Color(255, 225, 154),
+                                 new Color(227, 227, 227)};
+
     /**
      * Magic value for indicating automatic parameters. These can
      * be overridden by a caller.
      */
-    public static double AUTOMATIC = -1;
+    public static final double AUTOMATIC = -1;
 
     /**
      * Default margin for vector graphics formats.
      */
-    public static double DEFAULT_MM_MARGIN = 0.56;
+    public static final double DEFAULT_MM_MARGIN = 0.56;
 
     /**
      * Default margin for raster graphics formats.
      */
-    public static double DEFAULT_PX_MARGIN = 4;
+    public static final double DEFAULT_PX_MARGIN = 4;
 
     /**
      * The dimensions (width x height) of the depiction.
@@ -179,6 +196,11 @@ public final class DepictionGenerator {
      * Flag to indicate atom numbers should be displayed.
      */
     private boolean annotateAtomNum = false;
+
+    /**
+     * Flag to indicate bond numbers should be displayed.
+     */
+    private boolean annotateBondNum = false;
 
     /**
      * Flag to indicate atom values should be displayed.
@@ -208,17 +230,15 @@ public final class DepictionGenerator {
     /**
      * Object that should be highlighted
      */
-    private Map<IChemObject, Color> highlight = new HashMap<>();
+    private final Map<IChemObject, Color> highlight = new HashMap<>();
+
 
     /**
      * Create a depiction generator using the standard sans-serif
      * system font.
      */
     public DepictionGenerator() {
-        this(new Font(getDefaultOsFont(), Font.PLAIN, 13));
-        setParam(BasicSceneGenerator.BondLength.class, 26.1d);
-        setParam(StandardGenerator.HashSpacing.class, 26 / 8d);
-        setParam(StandardGenerator.WaveSpacing.class, 26 / 8d);
+        this(new Font(getDefaultOsFont(), Font.PLAIN, 14));
     }
 
     /**
@@ -256,6 +276,7 @@ public final class DepictionGenerator {
         this.annotateAtomMap = org.annotateAtomMap;
         this.annotateAtomVal = org.annotateAtomVal;
         this.annotateAtomNum = org.annotateAtomNum;
+        this.annotateBondNum = org.annotateBondNum;
         this.highlightAtomMap = org.highlightAtomMap;
         this.atomMapColors = org.atomMapColors;
         this.dimensions = org.dimensions;
@@ -267,15 +288,14 @@ public final class DepictionGenerator {
     }
 
     private <U, T extends IGeneratorParameter<U>> U getParameterValue(Class<T> key) {
-        @SuppressWarnings("unchecked")
-        final T param = (T) params.get(key);
+        @SuppressWarnings("unchecked") final T param = (T) params.get(key);
         if (param == null)
             throw new IllegalArgumentException("No parameter registered: " + key + " " + params.keySet());
-        return (U) param.getValue();
+        return param.getValue();
     }
 
     private <T extends IGeneratorParameter<S>, S, U extends S> void setParam(Class<T> key, U val) {
-        T param = null;
+        T param;
         try {
             param = key.newInstance();
             param.setValue(val);
@@ -316,8 +336,8 @@ public final class DepictionGenerator {
      * @see #depict(Iterable, int, int)
      */
     public Depiction depict(Iterable<IAtomContainer> mols) throws CDKException {
-        int nMols = FluentIterable.from(mols).size();
-        Dimension grid = Dimensions.determineGrid(nMols);
+        int count = (int) StreamSupport.stream(mols.spliterator(), false).count();
+        Dimension grid = Dimensions.determineGrid(count);
         return depict(mols, grid.height, grid.width);
     }
 
@@ -337,6 +357,8 @@ public final class DepictionGenerator {
         List<LayoutBackup> layoutBackups = new ArrayList<>();
         int molId = 0;
         for (IAtomContainer mol : mols) {
+            if (mol == null)
+                throw new NullPointerException("Null molecule provided!");
             setIfMissing(mol, MarkedElement.ID_KEY, "mol" + ++molId);
             layoutBackups.add(new LayoutBackup(mol));
         }
@@ -351,13 +373,14 @@ public final class DepictionGenerator {
             e.getKey().setProperty(StandardGenerator.HIGHLIGHT_COLOR, e.getValue());
 
         // setup the model scale
-        List<IAtomContainer> molList = FluentIterable.from(mols).toList();
+        List<IAtomContainer> molList = new ArrayList<>();
+        mols.forEach(molList::add);
         DepictionGenerator copy = this.withParam(BasicSceneGenerator.Scale.class,
                                                  caclModelScale(molList));
 
         // generate bound rendering elements
         final RendererModel model = copy.getModel();
-        final List<Bounds> molElems = copy.generate(molList, model, 1);
+        final List<Bounds> molElems = copy.generate(molList, model, new AtomNumbering());
 
         // reset molecule coordinates
         for (LayoutBackup backup : layoutBackups)
@@ -401,6 +424,10 @@ public final class DepictionGenerator {
             chemObject.setProperty(key, val);
     }
 
+    private Color getForgroundColor(IChemObjectBuilder builder) {
+        return getParameterValue(StandardGenerator.AtomColor.class).getAtomColor(builder.newInstance(IAtom.class, "C"));
+    }
+
     /**
      * Depict a reaction.
      *
@@ -410,11 +437,64 @@ public final class DepictionGenerator {
      */
     public Depiction depict(IReaction rxn) throws CDKException {
 
-        ensure2dLayout(rxn); // can reorder components!
+        ensure2dLayout(rxn); // can reorder components if align is enabled!
 
-        final Color fgcol = getParameterValue(StandardGenerator.AtomColor.class).getAtomColor(rxn.getBuilder()
-                                                                                                 .newInstance(IAtom.class, "C"));
+        final Color fgcol = getForgroundColor(rxn.getBuilder());
 
+        ReactionBounds reactionBounds = getReactionBounds(rxn, fgcol, new AtomNumbering());
+        highlight.clear();
+        return new ReactionDepiction(reactionBounds,
+                                     dimensions,
+                                     fgcol);
+    }
+
+    public Depiction depict(IReactionSet rxns) throws CDKException {
+
+        for (IReaction rxn : rxns.reactions())
+            ensure2dLayout(rxn);
+
+        // n.b. we may want to scale bonds consistently across the whole reaction
+
+        final Color fgcol = getForgroundColor(rxns.getBuilder());
+        List<ReactionBounds> reactionSetBounds = new ArrayList<>();
+
+        IAtomContainerSet prev = null;
+        boolean isSequence = rxns.getReactionCount() > 1;
+        for (IReaction rxn : rxns.reactions()) {
+            if (prev != null && !equals(prev, rxn.getReactants()))
+                isSequence = false;
+            prev = rxn.getProducts();
+        }
+
+        AtomNumbering atomNumbering = new AtomNumbering();
+        for (IReaction rxn : rxns.reactions()) {
+            reactionSetBounds.add(getReactionBounds(rxn, fgcol, atomNumbering));
+            if (isSequence) {
+                for (IAtomContainer mol : rxn.getProducts().atomContainers())
+                    atomNumbering.id -= mol.getAtomCount();
+            }
+        }
+        highlight.clear();
+
+        return new ReactionSetDepiction(reactionSetBounds.get(0).model,
+                                        reactionSetBounds,
+                                        dimensions,
+                                        isSequence,
+                                        fgcol);
+    }
+
+    private boolean equals(IAtomContainerSet as, IAtomContainerSet bs) {
+        if (as.getAtomContainerCount() != bs.getAtomContainerCount())
+            return false;
+        for (int i = 0; i < as.getAtomContainerCount(); i++) {
+            // deliberate reference comparison
+            if (as.getAtomContainer(i) != bs.getAtomContainer(i))
+                return false;
+        }
+        return true;
+    }
+
+    private ReactionBounds getReactionBounds(IReaction rxn, Color fgcol, AtomNumbering atomNumbering) throws CDKException {
         final List<IAtomContainer> reactants = toList(rxn.getReactants());
         final List<IAtomContainer> products = toList(rxn.getProducts());
         final List<IAtomContainer> agents = toList(rxn.getAgents());
@@ -422,51 +502,35 @@ public final class DepictionGenerator {
 
         // set ids for tagging elements
         int molId = 0;
-        for (IAtomContainer mol : reactants) {
+        for (IAtomContainer mol : ReactionManipulator.getAllAtomContainers(rxn)) {
             setIfMissing(mol, MarkedElement.ID_KEY, "mol" + ++molId);
             setIfMissing(mol, MarkedElement.CLASS_KEY, "reactant");
             layoutBackups.add(new LayoutBackup(mol));
         }
-        for (IAtomContainer mol : products) {
-            setIfMissing(mol, MarkedElement.ID_KEY, "mol" + ++molId);
-            setIfMissing(mol, MarkedElement.CLASS_KEY, "product");
-            layoutBackups.add(new LayoutBackup(mol));
-        }
-        for (IAtomContainer mol : agents) {
-            setIfMissing(mol, MarkedElement.ID_KEY, "mol" + ++molId);
-            setIfMissing(mol, MarkedElement.CLASS_KEY, "agent");
-            layoutBackups.add(new LayoutBackup(mol));
-        }
-
-        final Map<IChemObject, Color> myHighlight = new HashMap<>();
-        if (highlightAtomMap) {
-            myHighlight.putAll(makeHighlightAtomMap(reactants, products));
-        }
-        // user highlight buffer pushes out the atom-map highlight if provided
-        myHighlight.putAll(highlight);
-        highlight.clear();
 
         prepareCoords(reactants);
         prepareCoords(products);
         prepareCoords(agents);
 
-        // highlight parts
-        for (Map.Entry<IChemObject, Color> e : myHighlight.entrySet())
+        // highlighting
+        final Map<IChemObject, Color> mappingHighlight = new HashMap<>();
+        if (highlightAtomMap)
+            mappingHighlight.putAll(makeHighlightAtomMap(rxn));
+
+        // user highlight buffer pushes out the atom-map highlight if provided
+        mappingHighlight.putAll(highlight);
+        for (Map.Entry<IChemObject, Color> e : mappingHighlight.entrySet())
             e.getKey().setProperty(StandardGenerator.HIGHLIGHT_COLOR, e.getValue());
 
-        // setup the model scale based on bond length
+        // set up the model scale based on bond length
         final double scale = this.caclModelScale(rxn);
         final DepictionGenerator copy = this.withParam(BasicSceneGenerator.Scale.class, scale);
         final RendererModel model = copy.getModel();
 
         // reactant/product/agent element generation, we number the reactants, then products then agents
-        List<Bounds> reactantBounds = copy.generate(reactants, model, 1);
-        List<Bounds> productBounds = copy.generate(toList(rxn.getProducts()), model, rxn.getReactantCount());
-        List<Bounds> agentBounds = copy.generate(toList(rxn.getAgents()), model, rxn.getReactantCount() + rxn.getProductCount());
-
-        // remove current highlight buffer
-        for (IChemObject obj : myHighlight.keySet())
-            obj.removeProperty(StandardGenerator.HIGHLIGHT_COLOR);
+        List<Bounds> reactantBounds = copy.generate(reactants, model, atomNumbering);
+        List<Bounds> agentBounds = copy.generate(toList(rxn.getAgents()), model, atomNumbering);
+        List<Bounds> productBounds = copy.generate(toList(rxn.getProducts()), model, atomNumbering);
 
         // generate a 'plus' element
         Bounds plus = copy.generatePlusSymbol(scale, fgcol);
@@ -488,14 +552,28 @@ public final class DepictionGenerator {
 
         final Bounds conditions = generateReactionConditions(rxn, fgcol, model.get(BasicSceneGenerator.Scale.class));
 
-        return new ReactionDepiction(model,
-                                     reactantBounds, productBounds, agentBounds,
-                                     plus, rxn.getDirection(), dimensions,
-                                     reactantTitles,
-                                     productTitles,
-                                     title,
-                                     conditions,
-                                     fgcol);
+        ReactionBounds reactionBounds = new ReactionBounds();
+        reactionBounds.model = model;
+        reactionBounds.plus = plus;
+        reactionBounds.reactants.addAll(reactantBounds);
+        reactionBounds.products.addAll(productBounds);
+        reactionBounds.aboveArrow.addAll(agentBounds);
+        reactionBounds.title = title;
+        reactionBounds.reactantLabels.addAll(reactantTitles);
+        reactionBounds.productLabels.addAll(productTitles);
+        reactionBounds.belowArrow.add(conditions);
+        reactionBounds.direction = rxn.getDirection();
+        return reactionBounds;
+    }
+
+    private Map<IChemObject, Color> makeHighlightAtomMap(IReaction reaction) {
+        List<IAtomContainer> reactants = new ArrayList<>();
+        for (IAtomContainer mol : reaction.getReactants())
+            reactants.add(mol);
+        for (IAtomContainer mol : reaction.getAgents())
+            reactants.add(mol);
+        return makeHighlightAtomMap(reactants,
+                                    reaction.getProducts().atomContainers());
     }
 
     /**
@@ -505,24 +583,59 @@ public final class DepictionGenerator {
      * @param products  reaction products
      * @return the highlight map
      */
-    private Map<IChemObject, Color> makeHighlightAtomMap(List<IAtomContainer> reactants,
-                                                         List<IAtomContainer> products) {
+    private Map<IChemObject, Color> makeHighlightAtomMap(Iterable<IAtomContainer> reactants,
+                                                         Iterable<IAtomContainer> products) {
+
+        // only highlight atom-maps that appear in both the reactant+product
+        Set<Integer> reactantMapIdxs = new HashSet<>();
+        Set<Integer> productMapIdxs = new HashSet<>();
+        for (IAtomContainer mol : reactants) {
+            for (IAtom atom : mol.atoms())
+                reactantMapIdxs.add(accessAtomMap(atom));
+        }
+
+        for (IAtomContainer mol : products) {
+            for (IAtom atom : mol.atoms())
+                productMapIdxs.add(accessAtomMap(atom));
+        }
+
+        Set<Color> seen = new HashSet<>();
+
+        for (IAtomContainer r : reactants) {
+            for (IAtom atom : r.atoms()) {
+                Color c = atom.<Color>getProperty(StandardGenerator.HIGHLIGHT_COLOR);
+                if (c != null) seen.add(c);
+            }
+        }
+
+
         Map<IChemObject, Color> colorMap = new HashMap<>();
         Map<Integer, Color> mapToColor = new HashMap<>();
+        Map<Integer, IAtom> amap = new TreeMap<>();
         int colorIdx = -1;
+
+        while (colorIdx+1 < atomMapColors.length &&
+               seen.contains(atomMapColors[colorIdx+1])) {
+            colorIdx++;
+        }
+
         for (IAtomContainer mol : reactants) {
             int prevPalletIdx = colorIdx;
             for (IAtom atom : mol.atoms()) {
                 int mapidx = accessAtomMap(atom);
-                if (mapidx > 0) {
-                    if (prevPalletIdx == colorIdx) {
-                        colorIdx++; // select next color
-                        if (colorIdx >= atomMapColors.length)
-                            throw new IllegalArgumentException("Not enough colors to highlight atom mapping, please provide mode");
+                if (mapidx > 0 && productMapIdxs.contains(mapidx)) {
+                    Color color = atom.getProperty(StandardGenerator.HIGHLIGHT_COLOR);
+                    if (color == null) {
+                        if (prevPalletIdx == colorIdx) {
+                            colorIdx++; // select next color
+                            if (colorIdx >= atomMapColors.length)
+                                throw new IllegalArgumentException("Not enough colors to highlight atom mapping, please provide mode");
+                        }
+                        color = atomMapColors[colorIdx];
                     }
-                    Color color = atomMapColors[colorIdx];
                     colorMap.put(atom, color);
                     mapToColor.put(mapidx, color);
+                    amap.put(mapidx, atom);
                 }
             }
             if (colorIdx > prevPalletIdx) {
@@ -540,17 +653,43 @@ public final class DepictionGenerator {
         for (IAtomContainer mol : products) {
             for (IAtom atom : mol.atoms()) {
                 int mapidx = accessAtomMap(atom);
-                if (mapidx > 0) {
+                if (mapidx > 0 && reactantMapIdxs.contains(mapidx)) {
                     colorMap.put(atom, mapToColor.get(mapidx));
                 }
             }
-            for (IBond bond : mol.bonds()) {
-                IAtom a1 = bond.getBegin();
-                IAtom a2 = bond.getEnd();
-                Color c1 = colorMap.get(a1);
-                Color c2 = colorMap.get(a2);
-                if (c1 != null && c1 == c2)
-                    colorMap.put(bond, c1);
+
+            boolean makeBreak = false;
+            List<IBond> bondChanged = new ArrayList<>();
+
+            for (IBond pBnd : mol.bonds()) {
+                IAtom pBeg = pBnd.getBegin();
+                IAtom pEnd = pBnd.getEnd();
+                Color c1 = colorMap.get(pBeg);
+                Color c2 = colorMap.get(pEnd);
+                if (c1 != null && c1 == c2) {
+                    IAtom rBeg = amap.get(accessAtomMap(pBeg));
+                    IAtom rEnd = amap.get(accessAtomMap(pEnd));
+                    if (rBeg != null && rEnd != null) {
+                        IBond rBnd = rBeg.getBond(rEnd);
+                        if (rBnd == null) {
+                            colorMap.remove(rBnd);
+                            makeBreak = true;
+                        } else if (((pBnd.isAromatic() || rBnd.isAromatic()) ||
+                                        rBnd.getOrder() == pBnd.getOrder())) {
+                            colorMap.put(pBnd, c1);
+                        } else {
+                            colorMap.put(pBnd, c1);
+                            bondChanged.add(rBnd);
+                            bondChanged.add(pBnd);
+                        }
+                    }
+                }
+            }
+
+            if (!makeBreak) {
+                for (IBond bond : bondChanged) {
+                    colorMap.remove(bond);
+                }
             }
         }
 
@@ -569,10 +708,20 @@ public final class DepictionGenerator {
     }
 
     private List<IAtomContainer> toList(IAtomContainerSet set) {
-        return FluentIterable.from(set.atomContainers()).toList();
+        List<IAtomContainer> mols = new ArrayList<>();
+        set.atomContainers().forEach(mols::add);
+        return mols;
     }
 
-    private IRenderingElement generate(IAtomContainer molecule, RendererModel model, int atomNum) throws CDKException {
+    private final class AtomNumbering {
+        private int id = 1;
+
+        int nextId() {
+            return id++;
+        }
+    }
+
+    private IRenderingElement generate(IAtomContainer molecule, RendererModel model, AtomNumbering sequence) throws CDKException {
 
         // tag the atom and bond ids
         String molId = molecule.getProperty(MarkedElement.ID_KEY);
@@ -584,12 +733,26 @@ public final class DepictionGenerator {
                 setIfMissing(bond, MarkedElement.ID_KEY, molId + "bnd" + ++bondid);
         }
 
+        // if the molecule has an IChemObjectSelection set and the renderer
+        // has no selection, then this take priority
+        IChemObjectSelection selection = molecule.getProperty(CDKConstants.SELECTION);
+        boolean localSelection = model.getSelection() == null && selection != null;
+        if (localSelection)
+            model.setSelection(selection);
+
         if (annotateAtomNum) {
             for (IAtom atom : molecule.atoms()) {
                 if (atom.getProperty(StandardGenerator.ANNOTATION_LABEL) != null)
                     throw new UnsupportedOperationException("Multiple annotation labels are not supported.");
                 atom.setProperty(StandardGenerator.ANNOTATION_LABEL,
-                                 Integer.toString(atomNum++));
+                                 Integer.toString(sequence.nextId()));
+            }
+        } else if (annotateBondNum) {
+            for (IBond bond : molecule.bonds()) {
+                if (bond.getProperty(StandardGenerator.ANNOTATION_LABEL) != null)
+                    throw new UnsupportedOperationException("Multiple annotation labels are not supported.");
+                bond.setProperty(StandardGenerator.ANNOTATION_LABEL,
+                                 Integer.toString(sequence.nextId()));
             }
         } else if (annotateAtomVal) {
             for (IAtom atom : molecule.atoms()) {
@@ -614,21 +777,23 @@ public final class DepictionGenerator {
             grp.add(gen.generate(molecule, model));
 
         // cleanup
-        if (annotateAtomNum || annotateAtomMap) {
+        if (annotateAtomNum || annotateAtomMap || annotateAtomVal) {
             for (IAtom atom : molecule.atoms()) {
                 atom.removeProperty(StandardGenerator.ANNOTATION_LABEL);
             }
         }
 
+        if (localSelection)
+            model.setSelection(null);
+
         return grp;
     }
 
-    private List<Bounds> generate(List<IAtomContainer> mols, RendererModel model, int atomNum) throws CDKException {
+      private List<Bounds> generate(List<IAtomContainer> mols, RendererModel model, AtomNumbering atomNumbering) throws CDKException {
         List<Bounds> elems = new ArrayList<>();
         int num = 0;
         for (IAtomContainer mol : mols) {
-            elems.add(new Bounds(generate(mol, model, atomNum)));
-            atomNum += mol.getAtomCount();
+            elems.add(new Bounds(generate(mol, model, atomNumbering)));
         }
         return elems;
     }
@@ -645,15 +810,17 @@ public final class DepictionGenerator {
         if (title == null || title.isEmpty())
             return new Bounds();
         scale = 1 / scale * getParameterValue(RendererModel.TitleFontScale.class);
+        String refId = chemObj.getProperty(MarkedElement.ID_KEY);
+        String classStr = refId != null ? ("title " + refId) : "title";
         return new Bounds(MarkedElement.markup(StandardGenerator.embedText(font, title, getParameterValue(RendererModel.TitleColor.class), scale),
-                                               "title"));
+                                               classStr));
     }
 
     private Bounds generateReactionConditions(IReaction chemObj, Color fg, double scale) {
         String title = chemObj.getProperty(CDKConstants.REACTION_CONDITIONS);
         if (title == null || title.isEmpty())
             return new Bounds();
-        return new Bounds(MarkedElement.markup(StandardGenerator.embedText(font, title, fg, 1/scale),
+        return new Bounds(MarkedElement.markup(StandardGenerator.embedText(font, title, fg, 1 / scale),
                                                "conditions"));
     }
 
@@ -751,7 +918,7 @@ public final class DepictionGenerator {
      */
     public DepictionGenerator withOuterGlowHighlight(double width) {
         return withParam(StandardGenerator.Highlighting.class,
-                         StandardGenerator.HighlightStyle.OuterGlow)
+                         StandardGenerator.HighlightStyle.OuterGlowFillRings)
                 .withParam(StandardGenerator.OuterGlowWidth.class,
                            width);
     }
@@ -760,7 +927,7 @@ public final class DepictionGenerator {
      * Display atom numbers on the molecule or reaction. The numbers are based on the
      * ordering of atoms in the molecule data structure and not a systematic system
      * such as IUPAC numbering.
-     * 
+     * <p>
      * Note: A depiction can not have both atom numbers and atom maps visible
      * (but this can be achieved by manually setting the annotation).
      *
@@ -769,20 +936,40 @@ public final class DepictionGenerator {
      * @see StandardGenerator#ANNOTATION_LABEL
      */
     public DepictionGenerator withAtomNumbers() {
-        if (annotateAtomMap || annotateAtomVal)
-            throw new IllegalArgumentException("Can not annotated atom numbers, atom values or maps are already annotated");
+        if (annotateAtomMap || annotateAtomVal || annotateBondNum)
+            throw new IllegalArgumentException("Can not annotated atom numbers - bond numbers, atom values or maps are already annotated");
         DepictionGenerator copy = new DepictionGenerator(this);
         copy.annotateAtomNum = true;
         return copy;
     }
 
     /**
-     * Display atom values on the molecule or reaction. The values need to be assigned by 
-     * 
+     * Display bond numbers on the molecule or reaction. The numbers are based on the
+     * ordering of bonds in the molecule data structure and not a systematic system
+     * such as IUPAC numbering.
+     * <p>
+     * Note: A depiction can not have both atom numbers and atom maps visible
+     * (but this can be achieved by manually setting the annotation).
+     *
+     * @return new generator for method chaining
+     * @see #withAtomMapNumbers()
+     * @see StandardGenerator#ANNOTATION_LABEL
+     */
+    public DepictionGenerator withBondNumbers() {
+        if (annotateAtomNum || annotateAtomMap || annotateAtomVal)
+            throw new IllegalArgumentException("Can not annotated bond numbers - atom number,s values or maps are already annotated");
+        DepictionGenerator copy = new DepictionGenerator(this);
+        copy.annotateBondNum = true;
+        return copy;
+    }
+
+    /**
+     * Display atom values on the molecule or reaction. The values need to be assigned by
+     *
      * <pre>{@code
      * atom.setProperty(CDKConstants.COMMENT, myValueToBeDisplayedNextToAtom);
      * }</pre>
-     *
+     * <p>
      * Note: A depiction can not have both atom numbers and atom maps visible
      * (but this can be achieved by manually setting the annotation).
      *
@@ -801,7 +988,7 @@ public final class DepictionGenerator {
     /**
      * Display atom-atom mapping numbers on a reaction. Each atom map index
      * is loaded from the property {@link CDKConstants#ATOM_ATOM_MAPPING}.
-     * 
+     * <p>
      * Note: A depiction can not have both atom numbers and atom
      * maps visible (but this can be achieved by manually setting
      * the annotation).
@@ -830,7 +1017,7 @@ public final class DepictionGenerator {
      * @see #withAtomMapHighlight()
      */
     public DepictionGenerator withAtomMapHighlight() {
-        return withAtomMapHighlight(KELLY_MAX_CONTRAST);
+        return withAtomMapHighlight(PASTAL);
     }
 
     /**
@@ -966,7 +1153,7 @@ public final class DepictionGenerator {
     /**
      * Highlight the provided set of atoms and bonds in the depiction in the
      * specified color.
-     * 
+     * <p>
      * Calling this methods appends to the current highlight buffer. The buffer
      * is cleared after each depiction is generated (e.g. {@link #depict(IAtomContainer)}).
      *
@@ -977,8 +1164,14 @@ public final class DepictionGenerator {
      */
     public DepictionGenerator withHighlight(Iterable<? extends IChemObject> chemObjs, Color color) {
         DepictionGenerator copy = new DepictionGenerator(this);
-        for (IChemObject chemObj : chemObjs)
-            copy.highlight.put(chemObj, color);
+        for (IChemObject chemObj : chemObjs) {
+            if (chemObj instanceof IAtomContainer) {
+                for (IAtom atom : ((IAtomContainer) chemObj).atoms())
+                    copy.highlight.put(atom, color);
+                for (IBond bond : ((IAtomContainer) chemObj).bonds())
+                    copy.highlight.put(bond, color);
+            } else copy.highlight.put(chemObj, color);
+        }
         return copy;
     }
 
@@ -986,8 +1179,8 @@ public final class DepictionGenerator {
      * Specify a desired size of depiction. The units depend on the output format with
      * raster images using pixels and vector graphics using millimeters. By default depictions
      * are only ever made smaller if you would also like to make depictions fill all available
-     * space use the {@link #withFillToFit()} option. 
-     * 
+     * space use the {@link #withFillToFit()} option.
+     * <p>
      * Currently the size must either both be precisely specified (e.g. 256x256) or
      * automatic (e.g. {@link #AUTOMATIC}x{@link #AUTOMATIC}) you cannot for example
      * specify a fixed height and automatic width.
@@ -1006,8 +1199,15 @@ public final class DepictionGenerator {
     }
 
     /**
-     * Specify a desired size of margin. The units depend on the output format with
-     * raster images using pixels and vector graphics using millimeters.
+     * Specify a desired size of margin, this margin is a minimum amount of
+     * space around the depiction and the edge of the draw area. If you have
+     * specified {@link #withSize} larger than required the margin will grow
+     * to center the molecule/reaction. If you specify a margin you should also
+     * specify {@link #withPadding} which will default to a multiple of the
+     * margin amount.
+     * <br/>
+     * The units depend on the output format with raster images using pixels
+     * and vector graphics using millimeters.
      *
      * @param m margin
      * @return new generator for method chaining
@@ -1020,8 +1220,8 @@ public final class DepictionGenerator {
 
     /**
      * Specify a desired size of padding for molecule sets and reactions. The units
-     * depend on the output format with raster images using pixels and vector graphics
-     * using millimeters.
+     * depend on the output format with raster images using pixels and
+     * vector graphics using millimeters.
      *
      * @param p padding
      * @return new generator for method chaining
@@ -1037,7 +1237,7 @@ public final class DepictionGenerator {
      * depiction and is used for uniformly making depictions bigger. If
      * you would like to simply fill all available space (not recommended)
      * use {@link #withFillToFit()}.
-     * 
+     * <p>
      * The zoom is a scaling factor, specifying a zoom of 2 is double size,
      * 0.5 half size, etc.
      *
@@ -1051,9 +1251,10 @@ public final class DepictionGenerator {
     }
 
     /**
-     * Resize depictions to fill all available space (only if a size is specified).
-     * This generally isn't wanted as very small molecules (e.g. acetaldehyde) may
-     * become huge.
+     * Resize depictions to fill all available space (only if a size is
+     * specified). This generally isn't wanted as very small molecules (e.g.
+     * acetaldehyde) may become huge and for publication quality work all bond
+     * lengths should be the same size.
      *
      * @return new generator for method chaining
      * @see BasicSceneGenerator.FitToScreen
@@ -1061,6 +1262,37 @@ public final class DepictionGenerator {
     public DepictionGenerator withFillToFit() {
         return withParam(BasicSceneGenerator.FitToScreen.class,
                          true);
+    }
+
+    /**
+     * When aromaticity is set on bonds, display this in the diagram. IUPAC
+     * recommends depicting kekulé structures to avoid ambiguity but it's common
+     * practice to render delocalised rings "donuts" or "life buoys". With fused
+     * rings this can be somewhat confusing as you end up with three lines at
+     * the fusion point. <br>
+     * By default small rings are renders as donuts with dashed bonds used
+     * otherwise. You can use dashed bonds always by turning off the
+     * {@link DelocalisedDonutsBondDisplay}.
+     *
+     * @return new generator for method chaining
+     * @see ForceDelocalisedBondDisplay
+     * @see DelocalisedDonutsBondDisplay
+     */
+    public DepictionGenerator withAromaticDisplay() {
+        return withParam(ForceDelocalisedBondDisplay.class,
+                         true);
+    }
+
+
+    /**
+     * Indicate whether <sup>2</sup>H should be rendered as 'D'. Default: true.
+     *
+     * @param v the value
+     * @return new generator for method chaining
+     */
+    public DepictionGenerator withDeuteriumSymbol(boolean v) {
+        return withParam(StandardGenerator.DeuteriumSymbol.class,
+                         v);
     }
 
     /**
@@ -1078,6 +1310,16 @@ public final class DepictionGenerator {
         return copy;
     }
 
+    public DepictionGenerator withParams(RendererModel model) {
+        DepictionGenerator copy = new DepictionGenerator(this);
+        for (IGeneratorParameter<?> param : model.getRenderingParameters()) {
+            if (copy.getModel().hasParameter(param.getClass())) {
+                copy.setParam(param.getClass(), param.getValue());
+            }
+        }
+        return copy;
+    }
+
     private double caclModelScale(Collection<IAtomContainer> mols) {
         List<IBond> bonds = new ArrayList<>();
         for (IAtomContainer mol : mols) {
@@ -1089,14 +1331,7 @@ public final class DepictionGenerator {
     }
 
     private double caclModelScale(IReaction rxn) {
-        List<IAtomContainer> mols = new ArrayList<>();
-        for (IAtomContainer mol : rxn.getReactants().atomContainers())
-            mols.add(mol);
-        for (IAtomContainer mol : rxn.getProducts().atomContainers())
-            mols.add(mol);
-        for (IAtomContainer mol : rxn.getAgents().atomContainers())
-            mols.add(mol);
-        return caclModelScale(mols);
+        return caclModelScale(ReactionManipulator.getAllAtomContainers(rxn));
     }
 
     private double medianBondLength(Collection<IBond> bonds) {
@@ -1124,19 +1359,19 @@ public final class DepictionGenerator {
         return Font.SANS_SERIF;
     }
 
-  /**
-   * Utility class for storing coordinates and bond types and resetting them after use.
-   */
-  private static final class LayoutBackup {
-        private final Point2d[]      coords;
-        private final IBond.Stereo[] btypes;
+    /**
+     * Utility class for storing coordinates and bond types and resetting them after use.
+     */
+    private static final class LayoutBackup {
+        private final Point2d[] coords;
+        private final IBond.Display[] disps;
         private final IAtomContainer mol;
 
         public LayoutBackup(IAtomContainer mol) {
             final int numAtoms = mol.getAtomCount();
             final int numBonds = mol.getBondCount();
             this.coords = new Point2d[numAtoms];
-            this.btypes = new IBond.Stereo[numBonds];
+            this.disps = new IBond.Display[numBonds];
             this.mol = mol;
             for (int i = 0; i < numAtoms; i++) {
                 IAtom atom = mol.getAtom(i);
@@ -1146,7 +1381,7 @@ public final class DepictionGenerator {
             }
             for (int i = 0; i < numBonds; i++) {
                 IBond bond = mol.getBond(i);
-                btypes[i] = bond.getStereo();
+                disps[i] = bond.getDisplay();
             }
         }
 
@@ -1156,7 +1391,7 @@ public final class DepictionGenerator {
             for (int i = 0; i < numAtoms; i++)
                 mol.getAtom(i).setPoint2d(coords[i]);
             for (int i = 0; i < numBonds; i++)
-                mol.getBond(i).setStereo(btypes[i]);
+                mol.getBond(i).setDisplay(disps[i]);
         }
     }
 }

@@ -19,29 +19,28 @@
  */
 package org.openscience.cdk.protein.data;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IPDBStructure;
-import org.openscience.cdk.interfaces.AbstractPDBStructureTest;
+import org.openscience.cdk.test.interfaces.AbstractPDBStructureTest;
 
 /**
  * Checks the functionality of the PDBStructure class.
  *
- * @cdk.module test-data
  *
  * @see PDBStructure
  */
-public class PDBStructureTest extends AbstractPDBStructureTest {
+class PDBStructureTest extends AbstractPDBStructureTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setChemObject(new PDBStructure());
     }
 
     @Test
-    public void testPDBStructure() {
+    void testPDBStructure() {
         IPDBStructure structure = new PDBStructure();
-        Assert.assertNotNull(structure);
+        Assertions.assertNotNull(structure);
     }
 }

@@ -37,14 +37,12 @@ import org.openscience.cdk.exception.CDKException;
  * Represents a list of Rgroup substitutes to be associated with some
  * {@link RGroupQuery}.
  *
- * @cdk.module  isomorphism
- * @cdk.githash
  * @cdk.keyword Rgroup
  * @cdk.keyword R group
  * @cdk.keyword R-group
  * @author Mark Rijnbeek
  */
-public class RGroupList {
+public class RGroupList implements IRGroupList {
 
     /**
      * Default value for occurrence field.
@@ -79,7 +77,7 @@ public class RGroupList {
     /**
      * List of substitute structures.
      */
-    private List<RGroup>       rGroups;
+    private List<IRGroup>       rGroups;
 
     /**
      * The rGroup (say B) that is required when this one (say A) exists.<p>
@@ -126,6 +124,7 @@ public class RGroupList {
         this.rGroupNumber = rGroupNumber;
     }
 
+    @Override
     public int getRGroupNumber() {
         return rGroupNumber;
     }
@@ -134,6 +133,7 @@ public class RGroupList {
         this.restH = restH;
     }
 
+    @Override
     public boolean isRestH() {
         return restH;
     }
@@ -142,15 +142,17 @@ public class RGroupList {
         this.requiredRGroupNumber = rGroupNumberImplicated;
     }
 
+    @Override
     public int getRequiredRGroupNumber() {
         return requiredRGroupNumber;
     }
 
-    public void setRGroups(List<RGroup> rGroups) {
+    public void setRGroups(List<IRGroup> rGroups) {
         this.rGroups = rGroups;
     }
 
-    public List<RGroup> getRGroups() {
+    @Override
+    public List<IRGroup> getRGroups() {
         return rGroups;
     }
 
@@ -158,6 +160,7 @@ public class RGroupList {
      * Returns the occurrence value.
      * @return occurrence
      */
+    @Override
     public String getOccurrence() {
         return occurrence;
     }
@@ -197,35 +200,30 @@ public class RGroupList {
         StringTokenizer st = new StringTokenizer(occ, ",");
         while (st.hasMoreTokens()) {
             String cond = st.nextToken().trim().replaceAll(" ", "");
-            do {
-                //Number: "n"
-                if (match("^\\d+$", cond)) {
-                    if (Integer.valueOf(cond) < 0) // not allowed
-                        return false;
-                    break;
-                }
-                //Range: "n-m"
-                if (match("^\\d+-\\d+$", cond)) {
-                    int from = Integer.valueOf(cond.substring(0, cond.indexOf('-')));
-                    int to = Integer.valueOf(cond.substring(cond.indexOf('-') + 1, cond.length()));
-                    if (from < 0 || to < 0 || to < from) // not allowed
-                        return false;
-                    break;
-                }
-                //Smaller than: "<n"
-                if (match("^<\\d+$", cond)) {
-                    int n = Integer.valueOf(cond.substring(cond.indexOf('<') + 1, cond.length()));
-                    if (n == 0) // not allowed
-                        return false;
-                    break;
-                }
-                //Greater than: ">n"
-                if (match("^>\\d+$", cond)) {
-                    break;
-                }
-
+            //Number: "n"
+            if (match("^\\d+$", cond)) {
+                if (Integer.parseInt(cond) < 0) // not allowed
+                    return false;
+            }
+            //Range: "n-m"
+            else if (match("^\\d+-\\d+$", cond)) {
+                int from = Integer.parseInt(cond.substring(0, cond.indexOf('-')));
+                int to = Integer.parseInt(cond.substring(cond.indexOf('-') + 1));
+                if (from < 0 || to < 0 || to < from) // not allowed
+                    return false;
+            }
+            //Smaller than: "<n"
+            else if (match("^<\\d+$", cond)) {
+                int n = Integer.parseInt(cond.substring(cond.indexOf('<') + 1));
+                if (n == 0) // not allowed
+                    return false;
+            }
+            //Greater than: ">n"
+            else if (match("^>\\d+$", cond)) {
+                // no-op?
+            }
+            else
                 return false;
-            } while (1 == 0);
         }
 
         return true;
@@ -259,9 +257,10 @@ public class RGroupList {
      * @param maxAttachments number of attachments
      * @return valid values by combining a max for R# with the occurrence cond.
      */
+    @Override
     public List<Integer> matchOccurence(int maxAttachments) {
 
-        List<Integer> validValues = new ArrayList<Integer>();
+        List<Integer> validValues = new ArrayList<>();
 
         for (int val = 0; val <= maxAttachments; val++) {
             boolean addVal = false;
@@ -270,23 +269,23 @@ public class RGroupList {
             while (st.hasMoreTokens() && !addVal) {
                 String cond = st.nextToken().trim().replaceAll(" ", "");
                 if (match("^\\d+$", cond)) { // n
-                    if (Integer.valueOf(cond) == val) addVal = true;
+                    if (Integer.parseInt(cond) == val) addVal = true;
                 }
                 if (match("^\\d+-\\d+$", cond)) { // n-m
-                    int from = Integer.valueOf(cond.substring(0, cond.indexOf('-')));
-                    int to = Integer.valueOf(cond.substring(cond.indexOf('-') + 1, cond.length()));
+                    int from = Integer.parseInt(cond.substring(0, cond.indexOf('-')));
+                    int to = Integer.parseInt(cond.substring(cond.indexOf('-') + 1, cond.length()));
                     if (val >= from && val <= to) {
                         addVal = true;
                     }
                 }
                 if (match("^>\\d+$", cond)) { // <n
-                    int n = Integer.valueOf(cond.substring(cond.indexOf('>') + 1, cond.length()));
+                    int n = Integer.parseInt(cond.substring(cond.indexOf('>') + 1, cond.length()));
                     if (val > n) {
                         addVal = true;
                     }
                 }
                 if (match("^<\\d+$", cond)) { // >n
-                    int n = Integer.valueOf(cond.substring(cond.indexOf('<') + 1, cond.length()));
+                    int n = Integer.parseInt(cond.substring(cond.indexOf('<') + 1, cond.length()));
                     if (val < n) {
                         addVal = true;
                     }

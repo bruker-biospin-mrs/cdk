@@ -22,153 +22,150 @@
  */
 package org.openscience.cdk.smsd.helper;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
-public class FinalMappingsTest {
+class FinalMappingsTest {
 
     public FinalMappingsTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     /**
      * Test of getInstance method, of class FinalMappings.
      */
     @Test
-    public void testGetInstance() {
+    void testGetInstance() {
         FinalMappings result = FinalMappings.getInstance();
-        assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
     /**
      * Test of add method, of class FinalMappings.
      */
     @Test
-    public void testAdd() {
-        Map<Integer, Integer> mapping = new TreeMap<Integer, Integer>();
+    void testAdd() {
+        Map<Integer, Integer> mapping = new TreeMap<>();
         mapping.put(1, 1);
         mapping.put(2, 2);
         mapping.put(3, 3);
 
         FinalMappings instance = new FinalMappings();
         instance.add(mapping);
-        assertEquals(1, instance.getSize());
+        Assertions.assertEquals(1, instance.getSize());
     }
 
     /**
      * Test of set method, of class FinalMappings.
      */
     @Test
-    public void testSet() {
-        Map<Integer, Integer> mapping1 = new TreeMap<Integer, Integer>();
+    void testSet() {
+        Map<Integer, Integer> mapping1 = new TreeMap<>();
         mapping1.put(1, 1);
         mapping1.put(2, 2);
         mapping1.put(3, 3);
-        Map<Integer, Integer> mapping2 = new TreeMap<Integer, Integer>();
+        Map<Integer, Integer> mapping2 = new TreeMap<>();
         mapping2.put(1, 2);
         mapping2.put(2, 1);
         mapping2.put(3, 3);
 
-        List<Map<Integer, Integer>> mappings = new ArrayList<Map<Integer, Integer>>(2);
+        List<Map<Integer, Integer>> mappings = new ArrayList<>(2);
         mappings.add(mapping1);
         mappings.add(mapping2);
         FinalMappings instance = new FinalMappings();
         instance.set(mappings);
 
-        assertEquals(2, instance.getSize());
+        Assertions.assertEquals(2, instance.getSize());
     }
 
     /**
      * Test of getIterator method, of class FinalMappings.
      */
     @Test
-    public void testGetIterator() {
-        Map<Integer, Integer> mapping1 = new TreeMap<Integer, Integer>();
+    void testGetIterator() {
+        Map<Integer, Integer> mapping1 = new TreeMap<>();
         mapping1.put(1, 1);
         mapping1.put(2, 2);
         mapping1.put(3, 3);
-        Map<Integer, Integer> mapping2 = new TreeMap<Integer, Integer>();
+        Map<Integer, Integer> mapping2 = new TreeMap<>();
         mapping2.put(1, 2);
         mapping2.put(2, 1);
         mapping2.put(3, 3);
 
-        List<Map<Integer, Integer>> mappings = new ArrayList<Map<Integer, Integer>>(2);
+        List<Map<Integer, Integer>> mappings = new ArrayList<>(2);
         mappings.add(mapping1);
         mappings.add(mapping2);
         FinalMappings instance = new FinalMappings();
         instance.set(mappings);
 
         Iterator<Map<Integer, Integer>> result = instance.getIterator();
-        assertEquals(true, result.hasNext());
+        Assertions.assertEquals(true, result.hasNext());
     }
 
     /**
      * Test of clear method, of class FinalMappings.
      */
     @Test
-    public void testClear() {
-        Map<Integer, Integer> mapping1 = new TreeMap<Integer, Integer>();
+    void testClear() {
+        Map<Integer, Integer> mapping1 = new TreeMap<>();
         mapping1.put(1, 1);
         mapping1.put(2, 2);
         mapping1.put(3, 3);
-        Map<Integer, Integer> mapping2 = new TreeMap<Integer, Integer>();
+        Map<Integer, Integer> mapping2 = new TreeMap<>();
         mapping2.put(1, 2);
         mapping2.put(2, 1);
         mapping2.put(3, 3);
 
-        List<Map<Integer, Integer>> mappings = new ArrayList<Map<Integer, Integer>>(2);
+        List<Map<Integer, Integer>> mappings = new ArrayList<>(2);
         mappings.add(mapping1);
         mappings.add(mapping2);
         FinalMappings instance = new FinalMappings();
         instance.set(mappings);
-        assertEquals(2, instance.getSize());
+        Assertions.assertEquals(2, instance.getSize());
         instance.clear();
-        assertEquals(0, instance.getSize());
+        Assertions.assertEquals(0, instance.getSize());
     }
 
     /**
      * Test of getFinalMapping method, of class FinalMappings.
      */
     @Test
-    public void testGetFinalMapping() {
-        Map<Integer, Integer> mapping1 = new TreeMap<Integer, Integer>();
+    void testGetFinalMapping() {
+        Map<Integer, Integer> mapping1 = new TreeMap<>();
         mapping1.put(1, 1);
         mapping1.put(2, 2);
         mapping1.put(3, 3);
-        Map<Integer, Integer> mapping2 = new TreeMap<Integer, Integer>();
+        Map<Integer, Integer> mapping2 = new TreeMap<>();
         mapping2.put(1, 2);
         mapping2.put(2, 1);
         mapping2.put(3, 3);
 
-        List<Map<Integer, Integer>> mappings = new ArrayList<Map<Integer, Integer>>(2);
+        List<Map<Integer, Integer>> mappings = new ArrayList<>(2);
         mappings.add(mapping1);
         mappings.add(mapping2);
         FinalMappings instance = new FinalMappings();
@@ -176,28 +173,28 @@ public class FinalMappingsTest {
 
         List<Map<Integer, Integer>> expResult = mappings;
         List<Map<Integer, Integer>> result = instance.getFinalMapping();
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of getSize method, of class FinalMappings.
      */
     @Test
-    public void testGetSize() {
-        Map<Integer, Integer> mapping1 = new TreeMap<Integer, Integer>();
+    void testGetSize() {
+        Map<Integer, Integer> mapping1 = new TreeMap<>();
         mapping1.put(1, 1);
         mapping1.put(2, 2);
         mapping1.put(3, 3);
-        Map<Integer, Integer> mapping2 = new TreeMap<Integer, Integer>();
+        Map<Integer, Integer> mapping2 = new TreeMap<>();
         mapping2.put(1, 2);
         mapping2.put(2, 1);
         mapping2.put(3, 3);
 
-        List<Map<Integer, Integer>> mappings = new ArrayList<Map<Integer, Integer>>(2);
+        List<Map<Integer, Integer>> mappings = new ArrayList<>(2);
         mappings.add(mapping1);
         mappings.add(mapping2);
         FinalMappings instance = new FinalMappings();
         instance.set(mappings);
-        assertEquals(2, instance.getSize());
+        Assertions.assertEquals(2, instance.getSize());
     }
 }

@@ -28,8 +28,6 @@ import java.util.List;
  * surrounded by other annotations such as mass number, charge, etc. These
  * annotation elements are the 'children' of the parent text element.
  *
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public class TextGroupElement extends TextElement {
 
@@ -39,7 +37,7 @@ public class TextGroupElement extends TextElement {
      */
     public enum Position {
         NW, SW, SE, NE, S, N, W, E
-    };
+    }
 
     /**
      * A string of text that should be shown around the parent.
@@ -105,7 +103,7 @@ public class TextGroupElement extends TextElement {
      */
     public TextGroupElement(double x, double y, String text, Color color) {
         super(x, y, text, color);
-        this.children = new ArrayList<Child>();
+        this.children = new ArrayList<>();
     }
 
     /**

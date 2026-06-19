@@ -18,34 +18,34 @@
  */
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IChemObjectChangeEvent;
 import org.openscience.cdk.interfaces.IChemObjectListener;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * Checks the propagation of ChangeEvents through a
  * nested set of objects.
  *
- * @cdk.module test-data
  *
  * @see org.openscience.cdk.ChemFile
  */
-public class ChangeEventPropagationTest extends CDKTestCase {
+class ChangeEventPropagationTest extends CDKTestCase {
 
-    @BeforeClass
-    public static void setUp() {}
+    @BeforeAll
+    static void setUp() {}
 
     @Test
-    public void testPropagation() {
+    void testPropagation() {
         ChemFile cf = new ChemFile();
         ChemSequence cs = new ChemSequence();
         ChemModel cm = new ChemModel();
         IAtomContainerSet som = new AtomContainerSet();
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom a1 = new Atom("C");
         Atom a2 = new Atom("C");
         Bond b1 = new Bond(a1, a2);
@@ -59,8 +59,8 @@ public class ChangeEventPropagationTest extends CDKTestCase {
         TestListener ts = new TestListener();
         cf.addListener(ts);
         a2.setSymbol("N");
-        Assert.assertTrue(ts.changedObject instanceof Atom);
-        Assert.assertEquals("N", ((Atom) ts.changedObject).getSymbol());
+        Assertions.assertTrue(ts.changedObject instanceof Atom);
+        Assertions.assertEquals("N", ((Atom) ts.changedObject).getSymbol());
     }
 
     class TestListener implements IChemObjectListener {

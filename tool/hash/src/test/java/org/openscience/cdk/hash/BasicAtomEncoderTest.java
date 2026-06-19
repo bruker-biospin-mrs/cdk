@@ -24,15 +24,13 @@
 
 package org.openscience.cdk.hash;
 
-import org.junit.Test;
-import org.openscience.cdk.hash.AtomEncoder;
-import org.openscience.cdk.hash.BasicAtomEncoder;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -41,12 +39,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class BasicAtomEncoderTest {
+class BasicAtomEncoderTest {
 
     @Test
-    public void testAtomicNumber() {
+    void testAtomicNumber() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.ATOMIC_NUMBER;
@@ -59,7 +56,7 @@ public class BasicAtomEncoderTest {
     }
 
     @Test
-    public void testAtomicNumber_Null() {
+    void testAtomicNumber_Null() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.ATOMIC_NUMBER;
@@ -71,7 +68,7 @@ public class BasicAtomEncoderTest {
     }
 
     @Test
-    public void testMassNumber() {
+    void testMassNumber() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.MASS_NUMBER;
@@ -84,7 +81,7 @@ public class BasicAtomEncoderTest {
     }
 
     @Test
-    public void testMassNumber_Null() {
+    void testMassNumber_Null() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.MASS_NUMBER;
@@ -96,7 +93,7 @@ public class BasicAtomEncoderTest {
     }
 
     @Test
-    public void testFormalNumber() {
+    void testFormalNumber() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.FORMAL_CHARGE;
@@ -109,7 +106,7 @@ public class BasicAtomEncoderTest {
     }
 
     @Test
-    public void testFormalNumber_Null() {
+    void testFormalNumber_Null() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.FORMAL_CHARGE;
@@ -121,7 +118,7 @@ public class BasicAtomEncoderTest {
     }
 
     @Test
-    public void testNConnectedAtoms() {
+    void testNConnectedAtoms() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.N_CONNECTED_ATOMS;
@@ -133,19 +130,19 @@ public class BasicAtomEncoderTest {
     }
 
     @Test
-    public void testBondOrderSum() {
+    void testBondOrderSum() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.BOND_ORDER_SUM;
 
         when(container.getBondOrderSum(atom)).thenReturn(3D);
-        assertThat(encoder.encode(atom, container), is(new Double(3D).hashCode()));
+        assertThat(encoder.encode(atom, container), is(Double.valueOf(3D).hashCode()));
         verify(container, times(1)).getBondOrderSum(atom);
         verifyNoMoreInteractions(atom, container);
     }
 
     @Test
-    public void testOrbitalHybridization() {
+    void testOrbitalHybridization() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.ORBITAL_HYBRIDIZATION;
@@ -158,7 +155,7 @@ public class BasicAtomEncoderTest {
     }
 
     @Test
-    public void testOrbitalHybridization_Null() {
+    void testOrbitalHybridization_Null() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.ORBITAL_HYBRIDIZATION;
@@ -170,7 +167,7 @@ public class BasicAtomEncoderTest {
     }
 
     @Test
-    public void testFreeRadicals() {
+    void testFreeRadicals() {
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
         AtomEncoder encoder = BasicAtomEncoder.FREE_RADICALS;

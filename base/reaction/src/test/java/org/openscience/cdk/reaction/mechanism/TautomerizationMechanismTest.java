@@ -18,24 +18,23 @@
  */
 package org.openscience.cdk.reaction.mechanism;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.reaction.IReactionMechanism;
 import org.openscience.cdk.reaction.ReactionMechanismTest;
 
 /**
  * Tests for TautomerizationMechanism implementations.
  *
- * @cdk.module test-reaction
  */
-public class TautomerizationMechanismTest extends ReactionMechanismTest {
+class TautomerizationMechanismTest extends ReactionMechanismTest {
 
     /**
      *  The JUnit setup method
      */
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         setMechanism(TautomerizationMechanism.class);
     }
 
@@ -45,9 +44,9 @@ public class TautomerizationMechanismTest extends ReactionMechanismTest {
      * @throws Exception
      */
     @Test
-    public void testTautomerizationMechanism() {
+    void testTautomerizationMechanism() {
         IReactionMechanism mechanism = new TautomerizationMechanism();
-        Assert.assertNotNull(mechanism);
+        Assertions.assertNotNull(mechanism);
     }
 
     /**
@@ -57,9 +56,9 @@ public class TautomerizationMechanismTest extends ReactionMechanismTest {
      * @throws Exception
      */
     @Test
-    public void testInitiate_IAtomContainerSet_ArrayList_ArrayList() {
+    void testInitiate_IAtomContainerSet_ArrayList_ArrayList() {
         IReactionMechanism mechanism = new TautomerizationMechanism();
 
-        Assert.assertNotNull(mechanism);
+        Assertions.assertNotNull(mechanism);
     }
 }

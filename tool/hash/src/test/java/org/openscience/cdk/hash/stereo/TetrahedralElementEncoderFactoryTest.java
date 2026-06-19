@@ -24,10 +24,9 @@
 
 package org.openscience.cdk.hash.stereo;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
 
 import java.lang.reflect.Field;
@@ -36,20 +35,19 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
  * See {@link org.openscience.cdk.hash.HashCodeScenariosTest} for examples.
  * @author John May
- * @cdk.module test-hash
  * @see org.openscience.cdk.hash.HashCodeScenariosTest
  */
-public class TetrahedralElementEncoderFactoryTest {
+class TetrahedralElementEncoderFactoryTest {
 
     @Test
-    public void createExplicitH() throws Exception {
+    void createExplicitH() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(5);
@@ -72,7 +70,7 @@ public class TetrahedralElementEncoderFactoryTest {
         when(tc.getChiralAtom()).thenReturn(c1);
         when(tc.getLigands()).thenReturn(new IAtom[]{o2, n3, c4, h5});
         when(tc.getStereo()).thenReturn(ITetrahedralChirality.Stereo.CLOCKWISE);
-        when(container.stereoElements()).thenReturn(Collections.<IStereoElement> singleton(tc));
+        when(container.stereoElements()).thenReturn(Collections.singleton(tc));
 
         StereoEncoder encoder = new TetrahedralElementEncoderFactory().create(container, new int[0][0]); // graph not used
 
@@ -80,7 +78,7 @@ public class TetrahedralElementEncoderFactoryTest {
     }
 
     @Test
-    public void createImplicitH_back() throws Exception {
+    void createImplicitH_back() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
 
@@ -101,7 +99,7 @@ public class TetrahedralElementEncoderFactoryTest {
         when(tc.getLigands()).thenReturn(new IAtom[]{o2, n3, c4, c1 // <-- represents implicit H
                 });
         when(tc.getStereo()).thenReturn(ITetrahedralChirality.Stereo.CLOCKWISE);
-        when(container.stereoElements()).thenReturn(Collections.<IStereoElement> singleton(tc));
+        when(container.stereoElements()).thenReturn(Collections.singleton(tc));
 
         StereoEncoder encoder = new TetrahedralElementEncoderFactory().create(container, new int[0][0]); // graph not used
 
@@ -109,7 +107,7 @@ public class TetrahedralElementEncoderFactoryTest {
     }
 
     @Test
-    public void createImplicitH_front() throws Exception {
+    void createImplicitH_front() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
 
@@ -130,7 +128,7 @@ public class TetrahedralElementEncoderFactoryTest {
         when(tc.getLigands()).thenReturn(new IAtom[]{c1, // <-- represents implicit H
                 o2, n3, c4,});
         when(tc.getStereo()).thenReturn(ITetrahedralChirality.Stereo.CLOCKWISE);
-        when(container.stereoElements()).thenReturn(Collections.<IStereoElement> singleton(tc));
+        when(container.stereoElements()).thenReturn(Collections.singleton(tc));
 
         StereoEncoder encoder = new TetrahedralElementEncoderFactory().create(container, new int[0][0]); // graph not used
 
@@ -140,7 +138,7 @@ public class TetrahedralElementEncoderFactoryTest {
     }
 
     @Test
-    public void createImplicitH_middle() throws Exception {
+    void createImplicitH_middle() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
 
@@ -161,7 +159,7 @@ public class TetrahedralElementEncoderFactoryTest {
         when(tc.getLigands()).thenReturn(new IAtom[]{o2, c1, // <-- represents implicit H
                 n3, c4,});
         when(tc.getStereo()).thenReturn(ITetrahedralChirality.Stereo.CLOCKWISE);
-        when(container.stereoElements()).thenReturn(Collections.<IStereoElement> singleton(tc));
+        when(container.stereoElements()).thenReturn(Collections.singleton(tc));
 
         StereoEncoder encoder = new TetrahedralElementEncoderFactory().create(container, new int[0][0]); // graph not used
 
@@ -174,14 +172,12 @@ public class TetrahedralElementEncoderFactoryTest {
         if (encoder instanceof MultiStereoEncoder) {
             return getGeometricParity(extractEncoders(encoder).get(0));
         } else if (encoder instanceof GeometryEncoder) {
-            Field field = null;
+            Field field;
             try {
                 field = encoder.getClass().getDeclaredField("geometric");
                 field.setAccessible(true);
                 return (GeometricParity) field.get(encoder);
-            } catch (NoSuchFieldException e) {
-                System.err.println(e.getMessage());
-            } catch (IllegalAccessException e) {
+            } catch (NoSuchFieldException | IllegalAccessException e) {
                 System.err.println(e.getMessage());
             }
         }
@@ -190,14 +186,12 @@ public class TetrahedralElementEncoderFactoryTest {
 
     private static List<StereoEncoder> extractEncoders(StereoEncoder encoder) {
         if (encoder instanceof MultiStereoEncoder) {
-            Field field = null;
+            Field field;
             try {
                 field = encoder.getClass().getDeclaredField("encoders");
                 field.setAccessible(true);
                 return (List<StereoEncoder>) field.get(encoder);
-            } catch (NoSuchFieldException e) {
-                System.err.println(e.getMessage());
-            } catch (IllegalAccessException e) {
+            } catch (NoSuchFieldException | IllegalAccessException e) {
                 System.err.println(e.getMessage());
             }
         }

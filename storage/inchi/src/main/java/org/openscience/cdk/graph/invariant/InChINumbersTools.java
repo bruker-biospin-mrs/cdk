@@ -18,9 +18,8 @@
  */
 package org.openscience.cdk.graph.invariant;
 
-import net.sf.jniinchi.INCHI_OPTION;
-import net.sf.jniinchi.INCHI_RET;
-
+import io.github.dan2097.jnainchi.InchiFlag;
+import io.github.dan2097.jnainchi.InchiStatus;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.inchi.InChIGenerator;
 import org.openscience.cdk.inchi.InChIGeneratorFactory;
@@ -34,8 +33,6 @@ import java.util.List;
 /**
  * Tool for calculating atom numbers using the InChI algorithm.
  *
- * @cdk.module  inchi
- * @cdk.githash
  */
 public class InChINumbersTools {
 
@@ -48,7 +45,7 @@ public class InChINumbersTools {
      * @throws CDKException   When the InChI could not be generated
      */
     public static long[] getNumbers(IAtomContainer atomContainer) throws CDKException {
-        String aux = auxInfo(atomContainer);
+        String aux = auxInfo(atomContainer, new InchiFlag[0]);
         long[] numbers = new long[atomContainer.getAtomCount()];
         parseAuxInfo(aux, numbers);
         return numbers;
@@ -65,7 +62,7 @@ public class InChINumbersTools {
         String numberStringAux = aux.substring(0, aux.indexOf('/'));
         int i = 1;
         for (String numberString : numberStringAux.split("[,;]"))
-            numbers[Integer.valueOf(numberString) - 1] = i++;
+            numbers[Integer.parseInt(numberString) - 1] = i++;
     }
 
     /**
@@ -75,11 +72,16 @@ public class InChINumbersTools {
      * hydrogens are labelled as 0.
      *
      * @param container the structure to obtain the numbers of
-     * @return the atom numbers
+     * @return the atom numbers or an array of length 0 if the container is empty
      * @throws CDKException
      */
     public static long[] getUSmilesNumbers(IAtomContainer container) throws CDKException {
-        String aux = auxInfo(container, INCHI_OPTION.RecMet, INCHI_OPTION.FixedH);
+        if (container.isEmpty()) {
+            return new long[0];
+        }
+
+        String aux = auxInfo(container, InchiFlag.RecMet, InchiFlag.FixedH,
+                             InchiFlag.LargeMolecules);
         return parseUSmilesNumbers(aux, container);
     }
 
@@ -110,7 +112,7 @@ public class InChINumbersTools {
 
         int index;
         long[] numbers = new long[container.getAtomCount()];
-        int[] first = null;
+        int[] first;
         int label = 1;
 
         if ((index = aux.indexOf("/R:")) >= 0) { // reconnected metal numbers
@@ -220,22 +222,22 @@ public class InChINumbersTools {
         }
         return null;
     }
-
+    
     /**
-     * Obtain the InChI auxiliary info for the provided structure using
-     * using the specified InChI options.
+     * Obtain the InChI auxiliary info for the provided structure using the specified InChI options.
      *
      * @param  container the structure to obtain the numbers of
+     * @param  flags varargs ... the JNA InChI flags
      * @return auxiliary info
      * @throws CDKException the inchi could not be generated
      */
-    static String auxInfo(IAtomContainer container, INCHI_OPTION... options) throws CDKException {
+    static String auxInfo(IAtomContainer container, InchiFlag... flags) throws CDKException {
         InChIGeneratorFactory factory = InChIGeneratorFactory.getInstance();
         boolean org = factory.getIgnoreAromaticBonds();
         factory.setIgnoreAromaticBonds(true);
-        InChIGenerator gen = factory.getInChIGenerator(container, Arrays.asList(options));
+        InChIGenerator gen = factory.getInChIGenerator(container, flags);
         factory.setIgnoreAromaticBonds(org); // an option on the singleton so we should reset for others
-        if (gen.getReturnStatus() != INCHI_RET.OKAY && gen.getReturnStatus() != INCHI_RET.WARNING)
+        if (gen.getStatus() == InchiStatus.ERROR)
             throw new CDKException("Could not generate InChI Numbers: " + gen.getMessage());
         return gen.getAuxInfo();
     }

@@ -31,8 +31,6 @@ import org.openscience.cdk.interfaces.IAtom;
  * A AminoAcid is Monomer which stores additional amino acid specific
  * informations, like the N-terminus atom.
  *
- * @cdk.module  silent
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;e.willighagen@science.ru.nl&gt;
  * @cdk.created 2005-08-11
@@ -152,14 +150,14 @@ public class AminoAcid extends Monomer implements IAminoAcid, Serializable, Clon
 
     @Override
     public String toString() {
-        StringBuffer stringContent = new StringBuffer(32);
+        StringBuilder stringContent = new StringBuilder(32);
         stringContent.append("AminoAcid(");
         stringContent.append(this.hashCode());
         if (nTerminus != null) {
-            stringContent.append(", N:").append(nTerminus.toString());
+            stringContent.append(", N:").append(nTerminus);
         }
         if (cTerminus != null) {
-            stringContent.append(", C:").append(cTerminus.toString());
+            stringContent.append(", C:").append(cTerminus);
         }
         stringContent.append(", ").append(super.toString());
         stringContent.append(')');

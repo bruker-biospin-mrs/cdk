@@ -21,35 +21,34 @@ package org.openscience.cdk.graph.rebond;
 
 import javax.vecmath.Point3d;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.config.AtomTypeFactory;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
 /**
  * Checks the functionality of the RebondTool.
  *
- * @cdk.module test-standard
  */
-public class RebondToolTest extends CDKTestCase {
+class RebondToolTest extends CDKTestCase {
 
-    public RebondToolTest() {
+    RebondToolTest() {
         super();
     }
 
     @Test
-    public void testRebondTool_double_double_double() {
+    void testRebondTool_double_double_double() {
         RebondTool rebonder = new RebondTool(2.0, 0.5, 0.5);
-        Assert.assertNotNull(rebonder);
+        Assertions.assertNotNull(rebonder);
     }
 
     @Test
-    public void testRebond_IAtomContainer() throws Exception {
+    void testRebond_IAtomContainer() throws Exception {
         RebondTool rebonder = new RebondTool(2.0, 0.5, 0.5);
-        IAtomContainer methane = new AtomContainer();
+        IAtomContainer methane = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         methane.addAtom(new Atom("C", new Point3d(0.0, 0.0, 0.0)));
         methane.addAtom(new Atom("H", new Point3d(0.6, 0.6, 0.6)));
         methane.addAtom(new Atom("H", new Point3d(-0.6, -0.6, 0.6)));
@@ -66,7 +65,7 @@ public class RebondToolTest extends CDKTestCase {
         // rebond
         rebonder.rebond(methane);
 
-        Assert.assertEquals(5, methane.getAtomCount());
-        Assert.assertEquals(4, methane.getBondCount());
+        Assertions.assertEquals(5, methane.getAtomCount());
+        Assertions.assertEquals(4, methane.getBondCount());
     }
 }

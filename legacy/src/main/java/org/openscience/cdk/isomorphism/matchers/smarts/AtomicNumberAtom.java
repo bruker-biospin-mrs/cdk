@@ -23,15 +23,14 @@
  */
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import com.google.common.base.Preconditions;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
+
+import java.util.Objects;
 
 /**
  * This matches an atom using the atomic number.
  *
- * @cdk.module smarts
- * @cdk.githash
  * @cdk.keyword SMARTS
  */
 @Deprecated
@@ -55,7 +54,7 @@ public class AtomicNumberAtom extends SMARTSAtom {
      */
     @Override
     public boolean matches(IAtom atom) {
-        return Preconditions.checkNotNull(atom.getAtomicNumber(), "Atomic number is not set.").equals(
+        return Objects.requireNonNull(atom.getAtomicNumber(), "Atomic number is not set.").equals(
                 this.getAtomicNumber());
     }
 }

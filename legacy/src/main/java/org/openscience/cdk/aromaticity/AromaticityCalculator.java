@@ -23,15 +23,14 @@
  */
 package org.openscience.cdk.aromaticity;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IRing;
 
 /**
- * @cdk.module standard
- * @cdk.githash
  *
  * @author Oliver Horlacher &lt;oliver.horlacher@therastrat.com&gt;
  * @cdk.created    2002-03-14
@@ -60,7 +59,7 @@ public class AromaticityCalculator {
         java.util.Iterator<IAtom> ringAtoms = ring.atoms().iterator();
         int eCount = 0;
         java.util.List<IBond> conectedBonds;
-        int numDoubleBond = 0;
+        int numDoubleBond;
         boolean allConnectedBondsSingle;
 
         while (ringAtoms.hasNext()) {
@@ -74,7 +73,7 @@ public class AromaticityCalculator {
                 }
 
                 // Count the Electron if bond order = 1.5
-                else if (conectedBond.getFlag(CDKConstants.ISAROMATIC) && ring.contains(conectedBond)) {
+                else if (conectedBond.getFlag(IChemObject.AROMATIC) && ring.contains(conectedBond)) {
                     numDoubleBond = 1;
                 }
 
@@ -85,12 +84,12 @@ public class AromaticityCalculator {
             if (numDoubleBond == 1) {
                 //C or heteroatoms both contibute 1 electron in sp2 hybridized form
                 eCount++;
-            } else if (!atom.getSymbol().equals("C")) {
+            } else if (atom.getAtomicNumber() != IElement.C) {
                 //Heteroatom probably in sp3 hybrid therefore 2 electrons contributed.
                 eCount = eCount + 2;
-            } else if (atom.getFlag(CDKConstants.ISAROMATIC)) {
+            } else if (atom.getFlag(IChemObject.AROMATIC)) {
                 eCount++;
-            } else if (allConnectedBondsSingle && atom.getSymbol().equals("C") && atom.getFormalCharge() == 1.0) {
+            } else if (allConnectedBondsSingle && atom.getAtomicNumber() == IElement.C && atom.getFormalCharge() == 1.0) {
                 // This is for tropylium and kinds.
                 // Dependence on hybridisation would be better:
                 // empty p-orbital is needed

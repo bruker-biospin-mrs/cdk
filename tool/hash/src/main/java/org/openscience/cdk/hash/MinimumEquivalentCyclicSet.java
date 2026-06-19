@@ -66,12 +66,10 @@ import java.util.TreeMap;
  * </blockquote>
  *
  * @author John May
- * @cdk.module hash
  * @see org.openscience.cdk.hash.PerturbedAtomHashGenerator
  * @see MinimumEquivalentCyclicSetUnion
  * @see AllEquivalentCyclicSet
  * @see org.openscience.cdk.hash.HashGeneratorMaker
- * @cdk.githash
  */
 final class MinimumEquivalentCyclicSet extends EquivalentSetFinder {
 
@@ -87,7 +85,7 @@ final class MinimumEquivalentCyclicSet extends EquivalentSetFinder {
         RingSearch ringSearch = new RingSearch(container, graph);
 
         // ordered map of the set of vertices for each value
-        Map<Long, Set<Integer>> equivalent = new TreeMap<Long, Set<Integer>>();
+        Map<Long, Set<Integer>> equivalent = new TreeMap<>();
 
         // divide the invariants into equivalent indexed and ordered sets
         for (int i = 0; i < invariants.length; i++) {
@@ -97,7 +95,7 @@ final class MinimumEquivalentCyclicSet extends EquivalentSetFinder {
 
             if (set == null) {
                 if (ringSearch.cyclic(i)) {
-                    set = new HashSet<Integer>(n / 2);
+                    set = new HashSet<>(n / 2);
                     set.add(i);
                     equivalent.put(invariant, set);
                 }

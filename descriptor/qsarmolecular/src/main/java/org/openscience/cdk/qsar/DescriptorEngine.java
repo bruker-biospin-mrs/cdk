@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -72,21 +71,19 @@ import java.util.jar.JarFile;
  * obtain its classification as described in the CDK descriptor-algorithms OWL dictionary.
  *
  * @cdk.created 2004-12-02
- * @cdk.module qsarmolecular
- * @cdk.githash
  * @see DescriptorSpecification
  * @see Dictionary
  * @see org.openscience.cdk.dict.OWLFile
  */
 public class DescriptorEngine {
 
-    private static String                      rdfNS       = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    private static final String                      rdfNS       = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 
-    private Dictionary                         dict        = null;
-    private List<String>                       classNames  = new ArrayList<String>(200);
-    private List<IDescriptor>                  descriptors = new ArrayList<IDescriptor>(200);
-    private List<IImplementationSpecification> speclist    = null;
-    private static ILoggingTool                logger      = LoggingToolFactory
+    private Dictionary                         dict;
+    private List<String>                       classNames  = new ArrayList<>(200);
+    private List<IDescriptor>                  descriptors = new ArrayList<>(200);
+    private List<IImplementationSpecification> speclist;
+    private static final ILoggingTool                logger      = LoggingToolFactory
                                                                    .createLoggingTool(DescriptorEngine.class);
     private final IChemObjectBuilder           builder;
 
@@ -182,9 +179,7 @@ public class DescriptorEngine {
                 }
                 logger.debug("Calculated molecular descriptors...");
             } else if (descriptor instanceof IAtomicDescriptor) {
-                Iterator atoms = molecule.atoms().iterator();
-                while (atoms.hasNext()) {
-                    IAtom atom = (IAtom) atoms.next();
+                for (IAtom atom : molecule.atoms()) {
                     DescriptorValue value = ((IAtomicDescriptor) descriptor).calculate(atom, molecule);
                     if (value.getException() == null)
                         atom.setProperty(speclist.get(i), value);
@@ -195,9 +190,7 @@ public class DescriptorEngine {
                 }
                 logger.debug("Calculated atomic descriptors...");
             } else if (descriptor instanceof IBondDescriptor) {
-                Iterator bonds = molecule.bonds().iterator();
-                while (bonds.hasNext()) {
-                    IBond bond = (IBond) bonds.next();
+                for (IBond bond : molecule.bonds()) {
                     DescriptorValue value = ((IBondDescriptor) descriptor).calculate(bond, molecule);
                     if (value.getException() == null)
                         bond.setProperty(speclist.get(i), value);
@@ -245,7 +238,7 @@ public class DescriptorEngine {
 
         for (Entry dictEntry : dictEntries) {
             if (!dictEntry.getClassName().equals("Descriptor")) continue;
-            if (dictEntry.getID().equals(specRef.toLowerCase())) {
+            if (dictEntry.getID().equalsIgnoreCase(specRef)) {
                 Element rawElement = (Element) dictEntry.getRawContent();
                 // assert(rawElement != null);
                 // We're not fully Java 1.5 yet, so commented it out now. If it is
@@ -256,8 +249,8 @@ public class DescriptorEngine {
                 for (int i = 0; i < classifications.size(); i++) {
                     Element element = classifications.get(i);
                     Attribute attr = element.getAttribute("resource", rdfNS);
-                    if ((attr.getValue().indexOf("molecularDescriptor") != -1)
-                            || (attr.getValue().indexOf("atomicDescriptor") != -1)) {
+                    if ((attr.getValue().contains("molecularDescriptor"))
+                            || (attr.getValue().contains("atomicDescriptor"))) {
                         String[] tmp = attr.getValue().split("#");
                         return tmp[1];
                     }
@@ -318,7 +311,7 @@ public class DescriptorEngine {
             logger.error("Cannot determine specification for id: ", identifier);
             return new String[0];
         }
-        List<String> dictClasses = new ArrayList<String>();
+        List<String> dictClasses = new ArrayList<>();
 
         for (Entry dictEntry : dictEntries) {
             if (!dictEntry.getClassName().equals("Descriptor")) continue;
@@ -328,8 +321,8 @@ public class DescriptorEngine {
                 for (int i = 0; i < classifications.size(); i++) {
                     Element element = classifications.get(i);
                     Attribute attr = element.getAttribute("resource", rdfNS);
-                    if ((attr.getValue().indexOf("molecularDescriptor") >= 0)
-                            || (attr.getValue().indexOf("atomicDescriptor") >= 0)) {
+                    if ((attr.getValue().contains("molecularDescriptor"))
+                            || (attr.getValue().contains("atomicDescriptor"))) {
                         continue;
                     }
                     String[] tmp = attr.getValue().split("#");
@@ -341,7 +334,7 @@ public class DescriptorEngine {
         if (dictClasses.size() == 0)
             return null;
         else
-            return (String[]) dictClasses.toArray(new String[]{});
+            return dictClasses.toArray(new String[]{});
     }
 
     /**
@@ -503,13 +496,13 @@ public class DescriptorEngine {
      * @return An array containing the unique dictionary classes.
      */
     public String[] getAvailableDictionaryClasses() {
-        List<String> classList = new ArrayList<String>();
+        List<String> classList = new ArrayList<>();
         for (IImplementationSpecification spec : speclist) {
             String[] tmp = getDictionaryClass(spec);
             if (tmp != null) classList.addAll(Arrays.asList(tmp));
         }
-        Set<String> uniqueClasses = new HashSet<String>(classList);
-        return (String[]) uniqueClasses.toArray(new String[]{});
+        Set<String> uniqueClasses = new HashSet<>(classList);
+        return uniqueClasses.toArray(new String[]{});
     }
 
     /**
@@ -548,28 +541,22 @@ public class DescriptorEngine {
             jars = jarFileNames;
         }
 
-        List<String> classlist = new ArrayList<String>();
-        for (int i = 0; i < jars.length; i++) {
-            logger.debug("Looking in " + jars[i]);
-            JarFile jarFile;
-            try {
-                jarFile = new JarFile(jars[i]);
+        List<String> classlist = new ArrayList<>();
+        for (String jar : jars) {
+            logger.debug("Looking in " + jar);
+            try (JarFile jarFile = new JarFile(jar)) {
                 Enumeration enumeration = jarFile.entries();
                 while (enumeration.hasMoreElements()) {
                     JarEntry jarEntry = (JarEntry) enumeration.nextElement();
-                    if (jarEntry.toString().indexOf(".class,") != -1) {
+                    if (jarEntry.toString().contains(".class,")) {
                         String className = jarEntry.toString().replace('/', '.').replaceAll(".class,", "");
                         if (className.indexOf('$') != -1) continue;
 
                         Class klass = null;
                         try {
                             klass = Class.forName(className);
-                        } catch (ClassNotFoundException cnfe) {
+                        } catch (ClassNotFoundException | UnsatisfiedLinkError | NoClassDefFoundError cnfe) {
                             logger.debug(cnfe);
-                        } catch (NoClassDefFoundError ncdfe) {
-                            logger.debug(ncdfe);
-                        } catch (UnsatisfiedLinkError ule) {
-                            logger.debug(ule);
                         }
                         if (klass == null) continue;
 
@@ -588,7 +575,7 @@ public class DescriptorEngine {
                     }
                 }
             } catch (IOException e) {
-                logger.error("Error opening the jar file: " + jars[i]);
+                logger.error("Error opening the jar file: " + jar);
                 logger.debug(e);
             }
         }
@@ -625,22 +612,20 @@ public class DescriptorEngine {
             jars = jarFileNames;
         }
 
-        ArrayList<String> classlist = new ArrayList<String>();
+        ArrayList<String> classlist = new ArrayList<>();
 
         for (String jar : jars) {
             logger.debug("Looking in " + jar);
-            JarFile jarFile;
-            try {
-                jarFile = new JarFile(jar);
+            try (JarFile jarFile = new JarFile(jar)) {
                 Enumeration enumeration = jarFile.entries();
                 while (enumeration.hasMoreElements()) {
                     JarEntry jarEntry = (JarEntry) enumeration.nextElement();
                     if (jarEntry.toString().endsWith(".class")) {
                         String tmp = jarEntry.toString().replace('/', '.').replaceAll("\\.class", "");
-                        if (!(tmp.indexOf(packageName) != -1)) continue;
+                        if (!(tmp.contains(packageName))) continue;
                         if (tmp.indexOf('$') != -1) continue;
-                        if (tmp.indexOf("Test") != -1) continue;
-                        if (tmp.indexOf("ChiIndexUtils") != -1) continue;
+                        if (tmp.contains("Test")) continue;
+                        if (tmp.contains("ChiIndexUtils")) continue;
                         if (!classlist.contains(tmp)) classlist.add(tmp);
                     }
                 }
@@ -653,7 +638,7 @@ public class DescriptorEngine {
     }
 
     public List<IDescriptor> instantiateDescriptors(List<String> descriptorClassNames) {
-        List<IDescriptor> descriptors = new ArrayList<IDescriptor>();
+        List<IDescriptor> descriptors = new ArrayList<>();
         ClassLoader classLoader = getClass().getClassLoader();
         for (String descriptorName : descriptorClassNames) {
             try {
@@ -663,12 +648,9 @@ public class DescriptorEngine {
                 descriptor.initialise(builder);
                 descriptors.add(descriptor);
                 logger.info("Loaded descriptor: ", descriptorName);
-            } catch (NoClassDefFoundError error) {
+            } catch (NoClassDefFoundError | ClassNotFoundException error) {
                 logger.error("Could not find this Descriptor: ", descriptorName);
                 logger.debug(error);
-            } catch (ClassNotFoundException exception) {
-                logger.error("Could not find this Descriptor: ", descriptorName);
-                logger.debug(exception);
             } catch (IllegalAccessException | InvocationTargetException | InstantiationException exception) {
                 logger.error("Could not load this Descriptor: ", descriptorName);
                 logger.debug(exception);
@@ -691,7 +673,7 @@ public class DescriptorEngine {
     }
 
     public List<IImplementationSpecification> initializeSpecifications(List<IDescriptor> descriptors) {
-        List<IImplementationSpecification> speclist = new ArrayList<IImplementationSpecification>();
+        List<IImplementationSpecification> speclist = new ArrayList<>();
         for (IDescriptor descriptor : descriptors) {
             speclist.add(descriptor.getSpecification());
         }

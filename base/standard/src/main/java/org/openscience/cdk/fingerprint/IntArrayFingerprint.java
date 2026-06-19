@@ -32,8 +32,6 @@ import java.util.Set;
 
 /**
  * @author jonalv
- * @cdk.module     standard
- * @cdk.githash
  */
 public class IntArrayFingerprint implements IBitFingerprint {
 
@@ -41,7 +39,7 @@ public class IntArrayFingerprint implements IBitFingerprint {
      *
      */
     private static final long serialVersionUID = 5175105019921245323L;
-    private volatile int[]    trueBits;
+    private int[] trueBits;
 
     public IntArrayFingerprint(Map<String, Integer> rawFingerPrint) {
         trueBits = new int[rawFingerPrint.size()];

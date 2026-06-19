@@ -20,11 +20,12 @@ package org.openscience.cdk.qsar.descriptors.atomic;
 
 import java.util.List;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.qsar.AbstractAtomicDescriptor;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -53,8 +54,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  *
  * @author      mfe4
  * @cdk.created 2004-11-03
- * @cdk.module  qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:isProtonInAromaticSystem
  */
 public class IsProtonInAromaticSystemDescriptor extends AbstractAtomicDescriptor implements IAtomicDescriptor {
@@ -130,7 +129,7 @@ public class IsProtonInAromaticSystemDescriptor extends AbstractAtomicDescriptor
     public DescriptorValue calculate(IAtom atom, IAtomContainer atomContainer) {
         IAtomContainer clonedAtomContainer;
         try {
-            clonedAtomContainer = (IAtomContainer) atomContainer.clone();
+            clonedAtomContainer = atomContainer.clone();
         } catch (CloneNotSupportedException e) {
             return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new IntegerResult(
                     (int) Double.NaN), NAMES, e);
@@ -149,15 +148,15 @@ public class IsProtonInAromaticSystemDescriptor extends AbstractAtomicDescriptor
             }
         }
         List<IAtom> neighboor = mol.getConnectedAtomsList(clonedAtom);
-        IAtom neighbour0 = (IAtom) neighboor.get(0);
-        if (atom.getSymbol().equals("H")) {
+        IAtom neighbour0 = neighboor.get(0);
+        if (atom.getAtomicNumber() == IElement.H) {
             //logger.debug("aromatic proton");
-            if (neighbour0.getFlag(CDKConstants.ISAROMATIC)) {
+            if (neighbour0.getFlag(IChemObject.AROMATIC)) {
                 isProtonInAromaticSystem = 1;
             } else {
                 List<IAtom> betaAtoms = clonedAtomContainer.getConnectedAtomsList(neighbour0);
                 for (IAtom betaAtom : betaAtoms) {
-                    if (betaAtom.getFlag(CDKConstants.ISAROMATIC)) {
+                    if (betaAtom.getFlag(IChemObject.AROMATIC)) {
                         isProtonInAromaticSystem = 2;
                     } else {
                         isProtonInAromaticSystem = 0;

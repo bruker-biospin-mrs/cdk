@@ -18,23 +18,21 @@
  */
 package org.openscience.cdk.smsd.algorithm.rgraph;
 
-import org.openscience.cdk.smsd.algorithm.rgraph.CDKRNode;
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
- * @cdk.module test-smsd
  * @author     Syed Asad Rahman
  * @cdk.require java1.5+
  */
-public class CDKRNodeTest extends CDKTestCase {
+class CDKRNodeTest extends CDKTestCase {
 
     @Test
-    public void testRNode_int_int() {
+    void testRNode_int_int() {
         CDKRNode node = new CDKRNode(1, 2);
-        Assert.assertNotNull(node);
-        Assert.assertNotNull(node.getExtension());
-        Assert.assertNotNull(node.getForbidden());
+        Assertions.assertNotNull(node);
+        Assertions.assertNotNull(node.getExtension());
+        Assertions.assertNotNull(node.getForbidden());
     }
 }

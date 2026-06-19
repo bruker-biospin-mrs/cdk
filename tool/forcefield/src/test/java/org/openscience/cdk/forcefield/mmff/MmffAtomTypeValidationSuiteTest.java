@@ -24,7 +24,6 @@
 
 package org.openscience.cdk.forcefield.mmff;
 
-import org.junit.Assert;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -40,10 +39,10 @@ import static org.hamcrest.CoreMatchers.is;
  *
  * @author John May
  */
-// @Category(SlowTest.class) // waiting on SlowTest patch
-public class MmffAtomTypeValidationSuiteTest extends AbstractMmffAtomTypeValidationSuiteTest {
+// @Tag("SlowTest") // waiting on SlowTest patch
+class MmffAtomTypeValidationSuiteTest extends AbstractMmffAtomTypeValidationSuiteTest {
 
-    static final MmffAtomTypeMatcher INSTANCE = new MmffAtomTypeMatcher();
+    private static final MmffAtomTypeMatcher INSTANCE = new MmffAtomTypeMatcher();
 
     @Override
     String[] assign(IAtomContainer container) {
@@ -68,6 +67,6 @@ public class MmffAtomTypeValidationSuiteTest extends AbstractMmffAtomTypeValidat
             }
         }
 
-        Assert.assertThat(mesg, actual, is(expected));
+        org.hamcrest.MatcherAssert.assertThat(mesg, actual, is(expected));
     }
 }

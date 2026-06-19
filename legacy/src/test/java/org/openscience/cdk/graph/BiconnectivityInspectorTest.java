@@ -24,24 +24,22 @@
 package org.openscience.cdk.graph;
 
 import org._3pq.jgrapht.graph.SimpleGraph;
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.graph.BiconnectivityInspector;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 import java.util.List;
 
 /**
  * This class tests the BiconnectivityInspector class.
  *
- * @cdk.module test-standard
  *
  * @author Ulrich Bauer &lt;baueru@cs.tum.edu&gt;
  */
-public class BiconnectivityInspectorTest extends CDKTestCase {
+class BiconnectivityInspectorTest extends CDKTestCase {
 
     @Test
-    public void testBiconnectedSets() {
+    void testBiconnectedSets() {
         SimpleGraph g = new SimpleGraph();
 
         g.addVertex("a");
@@ -77,7 +75,7 @@ public class BiconnectivityInspectorTest extends CDKTestCase {
         BiconnectivityInspector bci = new BiconnectivityInspector(g);
         List connectedSets = bci.biconnectedSets();
 
-        Assert.assertTrue(connectedSets.size() == 5);
+        Assertions.assertTrue(connectedSets.size() == 5);
     }
 
 }

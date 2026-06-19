@@ -59,15 +59,13 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * @author      mfe4
  * @cdk.created 2004-11-13
- * @cdk.module  qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:apol
  *
  * @cdk.keyword polarizability, atomic
  */
 public class APolDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
 
-    private static ILoggingTool   logger = LoggingToolFactory.createLoggingTool(APolDescriptor.class);
+    private static final ILoggingTool   logger = LoggingToolFactory.createLoggingTool(APolDescriptor.class);
     /* Atomic polarizabilities ordered by atomic number from 1 to 102. */
     private static double[]       polarizabilities;
     private static final String[] NAMES  = {"apol"};
@@ -171,7 +169,7 @@ public class APolDescriptor extends AbstractMolecularDescriptor implements IMole
             logger.debug(ex1);
             return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new DoubleResult(
                     Double.NaN), getDescriptorNames(), new CDKException("Problems with IsotopeFactory due to "
-                    + ex1.toString(), ex1));
+                    + ex1, ex1));
         }
     }
 

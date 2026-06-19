@@ -20,6 +20,7 @@ package org.openscience.cdk.qsar.descriptors.molecular;
 
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IBond.Order;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
@@ -58,8 +59,6 @@ import org.openscience.cdk.qsar.result.IntegerResult;
  *
  * @author      mfe4
  * @cdk.created 2004-11-13
- * @cdk.module  qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:bondCount
  */
 public class BondCountDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
@@ -140,7 +139,7 @@ public class BondCountDescriptor extends AbstractMolecularDescriptor implements 
             for (IBond bond : container.bonds()) {
                 boolean hasHydrogen = false;
                 for (int i = 0; i < bond.getAtomCount(); i++) {
-                    if (bond.getAtom(i).getSymbol().equals("H")) {
+                    if (bond.getAtom(i).getAtomicNumber() == IElement.H) {
                         hasHydrogen = true;
                         break;
                     }

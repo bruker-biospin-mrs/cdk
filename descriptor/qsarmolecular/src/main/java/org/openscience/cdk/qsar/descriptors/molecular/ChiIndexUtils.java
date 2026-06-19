@@ -27,6 +27,7 @@ import java.util.List;
 import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.config.IsotopeFactory;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -34,6 +35,7 @@ import org.openscience.cdk.isomorphism.UniversalIsomorphismTester;
 import org.openscience.cdk.isomorphism.matchers.QueryAtomContainer;
 import org.openscience.cdk.isomorphism.mcss.RMap;
 import org.openscience.cdk.qsar.AtomValenceTool;
+import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
  * Utility methods for chi index calculations.
@@ -42,8 +44,6 @@ import org.openscience.cdk.qsar.AtomValenceTool;
  * be used to evaluate path, path-cluster, cluster and chain chi indices.
  *
  * @author     Rajarshi Guha
- * @cdk.module qsarmolecular
- * @cdk.githash
  */
 class ChiIndexUtils {
 
@@ -62,14 +62,15 @@ class ChiIndexUtils {
      */
     public static List<List<Integer>> getFragments(IAtomContainer atomContainer, QueryAtomContainer[] queries) {
         UniversalIsomorphismTester universalIsomorphismTester = new UniversalIsomorphismTester();
-        List<List<Integer>> uniqueSubgraphs = new ArrayList<List<Integer>>();
+        List<List<Integer>> uniqueSubgraphs = new ArrayList<>();
         for (QueryAtomContainer query : queries) {
             List<List<RMap>> subgraphMaps = null;
             try {
                 // we get the list of bond mappings
                 subgraphMaps = universalIsomorphismTester.getSubgraphMaps(atomContainer, query);
             } catch (CDKException e) {
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(ChiIndexUtils.class)
+                                  .warn("Unexpected Error:", e);
             }
             if (subgraphMaps == null) continue;
             if (subgraphMaps.size() == 0) continue;
@@ -85,7 +86,7 @@ class ChiIndexUtils {
         // will have number of atoms equal to the number of bonds+1. So we need to check
         // fragment size against all unique query sizes - I get lazy and don't check
         // unique query sizes, but the size of each query
-        List<List<Integer>> retValue = new ArrayList<List<Integer>>();
+        List<List<Integer>> retValue = new ArrayList<>();
         for (List<Integer> fragment : uniqueSubgraphs) {
             for (QueryAtomContainer query : queries) {
                 if (fragment.size() == query.getAtomCount()) {
@@ -194,18 +195,18 @@ class ChiIndexUtils {
      *         environments, -1 otherwise
      */
     protected static double deltavSulphur(IAtom atom, IAtomContainer atomContainer) {
-        if (!atom.getSymbol().equals("S")) return -1;
+        if (atom.getAtomicNumber() != IElement.S) return -1;
 
         // check whether it's a S in S-S
         List<IAtom> connected = atomContainer.getConnectedAtomsList(atom);
         for (IAtom connectedAtom : connected) {
-            if (connectedAtom.getSymbol().equals("S")
+            if (connectedAtom.getAtomicNumber() == IElement.S
                     && atomContainer.getBond(atom, connectedAtom).getOrder() == IBond.Order.SINGLE) return .89;
         }
 
         int count = 0;
         for (IAtom connectedAtom : connected) {
-            if (connectedAtom.getSymbol().equals("O")
+            if (connectedAtom.getAtomicNumber() == IElement.O
                     && atomContainer.getBond(atom, connectedAtom).getOrder() == IBond.Order.DOUBLE) count++;
         }
         if (count == 1)
@@ -226,7 +227,7 @@ class ChiIndexUtils {
      *         -1 otherwise
      */
     private static double deltavPhosphorous(IAtom atom, IAtomContainer atomContainer) {
-        if (!atom.getSymbol().equals("P")) return -1;
+        if (atom.getAtomicNumber() != IElement.P) return -1;
 
         List<IAtom> connected = atomContainer.getConnectedAtomsList(atom);
         int conditions = 0;
@@ -234,7 +235,7 @@ class ChiIndexUtils {
         if (connected.size() == 4) conditions++;
 
         for (IAtom connectedAtom : connected) {
-            if (connectedAtom.getSymbol().equals("O")
+            if (connectedAtom.getAtomicNumber() == IElement.O
                     && atomContainer.getBond(atom, connectedAtom).getOrder() == IBond.Order.DOUBLE) conditions++;
             if (atomContainer.getBond(atom, connectedAtom).getOrder() == IBond.Order.SINGLE) conditions++;
         }
@@ -254,12 +255,12 @@ class ChiIndexUtils {
      * @return A unique <code>List</code> of atom paths
      */
     private static List<List<Integer>> getUniqueBondSubgraphs(List<List<RMap>> subgraphs, IAtomContainer ac) {
-        List<List<Integer>> bondList = new ArrayList<List<Integer>>();
+        List<List<Integer>> bondList = new ArrayList<>();
         for (List<RMap> subgraph : subgraphs) {
             List<RMap> current = subgraph;
-            List<Integer> ids = new ArrayList<Integer>();
+            List<Integer> ids = new ArrayList<>();
             for (RMap aCurrent : current) {
-                RMap rmap = (RMap) aCurrent;
+                RMap rmap = aCurrent;
                 ids.add(rmap.getId1());
             }
             Collections.sort(ids);
@@ -267,13 +268,13 @@ class ChiIndexUtils {
         }
 
         // get the unique set of bonds
-        HashSet<List<Integer>> hs = new HashSet<List<Integer>>(bondList);
-        bondList = new ArrayList<List<Integer>>(hs);
+        HashSet<List<Integer>> hs = new HashSet<>(bondList);
+        bondList = new ArrayList<>(hs);
 
-        List<List<Integer>> paths = new ArrayList<List<Integer>>();
+        List<List<Integer>> paths = new ArrayList<>();
         for (List<Integer> aBondList1 : bondList) {
             List<Integer> aBondList = aBondList1;
-            List<Integer> tmp = new ArrayList<Integer>();
+            List<Integer> tmp = new ArrayList<>();
             for (Object anABondList : aBondList) {
                 int bondNumber = (Integer) anABondList;
                 for (IAtom atom : ac.getBond(bondNumber).atoms()) {

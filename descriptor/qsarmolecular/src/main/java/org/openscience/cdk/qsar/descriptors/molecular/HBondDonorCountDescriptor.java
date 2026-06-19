@@ -20,6 +20,7 @@ package org.openscience.cdk.qsar.descriptors.molecular;
 
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
@@ -60,8 +61,6 @@ import org.openscience.cdk.qsar.result.IntegerResult;
  *
  * @author      ulif
  * @cdk.created 2005-22-07
- * @cdk.module  qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:hBondDonors
  */
 public class HBondDonorCountDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
@@ -130,7 +129,7 @@ public class HBondDonorCountDescriptor extends AbstractMolecularDescriptor imple
 
         IAtomContainer ac;
         try {
-            ac = (IAtomContainer) atomContainer.clone();
+            ac = atomContainer.clone();
         } catch (CloneNotSupportedException e) {
             return getDummyDescriptorValue(e);
         }
@@ -138,9 +137,9 @@ public class HBondDonorCountDescriptor extends AbstractMolecularDescriptor imple
         //org.openscience.cdk.interfaces.IAtom[] atoms = ac.getAtoms();
         // iterate over all atoms of this AtomContainer; use label atomloop to allow for labelled continue
         atomloop: for (int atomIndex = 0; atomIndex < ac.getAtomCount(); atomIndex++) {
-            IAtom atom = (IAtom) ac.getAtom(atomIndex);
+            IAtom atom = ac.getAtom(atomIndex);
             // checking for O and N atoms where the formal charge is >= 0
-            if ((atom.getSymbol().equals("O") || atom.getSymbol().equals("N")) && atom.getFormalCharge() >= 0) {
+            if ((atom.getAtomicNumber() == IElement.O || atom.getAtomicNumber() == IElement.N) && atom.getFormalCharge() >= 0) {
                 // implicit hydrogens
                 Integer implicitH = atom.getImplicitHydrogenCount();
                 if (implicitH == CDKConstants.UNSET) implicitH = 0;
@@ -151,7 +150,7 @@ public class HBondDonorCountDescriptor extends AbstractMolecularDescriptor imple
                 // explicit hydrogens
                 java.util.List neighbours = ac.getConnectedAtomsList(atom);
                 for (Object neighbour : neighbours) {
-                    if (((IAtom) neighbour).getSymbol().equals("H")) {
+                    if (((IAtom) neighbour).getAtomicNumber() == IElement.H) {
                         hBondDonors++;
                         continue atomloop;
                     }

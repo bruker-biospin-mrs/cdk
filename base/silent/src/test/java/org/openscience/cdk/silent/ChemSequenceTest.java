@@ -19,36 +19,27 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IChemSequence;
-import org.openscience.cdk.interfaces.AbstractChemSequenceTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractChemSequenceTest;
 
 /**
  * Checks the functionality of the {@link ChemSequence}.
  *
- * @cdk.module test-silent
  */
-public class ChemSequenceTest extends AbstractChemSequenceTest {
+class ChemSequenceTest extends AbstractChemSequenceTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new ChemSequence();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(ChemSequence::new);
     }
 
     @Test
-    public void testChemSequence() {
+    void testChemSequence() {
         IChemSequence cs = new ChemSequence();
-        Assert.assertNotNull(cs);
+        Assertions.assertNotNull(cs);
     }
 
     // Overwrite default methods: no notifications are expected!

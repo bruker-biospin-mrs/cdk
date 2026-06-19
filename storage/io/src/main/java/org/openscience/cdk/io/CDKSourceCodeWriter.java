@@ -28,7 +28,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Iterator;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
@@ -60,8 +59,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * System.out.print(stringWriter.toString());
  * </pre>
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
  * @cdk.created 2003-10-01
@@ -72,7 +69,7 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 public class CDKSourceCodeWriter extends DefaultChemObjectWriter {
 
     private BufferedWriter      writer;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(CDKSourceCodeWriter.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(CDKSourceCodeWriter.class);
 
     private BooleanIOSetting    write2DCoordinates;
     private BooleanIOSetting    write3DCoordinates;
@@ -130,8 +127,8 @@ public class CDKSourceCodeWriter extends DefaultChemObjectWriter {
     @Override
     public boolean accepts(Class<? extends IChemObject> classObject) {
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (IAtomContainer.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (IAtomContainer.class.equals(anInterface)) return true;
         }
         if (IAtomContainer.class.equals(classObject)) return true;
         Class superClass = classObject.getSuperclass();
@@ -157,9 +154,7 @@ public class CDKSourceCodeWriter extends DefaultChemObjectWriter {
     }
 
     private void writeAtoms(IAtomContainer molecule) throws Exception {
-        Iterator<IAtom> atoms = molecule.atoms().iterator();
-        while (atoms.hasNext()) {
-            IAtom atom = (IAtom) atoms.next();
+        for (IAtom atom : molecule.atoms()) {
             writeAtom(atom);
             writer.write("  mol.addAtom(" + atom.getID() + ");");
             writer.write('\n');
@@ -167,9 +162,7 @@ public class CDKSourceCodeWriter extends DefaultChemObjectWriter {
     }
 
     private void writeBonds(IAtomContainer molecule) throws Exception {
-        Iterator<IBond> bonds = molecule.bonds().iterator();
-        while (bonds.hasNext()) {
-            IBond bond = (IBond) bonds.next();
+        for (IBond bond : molecule.bonds()) {
             writeBond(bond);
             writer.write("  mol.addBond(" + bond.getID() + ");");
             writer.write('\n');

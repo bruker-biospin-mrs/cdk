@@ -18,10 +18,10 @@
  */
 package org.openscience.cdk.geometry.volume;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.config.AtomTypeFactory;
 import org.openscience.cdk.exception.CDKException;
@@ -29,6 +29,7 @@ import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IRingSet;
 
 /**
@@ -37,36 +38,34 @@ import org.openscience.cdk.interfaces.IRingSet;
  * with the following elements: H, C, N, O, F, Cl, Br, I,
  * P, S, As, B, Si, Se, and Te.
  *
- * @cdk.module   standard
  * @cdk.keyword  volume, molecular
- * @cdk.githash
  */
 public class VABCVolume {
+
+    private static Map<String,Double> loadVolumes() {
+        Map<String,Double> map = new HashMap<>();
+        map.put("H", 7.2382293504);
+        map.put("C", 20.5795259250667);
+        map.put("N", 15.5985308577667);
+        map.put("O", 14.7102267005611);
+        map.put("Cl", 22.4492971208333);
+        map.put("Br", 26.5218483279667);
+        map.put("F", 13.3057882007064);
+        map.put("I", 32.5150310206656);
+        map.put("S", 24.4290240576);
+        map.put("P", 24.4290240576);
+        map.put("As", 26.5218483279667);
+        map.put("B", 40.48); // value missing from spreadsheet; taken from paper
+        map.put("Se", 28.7309115245333);
+        map.put("Si", 38.7923854248);
+        return Collections.unmodifiableMap(map);
+    }
 
     /**
      * Values are taken from the spreadsheet where possible. The values in the
      * paper are imprecise.
      */
-    @SuppressWarnings("serial")
-    private static Map<String, Double> bondiiVolumes = new HashMap<String, Double>() {
-
-                                                         {
-                                                             put("H", 7.2382293504);
-                                                             put("C", 20.5795259250667);
-                                                             put("N", 15.5985308577667);
-                                                             put("O", 14.7102267005611);
-                                                             put("Cl", 22.4492971208333);
-                                                             put("Br", 26.5218483279667);
-                                                             put("F", 13.3057882007064);
-                                                             put("I", 32.5150310206656);
-                                                             put("S", 24.4290240576);
-                                                             put("P", 24.4290240576);
-                                                             put("As", 26.5218483279667);
-                                                             put("B", 40.48); // value missing from spreadsheet; taken from paper
-                                                             put("Se", 28.7309115245333);
-                                                             put("Si", 38.7923854248);
-                                                         }
-                                                     };
+    private static final Map<String, Double> bondiiVolumes = loadVolumes();
 
     private static AtomTypeFactory     atomTypeList  = null;
 
@@ -126,7 +125,7 @@ public class VABCVolume {
 
     private static boolean ringIsAromatic(IAtomContainer ring) {
         for (IAtom atom : ring.atoms()) {
-            if (!atom.getFlag(CDKConstants.ISAROMATIC)) return false;
+            if (!atom.getFlag(IChemObject.AROMATIC)) return false;
         }
         return true;
     }

@@ -23,11 +23,10 @@
 package org.openscience.cdk.io.formats;
 
 /**
- * @cdk.module test-ioformats
  */
-public class JaguarFormatTest extends ChemFormatMatcherTest {
+class JaguarFormatTest extends ChemFormatMatcherTest {
 
-    public JaguarFormatTest() {
+    JaguarFormatTest() {
         super.setChemFormatMatcher((IChemFormatMatcher) JaguarFormat.getInstance());
     }
 

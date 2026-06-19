@@ -24,8 +24,9 @@
 
 package org.openscience.cdk.layout;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
@@ -33,41 +34,36 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
-import org.openscience.cdk.io.MDLV2000Reader;
-import org.openscience.cdk.io.MDLV2000Writer;
 import org.openscience.cdk.silent.Atom;
-import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.stereo.Atropisomeric;
 import org.openscience.cdk.stereo.DoubleBondStereochemistry;
 import org.openscience.cdk.stereo.ExtendedTetrahedral;
+import org.openscience.cdk.stereo.StereoElementFactory;
 import org.openscience.cdk.stereo.TetrahedralChirality;
 
 import javax.vecmath.Point2d;
 
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation.OPPOSITE;
 
 /**
  * @author John May
- * @cdk.module test-sdg
  */
-public class NonPlanarBondsTest {
+class NonPlanarBondsTest {
 
     // [C@H](C)(N)O
     @Test
-    public void clockwise_implH_1() {
-        IAtomContainer m = new AtomContainer(4, 3, 0, 0);
+    void clockwise_implH_1() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 1, 0.00d, 1.50d));
         m.addAtom(atom("C", 3, 0.00d, 0.00d));
         m.addAtom(atom("N", 2, -1.30d, 2.25d));
@@ -78,16 +74,16 @@ public class NonPlanarBondsTest {
         m.addStereoElement(new TetrahedralChirality(m.getAtom(0), new IAtom[]{m.getAtom(0), m.getAtom(1), m.getAtom(2),
                 m.getAtom(3)}, ITetrahedralChirality.Stereo.CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(1).getStereo(), is(IBond.Stereo.DOWN));
-        assertThat(m.getBond(2).getStereo(), is(IBond.Stereo.NONE));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(1).getDisplay(), is(IBond.Display.Down));
+        assertThat(m.getBond(2).getDisplay(), is(IBond.Display.Solid));
     }
 
     // [C@H](CC)(N)O
     // N is favoured over CC
     @Test
-    public void clockwise_implH_2() {
-        IAtomContainer m = new AtomContainer(5, 4, 0, 0);
+    void clockwise_implH_2() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 1, -1.30d, 2.25d));
         m.addAtom(atom("C", 2, 0.00d, 1.50d));
         m.addAtom(atom("C", 3, 0.00d, 0.00d));
@@ -100,16 +96,16 @@ public class NonPlanarBondsTest {
         m.addStereoElement(new TetrahedralChirality(m.getAtom(0), new IAtom[]{m.getAtom(0), m.getAtom(1), m.getAtom(3),
                 m.getAtom(4)}, ITetrahedralChirality.Stereo.CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(1).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(2).getStereo(), is(IBond.Stereo.UP));
-        assertThat(m.getBond(3).getStereo(), is(IBond.Stereo.NONE));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(1).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(2).getDisplay(), is(IBond.Display.Up));
+        assertThat(m.getBond(3).getDisplay(), is(IBond.Display.Solid));
     }
 
     // [C@H](C)(N)O
     @Test
-    public void anticlockwise_implH_1() {
-        IAtomContainer m = new AtomContainer(4, 3, 0, 0);
+    void anticlockwise_implH_1() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 1, 0.00d, 1.50d));
         m.addAtom(atom("C", 3, 0.00d, 0.00d));
         m.addAtom(atom("N", 2, -1.30d, 2.25d));
@@ -120,16 +116,16 @@ public class NonPlanarBondsTest {
         m.addStereoElement(new TetrahedralChirality(m.getAtom(0), new IAtom[]{m.getAtom(0), m.getAtom(1), m.getAtom(2),
                 m.getAtom(3)}, ITetrahedralChirality.Stereo.ANTI_CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(1).getStereo(), is(IBond.Stereo.UP));
-        assertThat(m.getBond(2).getStereo(), is(IBond.Stereo.NONE));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(1).getDisplay(), is(IBond.Display.Up));
+        assertThat(m.getBond(2).getDisplay(), is(IBond.Display.Solid));
     }
 
     // [C@H](CC)(N)O
     // N is favoured over CC
     @Test
-    public void anticlockwise_implH_2() {
-        IAtomContainer m = new AtomContainer(5, 4, 0, 0);
+    void anticlockwise_implH_2() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 1, -1.30d, 2.25d));
         m.addAtom(atom("C", 2, 0.00d, 1.50d));
         m.addAtom(atom("C", 3, 0.00d, 0.00d));
@@ -142,16 +138,16 @@ public class NonPlanarBondsTest {
         m.addStereoElement(new TetrahedralChirality(m.getAtom(0), new IAtom[]{m.getAtom(0), m.getAtom(1), m.getAtom(3),
                 m.getAtom(4)}, ITetrahedralChirality.Stereo.ANTI_CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(1).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(2).getStereo(), is(IBond.Stereo.DOWN));
-        assertThat(m.getBond(3).getStereo(), is(IBond.Stereo.NONE));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(1).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(2).getDisplay(), is(IBond.Display.Down));
+        assertThat(m.getBond(3).getDisplay(), is(IBond.Display.Solid));
     }
 
     // [C@@](CCC)(C)(N)O
     @Test
-    public void clockwise_1() {
-        IAtomContainer m = new AtomContainer(7, 6, 0, 0);
+    void clockwise_1() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, -1.47d, 3.62d));
         m.addAtom(atom("C", 2, -1.13d, 2.16d));
         m.addAtom(atom("C", 2, 0.30d, 1.72d));
@@ -168,16 +164,16 @@ public class NonPlanarBondsTest {
         m.addStereoElement(new TetrahedralChirality(m.getAtom(0), new IAtom[]{m.getAtom(1), m.getAtom(4), m.getAtom(5),
                 m.getAtom(6)}, ITetrahedralChirality.Stereo.CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(3).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(4).getStereo(), is(IBond.Stereo.UP));
-        assertThat(m.getBond(5).getStereo(), is(IBond.Stereo.DOWN));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(3).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(4).getDisplay(), is(IBond.Display.Up));
+        assertThat(m.getBond(5).getDisplay(), is(IBond.Display.Down));
     }
 
     // [C@@](CCC)(C1)(C)C1 (favour acyclic)
     @Test
-    public void clockwise_2() {
-        IAtomContainer m = new AtomContainer(8, 8, 0, 0);
+    void clockwise_2() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, -0.96d, -1.04d));
         m.addAtom(atom("C", 2, 0.18d, -0.08d));
         m.addAtom(atom("C", 2, -0.08d, 1.40d));
@@ -197,16 +193,16 @@ public class NonPlanarBondsTest {
         m.addStereoElement(new TetrahedralChirality(m.getAtom(0), new IAtom[]{m.getAtom(1), m.getAtom(4), m.getAtom(5),
                 m.getAtom(6)}, ITetrahedralChirality.Stereo.CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.UP));
-        assertThat(m.getBond(3).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(4).getStereo(), is(IBond.Stereo.DOWN));
-        assertThat(m.getBond(5).getStereo(), is(IBond.Stereo.NONE));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Up));
+        assertThat(m.getBond(3).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(4).getDisplay(), is(IBond.Display.Down));
+        assertThat(m.getBond(5).getDisplay(), is(IBond.Display.Solid));
     }
 
     // [C@](CCC)(C)(N)O
     @Test
-    public void anticlockwise_1() {
-        IAtomContainer m = new AtomContainer(7, 6, 0, 0);
+    void anticlockwise_1() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, -1.47d, 3.62d));
         m.addAtom(atom("C", 2, -1.13d, 2.16d));
         m.addAtom(atom("C", 2, 0.30d, 1.72d));
@@ -223,16 +219,16 @@ public class NonPlanarBondsTest {
         m.addStereoElement(new TetrahedralChirality(m.getAtom(0), new IAtom[]{m.getAtom(1), m.getAtom(4), m.getAtom(5),
                 m.getAtom(6)}, ITetrahedralChirality.Stereo.ANTI_CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(3).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(4).getStereo(), is(IBond.Stereo.DOWN));
-        assertThat(m.getBond(5).getStereo(), is(IBond.Stereo.UP));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(3).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(4).getDisplay(), is(IBond.Display.Down));
+        assertThat(m.getBond(5).getDisplay(), is(IBond.Display.Up));
     }
 
     // [C@](CCC)(C1)(C)C1 (favour acyclic)
     @Test
-    public void anticlockwise_2() {
-        IAtomContainer m = new AtomContainer(8, 8, 0, 0);
+    void anticlockwise_2() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, -0.96d, -1.04d));
         m.addAtom(atom("C", 2, 0.18d, -0.08d));
         m.addAtom(atom("C", 2, -0.08d, 1.40d));
@@ -252,15 +248,15 @@ public class NonPlanarBondsTest {
         m.addStereoElement(new TetrahedralChirality(m.getAtom(0), new IAtom[]{m.getAtom(1), m.getAtom(4), m.getAtom(5),
                 m.getAtom(6)}, ITetrahedralChirality.Stereo.ANTI_CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.DOWN));
-        assertThat(m.getBond(3).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(4).getStereo(), is(IBond.Stereo.UP));
-        assertThat(m.getBond(5).getStereo(), is(IBond.Stereo.NONE));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Down));
+        assertThat(m.getBond(3).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(4).getDisplay(), is(IBond.Display.Up));
+        assertThat(m.getBond(5).getDisplay(), is(IBond.Display.Solid));
     }
 
     @Test
-    public void nonPlanarBondsForAntiClockwsieExtendedTetrahedral() throws CDKException {
-        IAtomContainer m = new AtomContainer(7, 6, 0, 0);
+    void nonPlanarBondsForAntiClockwsieExtendedTetrahedral() throws CDKException {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 3, -1.56d, 0.78d));
         m.addAtom(atom("C", 0, -1.13d, 1.49d));
         m.addAtom(atom("C", 0, -0.31d, 1.47d));
@@ -269,21 +265,21 @@ public class NonPlanarBondsTest {
         m.addAtom(atom("H", 0, 0.92d, 0.74d));
         m.addAtom(atom("H", 0, -1.53d, 2.21d));
         m.addBond(0, 1, IBond.Order.SINGLE);
-        m.addBond(1, 2, IBond.Order.DOUBLE, IBond.Stereo.NONE);
-        m.addBond(2, 3, IBond.Order.DOUBLE, IBond.Stereo.NONE);
+        m.addBond(1, 2, IBond.Order.DOUBLE);
+        m.addBond(2, 3, IBond.Order.DOUBLE);
         m.addBond(3, 4, IBond.Order.SINGLE);
         m.addBond(1, 6, IBond.Order.SINGLE);
         m.addBond(3, 5, IBond.Order.SINGLE);
         m.addStereoElement(new ExtendedTetrahedral(m.getAtom(2), new IAtom[]{m.getAtom(0), m.getAtom(6), m.getAtom(4),
                 m.getAtom(5)}, ITetrahedralChirality.Stereo.ANTI_CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(m.getAtom(1), m.getAtom(0)).getStereo(), is(IBond.Stereo.DOWN));
-        assertThat(m.getBond(m.getAtom(1), m.getAtom(6)).getStereo(), is(IBond.Stereo.UP));
+        assertThat(m.getBond(m.getAtom(1), m.getAtom(0)).getDisplay(), is(IBond.Display.Down));
+        assertThat(m.getBond(m.getAtom(1), m.getAtom(6)).getDisplay(), is(IBond.Display.Up));
     }
 
     @Test
-    public void nonPlanarBondsForClockwsieExtendedTetrahedral() throws CDKException {
-        IAtomContainer m = new AtomContainer(7, 6, 0, 0);
+    void nonPlanarBondsForClockwsieExtendedTetrahedral() throws CDKException {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 3, -1.56d, 0.78d));
         m.addAtom(atom("C", 0, -1.13d, 1.49d));
         m.addAtom(atom("C", 0, -0.31d, 1.47d));
@@ -292,21 +288,21 @@ public class NonPlanarBondsTest {
         m.addAtom(atom("H", 0, 0.92d, 0.74d));
         m.addAtom(atom("H", 0, -1.53d, 2.21d));
         m.addBond(0, 1, IBond.Order.SINGLE);
-        m.addBond(1, 2, IBond.Order.DOUBLE, IBond.Stereo.NONE);
-        m.addBond(2, 3, IBond.Order.DOUBLE, IBond.Stereo.NONE);
+        m.addBond(1, 2, IBond.Order.DOUBLE);
+        m.addBond(2, 3, IBond.Order.DOUBLE);
         m.addBond(3, 4, IBond.Order.SINGLE);
         m.addBond(1, 6, IBond.Order.SINGLE);
         m.addBond(3, 5, IBond.Order.SINGLE);
         m.addStereoElement(new ExtendedTetrahedral(m.getAtom(2), new IAtom[]{m.getAtom(0), m.getAtom(6), m.getAtom(4),
                 m.getAtom(5)}, ITetrahedralChirality.Stereo.CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(m.getAtom(1), m.getAtom(0)).getStereo(), is(IBond.Stereo.UP));
-        assertThat(m.getBond(m.getAtom(1), m.getAtom(6)).getStereo(), is(IBond.Stereo.DOWN));
+        assertThat(m.getBond(m.getAtom(1), m.getAtom(0)).getDisplay(), is(IBond.Display.Up));
+        assertThat(m.getBond(m.getAtom(1), m.getAtom(6)).getDisplay(), is(IBond.Display.Down));
     }
 
     @Test
-    public void clockwiseSortShouldHandleExactlyOppositeAtoms() throws Exception {
-        IAtomContainer m = new AtomContainer(8, 7, 0, 0);
+    void clockwiseSortShouldHandleExactlyOppositeAtoms() throws Exception {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, 4.50d, -14.84d));
         m.addAtom(atom("C", 3, 4.51d, -13.30d));
         m.addAtom(atom("C", 2, 4.93d, -14.13d));
@@ -325,25 +321,27 @@ public class NonPlanarBondsTest {
         m.addStereoElement(new TetrahedralChirality(m.getAtom(0), new IAtom[]{m.getAtom(2), m.getAtom(4), m.getAtom(6),
                 m.getAtom(3),}, ITetrahedralChirality.Stereo.ANTI_CLOCKWISE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(2).getStereo(), is(IBond.Stereo.UP));
+        assertThat(m.getBond(2).getDisplay(), is(IBond.Display.Up));
     }
-    
-    
+
+
     // ethene is left alone and not marked as crossed
-    @Test public void dontCrossEtheneDoubleBond() {
-        IAtomContainer m = new AtomContainer();
+    @Test
+    void dontCrossEtheneDoubleBond() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 2, 0.000, 0.000));
         m.addAtom(atom("C", 2, 1.299, -0.750));
         m.addBond(0, 1, IBond.Order.DOUBLE);
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.NONE));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Solid));
     }
 
     /**
      * @cdk.inchi InChI=1S/C4H8O/c1-3-4(2)5/h3H2,1-2H3
      */
-    @Test public void dontMarkTerminalBonds() {
-        IAtomContainer m = new AtomContainer();
+    @Test
+    void dontMarkTerminalBonds() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 3, 0.000, 0.000));
         m.addAtom(atom("C", 0, 1.299, -0.750));
         m.addAtom(atom("C", 2, 2.598, -0.000));
@@ -354,16 +352,17 @@ public class NonPlanarBondsTest {
         m.addBond(2, 3, IBond.Order.SINGLE);
         m.addBond(1, 4, IBond.Order.DOUBLE);
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(1).getStereo(), is(IBond.Stereo.NONE));
-        assertThat(m.getBond(2).getStereo(), is(IBond.Stereo.NONE));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(1).getDisplay(), is(IBond.Display.Solid));
+        assertThat(m.getBond(2).getDisplay(), is(IBond.Display.Solid));
     }
 
     /**
      * @cdk.inchi InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3
      */
-    @Test public void markBut2eneWithWavyBond() {
-        IAtomContainer m = new AtomContainer();
+    @Test
+    void markBut2eneWithWavyBond() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 3, 0.000, 0.000));
         m.addAtom(atom("C", 1, 1.299, -0.750));
         m.addAtom(atom("C", 1, 2.598, -0.000));
@@ -372,14 +371,15 @@ public class NonPlanarBondsTest {
         m.addBond(1, 2, IBond.Order.DOUBLE);
         m.addBond(2, 3, IBond.Order.SINGLE);
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(IBond.Stereo.UP_OR_DOWN));
+        assertThat(m.getBond(0).getDisplay(), is(IBond.Display.Wavy));
     }
 
     /**
      * @cdk.inchi InChI=1S/C8H12/c1-3-5-7-8-6-4-2/h3-8H,1-2H3/b5-3+,6-4+,8-7?
      */
-    @Test public void useCrossedBondIfNeeded() {
-        IAtomContainer m = new AtomContainer();
+    @Test
+    void useCrossedBondIfNeeded() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 3, 0.000, 0.000));
         m.addAtom(atom("C", 1, 1.299, -0.750));
         m.addAtom(atom("C", 1, 2.598, -0.000));
@@ -408,15 +408,15 @@ public class NonPlanarBondsTest {
                                                          },
                                                          OPPOSITE));
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(3).getStereo(), is(IBond.Stereo.E_OR_Z));
+        assertThat(m.getBond(3).getDisplay(), is(IBond.Display.Crossed));
     }
 
     /**
-     * @cdk.inchi InChI=1S/C6H14S/c1-5-7(4)6(2)3/h5H2,1-4H3/t7-/m0/s1 
-     */                                                                  
+     * @cdk.inchi InChI=1S/C6H14S/c1-5-7(4)6(2)3/h5H2,1-4H3/t7-/m0/s1
+     */
     @Test
-    public void dontMarkTetrahedralCentresWithDoubleBondsAsUnspecified() {
-        IAtomContainer m = new AtomContainer();
+    void dontMarkTetrahedralCentresWithDoubleBondsAsUnspecified() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 3, 2.598, 1.500));
         m.addAtom(atom("S", 0, 2.598, -0.000));
         m.addAtom(atom("C", 1, 1.299, -0.750));
@@ -433,14 +433,14 @@ public class NonPlanarBondsTest {
                                                     ITetrahedralChirality.Stereo.ANTI_CLOCKWISE));
 
         NonplanarBonds.assign(m);
-        assertThat(m.getBond(0).getStereo(), is(not(IBond.Stereo.UP_OR_DOWN)));
-        assertThat(m.getBond(2).getStereo(), is(not(IBond.Stereo.UP_OR_DOWN)));
-        assertThat(m.getBond(3).getStereo(), is(not(IBond.Stereo.UP_OR_DOWN)));
+        assertThat(m.getBond(0).getDisplay(), is(not(IBond.Display.Wavy)));
+        assertThat(m.getBond(2).getDisplay(), is(not(IBond.Display.Wavy)));
+        assertThat(m.getBond(3).getDisplay(), is(not(IBond.Display.Wavy)));
     }
-    
+
     @Test
-    public void dontMarkRingBondsInBezeneAsUnspecified() {
-        IAtomContainer m = new AtomContainer();
+    void dontMarkRingBondsInBezeneAsUnspecified() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 1, -1.299, 0.750));
         m.addAtom(atom("C", 1, 0.000, 1.500));
         m.addAtom(atom("C", 1, 1.299, 0.750));
@@ -455,7 +455,7 @@ public class NonPlanarBondsTest {
         m.addBond(0, 5, IBond.Order.SINGLE);
         NonplanarBonds.assign(m);
         for (IBond bond : m.bonds()) {
-            assertThat(bond.getStereo(), is(IBond.Stereo.NONE));   
+            assertThat(bond.getDisplay(), is(IBond.Display.Solid));
         }
     }
 
@@ -463,8 +463,8 @@ public class NonPlanarBondsTest {
      * {@code SMILES: *CN=C(N)N}
      */
     @Test
-    public void dontMarkGuanidineAsUnspecified() {
-        IAtomContainer m = new AtomContainer();
+    void dontMarkGuanidineAsUnspecified() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("R", 0, 0.00, 0.00));
         m.addAtom(atom("C", 2, 1.30, -0.75));
         m.addAtom(atom("N", 0, 2.60, -0.00));
@@ -478,15 +478,15 @@ public class NonPlanarBondsTest {
         m.addBond(3, 5, IBond.Order.SINGLE);
         NonplanarBonds.assign(m);
         for (IBond bond : m.bonds())
-            assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
+            assertThat(bond.getDisplay(), is(IBond.Display.Solid));
     }
 
     /**
      * {@code SMILES: *CN=C(CCC)CCC[H]}
      */
     @Test
-    public void dontUnspecifiedDueToHRepresentation() {
-        IAtomContainer m = new AtomContainer();
+    void dontUnspecifiedDueToHRepresentation() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("R", 0, 0.00, 0.00));
         m.addAtom(atom("C", 2, 1.30, -0.75));
         m.addAtom(atom("N", 0, 2.60, -0.00));
@@ -509,16 +509,17 @@ public class NonPlanarBondsTest {
         m.addBond(8, 9, IBond.Order.SINGLE);
         m.addBond(9, 10, IBond.Order.SINGLE);
         NonplanarBonds.assign(m);
-        for (IBond bond : m.bonds())
-            assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
+        for (IBond bond : m.bonds()) {
+            assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        }
     }
 
     /**
      * {@code SMILES: *CN=C(CCC)CCC}
      */
     @Test
-    public void dontMarkUnspecifiedForLinearEqualChains() {
-        IAtomContainer m = new AtomContainer();
+    void dontMarkUnspecifiedForLinearEqualChains() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("R", 0, 0.00, -0.00));
         m.addAtom(atom("C", 2, 1.30, -0.75));
         m.addAtom(atom("N", 0, 2.60, -0.00));
@@ -539,16 +540,17 @@ public class NonPlanarBondsTest {
         m.addBond(7, 8, IBond.Order.SINGLE);
         m.addBond(8, 9, IBond.Order.SINGLE);
         NonplanarBonds.assign(m);
-        for (IBond bond : m.bonds())
-            assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
+        for (IBond bond : m.bonds()) {
+            assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        }
     }
 
     /**
      * {@code SMILES: *CN=C1CCCCC1}
      */
     @Test
-    public void markUnspecifiedForCyclicLigands() {
-        IAtomContainer m = new AtomContainer();
+    void markUnspecifiedForCyclicLigands() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("R", 0, -4.22, 3.05));
         m.addAtom(atom("C", 2, -2.92, 2.30));
         m.addAtom(atom("N", 0, -1.62, 3.05));
@@ -571,17 +573,17 @@ public class NonPlanarBondsTest {
         NonplanarBonds.assign(m);
         int wavyCount = 0;
         for (IBond bond : m.bonds())
-            if (bond.getStereo() == IBond.Stereo.UP_OR_DOWN)
+            if (bond.getDisplay() == IBond.Display.Wavy)
                 wavyCount++;
-        assertThat(wavyCount, is(1));
+        assertThat(wavyCount, is(0));
     }
 
     /**
      * {@code SMILES: *CN=C(CCC)CCN}
      */
     @Test
-    public void unspecifiedMarkedOnDifferentLigands() {
-        IAtomContainer m = new AtomContainer();
+    void unspecifiedMarkedOnDifferentLigands() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("R", 0, 0.00, -0.00));
         m.addAtom(atom("C", 2, 1.30, -0.75));
         m.addAtom(atom("N", 0, 2.60, -0.00));
@@ -604,7 +606,7 @@ public class NonPlanarBondsTest {
         NonplanarBonds.assign(m);
         int wavyCount = 0;
         for (IBond bond : m.bonds())
-            if (bond.getStereo() == IBond.Stereo.UP_OR_DOWN)
+            if (bond.getDisplay() == IBond.Display.Wavy)
                 wavyCount++;
         assertThat(wavyCount, is(1));
     }
@@ -613,14 +615,14 @@ public class NonPlanarBondsTest {
      * {@code SMILES: O=C4C=C2[C@]([C@@]1([H])CC[C@@]3([C@@]([H])(O)CC[C@@]3([H])[C@]1([H])CC2)C)(C)CC4}
      */
     @Test
-    public void testosterone() throws CDKException {
+    void testosterone() throws CDKException {
         SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer mol = smipar.parseSmiles("O=C4C=C2[C@]([C@@]1([H])CC[C@@]3([C@@]([H])(O)CC[C@@]3([H])[C@]1([H])CC2)C)(C)CC4");
         StructureDiagramGenerator sdg = new StructureDiagramGenerator();
         sdg.generateCoordinates(mol);
         int wedgeCount = 0;
         for (IBond bond : mol.bonds())
-            if (bond.getStereo() == IBond.Stereo.UP || bond.getStereo() == IBond.Stereo.DOWN)
+            if (bond.getDisplay() == IBond.Display.Up || bond.getDisplay() == IBond.Display.Down)
                 wedgeCount++;
         assertThat(wedgeCount, is(7));
     }
@@ -629,24 +631,23 @@ public class NonPlanarBondsTest {
      * {@code SMILES: CN(C)(C)=CC}
      */
     @Test
-    public void noWavyBondForCisTransNv5() throws CDKException {
+    void noWavyBondForCisTransNv5() throws CDKException {
         SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer mol = smipar.parseSmiles("CN(C)(C)=CC");
         StructureDiagramGenerator sdg = new StructureDiagramGenerator();
         sdg.generateCoordinates(mol);
         for (IBond bond : mol.bonds()) {
-            assertThat(bond.getStereo(), is(not(IBond.Stereo.UP_OR_DOWN)));
-            assertThat(bond.getStereo(), is(not(IBond.Stereo.UP_OR_DOWN_INVERTED)));
+            assertThat(bond.getDisplay(), is(not(IBond.Display.Wavy)));
         }
     }
 
     @Test
-    public void atropisomerWedgeBonds() throws CDKException {
+    void atropisomerWedgeBonds() throws CDKException {
         SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer mol = smipar.parseSmiles("OC1=CC=C2C=CC=CC2=C1C1=C(O)C=CC2=C1C=CC=C2");
 
-        IBond       focus    = mol.getBond(mol.getAtom(10),
-                                           mol.getAtom(11));
+        IBond focus = mol.getBond(mol.getAtom(10),
+                                  mol.getAtom(11));
         List<IAtom> carriers = new ArrayList<>();
         carriers.addAll(mol.getConnectedAtomsList(focus.getBegin()));
         carriers.addAll(mol.getConnectedAtomsList(focus.getEnd()));
@@ -664,24 +665,26 @@ public class NonPlanarBondsTest {
         assertThat(bond1.getOrder(), is(IBond.Order.SINGLE));
         assertThat(bond2.getOrder(), is(IBond.Order.SINGLE));
 
-        assertTrue("One of the single bonds should have been wedged",
-                   bond1.getStereo() == IBond.Stereo.DOWN ||
-                   bond2.getStereo() == IBond.Stereo.DOWN);
+        Assertions.assertTrue(bond1.getDisplay() == IBond.Display.Down ||
+                                      bond2.getDisplay() == IBond.Display.Down, "One of the single bonds should have been wedged");
 
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void inconsistentStereoState() throws CDKException {
-        final String smi = "O[C@]([H])(C)CCC";
-        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
-        IAtomContainer mol = smipar.parseSmiles(smi);
-        mol.removeBond(1);
-        mol.removeAtomOnly(2); // unsafe-removes
-        StructureDiagramGenerator sdg = new StructureDiagramGenerator();
-        sdg.generateCoordinates(mol);
+    @Test
+    void inconsistentStereoState() throws CDKException {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            final String smi = "O[C@]([H])(C)CCC";
+            SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+            IAtomContainer mol = smipar.parseSmiles(smi);
+            // mol.removeBond(1); // updates stereo correctly!
+            mol.removeAtomOnly(2); // unsafe-removes
+            StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+            sdg.generateCoordinates(mol);
+        });
     }
 
-    @Test public void avoidBondsToOtherStereoCentres() throws CDKException {
+    @Test
+    void avoidBondsToOtherStereoCentres() throws CDKException {
         final String smi = "[H][C@@]([C@H](C)N)([C@@H](C)O)[C@@H](C)OC";
         SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer mol = smipar.parseSmiles(smi);
@@ -689,11 +692,13 @@ public class NonPlanarBondsTest {
         sdg.generateCoordinates(mol);
         int wedgeCount = 0;
         for (IBond bond : mol.bonds()) {
-            switch (bond.getStereo()) {
-                case UP:
-                case DOWN:
-                case UP_INVERTED:
-                case DOWN_INVERTED:
+            switch (bond.getDisplay()) {
+                case WedgeBegin:
+                case WedgeEnd:
+                case WedgedHashBegin:
+                case WedgedHashEnd:
+                case HollowWedgeBegin:
+                case HollowWedgeEnd:
                     wedgeCount++;
                     break;
             }
@@ -701,7 +706,8 @@ public class NonPlanarBondsTest {
         assertThat(wedgeCount, is(4));
     }
 
-    @Test public void avoidWedgingRingBond() throws CDKException {
+    @Test
+    void avoidWedgingRingBond() throws CDKException {
         final String smi = "CC(C)[C@@H]1CCCCO1";
         SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer mol = smipar.parseSmiles(smi);
@@ -709,12 +715,14 @@ public class NonPlanarBondsTest {
         sdg.generateCoordinates(mol);
         int wedgeCount = 0;
         for (IBond bond : mol.bonds()) {
-            switch (bond.getStereo()) {
-                case UP:
-                case DOWN:
-                case UP_INVERTED:
-                case DOWN_INVERTED:
-                    assertFalse(bond.isInRing());
+            switch (bond.getDisplay()) {
+                case WedgeBegin:
+                case WedgeEnd:
+                case WedgedHashBegin:
+                case WedgedHashEnd:
+                case HollowWedgeBegin:
+                case HollowWedgeEnd:
+                    Assertions.assertFalse(bond.isInRing());
                     ++wedgeCount;
                     break;
             }
@@ -722,8 +730,8 @@ public class NonPlanarBondsTest {
         assertThat(wedgeCount, is(1));
     }
 
-    @Ignore
-    public void wedgeExtendedTetrahedral() throws CDKException {
+    @Disabled
+    void wedgeExtendedTetrahedral() throws CDKException {
         final String smi = "C(=C=C=[C@@]=C=C=CC)C";
         SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer mol = smipar.parseSmiles(smi);
@@ -731,11 +739,13 @@ public class NonPlanarBondsTest {
         sdg.generateCoordinates(mol);
         int wedgeCount = 0;
         for (IBond bond : mol.bonds()) {
-            switch (bond.getStereo()) {
-                case UP:
-                case DOWN:
-                case UP_INVERTED:
-                case DOWN_INVERTED:
+            switch (bond.getDisplay()) {
+                case WedgeBegin:
+                case WedgeEnd:
+                case WedgedHashBegin:
+                case WedgedHashEnd:
+                case HollowWedgeBegin:
+                case HollowWedgeEnd:
                     ++wedgeCount;
                     break;
             }
@@ -745,7 +755,8 @@ public class NonPlanarBondsTest {
 
     // this structure should be displayed with 7 wedges, for some reason the
     // atom order affects whether multiple wedges are used
-    @Test public void minWedges() throws CDKException {
+    @Test
+    void minWedges() throws CDKException {
         final String smi = "[C@](([C@@H](C)Cl)([C@H](C)Cl)[C@H](O)[C@](([C@@H](C)Cl)[C@H](C)Cl)[H])[H]";
         SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer mol = smipar.parseSmiles(smi);
@@ -753,11 +764,13 @@ public class NonPlanarBondsTest {
         sdg.generateCoordinates(mol);
         int wedgeCount = 0;
         for (IBond bond : mol.bonds()) {
-            switch (bond.getStereo()) {
-                case UP:
-                case DOWN:
-                case UP_INVERTED:
-                case DOWN_INVERTED:
+            switch (bond.getDisplay()) {
+                case WedgeBegin:
+                case WedgeEnd:
+                case WedgedHashBegin:
+                case WedgedHashEnd:
+                case HollowWedgeBegin:
+                case HollowWedgeEnd:
                     ++wedgeCount;
                     break;
             }
@@ -770,6 +783,80 @@ public class NonPlanarBondsTest {
         a.setImplicitHydrogenCount(hCount);
         a.setPoint2d(new Point2d(x, y));
         return a;
+    }
+
+    @Test
+    void testColinearD3bonds() throws CDKException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles("[C@@H]12[C@@H]([C@H]([C@@H]([C@@H](CO1)O2)O)O)O |(1.3,0.1,;1.3,-1.4,;0.01,-2.15,;-1.29,-1.4,;-1.29,0.1,;-1.29,1.95,;1.26,1.93,;0.01,0.85,;-2.59,-2.15,;0.01,-3.65,;2.6,-2.15,)|");
+        NonplanarBonds.assign(mol);
+        // there are 4
+        Assertions.assertEquals(5,
+                                StereoElementFactory.using2DCoordinates(mol).withStrictMode().createAll().size());
+    }
+
+    @Test
+    void wavyBondNeeded() throws CDKException {
+        final String smi = "C1CC(=C(O)(C))COC1";
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles(smi);
+        StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+        sdg.generateCoordinates(mol);
+        int count = 0;
+        for (IBond bond : mol.bonds()) {
+            if (Objects.requireNonNull(bond.getDisplay()) == IBond.Display.Wavy) {
+                ++count;
+            }
+        }
+        assertThat(count, is(1));
+    }
+
+    @Test
+    void wavyBondNotNeeded() throws CDKException {
+        final String smi = "C1CC(=C(O)(C))CCC1";
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles(smi);
+        StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+        sdg.generateCoordinates(mol);
+        int count = 0;
+        for (IBond bond : mol.bonds()) {
+            if (Objects.requireNonNull(bond.getDisplay()) == IBond.Display.Wavy) {
+                ++count;
+            }
+        }
+        assertThat(count, is(0));
+    }
+
+    @Test
+    void wavyBondNeeded2() throws CDKException {
+        final String smi = "CC=C(C/C=C/C)C/C=C\\C";
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles(smi);
+        StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+        sdg.generateCoordinates(mol);
+        int count = 0;
+        for (IBond bond : mol.bonds()) {
+            if (Objects.requireNonNull(bond.getDisplay()) == IBond.Display.Wavy) {
+                ++count;
+            }
+        }
+        assertThat(count, is(1));
+    }
+
+    @Test
+    void wavyBondNotNeeded2() throws CDKException {
+        final String smi = "CC=C(C/C=C/C)C/C=C/C";
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles(smi);
+        StructureDiagramGenerator sdg = new StructureDiagramGenerator();
+        sdg.generateCoordinates(mol);
+        int count = 0;
+        for (IBond bond : mol.bonds()) {
+            if (Objects.requireNonNull(bond.getDisplay()) == IBond.Display.Wavy) {
+                ++count;
+            }
+        }
+        assertThat(count, is(0));
     }
 
 }

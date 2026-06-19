@@ -52,11 +52,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 
@@ -73,8 +73,6 @@ import org.openscience.cdk.interfaces.IRingSet;
  * nodes are deleted from the path graph (collapsed path). What remains is a graph
  * of paths that have the same start and endpoint and are thus rings (source=sink=ring).
  *
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt; 2009-2010
  * @deprecated Use CDK AllRingsFinder. A more recent version of SMSD is available at
  *             <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -82,10 +80,10 @@ import org.openscience.cdk.interfaces.IRingSet;
 @Deprecated
 public class HanserRingFinder implements RingFinder {
 
-    private List<List<IAtom>> rings;
+    private final List<List<IAtom>> rings;
 
     public HanserRingFinder() {
-        rings = new ArrayList<List<IAtom>>();
+        rings = new ArrayList<>();
     }
 
     /**
@@ -129,13 +127,15 @@ public class HanserRingFinder implements RingFinder {
         for (List<IAtom> ringAtoms : cycles) {
             IRing ring = molecule.getBuilder().newInstance(IRing.class);
             for (IAtom atom : ringAtoms) {
-                atom.setFlag(CDKConstants.ISINRING, true);
+                atom.setFlag(IChemObject.IN_RING, true);
                 ring.addAtom(atom);
+            }
+            for (IAtom atom : ringAtoms) {
                 for (IAtom atomNext : ringAtoms) {
                     if (!atom.equals(atomNext)) {
                         IBond bond = molecule.getBond(atom, atomNext);
                         if (bond != null) {
-                            bond.setFlag(CDKConstants.ISINRING, true);
+                            bond.setFlag(IChemObject.IN_RING, true);
                             ring.addElectronContainer(bond);
                         }
                     }

@@ -30,8 +30,6 @@ import org.openscience.cdk.interfaces.IRingSet;
 /**
  * Maintains a set of Ring objects.
  *
- * @cdk.module  silent
- * @cdk.githash
  *
  * @cdk.keyword     ring, set of
  */
@@ -184,7 +182,7 @@ public class RingSet extends AtomContainerSet implements Serializable, IRingSet,
      */
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer(32);
+        StringBuilder buffer = new StringBuilder(32);
         buffer.append("RingSet(");
         buffer.append(this.hashCode());
         if (getAtomContainerCount() > 0) {

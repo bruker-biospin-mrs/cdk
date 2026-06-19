@@ -29,38 +29,39 @@ import java.io.StringWriter;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.AtomContainer;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.test.io.ChemObjectIOTest;
 
 /**
  * TestCase for the writer XYZ files using one test file.
  *
- * @cdk.module test-io
  *
  * @see org.openscience.cdk.io.XYZWriter
  */
-public class XYZWriterTest extends ChemObjectIOTest {
+class XYZWriterTest extends ChemObjectIOTest {
 
-    @BeforeClass
-    public static void setup() throws Exception {
+    @BeforeAll
+    static void setup() throws Exception {
         setChemObjectIO(new XYZWriter());
     }
 
     @Test
-    public void testAccepts() throws Exception {
+    void testAccepts() throws Exception {
         XYZWriter reader = new XYZWriter();
-        Assert.assertTrue(reader.accepts(AtomContainer.class));
+        Assertions.assertTrue(reader.accepts(AtomContainer.class));
     }
 
     @Test
-    public void testWriting() throws Exception {
+    void testWriting() throws Exception {
         StringWriter writer = new StringWriter();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom1 = new Atom("C");
         atom1.setPoint3d(new Point3d(1.0, 2.0, 3.0));
         IAtom atom2 = new Atom("C");
@@ -80,16 +81,16 @@ public class XYZWriterTest extends ChemObjectIOTest {
         BufferedReader reader = new BufferedReader(new StringReader(output));
         while (reader.readLine() != null)
             lineCount++;
-        Assert.assertEquals(4, lineCount);
+        Assertions.assertEquals(4, lineCount);
     }
 
     /**
      * @cdk.bug 2215774
      */
     @Test
-    public void testWriting_Point2d() throws Exception {
+    void testWriting_Point2d() throws Exception {
         StringWriter writer = new StringWriter();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom1 = new Atom("C");
         atom1.setPoint2d(new Point2d(1.0, 2.0));
         molecule.addAtom(atom1);
@@ -100,16 +101,16 @@ public class XYZWriterTest extends ChemObjectIOTest {
         writer.close();
 
         String output = writer.toString();
-        Assert.assertTrue(output.contains("0.000000\t 0.000000\t 0.000000"));
+        Assertions.assertTrue(output.contains("0.000000\t 0.000000\t 0.000000"));
     }
 
     /**
      * @cdk.bug 2215775
      */
     @Test
-    public void testSixDecimalOuput() throws Exception {
+    void testSixDecimalOuput() throws Exception {
         StringWriter writer = new StringWriter();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = SilentChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom1 = new Atom("C");
         atom1.setPoint3d(new Point3d(1.0, 2.0, 3.0));
         molecule.addAtom(atom1);
@@ -123,9 +124,9 @@ public class XYZWriterTest extends ChemObjectIOTest {
         writer.close();
 
         String output = writer.toString();
-        Assert.assertTrue(output.contains("1.000000"));
-        Assert.assertTrue(output.contains("2.000000"));
-        Assert.assertTrue(output.contains("3.000000"));
+        Assertions.assertTrue(output.contains("1.000000"));
+        Assertions.assertTrue(output.contains("2.000000"));
+        Assertions.assertTrue(output.contains("3.000000"));
     }
 
 }

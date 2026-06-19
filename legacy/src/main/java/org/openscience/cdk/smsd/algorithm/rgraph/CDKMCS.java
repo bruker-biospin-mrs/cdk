@@ -53,14 +53,15 @@ package org.openscience.cdk.smsd.algorithm.rgraph;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.openscience.cdk.CDKConstants;
+
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtom;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
 import org.openscience.cdk.isomorphism.matchers.IQueryBond;
@@ -71,6 +72,7 @@ import org.openscience.cdk.smsd.algorithm.matchers.DefaultMatcher;
 import org.openscience.cdk.smsd.algorithm.matchers.DefaultRGraphAtomMatcher;
 import org.openscience.cdk.smsd.global.TimeOut;
 import org.openscience.cdk.smsd.tools.TimeManager;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.BondManipulator;
 
 /**
@@ -100,7 +102,7 @@ import org.openscience.cdk.tools.manipulator.BondManipulator;
  *  boolean isSubstructure = graphContainer.isSubgraph(atomContainer, query);
  *  </pre>
  *
- *  <p><font color="#FF0000">WARNING</font>:
+ *  <p><span style="color: #FF0000;">WARNING</span>:
  *    As atom result of the adjacency perception used in this algorithm
  *    there is atom single limitation : cyclopropane and isobutane are seen as isomorph
  *    This is due to the fact that these two compounds are the only ones where
@@ -120,8 +122,6 @@ import org.openscience.cdk.tools.manipulator.BondManipulator;
  *              Syed Asad Rahman &lt;asad@ebi.ebi.uk&gt; (modified the orignal code)
  * @cdk.created 2002-07-17
  * @cdk.require java1.5+
- * @cdk.module  smsd
- * @cdk.githash
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
  *             access to internal implementation details. SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -308,7 +308,7 @@ public class CDKMCS {
             return makeAtomsMapsOfBondsMaps(CDKMCS.getSubgraphMaps(sourceGraph, targetGraph, shouldMatchBonds),
                     sourceGraph, targetGraph);
         } else {
-            List<List<CDKRMap>> atomsMap = new ArrayList<List<CDKRMap>>();
+            List<List<CDKRMap>> atomsMap = new ArrayList<>();
             atomsMap.add(list);
             return atomsMap;
         }
@@ -371,7 +371,7 @@ public class CDKMCS {
                         return true;
                     }
                 } else {
-                    if (atom2.getSymbol().equals(atom.getSymbol())) {
+                    if (atom2.getAtomicNumber().equals(atom.getAtomicNumber())) {
                         return true;
                     }
                 }
@@ -478,7 +478,7 @@ public class CDKMCS {
 
         // handle single query atom case separately
         if (targetGraph.getAtomCount() == 1) {
-            List<List<CDKRMap>> matches = new ArrayList<List<CDKRMap>>();
+            List<List<CDKRMap>> matches = new ArrayList<>();
             IAtom queryAtom = targetGraph.getAtom(0);
 
             // we can have a IQueryAtomContainer *or* an IAtomContainer
@@ -486,15 +486,15 @@ public class CDKMCS {
                 IQueryAtom qAtom = (IQueryAtom) queryAtom;
                 for (IAtom atom : sourceGraph.atoms()) {
                     if (qAtom.matches(atom)) {
-                        List<CDKRMap> lmap = new ArrayList<CDKRMap>();
+                        List<CDKRMap> lmap = new ArrayList<>();
                         lmap.add(new CDKRMap(sourceGraph.indexOf(atom), 0));
                         matches.add(lmap);
                     }
                 }
             } else {
                 for (IAtom atom : sourceGraph.atoms()) {
-                    if (queryAtom.getSymbol().equals(atom.getSymbol())) {
-                        List<CDKRMap> lmap = new ArrayList<CDKRMap>();
+                    if (queryAtom.getAtomicNumber().equals(atom.getAtomicNumber())) {
+                        List<CDKRMap> lmap = new ArrayList<>();
                         lmap.add(new CDKRMap(sourceGraph.indexOf(atom), 0));
                         matches.add(lmap);
                     }
@@ -504,7 +504,7 @@ public class CDKMCS {
         }
 
         // reset result
-        List<List<CDKRMap>> rMapsList = new ArrayList<List<CDKRMap>>();
+        List<List<CDKRMap>> rMapsList = new ArrayList<>();
         // build the CDKRGraph corresponding to this problem
         CDKRGraph rGraph = buildRGraph(sourceGraph, targetGraph, shouldMatchBonds);
         setTimeManager(new TimeManager());
@@ -533,14 +533,13 @@ public class CDKMCS {
     public static IAtomContainer project(List<CDKRMap> rMapList, IAtomContainer graph, int key) {
         IAtomContainer atomContainer = graph.getBuilder().newInstance(IAtomContainer.class);
 
-        Map<IAtom, IAtom> table = new HashMap<IAtom, IAtom>();
+        Map<IAtom, IAtom> table = new HashMap<>();
         IAtom atom1;
         IAtom atom2;
         IAtom atom;
         IBond bond;
 
-        for (Iterator<CDKRMap> i = rMapList.iterator(); i.hasNext();) {
-            CDKRMap rMap = i.next();
+        for (CDKRMap rMap : rMapList) {
             if (key == CDKMCS.ID1) {
                 bond = graph.getBond(rMap.getId1());
             } else {
@@ -552,9 +551,10 @@ public class CDKMCS {
 
             if (atom1 == null) {
                 try {
-                    atom1 = (IAtom) atom.clone();
+                    atom1 = atom.clone();
                 } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
+                    LoggingToolFactory.createLoggingTool(CDKMCS.class)
+                                      .warn("Unexpected Error:", e);
                 }
                 atomContainer.addAtom(atom1);
                 table.put(atom, atom1);
@@ -565,15 +565,16 @@ public class CDKMCS {
 
             if (atom2 == null) {
                 try {
-                    atom2 = (IAtom) atom.clone();
+                    atom2 = atom.clone();
                 } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
+                    LoggingToolFactory.createLoggingTool(CDKMCS.class)
+                                      .warn("Unexpected Error:", e);
                 }
                 atomContainer.addAtom(atom2);
                 table.put(atom, atom2);
             }
             IBond newBond = graph.getBuilder().newInstance(IBond.class, atom1, atom2, bond.getOrder());
-            newBond.setFlag(CDKConstants.ISAROMATIC, bond.getFlag(CDKConstants.ISAROMATIC));
+            newBond.setFlag(IChemObject.AROMATIC, bond.getFlag(IChemObject.AROMATIC));
             atomContainer.addBond(newBond);
         }
         return atomContainer;
@@ -588,7 +589,7 @@ public class CDKMCS {
      * @return            atom list of AtomContainer
      */
     public static ArrayList<IAtomContainer> projectList(List<List<CDKRMap>> rMapsList, IAtomContainer graph, int key) {
-        ArrayList<IAtomContainer> graphList = new ArrayList<IAtomContainer>();
+        ArrayList<IAtomContainer> graphList = new ArrayList<>();
 
         for (List<CDKRMap> rMapList : rMapsList) {
             IAtomContainer atomContainer = project(rMapList, graph, key);
@@ -643,7 +644,7 @@ public class CDKMCS {
         }
 
         if (targetGraph.getAtomCount() == 1) {
-            List<CDKRMap> arrayList = new ArrayList<CDKRMap>();
+            List<CDKRMap> arrayList = new ArrayList<>();
             IAtom atom = targetGraph.getAtom(0);
             if (atom instanceof IQueryAtom) {
                 IQueryAtom qAtom = (IQueryAtom) atom;
@@ -662,7 +663,7 @@ public class CDKMCS {
             }
             return arrayList;
         } else if (sourceGraph.getAtomCount() == 1) {
-            List<CDKRMap> arrayList = new ArrayList<CDKRMap>();
+            List<CDKRMap> arrayList = new ArrayList<>();
             IAtom atom = sourceGraph.getAtom(0);
             for (int i = 0; i < targetGraph.getAtomCount(); i++) {
                 IAtom atom2 = targetGraph.getAtom(i);
@@ -672,7 +673,7 @@ public class CDKMCS {
                         arrayList.add(new CDKRMap(0, i));
                     }
                 } else {
-                    if (atom2.getSymbol().equals(atom.getSymbol())) {
+                    if (atom2.getAtomicNumber().equals(atom.getAtomicNumber())) {
                         arrayList.add(new CDKRMap(0, i));
                     }
                 }
@@ -699,7 +700,7 @@ public class CDKMCS {
         if (targetGraph.getAtomCount() == 1) {
             return list; // since the RMap is already an atom-atom mapping
         }
-        List<List<CDKRMap>> result = new ArrayList<List<CDKRMap>>();
+        List<List<CDKRMap>> result = new ArrayList<>();
         for (List<CDKRMap> l2 : list) {
             result.add(makeAtomsMapOfBondsMap(l2, sourceGraph, targetGraph));
         }
@@ -719,7 +720,7 @@ public class CDKMCS {
         if (list == null) {
             return (list);
         }
-        List<CDKRMap> result = new ArrayList<CDKRMap>();
+        List<CDKRMap> result = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             IBond bond1 = sourceGraph.getBond(list.get(i).getId1());
             IBond bond2 = targetGraph.getBond(list.get(i).getId2());
@@ -727,13 +728,13 @@ public class CDKMCS {
             IAtom[] atom2 = BondManipulator.getAtomArray(bond2);
             for (int j = 0; j < 2; j++) {
                 List<IBond> bondsConnectedToAtom1j = sourceGraph.getConnectedBondsList(atom1[j]);
-                for (int k = 0; k < bondsConnectedToAtom1j.size(); k++) {
-                    if (!bondsConnectedToAtom1j.get(k).equals(bond1)) {
-                        IBond testBond = bondsConnectedToAtom1j.get(k);
-                        for (int m = 0; m < list.size(); m++) {
+                for (IBond iBond : bondsConnectedToAtom1j) {
+                    if (!iBond.equals(bond1)) {
+                        IBond testBond = iBond;
+                        for (CDKRMap cdkrMap : list) {
                             IBond testBond2;
-                            if ((list.get(m)).getId1() == sourceGraph.indexOf(testBond)) {
-                                testBond2 = targetGraph.getBond((list.get(m)).getId2());
+                            if (cdkrMap.getId1() == sourceGraph.indexOf(testBond)) {
+                                testBond2 = targetGraph.getBond(cdkrMap.getId2());
                                 for (int n = 0; n < 2; n++) {
                                     List<IBond> bondsToTest = targetGraph.getConnectedBondsList(atom2[n]);
                                     if (bondsToTest.contains(testBond2)) {
@@ -1054,7 +1055,7 @@ public class CDKMCS {
         IAtom atom;
         for (int i = 0; i < ac1.getBondCount(); i++) {
             bond = ac1.getBond(i);
-            if (bond.getFlag(CDKConstants.ISAROMATIC)) {
+            if (bond.getFlag(IChemObject.AROMATIC)) {
                 ac1AromaticBondCount++;
             } else if (bond.getOrder() == IBond.Order.SINGLE) {
                 ac1SingleBondCount++;
@@ -1069,7 +1070,7 @@ public class CDKMCS {
             if (bond instanceof IQueryBond) {
                 continue;
             }
-            if (bond.getFlag(CDKConstants.ISAROMATIC)) {
+            if (bond.getFlag(IChemObject.AROMATIC)) {
                 ac2AromaticBondCount++;
             } else if (bond.getOrder() == IBond.Order.SINGLE) {
                 ac2SingleBondCount++;
@@ -1095,21 +1096,21 @@ public class CDKMCS {
 
         for (int i = 0; i < ac1.getAtomCount(); i++) {
             atom = ac1.getAtom(i);
-            if (atom.getSymbol().equals("S")) {
+            if (atom.getAtomicNumber() == IElement.S) {
                 ac1SCount++;
-            } else if (atom.getSymbol().equals("N")) {
+            } else if (atom.getAtomicNumber() == IElement.N) {
                 ac1NCount++;
-            } else if (atom.getSymbol().equals("O")) {
+            } else if (atom.getAtomicNumber() == IElement.O) {
                 ac1OCount++;
-            } else if (atom.getSymbol().equals("F")) {
+            } else if (atom.getAtomicNumber() == IElement.F) {
                 ac1FCount++;
-            } else if (atom.getSymbol().equals("Cl")) {
+            } else if (atom.getAtomicNumber() == IElement.Cl) {
                 ac1ClCount++;
-            } else if (atom.getSymbol().equals("Br")) {
+            } else if (atom.getAtomicNumber() == IElement.Br) {
                 ac1BrCount++;
-            } else if (atom.getSymbol().equals("I")) {
+            } else if (atom.getAtomicNumber() == IElement.I) {
                 ac1ICount++;
-            } else if (atom.getSymbol().equals("C")) {
+            } else if (atom.getAtomicNumber() == IElement.C) {
                 ac1CCount++;
             }
         }
@@ -1118,21 +1119,21 @@ public class CDKMCS {
             if (atom instanceof IQueryAtom) {
                 continue;
             }
-            if (atom.getSymbol().equals("S")) {
+            if (atom.getAtomicNumber() == IElement.S) {
                 ac2SCount++;
-            } else if (atom.getSymbol().equals("N")) {
+            } else if (atom.getAtomicNumber() == IElement.N) {
                 ac2NCount++;
-            } else if (atom.getSymbol().equals("O")) {
+            } else if (atom.getAtomicNumber() == IElement.O) {
                 ac2OCount++;
-            } else if (atom.getSymbol().equals("F")) {
+            } else if (atom.getAtomicNumber() == IElement.F) {
                 ac2FCount++;
-            } else if (atom.getSymbol().equals("Cl")) {
+            } else if (atom.getAtomicNumber() == IElement.Cl) {
                 ac2ClCount++;
-            } else if (atom.getSymbol().equals("Br")) {
+            } else if (atom.getAtomicNumber() == IElement.Br) {
                 ac2BrCount++;
-            } else if (atom.getSymbol().equals("I")) {
+            } else if (atom.getAtomicNumber() == IElement.I) {
                 ac2ICount++;
-            } else if (atom.getSymbol().equals("C")) {
+            } else if (atom.getAtomicNumber() == IElement.C) {
                 ac2CCount++;
             }
         }

@@ -20,33 +20,32 @@ package org.openscience.cdk.silent;
 
 import java.io.IOException;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractMolecularFormulaTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractMolecularFormulaTest;
 import org.openscience.cdk.interfaces.IIsotope;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 
 /**
  * Checks the functionality of the {@link MolecularFormula}.
  *
- * @cdk.module test-silent
  */
-public class MolecularFormulaTest extends AbstractMolecularFormulaTest {
+class MolecularFormulaTest extends AbstractMolecularFormulaTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setBuilder(SilentChemObjectBuilder.getInstance());
     }
 
     @Test
-    public void testMolecularFormula() {
+    void testMolecularFormula() {
         IMolecularFormula mf = new MolecularFormula();
-        Assert.assertNotNull(mf);
+        Assertions.assertNotNull(mf);
     }
 
     @Test
-    public void testIsTheSame_IIsotope_IIsotope() throws IOException {
+    void testIsTheSame_IIsotope_IIsotope() throws IOException {
         MolecularFormula mf = new MolecularFormula();
         IIsotope carb = getBuilder().newInstance(IIsotope.class, "C");
         IIsotope anotherCarb = getBuilder().newInstance(IIsotope.class, "C");
@@ -60,8 +59,8 @@ public class MolecularFormulaTest extends AbstractMolecularFormulaTest {
         anotherCarb.setNaturalAbundance(34.0);
         h.setNaturalAbundance(99.0);
 
-        Assert.assertTrue(mf.isTheSame(carb, carb));
-        Assert.assertTrue(mf.isTheSame(carb, anotherCarb));
-        Assert.assertFalse(mf.isTheSame(carb, h));
+        Assertions.assertTrue(mf.isTheSame(carb, carb));
+        Assertions.assertTrue(mf.isTheSame(carb, anotherCarb));
+        Assertions.assertFalse(mf.isTheSame(carb, h));
     }
 }

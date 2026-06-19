@@ -1,11 +1,9 @@
 package org.openscience.cdk.hash.stereo;
 
-import org.junit.Test;
-import org.openscience.cdk.hash.stereo.CombinedPermutationParity;
-import org.openscience.cdk.hash.stereo.PermutationParity;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -13,12 +11,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class CombinedPermutationParityTest {
+class CombinedPermutationParityTest {
 
     @Test
-    public void testParity() throws Exception {
+    void testParity() throws Exception {
         PermutationParity left = mock(PermutationParity.class);
         PermutationParity right = mock(PermutationParity.class);
         PermutationParity parity = new CombinedPermutationParity(left, right);

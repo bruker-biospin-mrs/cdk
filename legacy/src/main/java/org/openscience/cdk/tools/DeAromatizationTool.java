@@ -24,10 +24,12 @@
 package org.openscience.cdk.tools;
 
 import java.util.List;
+import java.util.Objects;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.Element;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.interfaces.IAtom;
@@ -46,8 +48,6 @@ import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
  *
  * @author         seb
  * @cdk.created    13. April 2005
- * @cdk.module     extra
- * @cdk.githash
  * @cdk.keyword    aromatic ring, bond order adjustment
  * @deprecated the newer {@link org.openscience.cdk.aromaticity.Kekulization} provides a faster, more generic and
  *             comprehensive algorithm.
@@ -66,11 +66,11 @@ public class DeAromatizationTool {
     public static boolean deAromatize(IRing ring) {
         boolean allaromatic = true;
         for (int i = 0; i < ring.getBondCount(); i++) {
-            if (!ring.getBond(i).getFlag(CDKConstants.ISAROMATIC)) allaromatic = false;
+            if (!ring.getBond(i).getFlag(IChemObject.AROMATIC)) allaromatic = false;
         }
         if (!allaromatic) return false;
         for (int i = 0; i < ring.getBondCount(); i++) {
-            if (ring.getBond(i).getFlag(CDKConstants.ISAROMATIC)) ring.getBond(i).setOrder(IBond.Order.SINGLE);
+            if (ring.getBond(i).getFlag(IChemObject.AROMATIC)) ring.getBond(i).setOrder(IBond.Order.SINGLE);
         }
         boolean result = false;
         IMolecularFormula formula = MolecularFormulaManipulator.getMolecularFormula(ring);
@@ -100,12 +100,13 @@ public class DeAromatizationTool {
         if (ring.getBondCount() != 5) return false;
         for (int i = 0; i < ring.getAtomCount(); i++) {
             IAtom atom = ring.getAtom(i);
-            if (atom.getSymbol().equals("N")) {
+            if (atom.getAtomicNumber() == IElement.N) {
                 int done = 0;
                 IBond bond = null;
                 int count = 0;
                 while (done != 2) {
                     bond = getNextBond(atom, bond, ring);
+                    Objects.requireNonNull(bond, "Bond not connected to atom!");
                     if (bond.getBegin().equals(atom))
                         atom = bond.getEnd();
                     else
@@ -124,8 +125,9 @@ public class DeAromatizationTool {
 
     private static IBond getNextBond(IAtom atom, IBond bond, IRing ring) {
         List<IBond> bonds = ring.getConnectedBondsList(atom);
-        for (int i = 0; i < bonds.size(); i++)
-            if (!bonds.get(i).equals(bond)) return (IBond) bonds.get(i);
+        for (IBond iBond : bonds)
+            if (!iBond.equals(bond))
+                return iBond;
         return null;
     }
 
@@ -463,7 +465,7 @@ public class DeAromatizationTool {
     {
         for (IAtom atom : ring.atoms())
         {
-            if (!atom.getFlag(CDKConstants.ISAROMATIC))
+            if (!atom.getFlag(IChemObject.AROMATIC))
             {
                 return false;
             }
@@ -487,11 +489,11 @@ public class DeAromatizationTool {
     {
         for (IAtom atom : ring.atoms())
         {
-            atom.setFlag(CDKConstants.ISAROMATIC, false);
+            atom.setFlag(IChemObject.AROMATIC, false);
         }
         for (IBond bond : ring.bonds())
         {
-            bond.setFlag(CDKConstants.ISAROMATIC, false);
+            bond.setFlag(IChemObject.AROMATIC, false);
         }
     }
     

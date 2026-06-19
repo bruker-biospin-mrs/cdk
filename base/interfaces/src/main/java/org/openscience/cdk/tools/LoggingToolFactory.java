@@ -33,15 +33,13 @@ import java.lang.reflect.Method;
  * }
  * </pre>
  *
- * @cdk.module core
- * @cdk.githash
  */
 public class LoggingToolFactory {
 
-    /** Default logging tool. Currently, the log4j based one. */
-    public final static String                   DEFAULT_LOGGING_TOOL_CLASS = "org.openscience.cdk.tools.LoggingTool";
-    /** Back-up logging tool. Currently, a tool that outputs to System.out. */
-    public final static String                   STDOUT_LOGGING_TOOL_CLASS  = "org.openscience.cdk.tools.SystemOutLoggingTool";
+    /** Default logging tool. Currently, the slf4j based one. */
+    public final static String DEFAULT_LOGGING_TOOL_CLASS = "org.openscience.cdk.tools.Slf4jLoggingTool";
+    /** Backup logging tool. Currently, the lof4j based one. */
+    private final static String BACKUP_LOGGING_TOOL_CLASS = "org.openscience.cdk.tools.Log4jLoggingTool";
 
     private static Class<? extends ILoggingTool> userSetILoggerTool;
 
@@ -83,7 +81,10 @@ public class LoggingToolFactory {
             tool = initializeLoggingTool(sourceClass, DEFAULT_LOGGING_TOOL_CLASS);
         }
         if (tool == null) {
-            tool = initializeLoggingTool(sourceClass, STDOUT_LOGGING_TOOL_CLASS);
+            tool = initializeLoggingTool(sourceClass, BACKUP_LOGGING_TOOL_CLASS);
+        }
+        if (tool == null) {
+            tool = new StdErrLogger(sourceClass);
         }
         return tool;
     }
@@ -94,9 +95,10 @@ public class LoggingToolFactory {
             if (ILoggingTool.class.isAssignableFrom(possibleLoggingToolClass)) {
                 return instantiateWithCreateMethod(sourceClass, possibleLoggingToolClass);
             }
-        } catch (ClassNotFoundException e) {
-        } catch (SecurityException e) {
-        } catch (IllegalArgumentException e) {
+        } catch (ClassNotFoundException ignored) {
+            // do not throw an error here is including the class is optional
+        } catch (IllegalArgumentException | SecurityException e) {
+            throw new RuntimeException("Could not create logging class: " + className, e);
         }
         return null;
     }
@@ -111,11 +113,8 @@ public class LoggingToolFactory {
             } else {
                 System.out.println("Expected ILoggingTool, but found a:" + createdLoggingTool.getClass().getName());
             }
-        } catch (SecurityException e) {
-        } catch (NoSuchMethodException e) {
-        } catch (IllegalArgumentException e) {
-        } catch (IllegalAccessException e) {
-        } catch (InvocationTargetException e) {
+        } catch (SecurityException | InvocationTargetException | IllegalAccessException | IllegalArgumentException | NoSuchMethodException e) {
+            throw new RuntimeException("Could not create custom logging class", e);
         }
         return null;
     }

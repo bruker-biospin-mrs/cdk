@@ -27,34 +27,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.fingerprint.IBitFingerprint;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.isomorphism.matchers.QueryChemObject;
 import org.openscience.cdk.ringsearch.RingPartitioner;
-import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.templates.TestMoleculeFactory;
 import org.openscience.cdk.tools.manipulator.RingSetManipulator;
 
 /**
- * @cdk.module test-builder3d
  *
  * @author      chhoppe
  * @author      Christoph Steinbeck
  * @cdk.created 2004-11-04
  */
-public class TemplateHandler3DTest extends CDKTestCase {
+class TemplateHandler3DTest extends CDKTestCase {
 
     @Test
-    public void testGetInstance() throws Exception {
+    void testGetInstance() throws Exception {
         TemplateHandler3D th3d = TemplateHandler3D.getInstance();
         // need to trigger a load of the templates
-        th3d.mapTemplates(new AtomContainer(), 0);
-        Assert.assertEquals(10751, th3d.getTemplateCount());
+        th3d.mapTemplates(SilentChemObjectBuilder.getInstance().newAtomContainer(), 0);
+        Assertions.assertEquals(10751, th3d.getTemplateCount());
     }
 
     private static BitSet parseBitSet(String str) throws Exception {
@@ -62,7 +61,7 @@ public class TemplateHandler3DTest extends CDKTestCase {
     }
 
     @Test
-    public void testFingerprints() throws Exception {
+    void testFingerprints() throws Exception {
         BitSet[] expected = new BitSet[]{
             parseBitSet("{3, 5, 8, 18, 29, 33, 39, 65, 71, 90, 105, 125, 140, 170, 182, 192, 199, 203, 209, 213, 226, 271, 272, 287, 301, 304, 319, 368, 386, 423, 433, 540, 590, 605, 618, 620, 629, 641, 649, 672, 681, 690, 694, 696, 697, 716, 726, 745, 748, 751, 760, 765, 775, 777, 780, 792, 799, 805, 810, 825, 829, 836, 844, 850, 876, 880, 882, 888, 899, 914, 924, 929, 932, 935, 967, 971, 1004, 1013, 1015, 1023}"),
             parseBitSet("{3, 8, 18, 29, 33, 65, 90, 101, 109, 117, 125, 127, 140, 170, 190, 192, 209, 213, 218, 226, 271, 272, 286, 287, 301, 304, 319, 386, 423, 433, 566, 590, 605, 618, 629, 641, 646, 649, 672, 690, 694, 696, 716, 726, 745, 748, 765, 775, 777, 780, 783, 792, 805, 810, 825, 829, 836, 844, 850, 876, 882, 899, 914, 924, 932, 934, 956, 967, 971, 994, 1004, 1013, 1015, 1023}"),
@@ -75,20 +74,20 @@ public class TemplateHandler3DTest extends CDKTestCase {
             parseBitSet("{3, 18, 26, 32, 33, 43, 140, 155, 188, 189, 226, 238, 262, 267, 287, 315, 319, 326, 375, 450, 577, 629, 644, 690, 719, 732, 745, 746, 751, 775, 847, 850, 881, 959, 971, 995, 1015, 1019}"),
             parseBitSet("{3, 18, 29, 33, 90, 105, 125, 272, 280, 301, 433, 521, 590, 618, 651, 672, 696, 698, 745, 760, 829, 844, 876, 890, 899, 924, 1013}")};
 
-        String filename = "data/mdl/fingerprints_from_modelbuilder3d.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        String filename = "fingerprints_from_modelbuilder3d.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         List<IBitFingerprint> data = new TemplateExtractor().makeFingerprintsFromSdf(true, false,
-                new HashMap<String, Integer>(), new BufferedReader(new InputStreamReader(ins)), 10);
+                new HashMap<>(), new BufferedReader(new InputStreamReader(ins)), 10);
         QueryChemObject obj = new QueryChemObject(DefaultChemObjectBuilder.getInstance());
         obj.getBuilder();
         for (int i = 0; i < data.size(); i++) {
             IBitFingerprint bs = data.get(i);
-            Assert.assertEquals(expected[i], bs.asBitSet());
+            Assertions.assertEquals(expected[i], bs.asBitSet());
         }
     }
 
     @Test
-    public void testAnonFingerprints() throws Exception {
+    void testAnonFingerprints() throws Exception {
         BitSet[] expected = new BitSet[]{
             parseBitSet("{148, 206, 392, 542, 637, 742, 752, 830}"),
             parseBitSet("{148, 206, 392, 542, 637, 742, 752, 830}"),
@@ -101,20 +100,20 @@ public class TemplateHandler3DTest extends CDKTestCase {
             parseBitSet("{148, 206, 392, 542, 637, 742, 752, 830}"),
             parseBitSet("{148, 206, 392, 542, 637, 742, 752, 830}")};
 
-        String filename = "data/mdl/fingerprints_from_modelbuilder3d.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        String filename = "fingerprints_from_modelbuilder3d.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         List<IBitFingerprint> data = new TemplateExtractor().makeFingerprintsFromSdf(true, true,
-                                                                                     new HashMap<String, Integer>(), new BufferedReader(new InputStreamReader(ins)), 10);
+                new HashMap<>(), new BufferedReader(new InputStreamReader(ins)), 10);
         QueryChemObject obj = new QueryChemObject(DefaultChemObjectBuilder.getInstance());
         obj.getBuilder();
         for (int i = 0; i < data.size(); i++) {
             IBitFingerprint bs = data.get(i);
-            Assert.assertEquals(expected[i], bs.asBitSet());
+            Assertions.assertEquals(expected[i], bs.asBitSet());
         }
     }
 
     @Test
-    public void testMapTemplates_IAtomContainer_double() throws Exception {
+    void testMapTemplates_IAtomContainer_double() throws Exception {
         IAtomContainer ac = TestMoleculeFactory.makeBicycloRings();
         TemplateHandler3D th3d = TemplateHandler3D.getInstance();
         ForceFieldConfigurator ffc = new ForceFieldConfigurator();
@@ -125,7 +124,7 @@ public class TemplateHandler3DTest extends CDKTestCase {
         IAtomContainer largestRingSetContainer = RingSetManipulator.getAllInOneContainer(largestRingSet);
         th3d.mapTemplates(largestRingSetContainer, largestRingSetContainer.getAtomCount());
         for (int i = 0; i < ac.getAtomCount(); i++) {
-            Assert.assertNotNull(ac.getAtom(i).getPoint3d());
+            Assertions.assertNotNull(ac.getAtom(i).getPoint3d());
         }
         ModelBuilder3DTest.checkAverageBondLength(ac);
     }

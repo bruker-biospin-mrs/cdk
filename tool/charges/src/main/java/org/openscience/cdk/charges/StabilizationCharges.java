@@ -38,9 +38,7 @@ import org.openscience.cdk.tools.StructureResonanceGenerator;
  *
  * @author       Miguel Rojas Cherto
  * @cdk.created  2008-104-31
- * @cdk.module   charges
  * @cdk.keyword  stabilization charge
- * @cdk.githash
  */
 public class StabilizationCharges {
 
@@ -77,13 +75,11 @@ public class StabilizationCharges {
 
         final int positionStart = atomContainer.indexOf(atom);
 
-        List<Double> result1 = new ArrayList<Double>();
-        List<Integer> distance1 = new ArrayList<Integer>();
+        List<Double> result1 = new ArrayList<>();
+        List<Integer> distance1 = new ArrayList<>();
 
         resonanceS.removeAtomContainer(0);// the first is the initial structure
-        for (Iterator<IAtomContainer> itA = resonanceS.atomContainers().iterator(); itA.hasNext();) {
-            final IAtomContainer resonance = itA.next();
-
+        for (final IAtomContainer resonance : resonanceS.atomContainers()) {
             if (resonance.getAtomCount() < 2) // resonance with only one atom donnot have resonance
                 continue;
 
@@ -93,8 +89,7 @@ public class StabilizationCharges {
 
             PiElectronegativity electronegativity = new PiElectronegativity();
 
-            for (Iterator<IAtom> itAtoms = resonance.atoms().iterator(); itAtoms.hasNext();) {
-                IAtom atomP = itAtoms.next();
+            for (IAtom atomP : resonance.atoms()) {
                 IAtom atomR = atomContainer.getAtom(resonance.indexOf(atomP));
                 if (containerS.getAtomContainer(0).contains(atomR)) {
 
@@ -109,13 +104,12 @@ public class StabilizationCharges {
             }
         }
         /* logarithm */
-        double value = 0.0;
+        double value;
         double sum = 0.0;
         Iterator<Integer> itDist = distance1.iterator();
-        for (Iterator<Double> itElec = result1.iterator(); itElec.hasNext();) {
-            double suM = itElec.next();
+        for (double suM : result1) {
             if (suM < 0) suM = -1 * suM;
-            sum += suM * Math.pow(0.67, itDist.next().intValue());
+            sum += suM * Math.pow(0.67, itDist.next());
         }
         value = sum;
 

@@ -18,6 +18,7 @@
  */
 package org.openscience.cdk;
 
+import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -30,8 +31,6 @@ import org.openscience.cdk.interfaces.IRing;
  * such that atom i (1 &lt; i &lt; N) is bonded to
  * atom i-1 and atom i + 1 and atom 1 is bonded to atom N and atom 2.
  *
- * @cdk.module  data
- * @cdk.githash
  * @cdk.keyword ring
  */
 public class Ring extends AtomContainer implements java.io.Serializable, IRing {
@@ -71,14 +70,14 @@ public class Ring extends AtomContainer implements java.io.Serializable, IRing {
      */
     public Ring(int ringSize, String elementSymbol) {
         this(ringSize);
-        super.atomCount = ringSize;
-        super.bondCount = ringSize;
-        atoms[0] = new Atom(elementSymbol);
+        int elem = Elements.ofString(elementSymbol).number();
+        IAtom prev = newAtom(elem);
         for (int i = 1; i < ringSize; i++) {
-            atoms[i] = new Atom(elementSymbol);
-            super.bonds[i - 1] = new Bond(atoms[i - 1], atoms[i], IBond.Order.SINGLE);
+            IAtom atom = newAtom(elem);
+            newBond(prev, atom);
+            prev = atom;
         }
-        super.bonds[ringSize - 1] = new Bond(atoms[ringSize - 1], atoms[0], IBond.Order.SINGLE);
+        newBond(prev, getAtom(0));
     }
 
     /**
@@ -99,7 +98,7 @@ public class Ring extends AtomContainer implements java.io.Serializable, IRing {
 
     @Override
     public int getRingSize() {
-        return this.atomCount;
+        return this.getAtomCount();
     }
 
     /**
@@ -148,7 +147,7 @@ public class Ring extends AtomContainer implements java.io.Serializable, IRing {
 
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("Ring(");
         buffer.append(super.toString());
         buffer.append(')');

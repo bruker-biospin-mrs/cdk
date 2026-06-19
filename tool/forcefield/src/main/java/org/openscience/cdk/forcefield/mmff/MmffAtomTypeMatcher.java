@@ -24,12 +24,13 @@
 
 package org.openscience.cdk.forcefield.mmff;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.graph.GraphUtil;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.isomorphism.Pattern;
 import org.openscience.cdk.smarts.SmartsPattern;
 
@@ -102,7 +103,7 @@ final class MmffAtomTypeMatcher {
     String[] symbolicTypes(final IAtomContainer container) {
         EdgeToBondMap bonds = EdgeToBondMap.withSpaceFor(container);
         int[][] graph = GraphUtil.toAdjList(container, bonds);
-        return symbolicTypes(container, graph, bonds, new HashSet<IBond>());
+        return symbolicTypes(container, graph, bonds, new HashSet<>());
     }
 
     /**
@@ -172,7 +173,7 @@ final class MmffAtomTypeMatcher {
         for (IAtom atom : container.atoms()) {
             if (atom.getImplicitHydrogenCount() == null || atom.getImplicitHydrogenCount() != 0)
                 throw new IllegalArgumentException("Hydrogens should be unsuppressed (explicit)");
-            if (atom.getFlag(CDKConstants.ISAROMATIC))
+            if (atom.getFlag(IChemObject.AROMATIC))
                 throw new IllegalArgumentException("No aromatic flags should be set");
         }
     }
@@ -186,7 +187,7 @@ final class MmffAtomTypeMatcher {
      */
     private void assignHydrogenTypes(IAtomContainer container, String[] symbs, int[][] graph) {
         for (int v = 0; v < graph.length; v++) {
-            if (container.getAtom(v).getSymbol().equals("H") && graph[v].length == 1) {
+            if (container.getAtom(v).getAtomicNumber() == IElement.H && graph[v].length == 1) {
                 int w = graph[v][0];
                 symbs[v] = this.hydrogenMap.get(symbs[w]);
             }
@@ -221,10 +222,10 @@ final class MmffAtomTypeMatcher {
      */
     static AtomTypePattern[] loadPatterns(InputStream smaIn) throws IOException {
 
-        List<AtomTypePattern> matchers = new ArrayList<AtomTypePattern>();
+        List<AtomTypePattern> matchers = new ArrayList<>();
 
         BufferedReader br = new BufferedReader(new InputStreamReader(smaIn));
-        String line = null;
+        String line;
         while ((line = br.readLine()) != null) {
             if (skipLine(line)) continue;
             String[] cols = line.split(" ");
@@ -251,11 +252,12 @@ final class MmffAtomTypeMatcher {
     private Map<String, String> loadHydrogenDefinitions(InputStream hdefIn) throws IOException {
 
         // maps of symbolic atom types to hydrogen atom types and internal types
-        final Map<String, String> hdefs = new HashMap<String, String>(200);
+        final Map<String, String> hdefs = new HashMap<>(200);
 
         BufferedReader br = new BufferedReader(new InputStreamReader(hdefIn));
-        br.readLine(); // header
-        String line = null;
+        String line = br.readLine(); // header
+        if (line == null)
+            throw new IOException("End of input, expected header");
         while ((line = br.readLine()) != null) {
             String[] cols = line.split("\t");
             hdefs.put(cols[0].trim(), cols[3].trim());
@@ -319,7 +321,7 @@ final class MmffAtomTypeMatcher {
          * @return indices of atoms that matched this type
          */
         private Set<Integer> matches(IAtomContainer container) {
-            Set<Integer> matchedIdx = new HashSet<Integer>();
+            Set<Integer> matchedIdx = new HashSet<>();
             for (int[] mapping : pattern.matchAll(container)) {
                 matchedIdx.add(mapping[0]);
             }

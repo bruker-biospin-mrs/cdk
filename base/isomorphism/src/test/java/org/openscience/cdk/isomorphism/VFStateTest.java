@@ -24,16 +24,15 @@
 
 package org.openscience.cdk.isomorphism;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.graph.GraphUtil;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.templates.TestMoleculeFactory;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -42,26 +41,25 @@ import static org.mockito.Mockito.when;
  * will add.
  *
  * @author John May
- * @cdk.module test-isomorphism
  */
-public class VFStateTest {
+class VFStateTest {
 
     // 0-look-ahead
     @Test
-    public void infeasibleAtoms() throws Exception {
+    void infeasibleAtoms() throws Exception {
         AtomMatcher mock = mock(AtomMatcher.class);
         when(mock.matches(any(IAtom.class), any(IAtom.class))).thenReturn(false);
         VFState state = createBenzeneToNaphthalene(mock, mock(BondMatcher.class));
         for (int i = 0; i < state.nMax(); i++) {
             for (int j = 0; j < state.mMax(); j++) {
-                assertFalse(state.feasible(i, j));
+                Assertions.assertFalse(state.feasible(i, j));
             }
         }
     }
 
     // 0-look-ahead
     @Test
-    public void infeasibleBonds() throws Exception {
+    void infeasibleBonds() throws Exception {
         BondMatcher mock = mock(BondMatcher.class);
         when(mock.matches(any(IBond.class), any(IBond.class))).thenReturn(false);
         VFState state = createBenzeneToNaphthalene(AtomMatcher.forAny(), mock);
@@ -72,21 +70,21 @@ public class VFStateTest {
         state.m1[4] = 4;
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
-                assertFalse(state.feasible(i, j));
+                Assertions.assertFalse(state.feasible(i, j));
             }
         }
     }
 
     // 1-look-ahead
     @Test
-    public void infeasibleTerminalCount() throws Exception {
+    void infeasibleTerminalCount() throws Exception {
         VFState state = createBenzeneToNaphthalene(AtomMatcher.forAny(), BondMatcher.forAny());
-        assertTrue(state.feasible(4, 4)); // 4, 4 is feasible
+        Assertions.assertTrue(state.feasible(4, 4)); // 4, 4 is feasible
         state.add(0, 0);
         state.add(1, 1);
         state.add(2, 2);
         state.add(3, 3);
-        assertFalse(state.feasible(4, 4)); // 4, 4 is infeasible
+        Assertions.assertFalse(state.feasible(4, 4)); // 4, 4 is infeasible
     }
 
     /**

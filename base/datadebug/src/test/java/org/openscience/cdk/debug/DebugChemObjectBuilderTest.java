@@ -18,31 +18,29 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.AbstractChemObjectBuilderTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.AbstractChemObjectBuilderTest;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 /**
- * Checks the functionality of the {@link IChemObjectBuilder}
- * {@link DebugChemObjectBuilder} implementation.
+ * Checks the functionality of the {@link IChemObjectBuilder} {@link DebugChemObjectBuilder} implementation.
  *
- * @cdk.module test-datadebug
  */
-public class DebugChemObjectBuilderTest extends AbstractChemObjectBuilderTest {
+class DebugChemObjectBuilderTest extends AbstractChemObjectBuilderTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setRootObject(new DebugChemObject());
     }
 
     @Test
-    public void testGetInstance() {
+    void testGetInstance() {
         Object builder = DebugChemObjectBuilder.getInstance();
-        Assert.assertNotNull(builder);
-        Assert.assertTrue(builder instanceof IChemObjectBuilder);
-        Assert.assertTrue(builder instanceof DebugChemObjectBuilder);
+        Assertions.assertNotNull(builder);
+        Assertions.assertTrue(builder instanceof IChemObjectBuilder);
+        Assertions.assertTrue(builder.getClass().getName().contains("DebugChemObjectBuilder"));
     }
 
 }

@@ -19,46 +19,37 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractLonePairTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractLonePairTest;
 import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.ILonePair;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugLonePair}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugLonePairTest extends AbstractLonePairTest {
+class DebugLonePairTest extends AbstractLonePairTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugLonePair();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugLonePair::new);
     }
 
     @Test
-    public void testDebugLonePair() {
+    void testDebugLonePair() {
         ILonePair lp = new DebugLonePair();
-        Assert.assertNull(lp.getAtom());
-        Assert.assertEquals(2, lp.getElectronCount().intValue());
+        Assertions.assertNull(lp.getAtom());
+        Assertions.assertEquals(2, lp.getElectronCount().intValue());
     }
 
     @Test
-    public void testDebugLonePair_IAtom() {
+    void testDebugLonePair_IAtom() {
         IAtom atom = newChemObject().getBuilder().newInstance(IAtom.class, "N");
         ILonePair lp = new DebugLonePair(atom);
-        Assert.assertEquals(2, lp.getElectronCount().intValue());
-        Assert.assertEquals(atom, lp.getAtom());
-        Assert.assertTrue(lp.contains(atom));
+        Assertions.assertEquals(2, lp.getElectronCount().intValue());
+        Assertions.assertEquals(atom, lp.getAtom());
+        Assertions.assertTrue(lp.contains(atom));
     }
 }

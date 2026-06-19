@@ -19,6 +19,7 @@
 package org.openscience.cdk.isomorphism.matchers;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
@@ -28,14 +29,13 @@ import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 /**
  * Implements the concept of a "query bond" between two or more atoms.
  * Query bonds can be used to capture types such as "Single or Double" or "Any".
  *
- * @cdk.module isomorphism
- * @cdk.githash
  * @cdk.created 2010-12-16
  */
 public class QueryBond extends QueryChemObject implements IQueryBond {
@@ -43,17 +43,17 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
     /**
      * The bond order of this query bond.
      */
-    protected IQueryBond.Order  order     = (Order) CDKConstants.UNSET;
+    protected IQueryBond.Order  order     = null;
 
     /**
      * Number of atoms contained by this object.
      */
-    protected int               atomCount = 0;
+    protected int               atomCount;
 
     /**
      * A list of atoms participating in this query bond.
      */
-    protected IAtom[]           atoms     = null;
+    protected IAtom[]           atoms;
 
     /**
      * A descriptor the stereochemical orientation of this query bond.
@@ -66,7 +66,7 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
     private Expr expr = new Expr(Expr.Type.TRUE);
 
     /**
-     * Constructs an query bond from an expression.
+     * Constructs a query bond from an expression.
      *
      * <pre>{@code
      * // pi-bond in a ring
@@ -84,7 +84,7 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
     }
 
     /**
-     * Constructs an query bond from an expression type.
+     * Constructs a query bond from an expression type.
      *
      * <pre>{@code
      * new QueryBond(beg, end, IS_IN_RING);
@@ -99,7 +99,7 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
     }
 
     /**
-     * Constructs an query bond from an expression type and value.
+     * Constructs a query bond from an expression type and value.
      *
      * <pre>{@code
      * new QueryBond(beg, end, ALIPHATIC_ORDER, 8);
@@ -119,6 +119,15 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
      */
     public QueryBond(IChemObjectBuilder builder) {
         this(null, null, null, IQueryBond.Stereo.NONE, builder);
+        atomCount = 0;
+    }
+
+    /**
+     * Constructs an empty query bond.
+     */
+    public QueryBond(Expr.Type type, IChemObjectBuilder builder) {
+        this(null, null, null, IQueryBond.Stereo.NONE, builder);
+        this.expr.setPrimitive(type);
         atomCount = 0;
     }
 
@@ -197,13 +206,7 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
      */
     @Override
     public Iterable<IAtom> atoms() {
-        return new Iterable<IAtom>() {
-
-            @Override
-            public Iterator<IAtom> iterator() {
-                return new AtomsIterator();
-            }
-        };
+        return AtomsIterator::new;
     }
 
     /**
@@ -236,6 +239,8 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
 
         @Override
         public IAtom next() {
+            if (pointer >= atomCount)
+                throw new NoSuchElementException();
             ++pointer;
             return atoms[pointer - 1];
         }
@@ -418,6 +423,24 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
     }
 
     /**
+     * Not used for query bonds. {@inheritDoc}
+     */
+    @Override
+    public Display getDisplay() {
+        // JWM: could do better here, but really IQueryAtomContainer should
+        // go away
+        return Display.Solid;
+    }
+
+    /**
+     * Not used for query bonds. {@inheritDoc}
+     */
+    @Override
+    public void setDisplay(Display display) {
+
+    }
+
+    /**
      * Returns the geometric 2D center of the query bond.
      *
      * @return The geometric 2D center of the query bond
@@ -502,7 +525,7 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
             clone.atoms = new IAtom[atoms.length];
             for (int f = 0; f < atoms.length; f++) {
                 if (atoms[f] != null) {
-                    clone.atoms[f] = (IAtom) (atoms[f]).clone();
+                    clone.atoms[f] = (atoms[f]).clone();
                 }
             }
         }
@@ -516,12 +539,12 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
      */
     @Override
     public String toString() {
-        StringBuffer resultString = new StringBuffer(32);
+        StringBuilder resultString = new StringBuilder(32);
         resultString.append("Bond(").append(this.hashCode());
         if (getOrder() != null) {
             resultString.append(", #O:").append(getOrder());
         }
-        resultString.append(", #S:").append(getStereo());
+        resultString.append(", #D:").append(getDisplay());
         if (getAtomCount() > 0) {
             resultString.append(", #A:").append(getAtomCount());
             for (int i = 0; i < atomCount; i++) {
@@ -550,25 +573,25 @@ public class QueryBond extends QueryChemObject implements IQueryBond {
     /** {@inheritDoc} */
     @Override
     public boolean isAromatic() {
-        return getFlag(CDKConstants.ISAROMATIC);
+        return getFlag(IChemObject.AROMATIC);
     }
 
     /** {@inheritDoc} */
     @Override
     public void setIsAromatic(boolean arom) {
-        setFlag(CDKConstants.ISAROMATIC, arom);
+        setFlag(IChemObject.AROMATIC, arom);
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean isInRing() {
-        return getFlag(CDKConstants.ISINRING);
+        return getFlag(IChemObject.IN_RING);
     }
 
     /** {@inheritDoc} */
     @Override
     public void setIsInRing(boolean ring) {
-        setFlag(CDKConstants.ISINRING, ring);
+        setFlag(IChemObject.IN_RING, ring);
     }
 
     /**

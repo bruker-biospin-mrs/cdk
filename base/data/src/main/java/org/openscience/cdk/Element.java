@@ -24,12 +24,11 @@
  */
 package org.openscience.cdk;
 
-import com.google.common.base.Objects;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.interfaces.IElement;
-import org.openscience.cdk.tools.periodictable.PeriodicTable;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Implements the idea of an element in the periodic table.
@@ -42,8 +41,6 @@ import java.io.Serializable;
  *   Element e2 = if.getElement(12);
  * </pre>
  *
- * @cdk.module data
- * @cdk.githash
  *
  * @cdk.keyword element
  *
@@ -178,7 +175,7 @@ public class Element extends ChemObject implements Serializable, IElement, Clone
 
     @Override
     public String toString() {
-        StringBuffer resultString = new StringBuffer(32);
+        StringBuilder resultString = new StringBuilder(32);
         resultString.append("Element(").append(hashCode());
         if (getSymbol() != null) {
             resultString.append(", S:").append(getSymbol());
@@ -213,6 +210,6 @@ public class Element extends ChemObject implements Serializable, IElement, Clone
             return false;
         }
         Element elem = (Element) object;
-        return Objects.equal(atomicNumber, elem.atomicNumber);
+        return Objects.equals(atomicNumber, elem.atomicNumber);
     }
 }

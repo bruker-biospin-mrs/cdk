@@ -27,78 +27,79 @@ import java.io.InputStream;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.AtomContainer;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
- * @cdk.module test-io
  */
-public class PCCompoundXMLReaderTest extends SimpleChemObjectReaderTest {
+class PCCompoundXMLReaderTest extends SimpleChemObjectReaderTest {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(PCCompoundXMLReaderTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(PCCompoundXMLReaderTest.class);
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        setSimpleChemObjectReader(new PCCompoundXMLReader(), "data/asn/pubchem/cid1145.xml");
+    @BeforeAll
+    static void setup() throws Exception {
+        setSimpleChemObjectReader(new PCCompoundXMLReader(), "cid1145.xml");
     }
 
     @Test
-    public void testAccepts() throws Exception {
+    void testAccepts() throws Exception {
         PCCompoundXMLReader reader = new PCCompoundXMLReader();
-        Assert.assertTrue(reader.accepts(AtomContainer.class));
+        Assertions.assertTrue(reader.accepts(AtomContainer.class));
     }
 
     @Test
-    public void testReading() throws Exception {
-        String filename = "data/asn/pubchem/cid1145.xml";
+    void testReading() throws Exception {
+        String filename = "cid1145.xml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         PCCompoundXMLReader reader = new PCCompoundXMLReader(ins);
-        IAtomContainer molecule = (IAtomContainer) reader.read(new AtomContainer());
+        IAtomContainer molecule = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
-        Assert.assertNotNull(molecule);
+        Assertions.assertNotNull(molecule);
 
         // check atom stuff
-        Assert.assertEquals(14, molecule.getAtomCount());
-        Assert.assertEquals("O", molecule.getAtom(0).getSymbol());
-        Assert.assertEquals(Integer.valueOf(-1), molecule.getAtom(0).getFormalCharge());
-        Assert.assertEquals("N", molecule.getAtom(1).getSymbol());
-        Assert.assertEquals(Integer.valueOf(1), molecule.getAtom(1).getFormalCharge());
+        Assertions.assertEquals(14, molecule.getAtomCount());
+        Assertions.assertEquals("O", molecule.getAtom(0).getSymbol());
+        Assertions.assertEquals(Integer.valueOf(-1), molecule.getAtom(0).getFormalCharge());
+        Assertions.assertEquals("N", molecule.getAtom(1).getSymbol());
+        Assertions.assertEquals(Integer.valueOf(1), molecule.getAtom(1).getFormalCharge());
 
         // check bond stuff
-        Assert.assertEquals(13, molecule.getBondCount());
-        Assert.assertNotNull(molecule.getBond(3));
+        Assertions.assertEquals(13, molecule.getBondCount());
+        Assertions.assertNotNull(molecule.getBond(3));
 
         // coordinates
-        Assert.assertNull(molecule.getAtom(0).getPoint3d());
+        Assertions.assertNull(molecule.getAtom(0).getPoint3d());
         Point2d point = molecule.getAtom(0).getPoint2d();
-        Assert.assertNotNull(point);
-        Assert.assertEquals(3.7320508956909, point.x, 0.00000001);
-        Assert.assertEquals(0.5, point.y, 0.00000001);
+        Assertions.assertNotNull(point);
+        Assertions.assertEquals(3.7320508956909, point.x, 0.00000001);
+        Assertions.assertEquals(0.5, point.y, 0.00000001);
     }
 
     @Test
-    public void testReading3DCoords() throws Exception {
-        String filename = "data/asn/pubchem/cid176.xml";
+    void testReading3DCoords() throws Exception {
+        String filename = "cid176.xml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         PCCompoundXMLReader reader = new PCCompoundXMLReader(ins);
-        IAtomContainer molecule = (IAtomContainer) reader.read(new AtomContainer());
+        IAtomContainer molecule = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
-        Assert.assertNotNull(molecule);
+        Assertions.assertNotNull(molecule);
 
         // check atom stuff
-        Assert.assertEquals(8, molecule.getAtomCount());
-        Assert.assertNull(molecule.getAtom(0).getPoint2d());
+        Assertions.assertEquals(8, molecule.getAtomCount());
+        Assertions.assertNull(molecule.getAtom(0).getPoint2d());
         Point3d point = molecule.getAtom(0).getPoint3d();
-        Assert.assertNotNull(point);
-        Assert.assertEquals(-0.9598, point.x, 0.0001);
-        Assert.assertEquals(1.5616, point.y, 0.0001);
-        Assert.assertEquals(1.8714, point.z, 0.0001);
+        Assertions.assertNotNull(point);
+        Assertions.assertEquals(-0.9598, point.x, 0.0001);
+        Assertions.assertEquals(1.5616, point.y, 0.0001);
+        Assertions.assertEquals(1.8714, point.z, 0.0001);
     }
 }

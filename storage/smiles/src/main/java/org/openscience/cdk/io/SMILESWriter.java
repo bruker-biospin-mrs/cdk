@@ -31,40 +31,38 @@ import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.io.formats.SMILESFormat;
 import org.openscience.cdk.io.setting.BooleanIOSetting;
 import org.openscience.cdk.io.setting.IOSetting;
+import org.openscience.cdk.io.setting.IntegerIOSetting;
+import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 
 /**
  * Writes the SMILES strings to a plain text file.
  *
- * @cdk.module  smiles
- * @cdk.githash
  * @cdk.iooptions
- *
  * @cdk.keyword file format, SMILES
  */
 public class SMILESWriter extends DefaultChemObjectWriter {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(SMILESWriter.class);
-    private BufferedWriter      writer;
-
-    private BooleanIOSetting    useAromaticityFlag;
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(SMILESWriter.class);
+    private BufferedWriter writer;
+    private BooleanIOSetting aromSetting;
+    private BooleanIOSetting titleSetting;
+    private IntegerIOSetting flavorSetting;
+    private final int flav = SmiFlavor.Default;
+    private SmilesGenerator smigen = new SmilesGenerator(flav);
+    private final StringBuilder buffer = new StringBuilder();
 
     /**
      * Constructs a new SMILESWriter that can write a list of SMILES to a Writer
      *
-     * @param   out  The Writer to write to
+     * @param out The Writer to write to
      */
     public SMILESWriter(Writer out) {
+        ByteArrayOutputStream bout;
         try {
             if (out instanceof BufferedWriter) {
                 writer = (BufferedWriter) out;
@@ -82,6 +80,24 @@ public class SMILESWriter extends DefaultChemObjectWriter {
 
     public SMILESWriter() {
         this(new StringWriter());
+    }
+
+    public void setFlavor(int flav) {
+        try {
+            flavorSetting.setSetting(Integer.toString(flav)); 
+        } catch (CDKException e) {
+            // ignored
+        }
+        customizeJob();
+    }
+
+    public void setWriteTitle(boolean val) {
+        try {
+            titleSetting.setSetting(Boolean.toString(val));
+        } catch (CDKException e) {
+            // ignored
+        }
+        customizeJob();
     }
 
     @Override
@@ -106,7 +122,7 @@ public class SMILESWriter extends DefaultChemObjectWriter {
     /**
      * Constructs a new SMILESWriter that can write an list of SMILES to a given OutputStream
      *
-     * @param   out  The OutputStream to write to
+     * @param out The OutputStream to write to
      */
     public SMILESWriter(FileOutputStream out) {
         this(new OutputStreamWriter(out));
@@ -126,9 +142,9 @@ public class SMILESWriter extends DefaultChemObjectWriter {
         if (IAtomContainer.class.equals(classObject)) return true;
         if (IAtomContainerSet.class.equals(classObject)) return true;
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (IAtomContainerSet.class.equals(interfaces[i])) return true;
-            if (IAtomContainer.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (IAtomContainerSet.class.equals(anInterface)) return true;
+            if (IAtomContainer.class.equals(anInterface)) return true;
         }
         Class superClass = classObject.getSuperclass();
         if (superClass != null) return this.accepts(superClass);
@@ -138,7 +154,7 @@ public class SMILESWriter extends DefaultChemObjectWriter {
     /**
      * Writes the content from object to output.
      *
-     * @param   object  IChemObject of which the data is given as output.
+     * @param object IChemObject of which the data is given as output.
      */
     @Override
     public void write(IChemObject object) throws CDKException {
@@ -154,7 +170,7 @@ public class SMILESWriter extends DefaultChemObjectWriter {
     /**
      * Writes a list of molecules to an OutputStream.
      *
-     * @param   som  MoleculeSet that is written to an OutputStream
+     * @param som MoleculeSet that is written to an OutputStream
      */
     public void writeAtomContainerSet(IAtomContainerSet som) {
         writeAtomContainer(som.getAtomContainer(0));
@@ -169,32 +185,41 @@ public class SMILESWriter extends DefaultChemObjectWriter {
     /**
      * Writes the content from molecule to output.
      *
-     * @param   molecule  Molecule of which the data is given as output.
+     * @param molecule Molecule of which the data is given as output.
      */
     public void writeAtomContainer(IAtomContainer molecule) {
-        SmilesGenerator sg = new SmilesGenerator();
-        if (useAromaticityFlag.isSet()) sg = sg.aromatic();
-        String smiles = "";
         try {
-            smiles = sg.create(molecule);
-            logger.debug("Generated SMILES: " + smiles);
-            writer.write(smiles);
-            writer.write('\n');
+            buffer.setLength(0);
+            buffer.append(smigen.create(molecule));
+            if (titleSetting.isSet() && molecule.getTitle() != null)
+                buffer.append('\t').append(molecule.getTitle());
+            buffer.append('\n');
+            writer.write(buffer.toString());
             writer.flush();
-            logger.debug("file flushed...");
         } catch (CDKException | IOException exc) {
             logger.error("Error while writing Molecule: ", exc.getMessage());
             logger.debug(exc);
         }
     }
 
+
     private void initIOSettings() {
-        useAromaticityFlag = addSetting(new BooleanIOSetting("UseAromaticity", IOSetting.Importance.LOW,
+        flavorSetting = addSetting(new IntegerIOSetting("SmilesFlavor", IOSetting.Importance.HIGH,
+                "Output SMILES flavor, binary option", Integer.toString(SmiFlavor.Default)));
+        titleSetting = addSetting(new BooleanIOSetting("WriteTitle", IOSetting.Importance.HIGH,
+                "Write the molecule title after the SMILES", "true"));
+        aromSetting = addSetting(new BooleanIOSetting("UseAromaticity", IOSetting.Importance.LOW,
                 "Should aromaticity information be stored in the SMILES?", "false"));
     }
 
     public void customizeJob() {
-        fireIOSettingQuestion(useAromaticityFlag);
+        fireIOSettingQuestion(flavorSetting);
+        fireIOSettingQuestion(titleSetting);
+        fireIOSettingQuestion(aromSetting);
+        int flav = flavorSetting.getSettingValue();
+        if (aromSetting.isSet())
+            flav |= SmiFlavor.UseAromaticSymbols;
+        smigen = new SmilesGenerator(flav);
     }
 
 }

@@ -25,23 +25,22 @@ import java.util.List;
 /**
  * A report on validation of chemical semantics.
  *
- * @cdk.githash
  */
 public class ValidationReport {
 
-    private List<ValidationTest> errors;
-    private List<ValidationTest> warnings;
-    private List<ValidationTest> oks;
-    private List<ValidationTest> cdkErrors;
+    private final List<ValidationTest> errors;
+    private final List<ValidationTest> warnings;
+    private final List<ValidationTest> oks;
+    private final List<ValidationTest> cdkErrors;
 
     /**
      * Constructs a new empty ValidationReport.
      */
     public ValidationReport() {
-        errors = new ArrayList<ValidationTest>();
-        warnings = new ArrayList<ValidationTest>();
-        oks = new ArrayList<ValidationTest>();
-        cdkErrors = new ArrayList<ValidationTest>();
+        errors = new ArrayList<>();
+        warnings = new ArrayList<>();
+        oks = new ArrayList<>();
+        cdkErrors = new ArrayList<>();
     }
 
     /**

@@ -27,21 +27,20 @@ package org.openscience.cdk.similarity;
 
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.fingerprint.LingoFingerprinter;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.templates.TestMoleculeFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 /**
- * @cdk.module test-fingerprint
  */
-public class LingoSimilarityTest extends CDKTestCase {
+class LingoSimilarityTest extends CDKTestCase {
 
     @Test
-    public void testLingoSim() throws Exception {
+    void testLingoSim() throws Exception {
         IAtomContainer mol1 = TestMoleculeFactory.makeIndole();
         IAtomContainer mol2 = TestMoleculeFactory.makeIndole();
         addImplicitHydrogens(mol1);
@@ -52,7 +51,7 @@ public class LingoSimilarityTest extends CDKTestCase {
         Map<String, Integer> bs1 = fingerprinter.getRawFingerprint(mol1);
         Map<String, Integer> bs2 = fingerprinter.getRawFingerprint(mol2);
         float lingosim = LingoSimilarity.calculate(bs1, bs2);
-        Assert.assertEquals(1.0, lingosim, 0.01);
+        Assertions.assertEquals(1.0, lingosim, 0.01);
     }
 
 }

@@ -37,7 +37,6 @@ import java.util.List;
  * #reset()}.
  *
  * @author John May
- * @cdk.module hash
  */
 final class MultiStereoEncoder implements StereoEncoder {
 
@@ -52,7 +51,7 @@ final class MultiStereoEncoder implements StereoEncoder {
      */
     public MultiStereoEncoder(List<StereoEncoder> encoders) {
         if (encoders.isEmpty()) throw new IllegalArgumentException("no stereo encoders provided");
-        this.encoders = Collections.unmodifiableList(new ArrayList<StereoEncoder>(encoders));
+        this.encoders = Collections.unmodifiableList(new ArrayList<>(encoders));
         this.unconfigured = new BitSet(encoders.size());
         unconfigured.flip(0, encoders.size());
     }

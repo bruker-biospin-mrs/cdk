@@ -25,11 +25,84 @@ import java.util.Map;
  * adding listeners and for their notification of events, as well a a hash
  * table for administration of physical or chemical properties
  *
- *@author        egonw
- * @cdk.githash
- *@cdk.module    interfaces
+ * @author        egonw
  */
 public interface IChemObject extends ICDKObject {
+
+    /**
+     * Flag that is set if the ChemObject is placed when calculating 2D/3D
+     * layouts.
+     */
+    int PLACED = 0x0001;
+    /**
+     * Flag that is set when the ChemObject is part of a ring.
+     */
+    int IN_RING = 0x0002;
+    /**
+     * Flag that is set when the ChemObject is part of a ring.
+     * Note !isInRing() is preferred.
+     */
+    int NOT_IN_RING = 0x0004;
+    /**
+     * Flag that is set if a ChemObject is part of an aliphatic chain.
+     * Since normally ALIPHATIC = !AROMATIC and AROMATIC = !ALIPHATIC.
+     */
+    int ALIPHATIC = 0x0008;
+    /**
+     * Flag is set if ChemObject has been visited.
+     */
+    int VISITED = 0x0010;
+    /**
+     * Flag is set if ChemObject is part of an aromatic system.
+     */
+    int AROMATIC = 0x0020;
+    /**
+     * Flag is set if ChemObject is part of a conjugated system.
+     */
+    int CONJUGATED = 0x0040;
+    /**
+     * Flag is set if a ChemObject is mapped to another ChemObject.
+     * It is used for example in subgraph isomorphism search.
+     * Note this flag is not currently used.
+     */
+    int MAPPED = 0x0080;
+    /**
+     * Sets to true if the atom is a hydrogen bond donor.
+     */
+    int HYDROGEN_BOND_DONOR = 0x0100;
+    /**
+     * Sets to true if the atom is a hydrogen bond acceptor.
+     */
+    int HYDROGEN_BOND_ACCEPTOR = 0x0200;
+    /**
+     * Flag is set if a ChemObject has reactive center.
+     * It is used for example in reaction.
+     */
+    int REACTIVE_CENTER = 0x0400;
+    /**
+     * Flag is set if an atom could be typed.
+     */
+    int TYPEABLE = 0x0800;
+    /**
+     * Flag used for marking uncertainty of the bond order.
+     * If used on an
+     * <ul>
+     *  <li>{@link IAtomContainer} it means that one or several of the bonds have
+     * 		this flag raised (which may indicate aromaticity).</li>
+     *  <li>{@link IBond} it means that it's unclear whether the bond is a single or
+     * 		double bond.</li>
+     *  <li>{@link IAtom} it is a way for the Smiles parser to indicate that this atom was
+     * 		written with a lower case letter, e.g. 'c' rather than 'C'</li>
+     * </ul>
+     */
+    int SINGLE_OR_DOUBLE = 0x1000;
+
+    /**
+     * Flag to indicate a flattened molecule holds a Markush structure, you
+     * can work on it as is or it might make more sense to repack into
+     * something sensible like a RGroupQuery.
+     */
+    int MARKUSH = 0x2000;
 
     /**
      * Use this to add yourself to this IChemObject as a listener. In order to do
@@ -38,14 +111,14 @@ public interface IChemObject extends ICDKObject {
      * @param  col  the ChemObjectListener
      * @see         #removeListener
      */
-    public void addListener(IChemObjectListener col);
+    void addListener(IChemObjectListener col);
 
     /**
      * Returns the number of ChemObjectListeners registered with this object.
      *
      * @return    the number of registered listeners.
      */
-    public int getListenerCount();
+    int getListenerCount();
 
     /**
      * Use this to remove a ChemObjectListener from the ListenerList of this
@@ -54,7 +127,7 @@ public interface IChemObject extends ICDKObject {
      * @param  col  The ChemObjectListener to be removed
      * @see         #addListener
      */
-    public void removeListener(IChemObjectListener col);
+    void removeListener(IChemObjectListener col);
 
     /**
      * Set a flag to use or not use notification. By default it should be set
@@ -63,7 +136,7 @@ public interface IChemObject extends ICDKObject {
      * @param bool if true, then notification messages are sent.
      * @see        #getNotification()
      */
-    public void setNotification(boolean bool);
+    void setNotification(boolean bool);
 
     /**
      * Returns the flag that indicates whether notification messages are sent around.
@@ -71,13 +144,13 @@ public interface IChemObject extends ICDKObject {
      * @return true if messages are sent.
      * @see    #setNotification(boolean)
      */
-    public boolean getNotification();
+    boolean getNotification();
 
     /**
      * This should be triggered by an method that changes the content of an object
      * to that the registered listeners can react to it.
      */
-    public void notifyChanged();
+    void notifyChanged();
 
     /**
      * This should be triggered by an method that changes the content of an object
@@ -88,7 +161,7 @@ public interface IChemObject extends ICDKObject {
      * @param  evt  A ChemObjectChangeEvent pointing to the source of where
      *		        the change happend
      */
-    public void notifyChanged(IChemObjectChangeEvent evt);
+    void notifyChanged(IChemObjectChangeEvent evt);
 
     /**
      * Sets a property for a IChemObject.
@@ -99,7 +172,7 @@ public interface IChemObject extends ICDKObject {
      * @see                 #getProperty
      * @see                 #removeProperty
      */
-    public void setProperty(Object description, Object property);
+    void setProperty(Object description, Object property);
 
     /**
      * Removes a property for a IChemObject.
@@ -109,7 +182,7 @@ public interface IChemObject extends ICDKObject {
      * @see                 #setProperty
      * @see                 #getProperty
      */
-    public void removeProperty(Object description);
+    void removeProperty(Object description);
 
     /**
      * Returns a property for the IChemObject - the object is automatically
@@ -145,7 +218,7 @@ public interface IChemObject extends ICDKObject {
      * @see                 #getProperty(Object, Class)
      * @see                 #removeProperty
      */
-    public <T> T getProperty(Object description);
+    <T> T getProperty(Object description);
 
     /**
      * Access a property of the given description and cast the specified class.
@@ -176,7 +249,7 @@ public interface IChemObject extends ICDKObject {
      * @see #getProperty(Object)
      * @see #addProperties(java.util.Map)
      */
-    public <T> T getProperty(Object description, Class<T> c);
+    <T> T getProperty(Object description, Class<T> c);
 
     /**
      *  Returns a Map with the IChemObject's properties.
@@ -184,7 +257,7 @@ public interface IChemObject extends ICDKObject {
      *@return    The object's properties as an Map
      *@see       #addProperties
      */
-    public Map<Object, Object> getProperties();
+    Map<Object, Object> getProperties();
 
     /**
      * Returns the identifier (ID) of this object.
@@ -192,7 +265,7 @@ public interface IChemObject extends ICDKObject {
      * @return    a String representing the ID value
      * @see       #setID
      */
-    public String getID();
+    String getID();
 
     /**
      * Sets the identifier (ID) of this object.
@@ -200,12 +273,12 @@ public interface IChemObject extends ICDKObject {
      * @param  identifier  a String representing the ID value
      * @see                #getID
      */
-    public void setID(String identifier);
+    void setID(String identifier);
 
     /**
      * Sets the value of some flag. The flag is a mask from a given
-     * CDKConstant (e.g. {@link org.openscience.cdk.CDKConstants#ISAROMATIC}
-     * or {@link org.openscience.cdk.CDKConstants#VISITED}). The flags are
+     * CDKConstant (e.g. {@link #AROMATIC}
+     * or {@link #VISITED}). The flags are
      * intrinsic internal properties and should not be used to store custom
      * values, please use {@link #setProperty(Object, Object)}.
      *
@@ -220,13 +293,12 @@ public interface IChemObject extends ICDKObject {
      * @param  mask   flag to set the value for
      * @param  value  value to assign to flag
      * @see           #getFlag
-     * @see           org.openscience.cdk.CDKConstants
      */
-    public void setFlag(int mask, boolean value);
+    void setFlag(int mask, boolean value);
 
     /**
      * Returns the value of a given flag. The flag is a mask from a given
-     * CDKConstant (e.g. {@link org.openscience.cdk.CDKConstants#ISAROMATIC}).
+     * CDKConstant (e.g. {@link #AROMATIC}).
      *
      * <pre>{@code
      * if(chemObject.getFlag(CDKConstants.ISAROMATIC)){
@@ -237,9 +309,8 @@ public interface IChemObject extends ICDKObject {
      * @param  mask  flag to retrieve the value of
      * @return       true if the flag <code>flag_type</code> is set
      * @see          #setFlag
-     * @see          org.openscience.cdk.CDKConstants
      */
-    public boolean getFlag(int mask);
+    boolean getFlag(int mask);
 
     /**
      * Set the properties of this object to the provided map (shallow copy). Any
@@ -247,7 +318,7 @@ public interface IChemObject extends ICDKObject {
      *
      * @param properties map key-value pairs
      */
-    public void setProperties(Map<Object, Object> properties);
+    void setProperties(Map<Object, Object> properties);
 
     /**
      * Add properties to this object, duplicate keys will replace any existing
@@ -256,7 +327,7 @@ public interface IChemObject extends ICDKObject {
      * @param  properties  a Map specifying the property values
      * @see                #getProperties
      */
-    public void addProperties(Map<Object, Object> properties);
+    void addProperties(Map<Object, Object> properties);
 
     /**
      * Sets the whole set of flags. This set will iteratively invoke
@@ -269,7 +340,7 @@ public interface IChemObject extends ICDKObject {
      * @see                #setFlag(int, boolean)
      * @see                #getFlags
      */
-    public void setFlags(boolean[] newFlags);
+    void setFlags(boolean[] newFlags);
 
     /**
      * Returns the whole set of flags. This method will create a new array on
@@ -281,15 +352,56 @@ public interface IChemObject extends ICDKObject {
      * @see       #getFlag(int)
      * @see       #getFlagValue()
      */
-    public boolean[] getFlags();
+    boolean[] getFlags();
 
     /**
      * Access the internal value used to store the flags. The flags are stored
      * on a single numeric value and are set/cleared.
      *
      * @return numeric representation of the flags
+     * @deprecated used {@link #flags()}
      */
-    public Number getFlagValue();
+    @Deprecated
+    Number getFlagValue();
+
+    /**
+     * Set the provided flags. Any on-bits in the input parameter are set on
+     * in the ChemObject.
+     *
+     * @param flags the flags
+     */
+    void set(int flags);
+
+    /**
+     * Clear the provided flags. Any on-bits in the input parameter are set on
+     * in the ChemObject.
+     *
+     * @param flags the flags
+     */
+    void clear(int flags);
+
+    /**
+     * Test if a flag(s) are set on this ChemObject. If multiple flags are
+     * provided they must all be set to return true.
+     *
+     * <pre>{@code
+     * atom.set(IS_IN_RING);
+     * atom.is(IS_IN_RING); // false!
+     * atom.is(IS_IN_RING+IS_AROMATIC); // false!
+     * atom.set(IS_AROMATIC);
+     * atom.is(IS_IN_RING+IS_AROMATIC); // true!
+     * }</pre>
+     *
+     * @param flags the flags
+     */
+    boolean is(int flags);
+
+    /**
+     * Access the current value of the flags for this ChemObject.
+     *
+     * @return the flag value (32-bit integer)
+     */
+    int flags();
 
     /**
      * Returns a one line description of this IChemObject.
@@ -297,7 +409,7 @@ public interface IChemObject extends ICDKObject {
      * @return a String representation of this object
      */
     @Override
-    public String toString();
+    String toString();
 
     /**
      * Returns a deep clone of this IChemObject.
@@ -305,6 +417,6 @@ public interface IChemObject extends ICDKObject {
      * @return Object the clone of this IChemObject.
      * @throws CloneNotSupportedException if the IChemObject cannot be cloned
      */
-    public Object clone() throws CloneNotSupportedException;
+    Object clone() throws CloneNotSupportedException;
 
 }

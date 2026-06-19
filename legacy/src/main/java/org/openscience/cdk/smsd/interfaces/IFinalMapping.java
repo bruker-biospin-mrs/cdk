@@ -28,8 +28,6 @@ import java.util.Map;
 
 /**
  * Interface for mappings.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -42,35 +40,35 @@ public interface IFinalMapping {
      * @param mapping List of all MCS mapping between a given
      * reactant and product
      */
-    public void add(Map<Integer, Integer> mapping);
+    void add(Map<Integer, Integer> mapping);
 
     /**
      * Sets mapping list
      * @param list List of all MCS mapping between a given
      * reactant and product
      */
-    public void set(List<Map<Integer, Integer>> list);
+    void set(List<Map<Integer, Integer>> list);
 
     /**
      * Returns a mapping Iterator
      * @return Iterator of mappings
      */
-    public Iterator<Map<Integer, Integer>> getIterator();
+    Iterator<Map<Integer, Integer>> getIterator();
 
     /**
      * clear the mapping
      */
-    public void clear();
+    void clear();
 
     /**
      * Returns the stored mappings
      * @return get of MCS mapping List
      */
-    public List<Map<Integer, Integer>> getFinalMapping();
+    List<Map<Integer, Integer>> getFinalMapping();
 
     /**
      * Returns number of stored mappings
      * @return size of the mapping
      */
-    public int getSize();
+    int getSize();
 }

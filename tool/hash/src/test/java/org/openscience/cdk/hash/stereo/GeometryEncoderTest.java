@@ -24,15 +24,14 @@
 
 package org.openscience.cdk.hash.stereo;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -40,17 +39,19 @@ import static org.mockito.Mockito.when;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class GeometryEncoderTest {
+class GeometryEncoderTest {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testConstruction_Empty() {
-        new GeometryEncoder(new int[0], mock(PermutationParity.class), mock(GeometricParity.class));
+    @Test
+    void testConstruction_Empty() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    new GeometryEncoder(new int[0], mock(PermutationParity.class), mock(GeometricParity.class));
+                                });
     }
 
     @Test
-    public void testConstruction_Singleton() {
+    void testConstruction_Singleton() {
         PermutationParity permutation = mock(PermutationParity.class);
         GeometricParity geometric = mock(GeometricParity.class);
 
@@ -64,14 +65,14 @@ public class GeometryEncoderTest {
         Arrays.fill(result, 1);
 
         // check returned true
-        assertTrue(encoder.encode(prev, result));
+        Assertions.assertTrue(encoder.encode(prev, result));
 
         // check only the value at index '1' was changed
         assertThat(result, is(new long[]{1, 15543053, 1}));
     }
 
     @Test
-    public void testEncode_Clockwise() throws Exception {
+    void testEncode_Clockwise() throws Exception {
 
         PermutationParity permutation = mock(PermutationParity.class);
         GeometricParity geometric = mock(GeometricParity.class);
@@ -86,7 +87,7 @@ public class GeometryEncoderTest {
         Arrays.fill(result, 1);
 
         // check returned true
-        assertTrue(encoder.encode(prev, result));
+        Assertions.assertTrue(encoder.encode(prev, result));
 
         // check only the value at index '1' was changed
         assertThat(result, is(new long[]{1, 15543053, 1}));
@@ -94,7 +95,7 @@ public class GeometryEncoderTest {
     }
 
     @Test
-    public void testEncode_Clockwise_Alt() throws Exception {
+    void testEncode_Clockwise_Alt() throws Exception {
 
         PermutationParity permutation = mock(PermutationParity.class);
         GeometricParity geometric = mock(GeometricParity.class);
@@ -109,7 +110,7 @@ public class GeometryEncoderTest {
         Arrays.fill(result, 1);
 
         // check returned true
-        assertTrue(encoder.encode(prev, result));
+        Assertions.assertTrue(encoder.encode(prev, result));
 
         // check only the value at index '1' was changed
         assertThat(result, is(new long[]{1, 15543053, 1}));
@@ -117,7 +118,7 @@ public class GeometryEncoderTest {
     }
 
     @Test
-    public void testEncode_Clockwise_Two() throws Exception {
+    void testEncode_Clockwise_Two() throws Exception {
 
         PermutationParity permutation = mock(PermutationParity.class);
         GeometricParity geometric = mock(GeometricParity.class);
@@ -132,7 +133,7 @@ public class GeometryEncoderTest {
         Arrays.fill(result, 1);
 
         // check returned true
-        assertTrue(encoder.encode(prev, result));
+        Assertions.assertTrue(encoder.encode(prev, result));
 
         // check only the value at index '1' was changed
         assertThat(result, is(new long[]{1, 15543053, 1, 15543053, 1, 1}));
@@ -140,7 +141,7 @@ public class GeometryEncoderTest {
     }
 
     @Test
-    public void testEncode_Anticlockwise() throws Exception {
+    void testEncode_Anticlockwise() throws Exception {
 
         PermutationParity permutation = mock(PermutationParity.class);
         GeometricParity geometric = mock(GeometricParity.class);
@@ -155,7 +156,7 @@ public class GeometryEncoderTest {
         Arrays.fill(result, 1);
 
         // check returned true
-        assertTrue(encoder.encode(prev, result));
+        Assertions.assertTrue(encoder.encode(prev, result));
 
         // check only the value at index '1' was changed
         assertThat(result, is(new long[]{1, 15521419, 1}));
@@ -163,7 +164,7 @@ public class GeometryEncoderTest {
     }
 
     @Test
-    public void testEncode_Anticlockwise_Alt() throws Exception {
+    void testEncode_Anticlockwise_Alt() throws Exception {
 
         PermutationParity permutation = mock(PermutationParity.class);
         GeometricParity geometric = mock(GeometricParity.class);
@@ -178,7 +179,7 @@ public class GeometryEncoderTest {
         Arrays.fill(result, 1);
 
         // check returned true
-        assertTrue(encoder.encode(prev, result));
+        Assertions.assertTrue(encoder.encode(prev, result));
 
         // check only the value at index '1' was changed
         assertThat(result, is(new long[]{1, 15521419, 1}));
@@ -186,7 +187,7 @@ public class GeometryEncoderTest {
     }
 
     @Test
-    public void testEncode_Anticlockwise_Two() throws Exception {
+    void testEncode_Anticlockwise_Two() throws Exception {
 
         PermutationParity permutation = mock(PermutationParity.class);
         GeometricParity geometric = mock(GeometricParity.class);
@@ -201,7 +202,7 @@ public class GeometryEncoderTest {
         Arrays.fill(result, 1);
 
         // check returned true
-        assertTrue(encoder.encode(prev, result));
+        Assertions.assertTrue(encoder.encode(prev, result));
 
         // check only the value at index '1' was changed
         assertThat(result, is(new long[]{1, 15521419, 1, 15521419, 1, 1}));
@@ -209,7 +210,7 @@ public class GeometryEncoderTest {
     }
 
     @Test
-    public void testEncode_NoGeometry() {
+    void testEncode_NoGeometry() {
         PermutationParity permutation = mock(PermutationParity.class);
         GeometricParity geometric = mock(GeometricParity.class);
 
@@ -224,14 +225,14 @@ public class GeometryEncoderTest {
 
         // check returned true. the permutation was okay, but no geometry, this
         // will never change
-        assertTrue(encoder.encode(prev, result));
+        Assertions.assertTrue(encoder.encode(prev, result));
 
         // check no values modified
         assertThat(result, is(new long[]{1, 1, 1, 1, 1, 1}));
     }
 
     @Test
-    public void testEncode_NoPermutation() {
+    void testEncode_NoPermutation() {
         PermutationParity permutation = mock(PermutationParity.class);
         GeometricParity geometric = mock(GeometricParity.class);
 
@@ -245,7 +246,7 @@ public class GeometryEncoderTest {
         Arrays.fill(result, 1);
 
         // check returned false, the permutation changes for each cycle
-        assertFalse(encoder.encode(prev, result));
+        Assertions.assertFalse(encoder.encode(prev, result));
 
         // check no values modified
         assertThat(result, is(new long[]{1, 1, 1, 1, 1, 1}));
@@ -255,7 +256,7 @@ public class GeometryEncoderTest {
     }
 
     @Test
-    public void testReset() throws Exception {
+    void testReset() throws Exception {
         // no method body to test
     }
 }

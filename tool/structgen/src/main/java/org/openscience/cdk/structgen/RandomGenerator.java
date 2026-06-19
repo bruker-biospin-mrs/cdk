@@ -41,13 +41,11 @@ import org.openscience.cdk.tools.manipulator.BondManipulator;
  *
  * @see         org.openscience.cdk.structgen.VicinitySampler
  *
- * @cdk.githash
  * @cdk.keyword structure generator
- * @cdk.module structgen
  */
 public class RandomGenerator {
 
-    ILoggingTool           logger            = LoggingToolFactory.createLoggingTool(RandomGenerator.class);
+    final ILoggingTool           logger            = LoggingToolFactory.createLoggingTool(RandomGenerator.class);
 
     private IAtomContainer proposedStructure = null;
     private IAtomContainer molecule          = null;
@@ -113,16 +111,16 @@ public class RandomGenerator {
     public void mutate(IAtomContainer ac) {
         logger.debug("RandomGenerator->mutate() Start");
         int nrOfAtoms = ac.getAtomCount();
-        int x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-        double a11 = 0, a12 = 0, a22 = 0, a21 = 0;
-        double b11 = 0, lowerborder = 0, upperborder = 0;
+        int x1, x2, y1, y2;
+        double a11, a12, a22, a21;
+        double b11 = 0, lowerborder, upperborder;
 
-        IAtom ax1 = null, ax2 = null, ay1 = null, ay2 = null;
-        IBond b1 = null, b2 = null, b3 = null, b4 = null;
+        IAtom ax1, ax2, ay1, ay2;
+        IBond b1, b2, b3, b4;
         int[] choices = new int[3];
-        int choiceCounter = 0;
+        int choiceCounter;
         /* We need at least two non-zero bonds in order to be successful */
-        int nonZeroBondsCounter = 0;
+        int nonZeroBondsCounter;
         do {
             do {
                 nonZeroBondsCounter = 0;
@@ -143,7 +141,7 @@ public class RandomGenerator {
 
                 b1 = ac.getBond(ax1, ay1);
                 if (b1 != null) {
-                    a11 = BondManipulator.destroyBondOrder(b1.getOrder());
+                    a11 = b1.getOrder().numeric();
                     nonZeroBondsCounter++;
                 } else {
                     a11 = 0;
@@ -151,7 +149,7 @@ public class RandomGenerator {
 
                 b2 = ac.getBond(ax1, ay2);
                 if (b2 != null) {
-                    a12 = BondManipulator.destroyBondOrder(b2.getOrder());
+                    a12 = b2.getOrder().numeric();
                     nonZeroBondsCounter++;
                 } else {
                     a12 = 0;
@@ -159,7 +157,7 @@ public class RandomGenerator {
 
                 b3 = ac.getBond(ax2, ay1);
                 if (b3 != null) {
-                    a21 = BondManipulator.destroyBondOrder(b3.getOrder());
+                    a21 = b3.getOrder().numeric();
                     nonZeroBondsCounter++;
                 } else {
                     a21 = 0;
@@ -167,7 +165,7 @@ public class RandomGenerator {
 
                 b4 = ac.getBond(ax2, ay2);
                 if (b4 != null) {
-                    a22 = BondManipulator.destroyBondOrder(b4.getOrder());
+                    a22 = b4.getOrder().numeric();
                     nonZeroBondsCounter++;
                 } else {
                     a22 = 0;

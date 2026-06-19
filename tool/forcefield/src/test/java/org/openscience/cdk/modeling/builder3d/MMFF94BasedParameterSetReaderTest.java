@@ -22,18 +22,15 @@
  */
 package org.openscience.cdk.modeling.builder3d;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomType;
-
-import org.junit.Test;
 
 /**
  * This class is for testing the MMFF94 based parameter
@@ -41,28 +38,27 @@ import org.junit.Test;
  *
  * @author danielszisz
  * @version 04/16/2012
- * @cdk.module test-forcefield
  */
-public class MMFF94BasedParameterSetReaderTest {
+class MMFF94BasedParameterSetReaderTest {
 
     @Test
-    public void testreadParameterSets() throws Exception {
+    void testreadParameterSets() throws Exception {
         MMFF94BasedParameterSetReader mmff94bpsr = new MMFF94BasedParameterSetReader();
         mmff94bpsr.readParameterSets(DefaultChemObjectBuilder.getInstance());
-        Map<String, Object> parameterSet = new Hashtable<String, Object>();
+        Map<String, Object> parameterSet;
         parameterSet = mmff94bpsr.getParamterSet();
 
         //test atom type
         List<IAtomType> atomtypes = mmff94bpsr.getAtomTypes();
         IAtomType atomtype = atomtypes.get(0);
         String sid = "C";
-        assertEquals(sid, atomtype.getAtomTypeName());
+        Assertions.assertEquals(sid, atomtype.getAtomTypeName());
         String rootType = "C";
-        assertEquals(rootType, atomtype.getSymbol());
+        Assertions.assertEquals(rootType, atomtype.getSymbol());
         String smaxbond = "4";
-        assertEquals(Integer.parseInt(smaxbond), (int) atomtype.getFormalNeighbourCount());
+        Assertions.assertEquals(Integer.parseInt(smaxbond), (int) atomtype.getFormalNeighbourCount());
         String satomNr = "6";
-        assertEquals(Integer.parseInt(satomNr), (int) atomtype.getAtomicNumber());
+        Assertions.assertEquals(Integer.parseInt(satomNr), (int) atomtype.getAtomicNumber());
 
         //atom
         //TODO testing
@@ -77,12 +73,12 @@ public class MMFF94BasedParameterSetReaderTest {
         String sk4 = "715.009";
         String sbci = "0.0000";
         String bondkey = "bond" + sid1 + ";" + sid2;
-        List<Double> bonddata = new ArrayList<Double>();
-        bonddata.add((Double) (new Double(slen).doubleValue()));
-        bonddata.add((Double) (new Double(sk2).doubleValue()));
-        bonddata.add((Double) (new Double(sk3).doubleValue()));
-        bonddata.add((Double) (new Double(sk4).doubleValue()));
-        bonddata.add((Double) (new Double(sbci).doubleValue()));
+        List<Double> bonddata = new ArrayList<>();
+        bonddata.add(Double.valueOf(slen));
+        bonddata.add(Double.valueOf(sk2));
+        bonddata.add(Double.valueOf(sk3));
+        bonddata.add(Double.valueOf(sk4));
+        bonddata.add(Double.valueOf(sbci));
 
         //strbnd
         //		scode = "0";
@@ -92,9 +88,9 @@ public class MMFF94BasedParameterSetReaderTest {
         String value1 = "14.82507";
         String value2 = "14.82507";
         String strbndkey = "strbnd" + sid1 + ";" + sid2 + ";" + sid3;
-        List<Double> strbnddata = new ArrayList<Double>();
-        strbnddata.add((Double) (new Double(value1).doubleValue()));
-        strbnddata.add((Double) (new Double(value2).doubleValue()));
+        List<Double> strbnddata = new ArrayList<>();
+        strbnddata.add(Double.valueOf(value1));
+        strbnddata.add(Double.valueOf(value2));
 
         //angle
         //      scode = "0";
@@ -106,11 +102,11 @@ public class MMFF94BasedParameterSetReaderTest {
         String value3 = "-34.5494";
         String value4 = "0";
         String anglekey = "angle" + sid1 + ";" + sid2 + ";" + sid3;
-        List<Double> angledata = new ArrayList<Double>();
-        angledata.add((Double) (new Double(value1).doubleValue()));
-        angledata.add((Double) (new Double(value2).doubleValue()));
-        angledata.add((Double) (new Double(value3).doubleValue()));
-        angledata.add((Double) (new Double(value4).doubleValue()));
+        List<Double> angledata = new ArrayList<>();
+        angledata.add(Double.valueOf(value1));
+        angledata.add(Double.valueOf(value2));
+        angledata.add(Double.valueOf(value3));
+        angledata.add(Double.valueOf(value4));
 
         //torsion
         //	    scode = "0";
@@ -124,12 +120,12 @@ public class MMFF94BasedParameterSetReaderTest {
         value4 = "0.000";
         String value5 = "0.000";
         String torsionkey = "torsion" + ";" + sid1 + ";" + sid2 + ";" + sid3 + ";" + sid4;
-        List<Double> torsiondata = new ArrayList<Double>();
-        torsiondata.add((Double) (new Double(value1).doubleValue()));
-        torsiondata.add((Double) (new Double(value2).doubleValue()));
-        torsiondata.add((Double) (new Double(value3).doubleValue()));
-        torsiondata.add((Double) (new Double(value4).doubleValue()));
-        torsiondata.add((Double) (new Double(value5).doubleValue()));
+        List<Double> torsiondata = new ArrayList<>();
+        torsiondata.add(Double.valueOf(value1));
+        torsiondata.add(Double.valueOf(value2));
+        torsiondata.add(Double.valueOf(value3));
+        torsiondata.add(Double.valueOf(value4));
+        torsiondata.add(Double.valueOf(value5));
 
         //opbend
         //      scode = "0";
@@ -139,21 +135,21 @@ public class MMFF94BasedParameterSetReaderTest {
         sid4 = "CR4R";
         value1 = "10.86681780";
         String opbendkey = "opbend" + ";" + sid1 + ";" + sid2 + ";" + sid3 + ";" + sid4;
-        List<Double> opbenddata = new ArrayList<Double>();
-        opbenddata.add((Double) (new Double(value1).doubleValue()));
+        List<Double> opbenddata = new ArrayList<>();
+        opbenddata.add(Double.valueOf(value1));
 
         //TODO data lines testing
 
         for (Entry<String, Object> e : parameterSet.entrySet()) {
             if (e.getKey().equals(bondkey))
-                assertEquals(bonddata, e.getValue());
+                Assertions.assertEquals(bonddata, e.getValue());
             else if (e.getKey().equals(strbndkey))
-                assertEquals(strbnddata, e.getValue());
+                Assertions.assertEquals(strbnddata, e.getValue());
             else if (e.getKey().equals(anglekey))
-                assertEquals(angledata, e.getValue());
+                Assertions.assertEquals(angledata, e.getValue());
             else if (e.getKey().equals(torsionkey))
-                assertEquals(torsiondata, e.getValue());
-            else if (e.getKey().equals(opbendkey)) assertEquals(opbenddata, e.getValue());
+                Assertions.assertEquals(torsiondata, e.getValue());
+            else if (e.getKey().equals(opbendkey)) Assertions.assertEquals(opbenddata, e.getValue());
         }
     }
 }

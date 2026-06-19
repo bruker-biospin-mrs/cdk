@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -47,8 +46,8 @@ import org.openscience.cdk.tools.periodictable.PeriodicTable;
 /**
  * Generates a fingerprint for a given {@link IAtomContainer}. Fingerprints are one-dimensional bit arrays, where bits
  * are set according to a the occurrence of a particular structural feature (See for example the Daylight inc. theory
- * manual for more information). Fingerprints allow for a fast screening step to exclude candidates for a substructure
- * search in a database. They are also a means for determining the similarity of chemical structures.
+ * manual for more information). Fingerprints are a means for determining the similarity of chemical structures,
+ * some fingerprints (not this one) allow database pre-screening for substructure searches.
 
  * <pre>
  *
@@ -72,12 +71,14 @@ import org.openscience.cdk.tools.periodictable.PeriodicTable;
  * malformed symbols are present, their atomic number is taken as one more than the last element currently supported in {@link PeriodicTable}.
  * </P>
  *
+ * <br/>
+ * <b>
+ * Important! this fingerprint can not be used for substructure screening.
+ * </b>
  *
  * @author Syed Asad Rahman (2012)
  * @cdk.keyword fingerprint
  * @cdk.keyword similarity
- * @cdk.module fingerprint
- * @cdk.githash
  *
  */
 public class ShortestPathFingerprinter extends AbstractFingerprinter implements IFingerprinter, Serializable {
@@ -90,11 +91,9 @@ public class ShortestPathFingerprinter extends AbstractFingerprinter implements 
     /**
      * The default length of created fingerprints.
      */
-    private int                 fingerprintLength;
-    private static ILoggingTool logger           = LoggingToolFactory
+    private final int                 fingerprintLength;
+    private static final ILoggingTool logger           = LoggingToolFactory
                                                          .createLoggingTool(ShortestPathFingerprinter.class);
-
-    private final RandomNumber rand = new RandomNumber();
 
     /**
      * Creates a fingerprint generator of length
@@ -126,7 +125,7 @@ public class ShortestPathFingerprinter extends AbstractFingerprinter implements 
 
         IAtomContainer atomContainer = null;
         try {
-            atomContainer = (IAtomContainer) ac.clone();
+            atomContainer = ac.clone();
         } catch (CloneNotSupportedException ex) {
             logger.error("Failed to clone the molecule:", ex);
         }
@@ -185,7 +184,7 @@ public class ShortestPathFingerprinter extends AbstractFingerprinter implements 
 
         ShortestPathWalker walker = new ShortestPathWalker(container);
         // convert paths to hashes
-        List<Integer> paths = new ArrayList<Integer>();
+        List<Integer> paths = new ArrayList<>();
         int patternIndex = 0;
 
         for (String s : walker.paths()) {
@@ -199,8 +198,7 @@ public class ShortestPathFingerprinter extends AbstractFingerprinter implements 
          */
         IRingSet sssr = Cycles.essential(container).toRingSet();
         RingSetManipulator.sort(sssr);
-        for (Iterator<IAtomContainer> it = sssr.atomContainers().iterator(); it.hasNext();) {
-            IAtomContainer ring = it.next();
+        for (IAtomContainer ring : sssr.atomContainers()) {
             int toHashCode = String.valueOf(ring.getAtomCount()).hashCode();
             paths.add(patternIndex, toHashCode);
             patternIndex++;
@@ -208,9 +206,8 @@ public class ShortestPathFingerprinter extends AbstractFingerprinter implements 
         /*
          * Check for the charges
          */
-        List<String> l = new ArrayList<String>();
-        for (Iterator<IAtom> it = container.atoms().iterator(); it.hasNext();) {
-            IAtom atom = it.next();
+        List<String> l = new ArrayList<>();
+        for (IAtom atom : container.atoms()) {
             int charge = atom.getFormalCharge() == null ? 0 : atom.getFormalCharge();
             if (charge != 0) {
                 l.add(atom.getSymbol().concat(String.valueOf(charge)));
@@ -221,12 +218,11 @@ public class ShortestPathFingerprinter extends AbstractFingerprinter implements 
         paths.add(patternIndex, toHashCode);
         patternIndex++;
 
-        l = new ArrayList<String>();
+        l = new ArrayList<>();
         /*
          * atom stereo parity
          */
-        for (Iterator<IAtom> it = container.atoms().iterator(); it.hasNext();) {
-            IAtom atom = it.next();
+        for (IAtom atom : container.atoms()) {
             int st = atom.getStereoParity() == null ? 0 : atom.getStereoParity();
             if (st != 0) {
                 l.add(atom.getSymbol().concat(String.valueOf(st)));
@@ -239,13 +235,13 @@ public class ShortestPathFingerprinter extends AbstractFingerprinter implements 
 
         if (container.getSingleElectronCount() > 0) {
             StringBuilder radicalInformation = new StringBuilder();
-            radicalInformation.append("RAD: ").append(String.valueOf(container.getSingleElectronCount()));
+            radicalInformation.append("RAD: ").append(container.getSingleElectronCount());
             paths.add(patternIndex, radicalInformation.toString().hashCode());
             patternIndex++;
         }
         if (container.getLonePairCount() > 0) {
             StringBuilder lpInformation = new StringBuilder();
-            lpInformation.append("LP: ").append(String.valueOf(container.getLonePairCount()));
+            lpInformation.append("LP: ").append(container.getLonePairCount());
             paths.add(patternIndex, lpInformation.toString().hashCode());
             patternIndex++;
         }
@@ -262,10 +258,19 @@ public class ShortestPathFingerprinter extends AbstractFingerprinter implements 
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    /*
-     * Returns a random number for a given object
+    /**
+     * Randomise (distribute/rotate) a hash code seed. A fast pseudorandom
+     * number generator based on feedback shift registers.
+     * 
+     * @see <a href="http://en.wikipedia.org/wiki/Xorshift">Xorshift</a>
+     * @see <a href="http://www.javamex.com/tutorials/random_numbers/xorshift.shtml">Xorshift
+     *      random number generators</a>
      */
-    private int getRandomNumber(Integer hashValue) {
-        return rand.generateMersenneTwisterRandomNumber(fingerprintLength, hashValue);
+    private int getRandomNumber(long seed) {
+        // these shifts generate a large period (how often we see a repeat)
+        seed = seed ^ seed << 21;
+        seed = seed ^ seed >>> 35;
+        seed = seed ^ seed << 4;
+        return (int)(Math.abs(seed) % fingerprintLength);
     }
 }

@@ -23,15 +23,12 @@ package org.openscience.cdk.renderer.elements.path;
 
 import javax.vecmath.Point2d;
 
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
-/**
- * @cdk.module test-renderbasic
- */
-public class QuadToTest extends AbstractPathElementTest {
+class QuadToTest extends AbstractPathElementTest {
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         setPathElement(new QuadTo(new Point2d(0, 1), new Point2d(2, 3)));
     }
 

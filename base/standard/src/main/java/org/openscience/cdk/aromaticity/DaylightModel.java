@@ -24,7 +24,6 @@
 
 package org.openscience.cdk.aromaticity;
 
-import com.google.common.collect.Maps;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -32,9 +31,9 @@ import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.ringsearch.RingSearch;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Objects;
 
 /**
  * Electron donation model closely mirroring the Daylight model for use in
@@ -62,11 +61,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * contribute '0' electrons.</li></ul>
  *
  * @author John May
- * @cdk.module standard
- * @cdk.githash
  */
 final class DaylightModel extends ElectronDonation {
 
+    private static final int WILDCARD   = 0;
     private static final int CARBON     = 6;
     private static final int NITROGEN   = 7;
     private static final int OXYGEN     = 8;
@@ -77,7 +75,7 @@ final class DaylightModel extends ElectronDonation {
 
     /**{@inheritDoc} */
     @Override
-    int[] contribution(IAtomContainer container, RingSearch ringSearch) {
+    int[] contribution(IAtomContainer container) {
 
         int n = container.getAtomCount();
 
@@ -85,7 +83,7 @@ final class DaylightModel extends ElectronDonation {
         // - this avoids costly operations such as looking up connected
         // bonds on each atom at the cost of memory
         int[] degree = new int[n];
-        int[] bondOrderSum = new int[n];
+        int[] valence = new int[n];
         int[] nCyclicPiBonds = new int[n];
         int[] exocyclicPiBond = new int[n];
         int[] electrons = new int[n];
@@ -93,12 +91,14 @@ final class DaylightModel extends ElectronDonation {
         Arrays.fill(exocyclicPiBond, -1);
 
         // index atoms and set the degree to the number of implicit hydrogens
-        Map<IAtom, Integer> atomIndex = Maps.newHashMapWithExpectedSize(n);
+        Map<IAtom, Integer> atomIndex = new HashMap<>(2*n);
         for (int i = 0; i < n; i++) {
             IAtom a = container.getAtom(i);
             atomIndex.put(a, i);
-            degree[i] = checkNotNull(a.getImplicitHydrogenCount(),
-                    "Aromaticity model requires implicit hydrogen count is set.");
+            int implH = Objects.requireNonNull(a.getImplicitHydrogenCount(),
+                                      "Aromaticity model requires implicit hydrogen count is set.");
+            degree[i] = implH;
+            valence[i] = implH;
         }
 
         // for each bond we increase the degree count and check for cyclic and
@@ -111,13 +111,13 @@ final class DaylightModel extends ElectronDonation {
             degree[u]++;
             degree[v]++;
 
-            IBond.Order order = checkNotNull(bond.getOrder(), "Aromaticity model requires that bond orders must be set");
+            IBond.Order order = Objects.requireNonNull(bond.getOrder(), "Aromaticity model requires that bond orders must be set");
 
             switch (order) {
                 case UNSET:
                     throw new IllegalArgumentException("Aromaticity model requires that bond orders must be set");
                 case DOUBLE:
-                    if (ringSearch.cyclic(u, v)) {
+                    if (bond.isInRing()) {
                         nCyclicPiBonds[u]++;
                         nCyclicPiBonds[v]++;
                     } else {
@@ -128,20 +128,21 @@ final class DaylightModel extends ElectronDonation {
                 case SINGLE:
                 case TRIPLE:
                 case QUADRUPLE:
-                    bondOrderSum[u] += order.numeric();
-                    bondOrderSum[v] += order.numeric();
+                    valence[u] += order.numeric();
+                    valence[v] += order.numeric();
             }
         }
 
         // now make a decision on how many electrons each atom contributes
         for (int i = 0; i < n; i++) {
 
-            int element = element(container.getAtom(i));
-            int charge = charge(container.getAtom(i));
+            IAtom atom = container.getAtom(i);
+            int element = element(atom);
+            int charge = charge(atom);
 
             // abnormal valence, usually indicated a radical. these cause problems
             // with kekulisations
-            int bondedValence = bondOrderSum[i] + container.getAtom(i).getImplicitHydrogenCount();
+            int bondedValence = valence[i];
             if (!normal(element, charge, bondedValence)) {
                 electrons[i] = -1;
             }
@@ -149,7 +150,7 @@ final class DaylightModel extends ElectronDonation {
             // non-aromatic element, acyclic atoms, atoms with more than three
             // neighbors and atoms with more than 1 cyclic pi bond are not
             // considered
-            else if (!aromaticElement(element) || !ringSearch.cyclic(i) || degree[i] > 3 || nCyclicPiBonds[i] > 1) {
+            else if (!aromaticElement(element) || !atom.isInRing() || degree[i] > 3 || nCyclicPiBonds[i] > 1) {
                 electrons[i] = -1;
             }
 
@@ -170,7 +171,9 @@ final class DaylightModel extends ElectronDonation {
             // here is we count the number free valence electrons but also
             // check if the bonded valence is okay (i.e. not a radical)
             else if (charge <= 0 && charge > -3) {
-                if (valence(element, charge) - bondOrderSum[i] >= 2)
+                if (element == WILDCARD)
+                    electrons[i] = 2;
+                else if (valence(element, charge) - valence[i] >= 2)
                     electrons[i] = 2;
                 else
                     electrons[i] = -1;
@@ -214,6 +217,7 @@ final class DaylightModel extends ElectronDonation {
      */
     private static int exocyclicContribution(int element, int otherElement, int charge, int nCyclic) {
         switch (element) {
+            case WILDCARD:
             case CARBON:
                 return otherElement != CARBON ? 0 : 1;
             case NITROGEN:
@@ -239,6 +243,7 @@ final class DaylightModel extends ElectronDonation {
      */
     private static boolean aromaticElement(int element) {
         switch (element) {
+            case WILDCARD:
             case CARBON:
             case NITROGEN:
             case OXYGEN:
@@ -261,6 +266,8 @@ final class DaylightModel extends ElectronDonation {
      */
     private static boolean normal(int element, int charge, int valence) {
         switch (element) {
+            case WILDCARD:
+                return true;
             case CARBON:
                 if (charge == -1 || charge == +1) return valence == 3;
                 return charge == 0 && valence == 4;

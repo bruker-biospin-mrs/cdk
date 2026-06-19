@@ -24,10 +24,11 @@
 
 package org.openscience.cdk.hash;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -36,19 +37,17 @@ import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.openscience.cdk.interfaces.IBond.Order.DOUBLE;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class MinimumEquivalentCyclicSetUnionTest {
+class MinimumEquivalentCyclicSetUnionTest {
 
     @Test
-    public void testFind() throws Exception {
+    void testFind() throws Exception {
         IAtomContainer dummy = mock(IAtomContainer.class);
         int[][] g = new int[][]{{1, 5, 6}, {0, 2}, {1, 3}, {2, 4, 7}, {3, 5}, {0, 4}, {0}, {3}};
 
@@ -60,14 +59,14 @@ public class MinimumEquivalentCyclicSetUnionTest {
 
         assertThat(set.size(), is(4));
         // the first size vertex are all in a cycle
-        assertTrue(set.contains(0));
-        assertTrue(set.contains(2));
-        assertTrue(set.contains(3));
-        assertTrue(set.contains(4));
+        Assertions.assertTrue(set.contains(0));
+        Assertions.assertTrue(set.contains(2));
+        Assertions.assertTrue(set.contains(3));
+        Assertions.assertTrue(set.contains(4));
     }
 
     @Test
-    public void testFind_Distinct() throws Exception {
+    void testFind_Distinct() throws Exception {
         IAtomContainer dummy = mock(IAtomContainer.class);
         int[][] g = new int[][]{{1, 5, 6}, {0, 2}, {1, 3}, {2, 4, 7}, {3, 5}, {0, 4}, {0}, {3}};
 
@@ -89,7 +88,7 @@ public class MinimumEquivalentCyclicSetUnionTest {
      * does.
      */
     @Test
-    public void testScenario() {
+    void testScenario() {
 
         IAtomContainer cid4433798 = cid44333798();
         IAtomContainer cid57170558 = cid57170558();
@@ -111,7 +110,7 @@ public class MinimumEquivalentCyclicSetUnionTest {
      * @cdk.inchi InChI=1S/C13H17N/c1-10-2-4-11(5-3-10)14-12-6-7-13(14)9-8-12/h2-5,12-13H,6-9H2,1H3
      */
     private IAtomContainer cid44333798() {
-        IAtomContainer m = new AtomContainer(14, 16, 0, 0);
+        IAtomContainer m = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom[] as = new IAtom[]{new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"),
                 new Atom("C"), new Atom("C"), new Atom("N"), new Atom("C"), new Atom("C"), new Atom("C"),
                 new Atom("C"), new Atom("C"), new Atom("C"),};
@@ -131,7 +130,7 @@ public class MinimumEquivalentCyclicSetUnionTest {
      * @cdk.inchi InChI=1S/C13H17N/c1-10-2-4-11(5-3-10)14(12-6-7-12)13-8-9-13/h2-5,12-13H,6-9H2,1H3
      */
     private IAtomContainer cid57170558() {
-        IAtomContainer m = new AtomContainer(14, 16, 0, 0);
+        IAtomContainer m = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom[] as = new IAtom[]{new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"),
                 new Atom("C"), new Atom("C"), new Atom("N"), new Atom("C"), new Atom("C"), new Atom("C"),
                 new Atom("C"), new Atom("C"), new Atom("C"),};

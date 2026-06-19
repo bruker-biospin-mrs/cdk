@@ -41,11 +41,10 @@ import org.openscience.cdk.renderer.visitor.IDrawVisitor;
  * Utility class for testing.
  *
  * @author     maclean
- * @cdk.module test-renderbasic
  */
 public class ElementUtility implements IDrawVisitor {
 
-    private List<IRenderingElement> elements         = new ArrayList<IRenderingElement>();
+    private final List<IRenderingElement> elements         = new ArrayList<>();
 
     private AffineTransform         transform;
 
@@ -86,10 +85,10 @@ public class ElementUtility implements IDrawVisitor {
         elements.clear();
         getElementGroups = false;
         root.accept(this);
-        return new ArrayList<IRenderingElement>(elements);
+        return new ArrayList<>(elements);
     }
 
-    public int[] transformPoint(double x, double y) {
+    private int[] transformPoint(double x, double y) {
         double[] src = new double[]{x, y};
         double[] dest = new double[2];
         this.transform.transform(src, 0, dest, 0, 1);
@@ -111,15 +110,15 @@ public class ElementUtility implements IDrawVisitor {
         return this.model;
     }
 
-    public String toString(int[] p) {
+    private String toString(int[] p) {
         return String.format("(%d, %d)", p[0], p[1]);
     }
 
-    public String toString(double x, double y) {
+    private String toString(double x, double y) {
         return String.format("(%+3.1f, %+3.1f)", x, y);
     }
 
-    public String toString(double x, double y, double r) {
+    private String toString(double x, double y, double r) {
         return String.format("(%+3.1f, %+3.1f, %+3.1f)", x, y, r);
     }
 

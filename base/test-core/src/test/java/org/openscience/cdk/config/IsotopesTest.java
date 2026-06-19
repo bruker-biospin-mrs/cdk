@@ -19,11 +19,12 @@
  */
 package org.openscience.cdk.config;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.Element;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IElement;
@@ -32,115 +33,113 @@ import org.openscience.cdk.interfaces.IIsotope;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Checks the functionality of the IsotopeFactory
  *
- * @cdk.module test-core
  */
-public class IsotopesTest extends CDKTestCase {
+class IsotopesTest extends CDKTestCase {
 
     @Test
-    public void testGetInstance_IChemObjectBuilder() throws Exception {
+    void testGetInstance_IChemObjectBuilder() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
-        Assert.assertNotNull(isofac);
+        Assertions.assertNotNull(isofac);
     }
 
     @Test
-    public void testGetSize() throws Exception {
+    void testGetSize() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
-        Assert.assertTrue(isofac.getSize() > 0);
+        Assertions.assertTrue(isofac.getSize() > 0);
     }
 
     @Test
-    public void testConfigure_IAtom() throws Exception {
+    void testConfigure_IAtom() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         Atom atom = new Atom("H");
         isofac.configure(atom);
-        Assert.assertEquals(1, atom.getAtomicNumber().intValue());
+        Assertions.assertEquals(1, atom.getAtomicNumber().intValue());
     }
 
     @Test
-    public void testConfigure_IAtom_IIsotope() throws Exception {
+    void testConfigure_IAtom_IIsotope() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         Atom atom = new Atom("H");
         IIsotope isotope = new org.openscience.cdk.Isotope("H", 2);
         isofac.configure(atom, isotope);
-        Assert.assertEquals(2, atom.getMassNumber().intValue());
+        Assertions.assertEquals(2, atom.getMassNumber().intValue());
     }
 
     @Test
-    public void testGetMajorIsotope_String() throws Exception {
+    void testGetMajorIsotope_String() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         IIsotope isotope = isofac.getMajorIsotope("Te");
-        Assert.assertEquals(129.9062244, isotope.getExactMass(), 0.0001);
+        Assertions.assertEquals(129.9062244, isotope.getExactMass(), 0.0001);
     }
 
     @Test
-    public void testGetMajorIsotope_int() throws Exception {
+    void testGetMajorIsotope_int() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         IIsotope isotope = isofac.getMajorIsotope(17);
-        Assert.assertEquals("Cl", isotope.getSymbol());
+        Assertions.assertEquals("Cl", isotope.getSymbol());
     }
 
     @Test
-    public void testGetElement_String() throws Exception {
+    void testGetElement_String() throws Exception {
         IsotopeFactory elfac = Isotopes.getInstance();
         IElement element = elfac.getElement("Br");
-        Assert.assertEquals(35, element.getAtomicNumber().intValue());
+        Assertions.assertEquals(35, element.getAtomicNumber().intValue());
     }
 
     @Test
-    public void testGetElement_int() throws Exception {
+    void testGetElement_int() throws Exception {
         IsotopeFactory elfac = Isotopes.getInstance();
         IElement element = elfac.getElement(6);
-        Assert.assertEquals("C", element.getSymbol());
+        Assertions.assertEquals("C", element.getSymbol());
     }
 
     @Test
-    public void testGetElementSymbol_int() throws Exception {
+    void testGetElementSymbol_int() throws Exception {
         IsotopeFactory elfac = Isotopes.getInstance();
         String symbol = elfac.getElementSymbol(8);
-        Assert.assertEquals("O", symbol);
+        Assertions.assertEquals("O", symbol);
     }
 
     @Test
-    public void testGetIsotopes_String() throws Exception {
+    void testGetIsotopes_String() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         IIsotope[] list = isofac.getIsotopes("He");
-        Assert.assertEquals(8, list.length);
+        Assertions.assertEquals(8, list.length);
     }
 
     @Test
-    public void testGetIsotopes() throws Exception {
+    void testGetIsotopes() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         IIsotope[] list = isofac.getIsotopes();
-        Assert.assertTrue(list.length > 200);
+        Assertions.assertTrue(list.length > 200);
     }
 
     @Test
-    public void testGetIsotopes_double_double() throws Exception {
+    void testGetIsotopes_double_double() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         IIsotope[] list = isofac.getIsotopes(87.90, 0.01);
         //        should return:
         //        Isotope match: 88Sr has mass 87.9056121
         //        Isotope match: 88Y has mass 87.9095011
-        Assert.assertEquals(2, list.length);
-        Assert.assertEquals(88, list[0].getMassNumber().intValue());
-        Assert.assertEquals(88, list[1].getMassNumber().intValue());
+        Assertions.assertEquals(2, list.length);
+        Assertions.assertEquals(88, list[0].getMassNumber().intValue());
+        Assertions.assertEquals(88, list[1].getMassNumber().intValue());
     }
 
     @Test
-    public void testIsElement_String() throws Exception {
+    void testIsElement_String() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
-        Assert.assertTrue(isofac.isElement("C"));
+        Assertions.assertTrue(isofac.isElement("C"));
     }
 
     @Test
-    public void testConfigureAtoms_IAtomContainer() throws Exception {
-        AtomContainer container = new org.openscience.cdk.AtomContainer();
+    void testConfigureAtoms_IAtomContainer() throws Exception {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(new Atom("C"));
         container.addAtom(new Atom("H"));
         container.addAtom(new Atom("N"));
@@ -150,71 +149,71 @@ public class IsotopesTest extends CDKTestCase {
         Isotopes isofac = Isotopes.getInstance();
         isofac.configureAtoms(container);
         for (int i = 0; i < container.getAtomCount(); i++) {
-            Assert.assertTrue(0 < container.getAtom(i).getAtomicNumber());
+            Assertions.assertTrue(0 < container.getAtom(i).getAtomicNumber());
         }
     }
 
     @Test
-    public void testGetNaturalMass_IElement() throws Exception {
+    void testGetNaturalMass_IElement() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
-        Assert.assertEquals(1.0079760, isofac.getNaturalMass(new Element("H")), 0.1);
+        Assertions.assertEquals(1.0079760, isofac.getNaturalMass(new Element("H")), 0.1);
     }
 
     @Test
-    public void testGetIsotope() throws Exception {
+    void testGetIsotope() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
-        Assert.assertEquals(13.00335484, isofac.getIsotope("C", 13).getExactMass(), 0.0000001);
+        Assertions.assertEquals(13.00335484, isofac.getIsotope("C", 13).getExactMass(), 0.0000001);
     }
 
     /**
      * Elements without a major isotope should return null.
      */
     @Test
-    public void testMajorUnstableIsotope() throws Exception {
+    void testMajorUnstableIsotope() throws Exception {
         Isotopes isotopes = Isotopes.getInstance();
-        assertNull(isotopes.getMajorIsotope("Es"));
+        Assertions.assertNull(isotopes.getMajorIsotope("Es"));
     }
 
     @Test
-    public void testGetIsotope_NonElement() throws Exception {
+    void testGetIsotope_NonElement() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
-        assertNull(isofac.getIsotope("R", 13));
+        Assertions.assertNull(isofac.getIsotope("R", 13));
     }
 
     @Test
-    public void testGetIsotopeFromExactMass() throws Exception {
+    void testGetIsotopeFromExactMass() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         IIsotope carbon13 = isofac.getIsotope("C", 13);
         IIsotope match = isofac.getIsotope(carbon13.getSymbol(), carbon13.getExactMass(), 0.0001);
-        Assert.assertNotNull(match);
-        Assert.assertEquals(13, match.getMassNumber().intValue());
+        Assertions.assertNotNull(match);
+        Assertions.assertEquals(13, match.getMassNumber().intValue());
     }
 
     @Test
-    public void testGetIsotopeFromExactMass_NonElement() throws Exception {
+    void testGetIsotopeFromExactMass_NonElement() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         IIsotope match = isofac.getIsotope("R", 13.00001, 0.0001);
-        assertNull(match);
+        Assertions.assertNull(match);
     }
 
     @Test
-    public void testYeahSure() throws Exception {
+    void testYeahSure() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         IIsotope match = isofac.getIsotope("H", 13.00001, 0.0001);
-        assertNull(match);
+        Assertions.assertNull(match);
     }
 
     @Test
-    public void testGetIsotopeFromExactMass_LargeTolerance() throws Exception {
+    void testGetIsotopeFromExactMass_LargeTolerance() throws Exception {
         Isotopes isofac = Isotopes.getInstance();
         IIsotope carbon13 = isofac.getIsotope("C", 13);
         IIsotope match = isofac.getIsotope(carbon13.getSymbol(), carbon13.getExactMass(), 2.0);
-        Assert.assertNotNull(match);
-        Assert.assertEquals(13, match.getMassNumber().intValue());
+        Assertions.assertNotNull(match);
+        Assertions.assertEquals(13, match.getMassNumber().intValue());
     }
 
     @Test
-    public void configureDoesNotSetMajorIsotope() throws Exception {
+    void configureDoesNotSetMajorIsotope() throws Exception {
         IAtom    atom     = new Atom("CH4");
         Isotopes isotopes = Isotopes.getInstance();
         IIsotope major    = isotopes.getMajorIsotope(atom.getSymbol());
@@ -228,33 +227,36 @@ public class IsotopesTest extends CDKTestCase {
     /**
      * @cdk.bug 3534288
      */
-    @Test(expected = IllegalArgumentException.class)
-    public void testNonexistingElement() throws Exception {
-        Isotopes isofac = Isotopes.getInstance();
-        IAtom xxAtom = new Atom("Xx");
-        isofac.configure(xxAtom);
+    @Test
+    void testNonexistingElement() throws Exception {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    Isotopes isofac = Isotopes.getInstance();
+                                    IAtom xxAtom = new Atom("Xx");
+                                    isofac.configure(xxAtom);
+                                });
     }
 
     @Test
-    public void testGetIsotopes_Nonelement() throws Exception {
+    void testGetIsotopes_Nonelement() throws Exception {
         IsotopeFactory isofac = Isotopes.getInstance();
         IIsotope[] list = isofac.getIsotopes("E");
-        Assert.assertNotNull(list);
-        Assert.assertEquals(0, list.length);
+        Assertions.assertNotNull(list);
+        Assertions.assertEquals(0, list.length);
     }
 
     @Test
-    public void testGetElement_Nonelement() throws Exception {
+    void testGetElement_Nonelement() throws Exception {
         IsotopeFactory isofac = Isotopes.getInstance();
         IElement element = isofac.getElement("E");
-        assertNull(element);
+        Assertions.assertNull(element);
     }
 
     @Test
-    public void testGetMajorIsotope_Nonelement() throws Exception {
+    void testGetMajorIsotope_Nonelement() throws Exception {
         IsotopeFactory isofac = Isotopes.getInstance();
         IIsotope isotope = isofac.getMajorIsotope("E");
-        assertNull(isotope);
+        Assertions.assertNull(isotope);
     }
 
 }

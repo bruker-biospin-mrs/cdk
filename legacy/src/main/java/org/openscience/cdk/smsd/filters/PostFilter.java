@@ -39,8 +39,6 @@ import org.openscience.cdk.smsd.helper.FinalMappings;
  * <lI>3: Bond breaking energy
  *
  * </OL>
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -62,7 +60,7 @@ public class PostFilter {
             finalMappings.set(removeRedundantMapping(mappings));
             mappings.clear();
         } else {
-            finalMappings.set(new ArrayList<Map<Integer, Integer>>());
+            finalMappings.set(new ArrayList<>());
         }
         return finalMappings.getFinalMapping();
     }
@@ -82,7 +80,7 @@ public class PostFilter {
      * @return
      */
     private static List<Map<Integer, Integer>> removeRedundantMapping(List<List<Integer>> mappingOrg) {
-        List<Map<Integer, Integer>> nonRedundantMapping = new ArrayList<Map<Integer, Integer>>();
+        List<Map<Integer, Integer>> nonRedundantMapping = new ArrayList<>();
         for (List<Integer> mapping : mappingOrg) {
             Map<Integer, Integer> newMap = getMappingMapFromList(mapping);
             if (!hasMap(newMap, nonRedundantMapping)) {
@@ -93,7 +91,7 @@ public class PostFilter {
     }
 
     private static Map<Integer, Integer> getMappingMapFromList(List<Integer> list) {
-        Map<Integer, Integer> newMap = new TreeMap<Integer, Integer>();
+        Map<Integer, Integer> newMap = new TreeMap<>();
         for (int index = 0; index < list.size(); index += 2) {
             newMap.put(list.get(index), list.get(index + 1));
         }

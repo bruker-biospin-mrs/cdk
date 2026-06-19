@@ -19,45 +19,37 @@
  */
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractCrystalTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractCrystalTest;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.ICrystal;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the Crystal.
  *
- * @cdk.module test-data
  */
-public class CrystalTest extends AbstractCrystalTest {
+class CrystalTest extends AbstractCrystalTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new Crystal();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(Crystal::new);
     }
 
     @Test
-    public void testCrystal() {
+    void testCrystal() {
         ICrystal crystal = new Crystal();
-        Assert.assertNotNull(crystal);
-        Assert.assertEquals(0, crystal.getAtomCount());
-        Assert.assertEquals(0, crystal.getBondCount());
+        Assertions.assertNotNull(crystal);
+        Assertions.assertEquals(0, crystal.getAtomCount());
+        Assertions.assertEquals(0, crystal.getBondCount());
     }
 
     @Test
-    public void testCrystal_IAtomContainer() {
+    void testCrystal_IAtomContainer() {
         IChemObject object = newChemObject();
         IAtomContainer acetone = object.getBuilder().newInstance(IAtomContainer.class);
         IAtom c1 = acetone.getBuilder().newInstance(IAtom.class, "C");
@@ -76,9 +68,9 @@ public class CrystalTest extends AbstractCrystalTest {
         acetone.addBond(b3);
 
         ICrystal crystal = new Crystal(acetone);
-        Assert.assertNotNull(crystal);
-        Assert.assertEquals(4, crystal.getAtomCount());
-        Assert.assertEquals(3, crystal.getBondCount());
+        Assertions.assertNotNull(crystal);
+        Assertions.assertEquals(4, crystal.getAtomCount());
+        Assertions.assertEquals(3, crystal.getBondCount());
     }
 
 }

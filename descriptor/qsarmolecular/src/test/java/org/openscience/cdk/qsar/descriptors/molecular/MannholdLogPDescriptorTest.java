@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -32,40 +32,39 @@ import org.openscience.cdk.qsar.result.IDescriptorResult;
 /**
  * TestSuite that runs unit tests.
  *
- * @cdk.module test-qsarmolecular
  * @see MannholdLogPDescriptor
  */
-public class MannholdLogPDescriptorTest extends MolecularDescriptorTest {
+class MannholdLogPDescriptorTest extends MolecularDescriptorTest {
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(MannholdLogPDescriptor.class);
     }
 
     @Test
-    public void testMethanol() {
+    void testMethanol() {
         IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
         IAtomContainer methanol = builder.newInstance(IAtomContainer.class);
         methanol.addAtom(builder.newInstance(IAtom.class, "C"));
         methanol.addAtom(builder.newInstance(IAtom.class, "O"));
         methanol.addBond(0, 1, IBond.Order.SINGLE);
         IDescriptorResult result = descriptor.calculate(methanol).getValue();
-        Assert.assertTrue(result instanceof DoubleResult);
-        Assert.assertEquals(1.46, ((DoubleResult) result).doubleValue(), 0.01);
+        Assertions.assertTrue(result instanceof DoubleResult);
+        Assertions.assertEquals(1.46, ((DoubleResult) result).doubleValue(), 0.01);
     }
 
     @Test
-    public void testMethane() {
+    void testMethane() {
         IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
         IAtomContainer methane = builder.newInstance(IAtomContainer.class);
         methane.addAtom(builder.newInstance(IAtom.class, "C"));
         IDescriptorResult result = descriptor.calculate(methane).getValue();
-        Assert.assertTrue(result instanceof DoubleResult);
-        Assert.assertEquals(1.57, ((DoubleResult) result).doubleValue(), 0.01);
+        Assertions.assertTrue(result instanceof DoubleResult);
+        Assertions.assertEquals(1.57, ((DoubleResult) result).doubleValue(), 0.01);
     }
 
     @Test
-    public void testChloroform() {
+    void testChloroform() {
         IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
         IAtomContainer chloroform = builder.newInstance(IAtomContainer.class);
         chloroform.addAtom(builder.newInstance(IAtom.class, "C"));
@@ -74,7 +73,7 @@ public class MannholdLogPDescriptorTest extends MolecularDescriptorTest {
             chloroform.addBond(0, (i + 1), IBond.Order.SINGLE);
         }
         IDescriptorResult result = descriptor.calculate(chloroform).getValue();
-        Assert.assertTrue(result instanceof DoubleResult);
-        Assert.assertEquals(1.24, ((DoubleResult) result).doubleValue(), 0.01);
+        Assertions.assertTrue(result instanceof DoubleResult);
+        Assertions.assertEquals(1.24, ((DoubleResult) result).doubleValue(), 0.01);
     }
 }

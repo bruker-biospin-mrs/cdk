@@ -37,8 +37,6 @@ import org.openscience.cdk.interfaces.IChemObject;
  * also provide an empty constructor so that ClassLoader/getInstance()
  * can be used to instantiate a ChemObjectReader.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @see DefaultChemObjectReader
  *
@@ -59,6 +57,6 @@ public interface ISimpleChemObjectReader extends IChemObjectReader {
      *            the type of information is not available from
      *            the input
      **/
-    public <T extends IChemObject> T read(T object) throws CDKException;
+    <T extends IChemObject> T read(T object) throws CDKException;
 
 }

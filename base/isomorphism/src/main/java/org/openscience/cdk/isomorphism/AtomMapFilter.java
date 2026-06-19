@@ -23,10 +23,6 @@
 
 package org.openscience.cdk.isomorphism;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.primitives.Ints;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.ReactionRole;
 import org.openscience.cdk.interfaces.IAtom;
@@ -34,11 +30,12 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * A filter for substructure matches implementing the logic for Atom-Atom Mapping matching. The following
@@ -73,8 +70,8 @@ final class AtomMapFilter implements Predicate<int[]> {
 
     AtomMapFilter(IAtomContainer query, IAtomContainer target) {
 
-        Multimap<Integer,Integer> reactInvMap = null;
-        Multimap<Integer,Integer> prodInvMap  = null;
+        Map<Integer,List<Integer>> reactInvMap = null;
+        Map<Integer,List<Integer>> prodInvMap  = null;
 
         this.target = target;
 
@@ -86,20 +83,20 @@ final class AtomMapFilter implements Predicate<int[]> {
             if (mapidx == 0) continue;
             switch (role(atom)) {
                 case Reactant:
-                    if (reactInvMap == null) reactInvMap = ArrayListMultimap.create();
-                    reactInvMap.put(mapidx, idx);
+                    if (reactInvMap == null) reactInvMap = new HashMap<>();
+                    reactInvMap.computeIfAbsent(mapidx, k -> new ArrayList<>()).add(idx);
                     break;
                 case Product:
-                    if (prodInvMap == null) prodInvMap = ArrayListMultimap.create();
-                    prodInvMap.put(mapidx, idx);
+                    if (prodInvMap == null) prodInvMap = new HashMap<>();
+                    prodInvMap.computeIfAbsent(mapidx, k -> new ArrayList<>()).add(idx);
                     break;
             }
         }
 
         if (reactInvMap != null && prodInvMap != null) {
-            for (Map.Entry<Integer, Collection<Integer>> e : reactInvMap.asMap().entrySet()) {
-                int[] reacMaps = Ints.toArray(e.getValue());
-                int[] prodMaps = Ints.toArray(prodInvMap.get(e.getKey()));
+            for (Map.Entry<Integer, List<Integer>> e : reactInvMap.entrySet()) {
+                int[] reacMaps = e.getValue().stream().mapToInt(i->i).toArray();
+                int[] prodMaps = prodInvMap.getOrDefault(e.getKey(), new ArrayList<>()).stream().mapToInt(i->i).toArray();
                 if (prodMaps.length == 0)
                     continue; // unpaired
                 mapped.add(new MappedPairs(reacMaps, prodMaps));
@@ -141,7 +138,7 @@ final class AtomMapFilter implements Predicate<int[]> {
      * @return whether the match should be accepted
      */
     @Override
-    public boolean apply(int[] perm) {
+    public boolean test(int[] perm) {
         for (MappedPairs mpair : mapped) {
 
             // possibly 'or' of query maps, need to use a set
@@ -176,6 +173,16 @@ final class AtomMapFilter implements Predicate<int[]> {
 
         }
         return true;
+    }
+
+    /**
+     * Backwards compatible method from when we used GUAVA predicates.
+     * @param ints atom index bijection
+     * @return true/false
+     * @see #test(int[])
+     */
+    public boolean apply(int[] ints) {
+        return test(ints);
     }
 
     /**

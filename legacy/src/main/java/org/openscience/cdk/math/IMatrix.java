@@ -30,7 +30,6 @@ import java.text.DecimalFormat;
 /**
  * This class contains a complex matrix.
  *
- * @cdk.module qm
  */
 public class IMatrix {
 
@@ -358,7 +357,7 @@ public class IMatrix {
         DecimalFormat format = new DecimalFormat("00.0000");
         format.setPositivePrefix("+");
 
-        StringBuffer str = new StringBuffer();
+        StringBuilder str = new StringBuilder();
         for (i = 0; i < (rows - 1); i++) {
             for (j = 0; j < (columns - 1); j++)
                 if ((Math.round(realmatrix[i][j] * 10000) != 0) && (Math.round(imagmatrix[i][j] * 10000) != 0))

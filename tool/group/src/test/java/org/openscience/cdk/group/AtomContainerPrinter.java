@@ -11,15 +11,14 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 /**
  * @author maclean
- * @cdk.module test-group
  */
-public class AtomContainerPrinter {
+class AtomContainerPrinter {
 
     public static void print(IAtomContainer atomContainer) {
         System.out.println(AtomContainerPrinter.toString(atomContainer));
     }
 
-    public static String toString(IAtomContainer atomContainer) {
+    private static String toString(IAtomContainer atomContainer) {
         return AtomContainerPrinter.toString(atomContainer, new Permutation(atomContainer.getAtomCount()));
     }
 
@@ -28,12 +27,12 @@ public class AtomContainerPrinter {
         return toString(atomContainer, identity, sortEdges);
     }
 
-    public static String toString(IAtomContainer atomContainer, Permutation permutation) {
+    private static String toString(IAtomContainer atomContainer, Permutation permutation) {
         return toString(atomContainer, permutation, false); // don't sort by default?
     }
 
     public static String toString(IAtomContainer atomContainer, Permutation permutation, boolean sortEdges) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int atomCount = atomContainer.getAtomCount();
         IAtom[] pAtoms = new IAtom[atomCount];
         for (int i = 0; i < atomCount; i++) {
@@ -47,7 +46,7 @@ public class AtomContainerPrinter {
         int i = 0;
         List<String> edgeStrings = null;
         if (sortEdges) {
-            edgeStrings = new ArrayList<String>();
+            edgeStrings = new ArrayList<>();
         }
         for (IBond bond : atomContainer.bonds()) {
             int a0 = atomContainer.indexOf(bond.getBegin());

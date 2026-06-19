@@ -35,8 +35,6 @@ import org.openscience.cdk.interfaces.ISingleElectron;
  *   radical.addElectronContainer(new SingleElectron(carbon));
  * </pre>
  *
- * @cdk.module  silent
- * @cdk.githash
  *
  * @cdk.keyword radical
  * @cdk.keyword electron, unpaired
@@ -128,12 +126,12 @@ public class SingleElectron extends ElectronContainer implements Serializable, I
      */
     @Override
     public String toString() {
-        StringBuffer stringContent = new StringBuffer();
+        StringBuilder stringContent = new StringBuilder();
         stringContent.append("SingleElectron(");
         stringContent.append(this.hashCode());
         if (atom != null) {
             stringContent.append(", ");
-            stringContent.append(atom.toString());
+            stringContent.append(atom);
         }
         stringContent.append(')');
         return stringContent.toString();
@@ -150,7 +148,7 @@ public class SingleElectron extends ElectronContainer implements Serializable, I
         SingleElectron clone = (SingleElectron) super.clone();
         // clone the Atom
         if (atom != null) {
-            clone.atom = (IAtom) ((IAtom) atom).clone();
+            clone.atom = atom.clone();
         }
         return clone;
     }

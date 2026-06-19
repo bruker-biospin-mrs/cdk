@@ -19,37 +19,28 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IPDBMonomer;
-import org.openscience.cdk.interfaces.AbstractPDBMonomerTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractPDBMonomerTest;
 
 /**
  * Checks the functionality of the {@link PDBMonomer}.
  *
- * @cdk.module test-silent
  */
-public class PDBMonomerTest extends AbstractPDBMonomerTest {
+class PDBMonomerTest extends AbstractPDBMonomerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new PDBMonomer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(PDBMonomer::new);
     }
 
     @Test
-    public void testPDBMonomer() {
+    void testPDBMonomer() {
         IPDBMonomer monomer = new PDBMonomer();
-        Assert.assertNotNull(monomer);
-        Assert.assertEquals(monomer.getICode(), null);
+        Assertions.assertNotNull(monomer);
+        Assertions.assertEquals(monomer.getICode(), null);
     }
 
     // Overwrite default methods: no notifications are expected!

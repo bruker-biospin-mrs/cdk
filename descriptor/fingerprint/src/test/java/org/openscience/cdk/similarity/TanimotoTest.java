@@ -24,9 +24,9 @@
 
 package org.openscience.cdk.similarity;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fingerprint.BitSetFingerprint;
@@ -46,17 +46,16 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.closeTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @cdk.module test-fingerprint
  */
-public class TanimotoTest extends CDKTestCase {
+class TanimotoTest extends CDKTestCase {
 
-    boolean standAlone = false;
+    private final boolean standAlone = false;
 
     @Test
-    public void testTanimoto1() throws java.lang.Exception {
+    void testTanimoto1() throws java.lang.Exception {
         IAtomContainer mol1 = TestMoleculeFactory.makeIndole();
         IAtomContainer mol2 = TestMoleculeFactory.makePyrrole();
         Fingerprinter fingerprinter = new Fingerprinter(1024, 8);
@@ -64,11 +63,11 @@ public class TanimotoTest extends CDKTestCase {
         BitSet bs2 = fingerprinter.getBitFingerprint(mol2).asBitSet();
         float tanimoto = Tanimoto.calculate(bs1, bs2);
         if (standAlone) System.out.println("Tanimoto: " + tanimoto);
-        if (!standAlone) Assert.assertEquals(0.3939, tanimoto, 0.01);
+        if (!standAlone) Assertions.assertEquals(0.3939, tanimoto, 0.01);
     }
 
     @Test
-    public void testTanimoto2() throws java.lang.Exception {
+    void testTanimoto2() throws java.lang.Exception {
         IAtomContainer mol1 = TestMoleculeFactory.makeIndole();
         IAtomContainer mol2 = TestMoleculeFactory.makeIndole();
         Fingerprinter fingerprinter = new Fingerprinter();
@@ -76,20 +75,20 @@ public class TanimotoTest extends CDKTestCase {
         BitSet bs2 = fingerprinter.getBitFingerprint(mol2).asBitSet();
         float tanimoto = Tanimoto.calculate(bs1, bs2);
         if (standAlone) System.out.println("Tanimoto: " + tanimoto);
-        if (!standAlone) Assert.assertEquals(1.0, tanimoto, 0.001);
+        if (!standAlone) Assertions.assertEquals(1.0, tanimoto, 0.001);
     }
 
     @Test
-    public void testCalculate_BitFingerprint() throws java.lang.Exception {
+    void testCalculate_BitFingerprint() throws java.lang.Exception {
         IAtomContainer mol1 = TestMoleculeFactory.makeIndole();
         IAtomContainer mol2 = TestMoleculeFactory.makePyrrole();
         Fingerprinter fp = new Fingerprinter(1024, 8);
         double similarity = Tanimoto.calculate(fp.getBitFingerprint(mol1), fp.getBitFingerprint(mol2));
-        Assert.assertEquals(0.3939, similarity, 0.01);
+        Assertions.assertEquals(0.3939, similarity, 0.01);
     }
 
     @Test
-    public void testExactMatch() throws Exception {
+    void testExactMatch() throws Exception {
         IAtomContainer mol1 = TestMoleculeFactory.makeIndole();
         IAtomContainer mol2 = TestMoleculeFactory.makeIndole();
         addImplicitHydrogens(mol1);
@@ -100,21 +99,21 @@ public class TanimotoTest extends CDKTestCase {
         Map<String, Integer> feat1 = fingerprinter.getRawFingerprint(mol1);
         Map<String, Integer> feat2 = fingerprinter.getRawFingerprint(mol2);
         float tanimoto = Tanimoto.calculate(feat1, feat2);
-        Assert.assertEquals(1.0, tanimoto, 0.001);
+        Assertions.assertEquals(1.0, tanimoto, 0.001);
 
     }
 
     @Test
-    public void testTanimoto3() throws java.lang.Exception {
+    void testTanimoto3() throws java.lang.Exception {
         double[] f1 = {1, 2, 3, 4, 5, 6, 7};
         double[] f2 = {1, 2, 3, 4, 5, 6, 7};
         float tanimoto = Tanimoto.calculate(f1, f2);
         if (standAlone) System.out.println("Tanimoto: " + tanimoto);
-        if (!standAlone) Assert.assertEquals(1.0, tanimoto, 0.001);
+        if (!standAlone) Assertions.assertEquals(1.0, tanimoto, 0.001);
     }
 
     @Test
-    public void keggR00258() throws java.lang.Exception {
+    void keggR00258() throws java.lang.Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         String smiles1 = "O=C(O)CCC(=O)C(=O)O";
         String smiles2 = "O=C(O)C(N)CCC(=O)O";
@@ -139,7 +138,7 @@ public class TanimotoTest extends CDKTestCase {
     }
 
     @Test
-    public void method1() throws CDKException {
+    void method1() throws CDKException {
         ICountFingerprint fp1 = new IntArrayCountFingerprint(new HashMap<String, Integer>() {
 
             {
@@ -152,11 +151,11 @@ public class TanimotoTest extends CDKTestCase {
                 put("A", 4);
             }
         });
-        Assert.assertEquals(0.923, Tanimoto.method1(fp1, fp2), 0.001);
+        Assertions.assertEquals(0.923, Tanimoto.method1(fp1, fp2), 0.001);
     }
 
     @Test
-    public void method2() throws CDKException {
+    void method2() throws CDKException {
         ICountFingerprint fp1 = new IntArrayCountFingerprint(new HashMap<String, Integer>() {
 
             {
@@ -169,11 +168,11 @@ public class TanimotoTest extends CDKTestCase {
                 put("A", 4);
             }
         });
-        Assert.assertEquals(0.75, Tanimoto.method2(fp1, fp2), 0.001);
+        Assertions.assertEquals(0.75, Tanimoto.method2(fp1, fp2), 0.001);
     }
 
     @Test
-    public void testCompareBitSetandBitFingerprintTanimoto() throws Exception {
+    void testCompareBitSetandBitFingerprintTanimoto() throws Exception {
         IAtomContainer mol1 = TestMoleculeFactory.make123Triazole();
         IAtomContainer mol2 = TestMoleculeFactory.makeImidazole();
         Fingerprinter fingerprinter = new Fingerprinter(1024, 8);
@@ -185,13 +184,13 @@ public class TanimotoTest extends CDKTestCase {
         BitSetFingerprint fp2 = new BitSetFingerprint(bs2);
 
         double tanimoto2 = Tanimoto.calculate(fp1, fp2);
-        Assert.assertEquals(tanimoto, tanimoto2, 0.01);
+        Assertions.assertEquals(tanimoto, tanimoto2, 0.01);
 
         IntArrayFingerprint ifp1 = new IntArrayFingerprint(fp1);
         IntArrayFingerprint ifp2 = new IntArrayFingerprint(fp2);
 
         tanimoto2 = Tanimoto.calculate(ifp1, ifp2);
-        Assert.assertEquals(tanimoto, tanimoto2, 0.01);
+        Assertions.assertEquals(tanimoto, tanimoto2, 0.01);
     }
 
 }

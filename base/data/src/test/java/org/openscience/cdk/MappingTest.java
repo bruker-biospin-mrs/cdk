@@ -19,26 +19,25 @@
  */
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractMappingTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractMappingTest;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IMapping;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the Mapping class.
  *
- * @cdk.module test-data
  *
  * @see org.openscience.cdk.Mapping
  */
-public class MappingTest extends AbstractMappingTest {
+class MappingTest extends AbstractMappingTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setTestObjectBuilder(new ITestObjectBuilder() {
 
             @Override
@@ -49,11 +48,11 @@ public class MappingTest extends AbstractMappingTest {
     }
 
     @Test
-    public void testMapping_IChemObject_IChemObject() {
+    void testMapping_IChemObject_IChemObject() {
         IChemObject object = newChemObject();
         IMapping mapping = new Mapping(object.getBuilder().newInstance(IAtom.class), object.getBuilder().newInstance(
                 IAtom.class));
-        Assert.assertNotNull(mapping);
+        Assertions.assertNotNull(mapping);
     }
 
 }

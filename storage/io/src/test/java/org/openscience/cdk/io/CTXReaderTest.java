@@ -24,10 +24,9 @@ package org.openscience.cdk.io;
 
 import java.io.InputStream;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.CDKConstants;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -35,60 +34,60 @@ import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IChemFile;
 import org.openscience.cdk.interfaces.IChemModel;
 import org.openscience.cdk.interfaces.IChemSequence;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
  * TestCase for the reading CTX files using a test file.
  *
- * @cdk.module test-io
  *
  * @see org.openscience.cdk.io.CrystClustReader
  */
-public class CTXReaderTest extends SimpleChemObjectReaderTest {
+class CTXReaderTest extends SimpleChemObjectReaderTest {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(CTXReaderTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(CTXReaderTest.class);
 
-    @BeforeClass
-    public static void setup() {
-        setSimpleChemObjectReader(new CTXReader(), "data/ctx/methanol_with_descriptors.ctx");
+    @BeforeAll
+    static void setup() {
+        setSimpleChemObjectReader(new CTXReader(), "methanol_with_descriptors.ctx");
     }
 
     @Test
-    public void testAccepts() {
+    void testAccepts() {
         CTXReader reader = new CTXReader();
-        Assert.assertTrue(reader.accepts(ChemFile.class));
+        Assertions.assertTrue(reader.accepts(ChemFile.class));
     }
 
     @Test
-    public void testMethanol() throws Exception {
-        String filename = "data/ctx/methanol_with_descriptors.ctx";
+    void testMethanol() throws Exception {
+        String filename = "methanol_with_descriptors.ctx";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CTXReader reader = new CTXReader(ins);
         IChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         reader.close();
 
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(1, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(1, seq.getChemModelCount());
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
+        Assertions.assertNotNull(model);
 
         IAtomContainerSet moleculeSet = model.getMoleculeSet();
-        Assert.assertNotNull(moleculeSet);
-        Assert.assertEquals(1, moleculeSet.getAtomContainerCount());
+        Assertions.assertNotNull(moleculeSet);
+        Assertions.assertEquals(1, moleculeSet.getAtomContainerCount());
 
         IAtomContainer container = moleculeSet.getAtomContainer(0);
-        Assert.assertNotNull(container);
-        Assert.assertEquals("Incorrect atom count.", 6, container.getAtomCount());
-        Assert.assertEquals(5, container.getBondCount());
+        Assertions.assertNotNull(container);
+        Assertions.assertEquals(6, container.getAtomCount(), "Incorrect atom count.");
+        Assertions.assertEquals(5, container.getBondCount());
 
-        Assert.assertEquals("Petra", container.getID());
+        Assertions.assertEquals("Petra", container.getID());
 
-        Assert.assertNotNull(container.getTitle());
-        Assert.assertEquals("CH4O", container.getTitle());
+        Assertions.assertNotNull(container.getTitle());
+        Assertions.assertEquals("CH4O", container.getTitle());
     }
 }

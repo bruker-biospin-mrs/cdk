@@ -18,7 +18,6 @@
  */
 package org.openscience.cdk.io;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -42,8 +41,6 @@ import java.util.Iterator;
  * Writer that outputs in the HIN format.
  *
  * @author Rajarshi Guha &lt;rajarshi@presidency.com&gt;
- * @cdk.module io
- * @cdk.githash
  * @cdk.created 2004-01-27
  * @cdk.iooptions
  */
@@ -172,15 +169,13 @@ public class HINWriter extends DefaultChemObjectWriter {
                     chrg = atom.getCharge();
                     Point3d point = atom.getPoint3d();
 
-                    line = line + Integer.toString(i + 1) + " - " + sym + " ** - " + Double.toString(chrg) + " "
-                            + Double.toString(point.x) + " " + Double.toString(point.y) + " "
-                            + Double.toString(point.z) + " ";
+                    line = line + (i + 1) + " - " + sym + " ** - " + chrg + " "
+                            + point.x + " " + point.y + " "
+                            + point.z + " ";
 
                     String buf = "";
                     int ncon = 0;
-                    Iterator<IBond> bonds = mol.bonds().iterator();
-                    while (bonds.hasNext()) {
-                        IBond bond = bonds.next();
+                    for (IBond bond : mol.bonds()) {
                         if (bond.contains(atom)) {
                             // current atom is in the bond so lets get the connected atom
                             IAtom connectedAtom = bond.getOther(atom);
@@ -197,12 +192,12 @@ public class HINWriter extends DefaultChemObjectWriter {
                                 bondType = "d";
                             else if (bondOrder == IBond.Order.TRIPLE)
                                 bondType = "t";
-                            else if (bond.getFlag(CDKConstants.ISAROMATIC)) bondType = "a";
-                            buf = buf + Integer.toString(serial + 1) + " " + bondType + " ";
+                            else if (bond.getFlag(IChemObject.AROMATIC)) bondType = "a";
+                            buf = buf + (serial + 1) + " " + bondType + " ";
                             ncon++;
                         }
                     }
-                    line = line + " " + Integer.toString(ncon) + " " + buf;
+                    line = line + " " + ncon + " " + buf;
                     writer.write(line, 0, line.length());
                     writer.write('\n');
                     i++;

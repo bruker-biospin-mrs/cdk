@@ -32,8 +32,6 @@ import java.util.Set;
  * molecules (ensemble).
  *
  * @author John May
- * @cdk.module interfaces
- * @cdk.githash
  */
 public interface EnsembleHashGenerator {
 
@@ -43,6 +41,6 @@ public interface EnsembleHashGenerator {
      * @param ensemble an ensemble molecule
      * @return hash code for the ensemble
      */
-    public long generate(Set<IAtomContainer> ensemble);
+    long generate(Set<IAtomContainer> ensemble);
 
 }

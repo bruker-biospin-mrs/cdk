@@ -24,8 +24,9 @@
 
 package org.openscience.cdk.graph;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -34,30 +35,27 @@ import java.util.BitSet;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author John May
- * @cdk.module test-standard
  */
-public class MatchingTest {
+class MatchingTest {
 
-    private IChemObjectBuilder bldr   = SilentChemObjectBuilder.getInstance();
-    private SmilesParser       smipar = new SmilesParser(bldr);
+    private final IChemObjectBuilder bldr   = SilentChemObjectBuilder.getInstance();
+    private final SmilesParser       smipar = new SmilesParser(bldr);
 
-    @Ignore("no operation performed")
-    public void nop() {}
+    @Disabled("no operation performed")
+    void nop() {}
 
     @Test
-    public void match() {
+    void match() {
         Matching matching = Matching.withCapacity(8);
         matching.match(2, 5);
         matching.match(6, 7);
-        assertTrue(matching.matched(2));
-        assertTrue(matching.matched(5));
-        assertTrue(matching.matched(6));
-        assertTrue(matching.matched(7));
+        Assertions.assertTrue(matching.matched(2));
+        Assertions.assertTrue(matching.matched(5));
+        Assertions.assertTrue(matching.matched(6));
+        Assertions.assertTrue(matching.matched(7));
         assertThat(matching.other(2), is(5));
         assertThat(matching.other(5), is(2));
         assertThat(matching.other(6), is(7));
@@ -65,65 +63,67 @@ public class MatchingTest {
     }
 
     @Test
-    public void replace() {
+    void replace() {
         Matching matching = Matching.withCapacity(8);
         matching.match(2, 5);
         matching.match(6, 7);
         matching.match(5, 6);
-        assertFalse(matching.matched(2));
-        assertTrue(matching.matched(5));
-        assertTrue(matching.matched(6));
-        assertFalse(matching.matched(7));
+        Assertions.assertFalse(matching.matched(2));
+        Assertions.assertTrue(matching.matched(5));
+        Assertions.assertTrue(matching.matched(6));
+        Assertions.assertFalse(matching.matched(7));
         assertThat(matching.other(5), is(6));
         assertThat(matching.other(6), is(5));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void other() {
-        Matching matching = Matching.withCapacity(8);
-        matching.match(2, 5);
-        matching.match(6, 7);
-        matching.match(5, 6);
-        matching.other(2); // 2 is unmatched!
+    @Test
+    void other() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            Matching matching = Matching.withCapacity(8);
+            matching.match(2, 5);
+            matching.match(6, 7);
+            matching.match(5, 6);
+            matching.other(2); // 2 is unmatched!
+        });
     }
 
     @Test
-    public void unmatch() {
+    void unmatch() {
         Matching matching = Matching.withCapacity(5);
         matching.match(2, 4);
         matching.unmatch(4); // also unmatches 2
-        assertFalse(matching.matched(4));
-        assertFalse(matching.matched(2));
+        Assertions.assertFalse(matching.matched(4));
+        Assertions.assertFalse(matching.matched(2));
     }
 
     @Test
-    public void perfectArbitaryMatching() {
+    void perfectArbitaryMatching() {
         Matching matching = Matching.withCapacity(4);
         BitSet subset = new BitSet();
         subset.flip(0, 4);
-        assertTrue(matching.arbitaryMatching(new int[][]{{1}, {0, 2}, {1, 3}, {2}}, subset));
+        Assertions.assertTrue(matching.arbitaryMatching(new int[][]{{1}, {0, 2}, {1, 3}, {2}}, subset));
     }
 
     @Test
-    public void imperfectArbitaryMatching() {
+    void imperfectArbitaryMatching() {
         Matching matching = Matching.withCapacity(5);
         BitSet subset = new BitSet();
         subset.flip(0, 5);
-        assertFalse(matching.arbitaryMatching(new int[][]{{1}, {0, 2}, {1, 3}, {2, 4}, {3}}, subset));
+        Assertions.assertFalse(matching.arbitaryMatching(new int[][]{{1}, {0, 2}, {1, 3}, {2, 4}, {3}}, subset));
     }
 
     @Test
-    public void fulvelene1() throws Exception {
+    void fulvelene1() throws Exception {
         int[][] graph = GraphUtil.toAdjList(smipar.parseSmiles("c1cccc1c1cccc1"));
         Matching m = Matching.withCapacity(graph.length);
         BitSet subset = new BitSet();
         subset.flip(0, graph.length);
         // arbitary matching will assign a perfect matching here
-        assertTrue(m.arbitaryMatching(graph, subset));
+        Assertions.assertTrue(m.arbitaryMatching(graph, subset));
     }
 
     @Test
-    public void fulvelene2() throws Exception {
+    void fulvelene2() throws Exception {
         int[][] graph = GraphUtil.toAdjList(smipar.parseSmiles("c1cccc1c1cccc1"));
         Matching m = Matching.withCapacity(graph.length);
         BitSet subset = new BitSet();
@@ -133,14 +133,14 @@ public class MatchingTest {
         m.match(1, 2);
 
         // arbitary matching will not be able assign a perfect matching
-        assertFalse(m.arbitaryMatching(graph, subset));
+        Assertions.assertFalse(m.arbitaryMatching(graph, subset));
 
         // but perfect() will
-        assertTrue(m.perfect(graph, subset));
+        Assertions.assertTrue(m.perfect(graph, subset));
     }
 
     @Test
-    public void string() {
+    void string() {
         Matching matching = Matching.withCapacity(9);
         matching.match(1, 3);
         matching.match(4, 8);

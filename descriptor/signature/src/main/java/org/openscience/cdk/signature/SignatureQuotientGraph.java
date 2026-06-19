@@ -36,16 +36,14 @@ import signature.AbstractQuotientGraph;
  * structure where every atom is in a different class will have a quotient
  * graph the same as the molecule.
  *
- * @cdk.module signature
  * @author maclean
- * @cdk.githash
  */
 public class SignatureQuotientGraph extends AbstractQuotientGraph {
 
     /**
      * The atom container to work on
      */
-    private IAtomContainer atomContainer;
+    private final IAtomContainer atomContainer;
 
     /**
      * Construct a quotient graph from the symmetry classes generated from the

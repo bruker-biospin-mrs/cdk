@@ -22,6 +22,7 @@ import org.openscience.cdk.charges.GasteigerMarsiliPartialCharges;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.qsar.AbstractAtomicDescriptor;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -40,8 +41,6 @@ import java.util.List;
  *
  * @author mfe4
  * @cdk.created 2004-11-03
- * @cdk.module qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:protonPartialCharge
  */
 public class ProtonTotalPartialChargeDescriptor extends AbstractAtomicDescriptor implements IAtomicDescriptor {
@@ -119,7 +118,7 @@ public class ProtonTotalPartialChargeDescriptor extends AbstractAtomicDescriptor
 
         IAtomContainer clone;
         try {
-            clone = (IAtomContainer) ac.clone();
+            clone = ac.clone();
         } catch (CloneNotSupportedException e) {
             return getDummyDescriptorValue(e);
         }
@@ -145,7 +144,7 @@ public class ProtonTotalPartialChargeDescriptor extends AbstractAtomicDescriptor
         protonPartialCharge.add(localAtom.getCharge());
         int hydrogenNeighbors = 0;
         for (IAtom neighboor : neighboors) {
-            if (neighboor.getSymbol().equals("H")) {
+            if (neighboor.getAtomicNumber() == IElement.H) {
                 hydrogenNeighbors++;
                 protonPartialCharge.add(neighboor.getCharge());
             }

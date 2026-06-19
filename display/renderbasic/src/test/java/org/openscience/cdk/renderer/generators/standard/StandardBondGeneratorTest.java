@@ -24,21 +24,33 @@
 
 package org.openscience.cdk.renderer.generators.standard;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.layout.StructureDiagramGenerator;
+import org.openscience.cdk.renderer.RendererModel;
+import org.openscience.cdk.renderer.elements.ElementGroup;
+import org.openscience.cdk.renderer.elements.IRenderingElement;
+import org.openscience.cdk.renderer.generators.BasicSceneGenerator;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.templates.TestMoleculeFactory;
 
+import javax.vecmath.Point2d;
+import java.awt.*;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.openscience.cdk.renderer.generators.standard.StandardBondGenerator.RingBondOffsetComparator;
 
-public class StandardBondGeneratorTest {
+class StandardBondGeneratorTest {
 
     @Test
-    public void adenineRingPreference() throws Exception {
+    void adenineRingPreference() throws Exception {
 
         IAtomContainer adenine = TestMoleculeFactory.makeAdenine();
         Map<IBond, IAtomContainer> ringMap = StandardBondGenerator.ringPreferenceMap(adenine);
@@ -60,7 +72,32 @@ public class StandardBondGeneratorTest {
     }
 
     @Test
-    public void ringSizePriority() {
+    void metalRingPreference() throws Exception {
+
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles("C1[Fe]C=CC2=C1C=CN2");
+        for (IAtom atom : mol.atoms())
+            atom.setPoint2d(new Point2d(0,0));
+        Map<IBond, IAtomContainer> ringMap = StandardBondGenerator.ringPreferenceMap(mol);
+
+        int nSize5 = 0, nSize6 = 0;
+        for (IBond bond : mol.bonds()) {
+            IAtomContainer ring = ringMap.get(bond);
+            // exocyclic bond
+            if (ring == null) continue;
+            int size = ring.getAtomCount();
+            if (size == 5) nSize5++;
+            if (size == 6) nSize6++;
+        }
+
+        // 5 bonds should point to the six member ring
+        // 5 bonds should point to the five member ring
+        assertThat(nSize5, is(5));
+        assertThat(nSize6, is(5));
+    }
+
+    @Test
+    void ringSizePriority() {
         assertThat(RingBondOffsetComparator.sizePreference(6), is(0));
         assertThat(RingBondOffsetComparator.sizePreference(5), is(1));
         assertThat(RingBondOffsetComparator.sizePreference(7), is(2));
@@ -68,32 +105,32 @@ public class StandardBondGeneratorTest {
         assertThat(RingBondOffsetComparator.sizePreference(3), is(4));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void invalidRingSize() {
-        RingBondOffsetComparator.sizePreference(2);
+    @Test
+    void invalidRingSize() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {RingBondOffsetComparator.sizePreference(2); });
     }
 
     @Test
-    public void macroCycle() {
+    void macroCycle() {
         assertThat(RingBondOffsetComparator.sizePreference(8), is(8));
         assertThat(RingBondOffsetComparator.sizePreference(10), is(10));
         assertThat(RingBondOffsetComparator.sizePreference(20), is(20));
     }
 
     @Test
-    public void benzeneDoubleBondCount() {
+    void benzeneDoubleBondCount() {
         assertThat(RingBondOffsetComparator.nDoubleBonds(TestMoleculeFactory.makeBenzene()), is(3));
     }
 
     @Test
-    public void benzeneElementCount() {
+    void benzeneElementCount() {
         int[] freq = RingBondOffsetComparator.countLightElements(TestMoleculeFactory.makeBenzene());
         assertThat(freq[6], is(6));
     }
 
 
     @Test
-    public void highAtomicNoElementCount() {
+    void highAtomicNoElementCount() {
         IAtomContainer container = TestMoleculeFactory.makeBenzene();
         container.getAtom(0).setAtomicNumber(34);
         container.getAtom(0).setSymbol("Se");
@@ -102,14 +139,14 @@ public class StandardBondGeneratorTest {
     }
 
     @Test
-    public void adenineElementCount() {
+    void adenineElementCount() {
         int[] freq = RingBondOffsetComparator.countLightElements(TestMoleculeFactory.makeAdenine());
         assertThat(freq[6], is(5));
         assertThat(freq[7], is(5));
     }
 
     @Test
-    public void benzeneComparedToPyrrole() {
+    void benzeneComparedToPyrrole() {
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
         IAtomContainer pyrrole = TestMoleculeFactory.makePyrrole();
 
@@ -118,7 +155,7 @@ public class StandardBondGeneratorTest {
     }
 
     @Test
-    public void benzeneComparedToCycloHexane() {
+    void benzeneComparedToCycloHexane() {
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
         IAtomContainer cyclohexane = TestMoleculeFactory.makeCyclohexane();
 
@@ -127,7 +164,7 @@ public class StandardBondGeneratorTest {
     }
 
     @Test
-    public void benzeneComparedToCycloHexene() {
+    void benzeneComparedToCycloHexene() {
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
         IAtomContainer cyclohexene = TestMoleculeFactory.makeCyclohexene();
 
@@ -136,7 +173,7 @@ public class StandardBondGeneratorTest {
     }
 
     @Test
-    public void benzeneComparedToBenzene() {
+    void benzeneComparedToBenzene() {
         IAtomContainer benzene1 = TestMoleculeFactory.makeBenzene();
         IAtomContainer benzene2 = TestMoleculeFactory.makeBenzene();
 
@@ -145,7 +182,7 @@ public class StandardBondGeneratorTest {
     }
 
     @Test
-    public void benzeneComparedToPyridine() {
+    void benzeneComparedToPyridine() {
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
         IAtomContainer pyridine = TestMoleculeFactory.makePyridine();
 
@@ -154,7 +191,7 @@ public class StandardBondGeneratorTest {
     }
 
     @Test
-    public void furaneComparedToPyrrole() {
+    void furaneComparedToPyrrole() {
         IAtomContainer furane = TestMoleculeFactory.makePyrrole();
         IAtomContainer pyrrole = TestMoleculeFactory.makePyrrole();
 
@@ -167,7 +204,7 @@ public class StandardBondGeneratorTest {
     }
 
     @Test
-    public void furaneComparedToThiophene() {
+    void furaneComparedToThiophene() {
         IAtomContainer furane = TestMoleculeFactory.makePyrrole();
         IAtomContainer thiophene = TestMoleculeFactory.makePyrrole();
 
@@ -180,6 +217,37 @@ public class StandardBondGeneratorTest {
 
         assertThat(new RingBondOffsetComparator().compare(furane, thiophene), is(-1));
         assertThat(new RingBondOffsetComparator().compare(thiophene, furane), is(+1));
+    }
+
+    @Test
+    void ensureAnnotationsAreGenerator() throws CDKException {
+        IAtomContainer furane = TestMoleculeFactory.makePyrrole();
+        for (IBond bond : furane.bonds()) {
+            bond.setProperty(StandardGenerator.ANNOTATION_LABEL,
+                             1+bond.getIndex());
+        }
+        new StructureDiagramGenerator().generateCoordinates(furane);
+        ElementGroup annotations = new ElementGroup();
+        Font font = new Font("Arial", Font.PLAIN, 16);
+        RendererModel model = new RendererModel();
+        model.registerParameters(new BasicSceneGenerator());
+        model.registerParameters(new StandardGenerator(font));
+        int count = 0;
+        for (IRenderingElement child : annotations)
+            ++count;
+        Assertions.assertEquals(0, count);
+        StandardBondGenerator.generateBonds(
+                furane,
+                new AtomSymbol[furane.getAtomCount()],
+                model,
+                1,
+                font,
+                annotations,
+                new StandardDonutGenerator(furane, font, model, 1));
+        count = 0;
+        for (IRenderingElement child : annotations)
+            ++count;
+        Assertions.assertEquals(5, count);
     }
 
 }

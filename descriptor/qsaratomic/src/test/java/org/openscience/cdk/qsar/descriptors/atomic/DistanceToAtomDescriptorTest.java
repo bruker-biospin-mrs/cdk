@@ -20,12 +20,11 @@ package org.openscience.cdk.qsar.descriptors.atomic;
 
 import javax.vecmath.Point3d;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.qsar.IAtomicDescriptor;
@@ -34,24 +33,23 @@ import org.openscience.cdk.qsar.result.DoubleResult;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsaratomic
  */
-public class DistanceToAtomDescriptorTest extends AtomicDescriptorTest {
+class DistanceToAtomDescriptorTest extends AtomicDescriptorTest {
 
-    public DistanceToAtomDescriptorTest() {}
+    DistanceToAtomDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(DistanceToAtomDescriptor.class);
     }
 
     @Test
-    public void testDistanceToAtomDescriptor() throws ClassNotFoundException, CDKException, java.lang.Exception {
+    void testDistanceToAtomDescriptor() throws java.lang.Exception {
         IAtomicDescriptor descriptor = new DistanceToAtomDescriptor();
-        Object[] params = {Integer.valueOf(2)};
+        Object[] params = {2};
         descriptor.setParameters(params);
 
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom a0 = new Atom("C");
         mol.addAtom(a0);
         a0.setPoint3d(new Point3d(1.2492, -0.2810, 0.0000));
@@ -65,7 +63,6 @@ public class DistanceToAtomDescriptorTest extends AtomicDescriptorTest {
         mol.addBond(1, 2, IBond.Order.SINGLE); // 2
         // mol.addBond(2, 3, IBond.Order.SINGLE); // 3 // jwmay: there is no atom at index 3
 
-        Assert.assertEquals(2.46, ((DoubleResult) descriptor.calculate(mol.getAtom(0), mol).getValue()).doubleValue(),
-                0.1);
+        Assertions.assertEquals(2.46, ((DoubleResult) descriptor.calculate(mol.getAtom(0), mol).getValue()).doubleValue(), 0.1);
     }
 }

@@ -25,8 +25,6 @@ package org.openscience.cdk.interfaces;
  * such that atom i (1 &lt; i &lt; N) is bonded to
  * atom i-1 and atom i + 1 and atom 1 is bonded to atom N and atom 2.
  *
- * @cdk.module  interfaces
- * @cdk.githash
  *
  * @cdk.keyword ring
  */
@@ -37,7 +35,7 @@ public interface IRing extends IAtomContainer {
      *
      * @return   The number of atoms/bonds in this ring
      */
-    public int getRingSize();
+    int getRingSize();
 
     /**
      * Returns the next bond in order, relative to a given bond and atom.
@@ -48,18 +46,18 @@ public interface IRing extends IAtomContainer {
      * @param   atom  A atom from the bond above to assign a search direction
      * @return  The next bond in the order given by the above assignment
      */
-    public IBond getNextBond(IBond bond, IAtom atom);
+    IBond getNextBond(IBond bond, IAtom atom);
 
     /**
      * Returns the sum of all bond orders in the ring.
      *
      * @return the sum of all bond orders in the ring
      */
-    public int getBondOrderSum();
+    int getBondOrderSum();
 
     /**
      *{@inheritDoc}
      */
     @Override
-    public IRing clone() throws CloneNotSupportedException;
+    IRing clone() throws CloneNotSupportedException;
 }

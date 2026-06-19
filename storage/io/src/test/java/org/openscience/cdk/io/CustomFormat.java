@@ -28,9 +28,8 @@ import org.openscience.cdk.io.formats.IChemFormat;
  * Dummy class to test the {@link WriterFactory} registerWriter functionality.
  * This is why only the getWriterClassName() is implemented.
  *
- * @cdk.module test-io
  */
-public class CustomFormat implements IChemFormat {
+class CustomFormat implements IChemFormat {
 
     @Override
     public String getReaderClassName() {

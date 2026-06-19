@@ -28,27 +28,27 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.number.IsCloseTo.closeTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.awt.Font;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-public class TextOutlineTest {
+class TextOutlineTest {
 
     private final Font font = new Font("Verdana", Font.PLAIN, 12);
 
     @Test
-    public void getOutline() throws Exception {
+    void getOutline() throws Exception {
         // not sure how to test... we have a complex shape with floating point
         // values?
     }
 
-    @Ignore("Font bounds vary between systems")
-    public void untransformedBounds() throws Exception {
+    @Disabled("Font bounds vary between systems")
+    void untransformedBounds() throws Exception {
         TextOutline clOutline = new TextOutline("Cl", font);
         Rectangle2D bounds = clOutline.getBounds();
         assertThat(bounds.getX(), closeTo(0.67, 0.01));
@@ -58,7 +58,7 @@ public class TextOutlineTest {
     }
 
     @Test
-    public void boundsTransformedWithXTranslation() throws Exception {
+    void boundsTransformedWithXTranslation() throws Exception {
         TextOutline original = new TextOutline("Cl", font);
         TextOutline transformed = original.translate(5, 0);
         Rectangle2D oBounds = original.getBounds();
@@ -70,7 +70,7 @@ public class TextOutlineTest {
     }
 
     @Test
-    public void boundsTransformedWithYTranslation() throws Exception {
+    void boundsTransformedWithYTranslation() throws Exception {
         TextOutline original = new TextOutline("Cl", font);
         TextOutline transformed = original.translate(0, -5);
         Rectangle2D oBounds = original.getBounds();
@@ -81,8 +81,8 @@ public class TextOutlineTest {
         assertThat(tBounds.getHeight(), closeTo(oBounds.getHeight(), 0.01));
     }
 
-    @Ignore("Font bounds vary between systems")
-    public void untransformedCenter() throws Exception {
+    @Disabled("Font bounds vary between systems")
+    void untransformedCenter() throws Exception {
         TextOutline clOutline = new TextOutline("Cl", font);
         Point2D center = clOutline.getCenter();
         assertThat(center.getX(), closeTo(5.62, 0.01));
@@ -90,7 +90,7 @@ public class TextOutlineTest {
     }
 
     @Test
-    public void transformedCenter() throws Exception {
+    void transformedCenter() throws Exception {
         TextOutline original = new TextOutline("Cl", font);
         TextOutline transformed = original.translate(0, -5);
         Point2D oCenter = original.getCenter();
@@ -100,7 +100,7 @@ public class TextOutlineTest {
     }
 
     @Test
-    public void testGetFirstGlyphCenter() throws Exception {
+    void testGetFirstGlyphCenter() throws Exception {
         TextOutline original = new TextOutline("Cl", font);
         Point2D oCenter = original.getCenter();
         Point2D tCenter = original.getFirstGlyphCenter();
@@ -108,7 +108,7 @@ public class TextOutlineTest {
     }
 
     @Test
-    public void testGetLastGlyphCenter() throws Exception {
+    void testGetLastGlyphCenter() throws Exception {
         TextOutline original = new TextOutline("Cl", font);
         Point2D oCenter = original.getCenter();
         Point2D tCenter = original.getLastGlyphCenter();
@@ -116,7 +116,7 @@ public class TextOutlineTest {
     }
 
     @Test
-    public void resizeModifiesBounds() throws Exception {
+    void resizeModifiesBounds() throws Exception {
         TextOutline original = new TextOutline("Cl", font);
         TextOutline transformed = original.resize(2, 2);
         Rectangle2D oBounds = original.getBounds();
@@ -128,7 +128,7 @@ public class TextOutlineTest {
     }
 
     @Test
-    public void resizeMaintainsCenter() throws Exception {
+    void resizeMaintainsCenter() throws Exception {
         TextOutline clOutline = new TextOutline("Cl", font);
         Point2D orgCenter = clOutline.getCenter();
         Point2D newCenter = clOutline.resize(21, 5).getCenter();
@@ -137,7 +137,7 @@ public class TextOutlineTest {
     }
 
     @Test
-    public void firstAndLastCenterIsTheSameForSingleLetterOutline() throws Exception {
+    void firstAndLastCenterIsTheSameForSingleLetterOutline() throws Exception {
         TextOutline oOutline = new TextOutline("O", font);
         Point2D firstCenter = oOutline.getFirstGlyphCenter();
         Point2D lastCenter = oOutline.getLastGlyphCenter();
@@ -146,7 +146,7 @@ public class TextOutlineTest {
     }
 
     @Test
-    public void testToString() throws Exception {
+    void testToString() throws Exception {
         TextOutline outline = new TextOutline("Cl", font);
         Rectangle2D bounds = outline.getBounds();
         assertThat(outline.toString(), is("Cl [x=" + toString(bounds.getX()) + ", y=" + toString(bounds.getY())

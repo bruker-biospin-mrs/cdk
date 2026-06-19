@@ -1,6 +1,6 @@
 package org.openscience.cdk.hash;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.hash.stereo.StereoEncoder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -8,7 +8,7 @@ import org.openscience.cdk.interfaces.IBond;
 import java.util.Iterator;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,12 +16,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class BasicAtomHashGeneratorTest {
+class BasicAtomHashGeneratorTest {
 
     @Test
-    public void testGenerate() throws Exception {
+    void testGenerate() throws Exception {
 
         AtomHashGenerator seedMock = mock(AtomHashGenerator.class);
         IAtomContainer container = mock(IAtomContainer.class);
@@ -59,7 +58,7 @@ public class BasicAtomHashGeneratorTest {
     }
 
     @Test
-    public void testGenerate_ZeroDepth() throws Exception {
+    void testGenerate_ZeroDepth() throws Exception {
 
         AtomHashGenerator seedMock = mock(AtomHashGenerator.class);
         IAtomContainer container = mock(IAtomContainer.class);
@@ -72,7 +71,7 @@ public class BasicAtomHashGeneratorTest {
     }
 
     @Test
-    public void testGenerate_Disconnected() throws Exception {
+    void testGenerate_Disconnected() throws Exception {
         AtomHashGenerator seedMock = mock(AtomHashGenerator.class);
         IAtomContainer container = mock(IAtomContainer.class);
 
@@ -86,7 +85,7 @@ public class BasicAtomHashGeneratorTest {
     }
 
     @Test
-    public void testGenerate_Simple() throws Exception {
+    void testGenerate_Simple() throws Exception {
         AtomHashGenerator seedMock = mock(AtomHashGenerator.class);
         IAtomContainer container = mock(IAtomContainer.class);
 
@@ -108,7 +107,7 @@ public class BasicAtomHashGeneratorTest {
     }
 
     @Test
-    public void testRotation() throws Exception {
+    void testRotation() throws Exception {
 
         AtomHashGenerator seedMock = mock(AtomHashGenerator.class);
         IAtomContainer container = mock(IAtomContainer.class);

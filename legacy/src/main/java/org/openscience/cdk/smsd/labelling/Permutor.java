@@ -3,8 +3,6 @@ package org.openscience.cdk.smsd.labelling;
 import java.util.Random;
 
 /**
- * @cdk.module smsd
- * @cdk.githash
  */
 
 /**
@@ -27,7 +25,6 @@ import java.util.Random;
  * Stinson</p>
  *
  * @author maclean
- * @cdk.githash
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
  *             access to internal implementation details. SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -43,17 +40,17 @@ public class Permutor {
     /**
      * The maximum rank possible, given the size
      */
-    private int    maxRank;
+    private final int    maxRank;
 
     /**
      * The number of objects to permute
      */
-    private int    size;
+    private final int    size;
 
     /**
      * For accessing part of the permutation space
      */
-    private Random random;
+    private final Random random;
 
     /**
      * Create a permutor that will generate permutations of numbers up to

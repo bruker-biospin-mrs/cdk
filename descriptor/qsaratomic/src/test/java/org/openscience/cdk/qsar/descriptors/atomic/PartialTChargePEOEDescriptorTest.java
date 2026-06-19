@@ -18,13 +18,11 @@
  */
 package org.openscience.cdk.qsar.descriptors.atomic;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.SlowTest;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -39,21 +37,20 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsaratomic
  */
-public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
+class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
 
     private final static IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
-    LonePairElectronChecker                 lpcheck = new LonePairElectronChecker();
+    private final LonePairElectronChecker                 lpcheck = new LonePairElectronChecker();
 
     /**
      *  Constructor for the PartialTChargePEOEDescriptorTest object
      *
      */
-    public PartialTChargePEOEDescriptorTest() {}
+    PartialTChargePEOEDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(PartialTChargePEOEDescriptor.class);
     }
 
@@ -63,8 +60,8 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
      *  @cdk.inchi InChI=1/CH3F/c1-2/h1H3
      */
     @Test
-    @Category(SlowTest.class)
-    public void testPartialTChargeDescriptor_Methyl_Fluoride() throws ClassNotFoundException, CDKException,
+    @Tag("SlowTest")
+    void testPartialTChargeDescriptor_Methyl_Fluoride() throws
             java.lang.Exception {
         double[] testResult = {-0.2527, 0.0795, 0.0577, 0.0577, 0.0577};/*
                                                                          * from
@@ -103,7 +100,7 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
             double result = ((DoubleResult) descriptor.calculate(molecule.getAtom(i), molecule).getValue())
                     .doubleValue();
 
-            Assert.assertEquals(testResult[i], result, 0.01);
+            Assertions.assertEquals(testResult[i], result, 0.01);
         }
     }
 
@@ -111,8 +108,8 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
      *  A unit test for JUnit with Fluoroethylene
      */
     @Test
-    @Category(SlowTest.class)
-    public void testPartialTChargeDescriptor_Fluoroethylene() throws ClassNotFoundException, CDKException,
+    @Tag("SlowTest")
+    void testPartialTChargeDescriptor_Fluoroethylene() throws
             java.lang.Exception {
         double[] testResult = {-0.1839, 0.079, -0.1019, 0.0942, 0.0563, 0.0563};/*
                                                                                  * from
@@ -153,7 +150,7 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
         for (int i = 0; i < mol.getAtomCount(); i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).doubleValue();
 
-            Assert.assertEquals(testResult[i], result, 0.04);
+            Assertions.assertEquals(testResult[i], result, 0.04);
         }
     }
 
@@ -163,8 +160,8 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
      *  @cdk.inchi  InChI=1/CH2O2/c2-1-3/h1H,(H,2,3)/f/h2H
      */
     @Test
-    @Category(SlowTest.class)
-    public void testPartialTChargeDescriptor_FormicAcid() throws ClassNotFoundException, CDKException,
+    @Tag("SlowTest")
+    void testPartialTChargeDescriptor_FormicAcid() throws
             java.lang.Exception {
         double[] testResult = {0.2672, -0.3877, -0.2365, 0.1367, 0.2203};/*
                                                                           * from
@@ -205,7 +202,7 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
             double result = ((DoubleResult) descriptor.calculate(molecule.getAtom(i), molecule).getValue())
                     .doubleValue();
 
-            Assert.assertEquals(testResult[i], result, 0.05);
+            Assertions.assertEquals(testResult[i], result, 0.05);
         }
     }
 
@@ -215,8 +212,8 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
      *  @cdk.inchi InChI=1/C6H5F/c7-6-4-2-1-3-5-6/h1-5H
      */
     @Test
-    @Category(SlowTest.class)
-    public void testPartialTChargeDescriptor_Fluorobenzene() throws ClassNotFoundException, CDKException,
+    @Tag("SlowTest")
+    void testPartialTChargeDescriptor_Fluorobenzene() throws
             java.lang.Exception {
         double[] testResult = {-0.1785, 0.1227, -0.0373, -0.0598, -0.0683};/*
                                                                             * from
@@ -270,7 +267,7 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
             double result = ((DoubleResult) descriptor.calculate(molecule.getAtom(i), molecule).getValue())
                     .doubleValue();
 
-            Assert.assertEquals(testResult[i], result, 0.012);
+            Assertions.assertEquals(testResult[i], result, 0.012);
         }
     }
 
@@ -280,8 +277,8 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
      *  @cdk.inchi InChI=1/C3H6O/c1-3-4-2/h3H,1H2,2H3
      */
     @Test
-    @Category(SlowTest.class)
-    public void testPartialTChargeDescriptor_Methoxyethylene() throws ClassNotFoundException, CDKException,
+    @Tag("SlowTest")
+    void testPartialTChargeDescriptor_Methoxyethylene() throws
             java.lang.Exception {
         double[] testResult = {-0.1211, 0.0314, -0.3121, 0.0429, 0.056, 0.056, 0.0885, 0.056, 0.056, 0.056};/*
                                                                                                              * from
@@ -329,7 +326,7 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
             double result = ((DoubleResult) descriptor.calculate(molecule.getAtom(i), molecule).getValue())
                     .doubleValue();
 
-            Assert.assertEquals(testResult[i], result, 0.05);
+            Assertions.assertEquals(testResult[i], result, 0.05);
         }
     }
 
@@ -339,8 +336,8 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
      *  @cdk.inchi InChI=1/C5H8O/c1-3-4-5-6-2/h3-5H,1H2,2H3
      */
     @Test
-    @Category(SlowTest.class)
-    public void testPartialTChargeDescriptor_1_Methoxybutadiene() throws ClassNotFoundException, CDKException,
+    @Tag("SlowTest")
+    void testPartialTChargeDescriptor_1_Methoxybutadiene() throws
             java.lang.Exception {
         double[] testResult = {-0.1331, -0.0678, -0.0803, 0.0385, -0.2822, 0.0429, 0.0541, 0.0541, 0.0619, 0.0644,
                 0.0891, 0.0528, 0.0528, 0.0528, 0.0528};/*
@@ -374,7 +371,7 @@ public class PartialTChargePEOEDescriptorTest extends AtomicDescriptorTest {
             double result = ((DoubleResult) descriptor.calculate(molecule.getAtom(i), molecule).getValue())
                     .doubleValue();
 
-            Assert.assertEquals(testResult[i], result, 0.3);
+            Assertions.assertEquals(testResult[i], result, 0.3);
         }
     }
 }

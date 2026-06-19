@@ -41,8 +41,6 @@ import org.openscience.cdk.smsd.helper.LabelContainer;
 /**
  * This class generates compatibility graph between query and target molecule.
  * It also markes edges in the compatibility graph as c-edges or d-edges.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -79,10 +77,10 @@ public final class GenerateCompatibilityGraph {
         setMatchBond(shouldMatchBonds);
         this.source = source;
         this.target = target;
-        compGraphNodes = new ArrayList<Integer>();
-        compGraphNodesCZero = new ArrayList<Integer>();
-        cEdges = new ArrayList<Integer>();
-        dEdges = new ArrayList<Integer>();
+        compGraphNodes = new ArrayList<>();
+        compGraphNodesCZero = new ArrayList<>();
+        cEdges = new ArrayList<>();
+        dEdges = new ArrayList<>();
         compatibilityGraphNodes();
         compatibilityGraph();
 
@@ -102,11 +100,11 @@ public final class GenerateCompatibilityGraph {
     }
 
     private List<List<Integer>> labelAtoms(IAtomContainer atomCont) {
-        List<List<Integer>> labelList = new ArrayList<List<Integer>>();
+        List<List<Integer>> labelList = new ArrayList<>();
 
         for (int i = 0; i < atomCont.getAtomCount(); i++) {
             LabelContainer labelContainer = LabelContainer.getInstance();
-            ArrayList<Integer> label = new ArrayList<Integer>(7);
+            ArrayList<Integer> label = new ArrayList<>(7);
             //            label.setSize(7);
 
             for (int a = 0; a < 7; a++) {
@@ -156,7 +154,7 @@ public final class GenerateCompatibilityGraph {
 
     private List<IAtom> reduceAtomSet(IAtomContainer atomCont) {
 
-        List<IAtom> basicAtoms = new ArrayList<IAtom>();
+        List<IAtom> basicAtoms = new ArrayList<>();
         for (IAtom atom : atomCont.atoms()) {
             basicAtoms.add(atom);
         }
@@ -172,8 +170,8 @@ public final class GenerateCompatibilityGraph {
     protected int compatibilityGraphNodes() throws IOException {
 
         compGraphNodes.clear();
-        List<IAtom> basicAtomVecA = null;
-        List<IAtom> basicAtomVecB = null;
+        List<IAtom> basicAtomVecA;
+        List<IAtom> basicAtomVecB;
         IAtomContainer reactant = source;
         IAtomContainer product = target;
 
@@ -210,8 +208,8 @@ public final class GenerateCompatibilityGraph {
     protected int compatibilityGraph() throws IOException {
         int compGraphNodesListSize = compGraphNodes.size();
 
-        cEdges = new ArrayList<Integer>(); //Initialize the cEdges List
-        dEdges = new ArrayList<Integer>(); //Initialize the dEdges List
+        cEdges = new ArrayList<>(); //Initialize the cEdges List
+        dEdges = new ArrayList<>(); //Initialize the dEdges List
 
         for (int a = 0; a < compGraphNodesListSize; a += 3) {
             int indexA = compGraphNodes.get(a);
@@ -224,8 +222,8 @@ public final class GenerateCompatibilityGraph {
                 // if element atomCont !=jIndex and atoms on the adjacent sides of the bonds are not equal
                 if (a != b && indexA != indexB && indexAPlus1 != indexBPlus1) {
 
-                    IBond reactantBond = null;
-                    IBond productBond = null;
+                    IBond reactantBond;
+                    IBond productBond;
 
                     reactantBond = source.getBond(source.getAtom(indexA), source.getAtom(indexB));
                     productBond = target.getBond(target.getAtom(indexAPlus1), target.getAtom(indexBPlus1));
@@ -259,8 +257,8 @@ public final class GenerateCompatibilityGraph {
     protected Integer compatibilityGraphNodesIfCEdgeIsZero() throws IOException {
 
         int countNodes = 1;
-        List<String> map = new ArrayList<String>();
-        compGraphNodesCZero = new ArrayList<Integer>(); //Initialize the compGraphNodesCZero List
+        List<String> map = new ArrayList<>();
+        compGraphNodesCZero = new ArrayList<>(); //Initialize the compGraphNodesCZero List
         LabelContainer labelContainer = LabelContainer.getInstance();
         compGraphNodes.clear();
 
@@ -271,7 +269,7 @@ public final class GenerateCompatibilityGraph {
 
                 //You can also check object equal or charge, hydrogen count etc
 
-                if (atom1.getSymbol().equalsIgnoreCase(atom2.getSymbol()) && (!map.contains(i + "_" + j))) {
+                if (atom1.getAtomicNumber().equals(atom2.getAtomicNumber()) && (!map.contains(i + "_" + j))) {
                     compGraphNodesCZero.add(i);
                     compGraphNodesCZero.add(j);
                     compGraphNodesCZero.add(labelContainer.getLabelID(atom1.getSymbol())); //i.e C is label 1
@@ -297,8 +295,8 @@ public final class GenerateCompatibilityGraph {
     protected int compatibilityGraphCEdgeZero() throws IOException {
 
         int compGraphNodesCZeroListSize = compGraphNodesCZero.size();
-        cEdges = new ArrayList<Integer>(); //Initialize the cEdges List
-        dEdges = new ArrayList<Integer>(); //Initialize the dEdges List
+        cEdges = new ArrayList<>(); //Initialize the cEdges List
+        dEdges = new ArrayList<>(); //Initialize the dEdges List
 
         for (int a = 0; a < compGraphNodesCZeroListSize; a += 4) {
             int indexA = compGraphNodesCZero.get(a);
@@ -310,8 +308,8 @@ public final class GenerateCompatibilityGraph {
                 // if element atomCont !=jIndex and atoms on the adjacent sides of the bonds are not equal
                 if ((a != b) && (indexA != indexB) && (indexAPlus1 != indexBPlus1)) {
 
-                    IBond reactantBond = null;
-                    IBond productBond = null;
+                    IBond reactantBond;
+                    IBond productBond;
 
                     reactantBond = source.getBond(source.getAtom(indexA), source.getAtom(indexB));
                     productBond = target.getBond(target.getAtom(indexAPlus1), target.getAtom(indexBPlus1));
@@ -344,6 +342,9 @@ public final class GenerateCompatibilityGraph {
 
     private static boolean isMatchFeasible(IAtomContainer ac1, IBond bondA1, IAtomContainer ac2, IBond bondA2,
             boolean shouldMatchBonds) {
+
+        if (bondA1 == null)
+            return false;
 
         //Bond Matcher
         BondMatcher bondMatcher = new DefaultBondMatcher(ac1, bondA1, shouldMatchBonds);

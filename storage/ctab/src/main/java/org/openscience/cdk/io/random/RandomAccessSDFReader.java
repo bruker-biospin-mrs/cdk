@@ -26,12 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.Iterator;
 
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IChemFile;
-import org.openscience.cdk.interfaces.IChemModel;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.io.ISimpleChemObjectReader;
@@ -39,15 +35,12 @@ import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.io.formats.MDLFormat;
 import org.openscience.cdk.io.listener.IReaderListener;
-import org.openscience.cdk.io.random.RandomAccessReader;
 
 /**
  * Random access of SDF file. Doesn't load molecules in memory, uses prebuilt
  * index and seeks to find the correct record offset.
  *
  * @author Nina Jeliazkova &lt;nina@acad.bg&gt;
- * @cdk.module io
- * @cdk.githash
  */
 public class RandomAccessSDFReader extends RandomAccessReader {
 
@@ -84,31 +77,7 @@ public class RandomAccessSDFReader extends RandomAccessReader {
 
     @Override
     protected IChemObject processContent() throws CDKException {
-        /*
-         * return chemObjectReader.read(builder.newInstance(IAtomContainer.class));
-         */
-        //read(IAtomContainer) doesn't read properties ...
-        IChemObject co = chemObjectReader.read(builder.newInstance(IChemFile.class));
-        if (co instanceof IChemFile) {
-            int c = ((IChemFile) co).getChemSequenceCount();
-            for (int i = 0; i < c; i++) {
-                Iterator<IChemModel> cm = ((IChemFile) co).getChemSequence(i).chemModels().iterator();
-                while (cm.hasNext()) {
-                    Iterator<IAtomContainer> sm = (cm.next()).getMoleculeSet().atomContainers().iterator();
-                    while (sm.hasNext()) {
-
-                        co = sm.next();
-                        break;
-                    }
-                    break;
-                }
-                cm = null;
-                break;
-            }
-            //cs = null;
-        }
-        return co;
-
+        return chemObjectReader.read(builder.newAtomContainer());
     }
 
     public void setReader(Reader reader) throws CDKException {

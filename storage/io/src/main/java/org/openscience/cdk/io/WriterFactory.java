@@ -42,17 +42,15 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Helper tool to create IChemObjectWriters.
  *
  * @author Egon Willighagen &lt;ewilligh@uni-koeln.de&gt;
- * @cdk.module io
- * @cdk.githash
  **/
 public class WriterFactory {
 
     private final static String                          IO_FORMATS_LIST = "io-formats.set";
 
-    private static ILoggingTool                          logger          = LoggingToolFactory
+    private static final ILoggingTool                          logger          = LoggingToolFactory
                                                                                  .createLoggingTool(WriterFactory.class);
 
-    private static List<IChemFormat>                     formats         = null;
+    private static List<IChemFormat>                     formats  = new ArrayList<>();
 
     private static Map<String, Class<IChemObjectWriter>> registeredReaders;
 
@@ -60,7 +58,7 @@ public class WriterFactory {
      * Constructs a ChemObjectIOInstantionTests.
      */
     public WriterFactory() {
-        registeredReaders = new HashMap<String, Class<IChemObjectWriter>>();
+        registeredReaders = new HashMap<>();
     }
 
     public void registerWriter(Class<?> writer) {
@@ -80,27 +78,25 @@ public class WriterFactory {
      * @see    org.openscience.cdk.tools.DataFeatures
      */
     public IChemFormat[] findChemFormats(int features) {
-        if (formats == null) loadFormats();
-
+        if (formats.isEmpty()) loadFormats();
         Iterator<IChemFormat> iter = formats.iterator();
-        List<IChemFormat> matches = new ArrayList<IChemFormat>();
+        List<IChemFormat> matches = new ArrayList<>();
         while (iter.hasNext()) {
-            IChemFormat format = (IChemFormat) iter.next();
+            IChemFormat format = iter.next();
             if ((format.getSupportedDataFeatures() & features) == features) matches.add(format);
         }
 
-        return (IChemFormat[]) matches.toArray(new IChemFormat[matches.size()]);
+        return matches.toArray(new IChemFormat[matches.size()]);
     }
 
     public int formatCount() {
-        if (formats == null) loadFormats();
-
+        if (formats.isEmpty()) loadFormats();
         return formats.size();
     }
 
     private void loadFormats() {
-        if (formats == null) {
-            formats = new ArrayList<IChemFormat>();
+        if (formats.isEmpty()) {
+            List<IChemFormat> localFormats = new ArrayList<>();
             try {
                 logger.debug("Starting loading Formats...");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(this.getClass().getClassLoader()
@@ -115,7 +111,7 @@ public class WriterFactory {
                         Method getinstanceMethod = formatClass.getMethod("getInstance", new Class[0]);
                         IResourceFormat format = (IResourceFormat) getinstanceMethod.invoke(null, new Object[0]);
                         if (format instanceof IChemFormat) {
-                            formats.add((IChemFormat) format);
+                            localFormats.add((IChemFormat) format);
                             logger.info("Loaded IChemFormat: " + format.getClass().getName());
                         }
                     } catch (ClassNotFoundException exception) {
@@ -131,6 +127,7 @@ public class WriterFactory {
                 logger.error("Could not load this io format list: ", IO_FORMATS_LIST);
                 logger.debug(exception);
             }
+            formats = localFormats;
         }
     }
 

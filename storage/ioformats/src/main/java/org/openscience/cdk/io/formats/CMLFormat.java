@@ -23,8 +23,6 @@ import org.openscience.cdk.tools.DataFeatures;
 /**
  * See <a href="http://en.wikipedia.org/wiki/Chemical_Markup_Language">here</a>.
  *
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class CMLFormat extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 
@@ -76,9 +74,9 @@ public class CMLFormat extends SimpleChemFormatMatcher implements IChemFormatMat
     /** {@inheritDoc} */
     @Override
     public boolean matches(int lineNumber, String line) {
-        if ((line.indexOf("http://www.xml-cml.org/schema") != -1) || (line.indexOf("<atom") != -1)
-                || (line.indexOf("<molecule") != -1) || (line.indexOf("<reaction") != -1)
-                || (line.indexOf("<cml") != -1) || (line.indexOf("<bond") != -1)) {
+        if ((line.contains("http://www.xml-cml.org/schema")) || (line.contains("<atom"))
+                || (line.contains("<molecule")) || (line.contains("<reaction"))
+                || (line.contains("<cml")) || (line.contains("<bond"))) {
             return true;
         }
         return false;

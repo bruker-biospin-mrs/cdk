@@ -24,22 +24,25 @@
 
 package org.openscience.cdk.smiles;
 
-import com.google.common.collect.Maps;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.config.IsotopeFactory;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IIsotope;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
 
 import org.openscience.cdk.stereo.ExtendedCisTrans;
 import org.openscience.cdk.stereo.ExtendedTetrahedral;
+import org.openscience.cdk.stereo.Octahedral;
+import org.openscience.cdk.stereo.SquarePlanar;
+import org.openscience.cdk.stereo.TrigonalBipyramidal;
 import uk.ac.ebi.beam.Atom;
 import uk.ac.ebi.beam.AtomBuilder;
 import uk.ac.ebi.beam.Bond;
@@ -50,11 +53,11 @@ import uk.ac.ebi.beam.Edge;
 import uk.ac.ebi.beam.GraphBuilder;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.openscience.cdk.CDKConstants.ATOM_ATOM_MAPPING;
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation.TOGETHER;
 import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo.CLOCKWISE;
@@ -82,12 +85,12 @@ import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo.CLOCKW
  * </pre></blockquote>
  *
  * @author John May
- * @cdk.module smiles
  * @cdk.keyword SMILES
  * @see <a href="http://johnmay.github.io/Beam">Beam SMILES Toolkit</a>
  */
 final class CDKToBeam {
 
+    public static final Configuration[] CONFIGS = Configuration.values();
     /**
      * Whether to convert the molecule with isotope and stereo information -
      * Isomeric SMILES.
@@ -113,7 +116,7 @@ final class CDKToBeam {
 
     Edge toBeamEdge(IBond b, Map<IAtom, Integer> indices) throws CDKException {
 
-        checkArgument(b.getAtomCount() == 2, "Invalid number of atoms on bond");
+        if (b.getAtomCount() != 2) throw new IllegalArgumentException("Invalid number of atoms on bond");
 
         int u = indices.get(b.getBegin());
         int v = indices.get(b.getEnd());
@@ -134,7 +137,7 @@ final class CDKToBeam {
         int order = ac.getAtomCount();
 
         GraphBuilder gb = GraphBuilder.create(order);
-        Map<IAtom, Integer> indices = Maps.newHashMapWithExpectedSize(order);
+        Map<IAtom, Integer> indices = new HashMap<>(2*order);
 
         for (IAtom a : ac.atoms()) {
             indices.put(a, indices.size());
@@ -150,7 +153,7 @@ final class CDKToBeam {
             for (IStereoElement se : ac.stereoElements()) {
                 if (SmiFlavor.isSet(flavour, SmiFlavor.StereoTetrahedral) &&
                     se instanceof ITetrahedralChirality) {
-                    addTetrahedralConfiguration((ITetrahedralChirality) se, gb, indices);
+                    addAtomStereo(se, gb, indices);
                 } else if (SmiFlavor.isSet(flavour, SmiFlavor.StereoCisTrans) &&
                            se instanceof IDoubleBondStereochemistry) {
                     addGeometricConfiguration((IDoubleBondStereochemistry) se, flavour, gb, indices);
@@ -160,6 +163,15 @@ final class CDKToBeam {
                 } else if (SmiFlavor.isSet(flavour, SmiFlavor.StereoExCisTrans) &&
                            se instanceof ExtendedCisTrans) {
                     addExtendedCisTransConfig((ExtendedCisTrans) se, gb, indices, ac);
+                } else if (SmiFlavor.isSet(flavour, SmiFlavor.StereoSquarePlanar) &&
+                        se instanceof SquarePlanar) {
+                    addAtomStereo((SquarePlanar)se, gb, indices);
+                } else if (SmiFlavor.isSet(flavour, SmiFlavor.StereoTrigonalBipyramidal) &&
+                        se instanceof TrigonalBipyramidal) {
+                    addAtomStereo((TrigonalBipyramidal)se, gb, indices);
+                } else if (SmiFlavor.isSet(flavour, SmiFlavor.StereoOctahedral) &&
+                        se instanceof Octahedral) {
+                    addAtomStereo((Octahedral)se, gb, indices);
                 }
             }
         }
@@ -207,9 +219,9 @@ final class CDKToBeam {
      */
     static Atom toBeamAtom(final IAtom a, final int flavour) {
 
-        final boolean aromatic = SmiFlavor.isSet(flavour, SmiFlavor.UseAromaticSymbols) && a.getFlag(CDKConstants.ISAROMATIC);
+        final boolean aromatic = SmiFlavor.isSet(flavour, SmiFlavor.UseAromaticSymbols) && a.getFlag(IChemObject.AROMATIC);
         final Integer charge = a.getFormalCharge();
-        final String symbol = checkNotNull(a.getSymbol(), "An atom had an undefined symbol");
+        final String symbol = Objects.requireNonNull(a.getSymbol(), "An atom had an undefined symbol");
 
         Element element = Element.ofSymbol(symbol);
         if (element == null) element = Element.Unknown;
@@ -221,7 +233,7 @@ final class CDKToBeam {
         if (element == Element.Unknown) {
             ab.hydrogens(hCount != null ? hCount : 0);
         } else {
-            ab.hydrogens(checkNotNull(hCount, "One or more atoms had an undefined number of implicit hydrogens"));
+            ab.hydrogens(Objects.requireNonNull(hCount, "One or more atoms had an undefined number of implicit hydrogens"));
         }
 
         if (charge != null) ab.charge(charge);
@@ -229,7 +241,7 @@ final class CDKToBeam {
         // use the mass number to specify isotope?
         if (SmiFlavor.isSet(flavour, SmiFlavor.AtomicMass | SmiFlavor.AtomicMassStrict)) {
             Integer massNumber = a.getMassNumber();
-            if (massNumber != null) {
+            if (massNumber != null && massNumber != 0) {
                 ab.isotope(massNumber);
             }
         }
@@ -254,7 +266,7 @@ final class CDKToBeam {
      */
     static Edge toBeamEdge(IBond b, int flavour, Map<IAtom, Integer> indices) throws CDKException {
 
-        checkArgument(b.getAtomCount() == 2, "Invalid number of atoms on bond");
+        if (b.getAtomCount() != 2) throw new IllegalArgumentException("Invalid number of atoms on bond");
 
         int u = indices.get(b.getBegin());
         int v = indices.get(b.getEnd());
@@ -274,7 +286,10 @@ final class CDKToBeam {
     private static Bond toBeamEdgeLabel(IBond b, int flavour) throws CDKException {
 
         if (SmiFlavor.isSet(flavour, SmiFlavor.UseAromaticSymbols) && b.isAromatic()) {
-            if (!b.getBegin().isAromatic() || !b.getEnd().isAromatic())
+            IAtom beg = b.getBegin();
+            IAtom end = b.getEnd();
+            if ((!beg.isAromatic() && beg.getAtomicNumber() != IElement.Wildcard) ||
+                (!end.isAromatic() && end.getAtomicNumber() != IElement.Wildcard))
                 throw new IllegalStateException("Aromatic bond connects non-aromatic atomic atoms");
             return Bond.AROMATIC;
         }
@@ -312,7 +327,7 @@ final class CDKToBeam {
         IBond[] bs = dbs.getBonds();
 
         // don't try to set a configuration on aromatic bonds
-        if (SmiFlavor.isSet(flavour, SmiFlavor.UseAromaticSymbols) && db.getFlag(CDKConstants.ISAROMATIC)) return;
+        if (SmiFlavor.isSet(flavour, SmiFlavor.UseAromaticSymbols) && db.getFlag(IChemObject.AROMATIC)) return;
 
         int u = indices.get(db.getBegin());
         int v = indices.get(db.getEnd());
@@ -340,7 +355,7 @@ final class CDKToBeam {
         IAtom[] ligands = tc.getLigands();
 
         int u = indices.get(tc.getChiralAtom());
-        int vs[] = new int[]{indices.get(ligands[0]), indices.get(ligands[1]), indices.get(ligands[2]),
+        int[] vs = new int[]{indices.get(ligands[0]), indices.get(ligands[1]), indices.get(ligands[2]),
                 indices.get(ligands[3])};
 
         gb.tetrahedral(u).lookingFrom(vs[0]).neighbors(vs[1], vs[2], vs[3])
@@ -360,7 +375,7 @@ final class CDKToBeam {
         IAtom[] ligands = et.peripherals();
 
         int u = indices.get(et.focus());
-        int vs[] = new int[]{indices.get(ligands[0]), indices.get(ligands[1]), indices.get(ligands[2]),
+        int[] vs = new int[]{indices.get(ligands[0]), indices.get(ligands[1]), indices.get(ligands[2]),
                 indices.get(ligands[3])};
 
         gb.extendedTetrahedral(u).lookingFrom(vs[0]).neighbors(vs[1], vs[2], vs[3])
@@ -386,5 +401,58 @@ final class CDKToBeam {
                          indices.get(carriers[1].getOther(ends[1])),
                          config);
         }
+    }
+
+    private static Configuration getConfig(IStereoElement<IAtom,IAtom> se) {
+        final int base;
+        switch (se.getConfigClass()) {
+            case IStereoElement.Tetrahedral:
+                base = Configuration.TH1.ordinal();
+                break;
+            case IStereoElement.SquarePlanar:
+                base = Configuration.SP1.ordinal();
+                break;
+            case IStereoElement.TrigonalBipyramidal:
+                base = Configuration.TB1.ordinal();
+                break;
+            case IStereoElement.Octahedral:
+                base = Configuration.OH1.ordinal();
+                break;
+            default:
+                throw new IllegalArgumentException("Unexpected config: cls=" +
+                                                           Integer.toHexString(se.getConfigClass()) +
+                                                           " ord=" + Integer.toHexString(se.getConfigOrder()));
+        }
+        return CONFIGS[base+se.getConfigOrder()-1];
+    }
+
+    private static void addAtomStereo(IStereoElement<IAtom,IAtom> se,
+                                      GraphBuilder gb,
+                                      Map<IAtom, Integer> indices) {
+        Configuration config = getConfig(se);
+        IAtom focus = se.getFocus();
+        List<IAtom> carriers = se.getCarriers();
+
+        // invalid tetrahedral
+        if (config.type() == Configuration.Type.Tetrahedral) {
+            int numImplicit = 0;
+            for (IAtom atom : carriers) {
+                if (atom.equals(focus)) {
+                    numImplicit++;
+                }
+            }
+            if (numImplicit > 1)
+                return;
+        }
+
+
+        int[] neighbors = new int[carriers.size() - 1];
+        for (int i = 0; i < neighbors.length; i++) {
+            neighbors[i] = indices.get(carriers.get(i + 1));
+        }
+        GraphBuilder.AtomStereoBuilder builder;
+        builder = gb.atomStereo(indices.get(focus), config);
+        builder.lookingFrom(indices.get(carriers.get(0))).neighbors(neighbors);
+        builder.build();
     }
 }

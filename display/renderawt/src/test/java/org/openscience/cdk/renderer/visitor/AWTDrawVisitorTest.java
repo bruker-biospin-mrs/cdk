@@ -24,67 +24,65 @@ import java.awt.Image;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.renderer.RendererModel;
 import org.openscience.cdk.renderer.elements.TextElement;
 import org.openscience.cdk.renderer.font.AWTFontManager;
 
 /**
- * @cdk.module  test-renderawt
- * @cdk.githash
  *
  */
-public class AWTDrawVisitorTest {
+class AWTDrawVisitorTest {
 
     @Test
-    public void testConstructor() {
+    void testConstructor() {
         Image image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = (Graphics2D) image.getGraphics();
         AWTDrawVisitor visitor = new AWTDrawVisitor(g2d);
-        Assert.assertNotNull(visitor);
+        Assertions.assertNotNull(visitor);
     }
 
     @Test
-    public void testSetFontManager() {
+    void testSetFontManager() {
         Image image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = (Graphics2D) image.getGraphics();
         AWTDrawVisitor visitor = new AWTDrawVisitor(g2d);
         visitor.setFontManager(new AWTFontManager());
         // at least we now know it did not crash...
-        Assert.assertNotNull(visitor);
+        Assertions.assertNotNull(visitor);
     }
 
     @Test
-    public void testSetRendererModel() {
+    void testSetRendererModel() {
         Image image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = (Graphics2D) image.getGraphics();
         AWTDrawVisitor visitor = new AWTDrawVisitor(g2d);
         visitor.setRendererModel(new RendererModel());
         // at least we now know it did not crash...
-        Assert.assertNotNull(visitor);
+        Assertions.assertNotNull(visitor);
     }
 
     @Test
-    public void testGetRendererModel() {
+    void testGetRendererModel() {
         Image image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = (Graphics2D) image.getGraphics();
         AWTDrawVisitor visitor = new AWTDrawVisitor(g2d);
         RendererModel model = new RendererModel();
         visitor.setRendererModel(model);
-        Assert.assertEquals(model, visitor.getRendererModel());
+        Assertions.assertEquals(model, visitor.getRendererModel());
     }
 
     @Test
-    public void testGetStrokeMap() {
+    void testGetStrokeMap() {
         Image image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = (Graphics2D) image.getGraphics();
         AWTDrawVisitor visitor = new AWTDrawVisitor(g2d);
-        Assert.assertNotNull(visitor.getStrokeMap());
+        Assertions.assertNotNull(visitor.getStrokeMap());
     }
 
     @Test
-    public void testVisit() {
+    void testVisit() {
         Image image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = (Graphics2D) image.getGraphics();
         AWTDrawVisitor visitor = new AWTDrawVisitor(g2d);
@@ -92,14 +90,14 @@ public class AWTDrawVisitorTest {
         visitor.setTransform(new AffineTransform());
         visitor.visit(new TextElement(2, 3, "Foo", Color.BLACK));
         // at least we now know it did not crash...
-        Assert.assertNotNull(visitor);
+        Assertions.assertNotNull(visitor);
     }
 
     @Test
-    public void testGetGraphics() {
+    void testGetGraphics() {
         Image image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = (Graphics2D) image.getGraphics();
         AWTDrawVisitor visitor = new AWTDrawVisitor(g2d);
-        Assert.assertEquals(g2d, visitor.getGraphics());
+        Assertions.assertEquals(g2d, visitor.getGraphics());
     }
 }

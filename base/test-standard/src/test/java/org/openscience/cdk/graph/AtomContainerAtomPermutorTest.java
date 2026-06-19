@@ -18,38 +18,37 @@
  */
 package org.openscience.cdk.graph;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
 /**
- * @cdk.module test-standard
  */
-public class AtomContainerAtomPermutorTest extends CDKTestCase {
+class AtomContainerAtomPermutorTest extends CDKTestCase {
 
-    public AtomContainerAtomPermutorTest() {
+    AtomContainerAtomPermutorTest() {
         super();
     }
 
     @Test
-    public void constructorTest() {
-        IAtomContainer atomContainer = new AtomContainer();
+    void constructorTest() {
+        IAtomContainer atomContainer = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atomContainer.addAtom(new Atom("C"));
         atomContainer.addAtom(new Atom("O"));
         atomContainer.addAtom(new Atom("S"));
         atomContainer.addBond(0, 1, IBond.Order.SINGLE);
         atomContainer.addBond(0, 2, IBond.Order.SINGLE);
         AtomContainerAtomPermutor acap = new AtomContainerAtomPermutor(atomContainer);
-        Assert.assertNotNull(acap);
+        Assertions.assertNotNull(acap);
     }
 
     @Test
-    public void testCountAtomPermutation() {
-        AtomContainer ac = new AtomContainer();
+    void testCountAtomPermutation() {
+        IAtomContainer ac = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("N"));
         ac.addAtom(new Atom("P"));
@@ -67,12 +66,12 @@ public class AtomContainerAtomPermutorTest extends CDKTestCase {
             counter++;
             acap.next();
         }
-        Assert.assertEquals(719, counter);
+        Assertions.assertEquals(719, counter);
     }
 
     @Test
-    public void containerFromPermutationTest() {
-        IAtomContainer atomContainer = new AtomContainer();
+    void containerFromPermutationTest() {
+        IAtomContainer atomContainer = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         atomContainer.addAtom(new Atom("C"));
         atomContainer.addAtom(new Atom("O"));
         atomContainer.addAtom(new Atom("S"));
@@ -80,9 +79,9 @@ public class AtomContainerAtomPermutorTest extends CDKTestCase {
         atomContainer.addBond(0, 2, IBond.Order.SINGLE);
         AtomContainerAtomPermutor acap = new AtomContainerAtomPermutor(atomContainer);
         IAtomContainer permuted = acap.containerFromPermutation(new int[]{1, 0, 2});
-        Assert.assertNotNull(permuted);
-        Assert.assertEquals(atomContainer.getAtomCount(), permuted.getAtomCount());
-        Assert.assertEquals(atomContainer.getBondCount(), permuted.getBondCount());
+        Assertions.assertNotNull(permuted);
+        Assertions.assertEquals(atomContainer.getAtomCount(), permuted.getAtomCount());
+        Assertions.assertEquals(atomContainer.getBondCount(), permuted.getBondCount());
     }
 
 }

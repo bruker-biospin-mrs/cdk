@@ -22,39 +22,37 @@ package org.openscience.cdk.dict;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * Checks the functionality of the dictionary reaction-processes class.
  *
- * @cdk.module test-dict
  *
  * @see org.openscience.cdk.dict.DictionaryDatabase
  */
-public class DictDBReactTest extends CDKTestCase {
+class DictDBReactTest extends CDKTestCase {
 
     @Test
-    public void testDictDBReact() {
+    void testDictDBReact() {
         DictionaryDatabase db = new DictionaryDatabase();
-        Assert.assertTrue(db.hasDictionary("reaction-processes"));
+        Assertions.assertTrue(db.hasDictionary("reaction-processes"));
     }
 
     @Test
-    public void TestCheckUniqueID() {
+    void TestCheckUniqueID() {
         DictionaryDatabase db = new DictionaryDatabase();
         Dictionary dict = db.getDictionary("reaction-processes");
         Entry[] entries = dict.getEntries();
-        List<String> idList = new ArrayList<String>();
+        List<String> idList = new ArrayList<>();
         idList.add(entries[0].getID());
         for (int i = 1; i < entries.length; i++) {
             //    		System.out.println(entries[i].getID());
             if (!idList.contains(entries[i].getID()))
                 idList.add(entries[i].getID());
             else
-                Assert.assertFalse("The entry is contained " + entries[i] + "two times",
-                        idList.contains(entries[i].getID()));
+                Assertions.assertFalse(idList.contains(entries[i].getID()), "The entry is contained " + entries[i] + "two times");
 
         }
     }

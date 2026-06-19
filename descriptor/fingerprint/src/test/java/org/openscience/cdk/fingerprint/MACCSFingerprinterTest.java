@@ -26,8 +26,8 @@ package org.openscience.cdk.fingerprint;
 
 import java.util.BitSet;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
@@ -37,14 +37,13 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @cdk.module test-fingerprint
  */
 public class MACCSFingerprinterTest extends AbstractFixedLengthFingerprinterTest {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(MACCSFingerprinterTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(MACCSFingerprinterTest.class);
 
     @Override
     public IFingerprinter getBitFingerprinter() {
@@ -52,13 +51,13 @@ public class MACCSFingerprinterTest extends AbstractFixedLengthFingerprinterTest
     }
 
     @Test
-    public void getsize() throws Exception {
+    void getsize() throws Exception {
         IFingerprinter printer = new MACCSFingerprinter(SilentChemObjectBuilder.getInstance());
-        Assert.assertEquals(166, printer.getSize());
+        Assertions.assertEquals(166, printer.getSize());
     }
 
     @Test
-    public void testFingerprint() throws Exception {
+    void testFingerprint() throws Exception {
         SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IFingerprinter printer = new MACCSFingerprinter();
 
@@ -77,20 +76,20 @@ public class MACCSFingerprinterTest extends AbstractFixedLengthFingerprinterTest
         BitSet bs2 = printer.getBitFingerprint(mol2).asBitSet();
         BitSet bs3 = printer.getBitFingerprint(mol3).asBitSet();
 
-        Assert.assertEquals(166, printer.getSize());
+        Assertions.assertEquals(166, printer.getSize());
 
-        Assert.assertFalse(bs1.get(165));
-        Assert.assertTrue(bs1.get(124));
+        Assertions.assertFalse(bs1.get(165));
+        Assertions.assertTrue(bs1.get(124));
 
-        Assert.assertFalse(bs2.get(124));
+        Assertions.assertFalse(bs2.get(124));
 
-        Assert.assertTrue(bs3.get(165));
+        Assertions.assertTrue(bs3.get(165));
 
-        Assert.assertFalse(FingerprinterTool.isSubset(bs1, bs2));
+        Assertions.assertFalse(FingerprinterTool.isSubset(bs1, bs2));
     }
 
     @Test
-    public void testfp2() throws Exception {
+    void testfp2() throws Exception {
         SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IFingerprinter printer = new MACCSFingerprinter();
 
@@ -110,12 +109,12 @@ public class MACCSFingerprinterTest extends AbstractFixedLengthFingerprinterTest
         BitSet bs2 = printer.getBitFingerprint(mol2).asBitSet();
         BitSet bs3 = printer.getBitFingerprint(mol3).asBitSet();
 
-        Assert.assertFalse(bs1.get(124));
-        Assert.assertFalse(bs2.get(124));
-        Assert.assertFalse(bs3.get(124));
+        Assertions.assertFalse(bs1.get(124));
+        Assertions.assertFalse(bs2.get(124));
+        Assertions.assertFalse(bs3.get(124));
 
-        Assert.assertFalse(FingerprinterTool.isSubset(bs1, bs2));
-        Assert.assertTrue(FingerprinterTool.isSubset(bs2, bs3));
+        Assertions.assertFalse(FingerprinterTool.isSubset(bs1, bs2));
+        Assertions.assertTrue(FingerprinterTool.isSubset(bs2, bs3));
     }
 
     /**
@@ -125,7 +124,7 @@ public class MACCSFingerprinterTest extends AbstractFixedLengthFingerprinterTest
      */
     @Test
     @Override
-    public void testBug706786() throws Exception {
+    void testBug706786() throws Exception {
 
         IAtomContainer superStructure = bug706786_1();
         IAtomContainer subStructure = bug706786_2();

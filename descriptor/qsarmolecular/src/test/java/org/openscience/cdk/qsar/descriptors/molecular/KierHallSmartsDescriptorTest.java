@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -32,16 +32,15 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * TestSuite that runs all test for the KierHallSmartsDescriptor
  *
- * @cdk.module test-qsarmolecular
  */
-public class KierHallSmartsDescriptorTest extends MolecularDescriptorTest {
+class KierHallSmartsDescriptorTest extends MolecularDescriptorTest {
 
     private String[] names;
 
-    public KierHallSmartsDescriptorTest() {}
+    KierHallSmartsDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(KierHallSmartsDescriptor.class);
         names = descriptor.getDescriptorNames();
     }
@@ -54,7 +53,7 @@ public class KierHallSmartsDescriptorTest extends MolecularDescriptorTest {
     }
 
     @Test
-    public void test1() throws Exception {
+    void test1() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CCO");
 
@@ -64,12 +63,12 @@ public class KierHallSmartsDescriptorTest extends MolecularDescriptorTest {
         DescriptorValue value = descriptor.calculate(mol);
         IntegerArrayResult result = (IntegerArrayResult) value.getValue();
 
-        Assert.assertEquals(79, result.length());
-        Assert.assertEquals(1, result.get(getIndex("khs.sOH")));
+        Assertions.assertEquals(79, result.length());
+        Assertions.assertEquals(1, result.get(getIndex("khs.sOH")));
     }
 
     @Test
-    public void test2() throws Exception {
+    void test2() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("c1c(CN)cc(CCNC)cc1C(CO)CC(=O)CCOCCCO");
 
@@ -79,16 +78,16 @@ public class KierHallSmartsDescriptorTest extends MolecularDescriptorTest {
         DescriptorValue value = descriptor.calculate(mol);
         IntegerArrayResult result = (IntegerArrayResult) value.getValue();
 
-        Assert.assertEquals(79, result.length());
-        Assert.assertEquals(2, result.get(getIndex("khs.sOH")));
-        Assert.assertEquals(1, result.get(getIndex("khs.dO")));
-        Assert.assertEquals(1, result.get(getIndex("khs.ssO")));
-        Assert.assertEquals(1, result.get(getIndex("khs.sNH2")));
-        Assert.assertEquals(1, result.get(getIndex("khs.ssNH")));
+        Assertions.assertEquals(79, result.length());
+        Assertions.assertEquals(2, result.get(getIndex("khs.sOH")));
+        Assertions.assertEquals(1, result.get(getIndex("khs.dO")));
+        Assertions.assertEquals(1, result.get(getIndex("khs.ssO")));
+        Assertions.assertEquals(1, result.get(getIndex("khs.sNH2")));
+        Assertions.assertEquals(1, result.get(getIndex("khs.ssNH")));
     }
 
     @Test
-    public void test3() throws Exception {
+    void test3() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("C#CC(C)(C)C(C)(C)C#C");
 
@@ -98,8 +97,8 @@ public class KierHallSmartsDescriptorTest extends MolecularDescriptorTest {
         DescriptorValue value = descriptor.calculate(mol);
         IntegerArrayResult result = (IntegerArrayResult) value.getValue();
 
-        Assert.assertEquals(79, result.length());
-        Assert.assertEquals(2, result.get(getIndex("khs.tsC")));
-        Assert.assertEquals(2, result.get(getIndex("khs.ssssC")));
+        Assertions.assertEquals(79, result.length());
+        Assertions.assertEquals(2, result.get(getIndex("khs.tsC")));
+        Assertions.assertEquals(2, result.get(getIndex("khs.ssssC")));
     }
 }

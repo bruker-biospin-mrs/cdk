@@ -23,12 +23,10 @@
  */
 package org.openscience.cdk.smiles;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.graph.ConnectivityChecker;
+import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
@@ -37,25 +35,32 @@ import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IReaction;
+import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.interfaces.ISingleElectron;
+import org.openscience.cdk.interfaces.IStereoElement;
+import org.openscience.cdk.renderer.selection.AtomBondSelection;
 import org.openscience.cdk.sgroup.Sgroup;
 import org.openscience.cdk.sgroup.SgroupKey;
 import org.openscience.cdk.sgroup.SgroupType;
-import org.openscience.cdk.smiles.CxSmilesState.DataSgroup;
-import org.openscience.cdk.smiles.CxSmilesState.PolymerSgroup;
+import org.openscience.cdk.smiles.CxSmilesState.CxDataSgroup;
+import org.openscience.cdk.smiles.CxSmilesState.CxPolymerSgroup;
+import org.openscience.cdk.stereo.Atropisomeric;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+import org.openscience.cdk.tools.manipulator.ReactionManipulator;
+import org.openscience.cdk.tools.manipulator.ReactionSetManipulator;
 import uk.ac.ebi.beam.Graph;
 
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,7 +81,7 @@ import java.util.Set;
  * </blockquote>
  *
  * <b>Reading Aromatic SMILES</b>
- *
+ * <p>
  * Aromatic SMILES are automatically kekulised producing a structure with
  * assigned bond orders. The aromatic specification on the atoms is maintained
  * from the SMILES even if the structures are not considered aromatic. For
@@ -93,7 +98,7 @@ import java.util.Set;
  * <a href="http://www.daylight.com/daycgi/depict">DEPICT</a> service.
  *
  * <b>Unsupported Features</b>
- *
+ * <p>
  * The following features are not supported by this parser. <ul> <li>variable
  * order of bracket atom attributes, '[C-H]', '[CH@]' are considered invalid.
  * The predefined order required by this parser follows the <a
@@ -105,7 +110,7 @@ import java.util.Set;
  * <li>octahedral stereochemistry</li> </ul>
  *
  * <b>Atom Class</b>
- *
+ * <p>
  * The atom class is stored as the {@link org.openscience.cdk.CDKConstants#ATOM_ATOM_MAPPING}
  * property.
  *
@@ -121,18 +126,15 @@ import java.util.Set;
  * </pre>
  * </blockquote>
  *
- *
  * @author Christoph Steinbeck
  * @author Egon Willighagen
  * @author John May
- * @cdk.module smiles
- * @cdk.githash
  * @cdk.created 2002-04-29
  * @cdk.keyword SMILES, parser
  */
 public final class SmilesParser {
 
-    private ILoggingTool logger = LoggingToolFactory.createLoggingTool(SmilesParser.class);
+    private final ILoggingTool logger = LoggingToolFactory.createLoggingTool(SmilesParser.class);
 
     /**
      * The builder determines which CDK domain objects to create.
@@ -142,7 +144,7 @@ public final class SmilesParser {
     /**
      * Direct converter from Beam to CDK.
      */
-    private final BeamToCDK          beamToCDK;
+    private final BeamToCDK beamToCDK;
 
     /**
      * Kekulise the molecule on load. Generally this is a good idea as a
@@ -151,12 +153,12 @@ public final class SmilesParser {
      * bond orders (if possible) using an efficient algorithm from the
      * underlying Beam library (soon to be added to CDK).
      */
-    private boolean                  kekulise = true;
+    private boolean kekulise = true;
 
     /**
      * Whether the parser is in strict mode or not.
      */
-    private boolean                  strict = false;
+    private boolean strict = false;
 
     /**
      * Create a new SMILES parser which will create {@link IAtomContainer}s with
@@ -192,7 +194,7 @@ public final class SmilesParser {
         if (!smiles.contains(">"))
             throw new InvalidSmilesException("Not a reaction SMILES: " + smiles);
 
-        final int first  = smiles.indexOf('>');
+        final int first = smiles.indexOf('>');
         final int second = smiles.indexOf('>', first + 1);
 
         if (second < 0)
@@ -200,7 +202,7 @@ public final class SmilesParser {
 
         final String reactants = smiles.substring(0, first);
         final String agents = smiles.substring(first + 1, second);
-        final String products = smiles.substring(second + 1, smiles.length());
+        final String products = smiles.substring(second + 1);
 
         IReaction reaction = builder.newInstance(IReaction.class);
 
@@ -235,14 +237,93 @@ public final class SmilesParser {
         }
 
         try {
-            // CXSMILES layer
-            parseRxnCXSMILES(title, reaction);
+            IReactionSet rset = reaction.getBuilder().newInstance(IReactionSet.class);
+            rset.addReaction(reaction);
+            parseRxnCXSMILES(title, rset);
+            reaction.setProperty(CDKConstants.TITLE, rset.getProperty(CDKConstants.TITLE));
+            reaction.setProperty(CDKConstants.CTAB_SGROUPS, rset.getProperty(CDKConstants.CTAB_SGROUPS));
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new InvalidSmilesException("Error parsing CXSMILES:" + e.getMessage());
+            throw new InvalidSmilesException("Error parsing CXSMILES", e);
         }
 
         return reaction;
+    }
+
+    /**
+     * Parse a SMILES that describes a set of reactions representing multiple
+     * synthesis steps or a metabolic pathway. This is a logical extension to
+     * the SMILES reaction syntax. The basic idea is the product(s) of the
+     * previous step become the reactants of the next step.
+     *
+     * <pre>{@code
+     * {reactant}>{agent_1}>{product_1}>{agent_2}>{product_2}
+     * }</pre>
+     * <p>
+     * Results in a reaction set with two reactions:
+     * <pre>{@code
+     * {reactant}>{agent_1}>{product_1} step 1
+     * {product_1}>{agent_2}>{product_2} step 2
+     * }</pre>
+     *
+     * @param smiles the SMILES input string
+     * @return the reaction set
+     * @throws InvalidSmilesException the input was invalid (with reason)
+     */
+    public IReactionSet parseReactionSetSmiles(String smiles)
+            throws InvalidSmilesException {
+
+        int delim = smiles.length();
+        for (int i = 0; i < smiles.length(); i++) {
+            if (smiles.charAt(i) == ' ' || smiles.charAt(i) == '\t') {
+                delim = i;
+                break;
+            }
+        }
+
+        String[] parts = smiles.substring(0, delim).split(">", -1);
+        String title = smiles.substring(delim).trim();
+
+        if (parts.length < 3 || parts.length % 2 == 0)
+            throw new IllegalArgumentException("Unexpected number of parts: " + parts.length + ", should be 3,5,7,..");
+
+        IReactionSet reactions = builder.newInstance(IReactionSet.class);
+        IReaction reaction = builder.newReaction();
+
+        for (int i = 0; i < parts.length; i++) {
+            IAtomContainer mol = parseSmiles(parts[i], true);
+            IAtomContainerSet mols = ConnectivityChecker.partitionIntoMolecules(mol);
+            if (i == 0) {
+                // first step's reactants
+                for (IAtomContainer container : mols.atomContainers())
+                    reaction.addReactant(container);
+            } else if (i == 1) {
+                // first step's agents
+                for (IAtomContainer container : mols.atomContainers())
+                    reaction.addAgent(container);
+            } else if (i % 2 == 0) {
+                // the products of which ever step we are on
+                for (IAtomContainer container : mols.atomContainers())
+                    reaction.addProduct(container);
+                reactions.addReaction(reaction);
+            } else {
+                // the agents of which ever step we are on, creates the new
+                // reaction step and copies the previous products as reactants
+                IReaction nextReaction = builder.newReaction();
+                for (IAtomContainer container : reaction.getProducts().atomContainers())
+                    nextReaction.addReactant(container);
+                reaction = nextReaction;
+                for (IAtomContainer container : mols.atomContainers())
+                    reaction.addAgent(container);
+            }
+        }
+        try {
+            parseRxnCXSMILES(title, reactions);
+        } catch (Exception e) {
+            throw new InvalidSmilesException("Error parsing CXSMILES", e);
+        }
+
+
+        return reactions;
     }
 
     /**
@@ -262,28 +343,32 @@ public final class SmilesParser {
             Set<String> warnings = new HashSet<>();
             Graph g = Graph.parse(smiles, strict, warnings);
             for (String warning : warnings)
-              logger.warn(warning);
+                logger.warn(warning);
 
             // convert the Beam object model to the CDK - note exception thrown
             // if a kekule structure could not be assigned.
             IAtomContainer mol = beamToCDK.toAtomContainer(kekulise ? g.kekule() : g,
                                                            kekulise);
+            Cycles.markRingAtomsAndBonds(mol);
 
             if (!isRxnPart) {
                 try {
                     // CXSMILES layer
                     parseMolCXSMILES(g.getTitle(), mol);
+                } catch (InvalidSmilesException e) {
+                    throw new InvalidSmilesException("Error parsing CXSMILES:", e);
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new InvalidSmilesException("Error parsing CXSMILES:" + e.getMessage());
+                    throw new InvalidSmilesException("Unexpected error parsing CXSMILES:", e);
                 }
             }
 
             return mol;
         } catch (IOException e) {
             throw new InvalidSmilesException("could not parse '" + smiles + "', " + e.getMessage());
+        } catch (InvalidSmilesException e) {
+            throw e;
         } catch (Exception e) {
-            throw new InvalidSmilesException("could not parse '" + smiles + "'");
+            throw new InvalidSmilesException("Unexpected error for '" + smiles + "'", e);
         }
     }
 
@@ -307,7 +392,7 @@ public final class SmilesParser {
      * @param title SMILES title field
      * @param mol   molecule
      */
-    private void parseMolCXSMILES(String title, IAtomContainer mol) {
+    private void parseMolCXSMILES(String title, IAtomContainer mol) throws InvalidSmilesException {
         CxSmilesState cxstate;
         int pos;
         if (title != null && title.startsWith("|")) {
@@ -316,15 +401,18 @@ public final class SmilesParser {
                 // set the correct title
                 mol.setTitle(title.substring(pos));
 
-                final Map<IAtom, IAtomContainer> atomToMol = Maps.newHashMapWithExpectedSize(mol.getAtomCount());
+                final Map<IAtom, IAtomContainer> atomToMol = new HashMap<>(2 * mol.getAtomCount());
                 final List<IAtom> atoms = new ArrayList<>(mol.getAtomCount());
+                final List<IBond> bonds = new ArrayList<>(mol.getBondCount());
 
                 for (IAtom atom : mol.atoms()) {
                     atoms.add(atom);
                     atomToMol.put(atom, mol);
                 }
+                for (IBond bond : mol.bonds())
+                    bonds.add(bond);
 
-                assignCxSmilesInfo(mol.getBuilder(), mol, atoms, atomToMol, cxstate);
+                assignCxSmilesInfo(mol.getBuilder(), mol, atoms, bonds, atomToMol, cxstate);
             }
         }
     }
@@ -333,42 +421,62 @@ public final class SmilesParser {
      * Parses CXSMILES layer and set attributes for atoms and bonds on the provided reaction.
      *
      * @param title SMILES title field
-     * @param rxn   parsed reaction
+     * @param rxns  parsed reactions
      */
-    private void parseRxnCXSMILES(String title, IReaction rxn) {
+    private void parseRxnCXSMILES(String title, IReactionSet rxns) throws InvalidSmilesException {
+        rxns.setProperty(CDKConstants.TITLE, title);
+
         CxSmilesState cxstate;
         int pos;
         if (title != null && title.startsWith("|")) {
             if ((pos = CxSmilesParser.processCx(title, cxstate = new CxSmilesState())) >= 0) {
 
                 // set the correct title
-                rxn.setProperty(CDKConstants.TITLE, title.substring(pos));
+                rxns.setProperty(CDKConstants.TITLE, title.substring(pos));
 
                 final Map<IAtom, IAtomContainer> atomToMol = new HashMap<>(100);
                 final List<IAtom> atoms = new ArrayList<>();
-                handleFragmentGrouping(rxn, cxstate);
+                final List<IBond> bonds = new ArrayList<>();
+
+                // collect atom offsets before handling fragment groups
+                Set<IAtomContainer> uniqueMolecules = new HashSet<>();
+                for (IAtomContainer mol : ReactionSetManipulator.getAllAtomContainers(rxns)) {
+                    if (!uniqueMolecules.add(mol))
+                        continue;
+                    for (IAtom atom : mol.atoms())
+                        atoms.add(atom);
+                    for (IBond bond : mol.bonds())
+                        bonds.add(bond);
+                }
+
+                handleFragmentGrouping(rxns, cxstate);
 
                 // merge all together
-                for (IAtomContainer mol : rxn.getReactants().atomContainers()) {
-                    for (IAtom atom : mol.atoms()) {
-                        atoms.add(atom);
+                for (IAtomContainer mol : ReactionSetManipulator.getAllAtomContainers(rxns))
+                    for (IAtom atom : mol.atoms())
                         atomToMol.put(atom, mol);
-                    }
-                }
-                for (IAtomContainer mol : rxn.getAgents().atomContainers()) {
-                    for (IAtom atom : mol.atoms()) {
-                        atoms.add(atom);
-                        atomToMol.put(atom, mol);
-                    }
-                }
-                for (IAtomContainer mol : rxn.getProducts().atomContainers()) {
-                    for (IAtom atom : mol.atoms()) {
-                        atoms.add(atom);
-                        atomToMol.put(atom, mol);
-                    }
-                }
 
-                assignCxSmilesInfo(rxn.getBuilder(), rxn, atoms, atomToMol, cxstate);
+                assignCxSmilesInfo(rxns.getBuilder(), rxns, atoms, bonds, atomToMol, cxstate);
+            }
+
+            String arrowType = rxns.getProperty(CDKConstants.REACTION_ARROW);
+            if (arrowType != null && !arrowType.isEmpty()) {
+                for (IReaction rxn : rxns.reactions()) {
+                    switch (arrowType) {
+                        case "RES":
+                            rxn.setDirection(IReaction.Direction.RESONANCE);
+                            break;
+                        case "EQU":
+                            rxn.setDirection(IReaction.Direction.BIDIRECTIONAL);
+                            break;
+                        case "RET":
+                            rxn.setDirection(IReaction.Direction.RETRO_SYNTHETIC);
+                            break;
+                        case "NGO":
+                            rxn.setDirection(IReaction.Direction.NO_GO);
+                            break;
+                    }
+                }
             }
         }
     }
@@ -377,40 +485,64 @@ public final class SmilesParser {
      * Handle fragment grouping of a reaction that specifies certain disconnected components
      * are actually considered a single molecule. Normally used for salts, [Na+].[OH-].
      *
-     * @param rxn reaction
+     * @param rxns    reaction set
      * @param cxstate state
      */
-    private void handleFragmentGrouping(IReaction rxn, CxSmilesState cxstate) {
+    private void handleFragmentGrouping(IReactionSet rxns, CxSmilesState cxstate) {
+
+        if (cxstate.fragGroups == null && cxstate.racemicFrags == null)
+            return; // nothing to do here
+
+        final int reactant = 1;
+        final int agent = 2;
+        final int product = 3;
+
+        Set<IAtomContainer> unique = new HashSet<>();
+        List<IAtomContainer> fragments = new ArrayList<>();
+        Map<IAtomContainer, List<Integer>> roleMap = new HashMap<>();
+        Map<IAtomContainer, List<IReaction>> molToReaction = new HashMap<>();
+
+        for (IReaction reaction : rxns.reactions()) {
+            for (IAtomContainer mol : ReactionManipulator.getAllAtomContainers(reaction)) {
+                molToReaction.computeIfAbsent(mol, k -> new ArrayList<>()).add(reaction);
+                if (unique.add(mol))
+                    fragments.add(mol);
+            }
+            for (IAtomContainer mol : reaction.getReactants().atomContainers())
+                roleMap.computeIfAbsent(mol, k -> new ArrayList<>()).add(reactant);
+            for (IAtomContainer mol : reaction.getAgents().atomContainers())
+                roleMap.computeIfAbsent(mol, k -> new ArrayList<>()).add(agent);
+            for (IAtomContainer mol : reaction.getProducts().atomContainers())
+                roleMap.computeIfAbsent(mol, k -> new ArrayList<>()).add(product);
+        }
+
+        if (cxstate.racemicFrags != null) {
+            for (Integer grp : cxstate.racemicFrags) {
+                if (grp >= fragments.size())
+                    continue;
+                IAtomContainer mol = fragments.get(grp);
+                if (mol == null)
+                    continue;
+                for (IStereoElement<?, ?> e : mol.stereoElements()) {
+                    // maybe also Al and AT?
+                    if (e.getConfigClass() == IStereoElement.TH) {
+                        e.setGroupInfo(IStereoElement.GRP_RAC1);
+                    }
+                }
+            }
+        }
+
         // repartition/merge fragments
         if (cxstate.fragGroups != null) {
-
-            final int reactant = 1;
-            final int agent    = 2;
-            final int product  = 3;
-
-            // note we don't use a list for fragmap as the indexes need to stay consistent
-            Map<Integer,IAtomContainer> fragMap = new LinkedHashMap<>();
-            Map<IAtomContainer,Integer> roleMap = new HashMap<>();
-
-            for (IAtomContainer mol : rxn.getReactants().atomContainers()) {
-                fragMap.put(fragMap.size(), mol);
-                roleMap.put(mol, reactant);
-            }
-            for (IAtomContainer mol : rxn.getAgents().atomContainers()) {
-                fragMap.put(fragMap.size(), mol);
-                roleMap.put(mol, agent);
-            }
-            for (IAtomContainer mol : rxn.getProducts().atomContainers()) {
-                fragMap.put(fragMap.size(), mol);
-                roleMap.put(mol, product);
-            }
 
             // check validity of group
             boolean invalid = false;
             Set<Integer> visit = new HashSet<>();
 
             for (List<Integer> grouping : cxstate.fragGroups) {
-                IAtomContainer dest = fragMap.get(grouping.get(0));
+                if (grouping.get(0) >= fragments.size())
+                    continue;
+                IAtomContainer dest = fragments.get(grouping.get(0));
                 if (dest == null)
                     continue;
                 if (!visit.add(grouping.get(0)))
@@ -418,29 +550,43 @@ public final class SmilesParser {
                 for (int i = 1; i < grouping.size(); i++) {
                     if (!visit.add(grouping.get(i)))
                         invalid = true;
-                    IAtomContainer src = fragMap.get(grouping.get(i));
+                    if (grouping.get(i) >= fragments.size())
+                        continue;
+                    IAtomContainer src = fragments.get(grouping.get(i));
                     if (src != null) {
                         dest.add(src);
-                        roleMap.put(src, 0); // no-role
+                        roleMap.put(src, Collections.emptyList()); // no-role
                     }
                 }
             }
 
             if (!invalid) {
-                rxn.getReactants().removeAllAtomContainers();
-                rxn.getAgents().removeAllAtomContainers();
-                rxn.getProducts().removeAllAtomContainers();
-                for (IAtomContainer mol : fragMap.values()) {
-                    switch (roleMap.get(mol)) {
-                        case reactant:
-                            rxn.getReactants().addAtomContainer(mol);
-                            break;
-                        case product:
-                            rxn.getProducts().addAtomContainer(mol);
-                            break;
-                        case agent:
-                            rxn.getAgents().addAtomContainer(mol);
-                            break;
+
+                for (IReaction reaction : rxns.reactions()) {
+                    reaction.getReactants().removeAllAtomContainers();
+                    reaction.getAgents().removeAllAtomContainers();
+                    reaction.getProducts().removeAllAtomContainers();
+                }
+
+                for (IAtomContainer mol : fragments) {
+                    List<IReaction> reactions = molToReaction.get(mol);
+                    List<Integer> roles = roleMap.get(mol);
+                    if (roles.isEmpty())
+                        continue;
+                    for (int i = 0; i < reactions.size(); i++) {
+                        IReaction rxn = reactions.get(i);
+                        int role = roles.get(i);
+                        switch (role) {
+                            case reactant:
+                                rxn.getReactants().addAtomContainer(mol);
+                                break;
+                            case product:
+                                rxn.getProducts().addAtomContainer(mol);
+                                break;
+                            case agent:
+                                rxn.getAgents().addAtomContainer(mol);
+                                break;
+                        }
                     }
                 }
             }
@@ -459,8 +605,9 @@ public final class SmilesParser {
     private void assignCxSmilesInfo(IChemObjectBuilder bldr,
                                     IChemObject chemObj,
                                     List<IAtom> atoms,
+                                    List<IBond> bonds,
                                     Map<IAtom, IAtomContainer> atomToMol,
-                                    CxSmilesState cxstate) {
+                                    CxSmilesState cxstate) throws InvalidSmilesException {
 
         // atom-labels - must be done first as we replace atoms
         if (cxstate.atomLabels != null) {
@@ -471,7 +618,18 @@ public final class SmilesParser {
                     continue;
 
                 IAtom old = atoms.get(e.getKey());
-                IPseudoAtom pseudo = bldr.newInstance(IPseudoAtom.class);
+                IPseudoAtom pseudo;
+                if (old instanceof IPseudoAtom) {
+                    pseudo = (IPseudoAtom) old;
+                } else {
+                    // possibly a warning, is "CCO |$R$|" valid?
+                    pseudo = bldr.newInstance(IPseudoAtom.class);
+                    IAtomContainer mol = atomToMol.get(old);
+                    AtomContainerManipulator.replaceAtomByAtom(mol, old, pseudo);
+                    atomToMol.put(mol.getAtom(old.getIndex()), mol);
+                    atoms.set(e.getKey(), mol.getAtom(old.getIndex()));
+                }
+
                 String val = e.getValue();
 
                 // specialised label handling
@@ -483,10 +641,6 @@ public final class SmilesParser {
                 pseudo.setLabel(val);
                 pseudo.setAtomicNumber(0);
                 pseudo.setImplicitHydrogenCount(0);
-                IAtomContainer mol = atomToMol.get(old);
-                AtomContainerManipulator.replaceAtomByAtom(mol, old, pseudo);
-                atomToMol.put(pseudo, mol);
-                atoms.set(e.getKey(), pseudo);
             }
         }
 
@@ -542,7 +696,36 @@ public final class SmilesParser {
             }
         }
 
-        Multimap<IAtomContainer, Sgroup> sgroupMap = HashMultimap.create();
+        if (cxstate.bondDisplay != null) {
+            for (Map.Entry<Map.Entry<Integer, Integer>, IBond.Display> e : cxstate.bondDisplay) {
+                Integer atmIdx = e.getKey().getKey();
+                Integer bndIdx = e.getKey().getValue();
+                IBond.Display style = e.getValue();
+                IAtom atomToWedgeFrom = atmIdx < atoms.size() ? atoms.get(atmIdx) : null;
+                IBond bondToWedge = bndIdx < bonds.size() ? bonds.get(bndIdx) : null;
+                if (bondToWedge == null)
+                    continue;
+                if (atomToWedgeFrom == null)
+                    continue;
+                if (cxstate.atomCoords == null) {
+                  handleRdkitAtropisomerExtension(atomToMol, atomToWedgeFrom, bondToWedge, style);
+                } else {
+                    if (bondToWedge.getBegin().equals(atomToWedgeFrom)) {
+                        bondToWedge.setDisplay(style);
+                    } else if (bondToWedge.getEnd().equals(atomToWedgeFrom)) {
+                        if (style == IBond.Display.WedgeBegin)
+                            bondToWedge.setDisplay(IBond.Display.WedgeEnd);
+                        else if (style == IBond.Display.WedgedHashBegin)
+                            bondToWedge.setDisplay(IBond.Display.WedgedHashEnd);
+                        else
+                            bondToWedge.setDisplay(style);
+                    }
+                }
+            }
+        }
+
+        Map<IChemObject, List<Sgroup>> sgroupMap = new HashMap<>();
+        Map<CxSmilesState.CxSgroup, Sgroup> sgroupRemap = new HashMap<>();
 
         // positional-variation
         if (cxstate.positionVar != null) {
@@ -551,37 +734,70 @@ public final class SmilesParser {
                 sgroup.setType(SgroupType.ExtMulticenter);
                 IAtom beg = atoms.get(e.getKey());
                 IAtomContainer mol = atomToMol.get(beg);
-                List<IBond> bonds = mol.getConnectedBondsList(beg);
-                if (bonds.isEmpty())
-                    continue; // bad
+                List<IBond> connectedBonds = mol.getConnectedBondsList(beg);
+                if (connectedBonds.isEmpty())
+                    continue; // possibly okay
                 sgroup.addAtom(beg);
-                sgroup.addBond(bonds.get(0));
+                sgroup.addBond(connectedBonds.get(0));
                 for (Integer endpt : e.getValue())
                     sgroup.addAtom(atoms.get(endpt));
-                sgroupMap.put(mol, sgroup);
+                sgroupMap.computeIfAbsent(mol, k -> new ArrayList<>())
+                         .add(sgroup);
             }
         }
 
-        // data sgroups
-        if (cxstate.dataSgroups != null) {
-            for (DataSgroup dsgroup : cxstate.dataSgroups) {
-                if (dsgroup.field != null && dsgroup.field.startsWith("cdk:")) {
-                    chemObj.setProperty(dsgroup.field, dsgroup.value);
+        // ligand ordering
+        if (cxstate.ligandOrdering != null) {
+            for (Map.Entry<Integer, List<Integer>> e : cxstate.ligandOrdering.entrySet()) {
+                Sgroup sgroup = new Sgroup();
+                sgroup.setType(SgroupType.ExtAttachOrdering);
+                IAtom beg = atoms.get(e.getKey());
+                IAtomContainer mol = atomToMol.get(beg);
+                List<IBond> connectedBonds = mol.getConnectedBondsList(beg);
+                if (connectedBonds.isEmpty())
+                    throw new InvalidSmilesException("CXSMILES LO: no bonds to order");
+                if (connectedBonds.size() != e.getValue().size())
+                    throw new InvalidSmilesException("CXSMILES LO: bond count and ordering count was different");
+                sgroup.addAtom(beg);
+                for (Integer endpt : e.getValue()) {
+                    IBond bond = beg.getBond(atoms.get(endpt));
+                    if (bond == null)
+                        throw new InvalidSmilesException("CXSMILES LO: defined ordering to non-existant bond");
+                    sgroup.addBond(bond);
                 }
+                sgroupMap.computeIfAbsent(mol, k -> new ArrayList<>())
+                         .add(sgroup);
             }
         }
 
         // polymer Sgroups
-        if (cxstate.sgroups != null) {
+        if (cxstate.mysgroups != null) {
 
             PolySgroup:
-            for (PolymerSgroup psgroup : cxstate.sgroups) {
-
+            for (CxSmilesState.CxSgroup cxsgroup : cxstate.mysgroups) {
+                if (!(cxsgroup instanceof CxPolymerSgroup))
+                    continue;
+                CxPolymerSgroup psgroup = (CxPolymerSgroup) cxsgroup;
                 Sgroup sgroup = new Sgroup();
 
-                Set<IAtom> atomset = new HashSet<>();
+                Set<IAtom> sgroupAtoms = new HashSet<>();
+                Set<IBond> xbonds = new HashSet<>();
+
                 IAtomContainer mol = null;
-                for (Integer idx : psgroup.atomset) {
+                for (Integer idx : psgroup.bonds) {
+                    if (idx >= atoms.size())
+                        continue;
+                    IBond bond = bonds.get(idx);
+                    IAtomContainer bmol = atomToMol.get(bond.getBegin());
+                    if (mol == null)
+                        mol = bmol;
+                    else if (bmol != mol)
+                        continue PolySgroup;
+                    xbonds.add(bond);
+                }
+
+
+                for (Integer idx : psgroup.atoms) {
                     if (idx >= atoms.size())
                         continue;
                     IAtom atom = atoms.get(idx);
@@ -592,18 +808,70 @@ public final class SmilesParser {
                     else if (amol != mol)
                         continue PolySgroup;
 
-                    atomset.add(atom);
+                    sgroupAtoms.add(atom);
                 }
+
 
                 if (mol == null)
                     continue;
 
-                for (IAtom atom : atomset) {
-                    for (IBond bond : mol.getConnectedBondsList(atom)) {
-                        if (!atomset.contains(bond.getOther(atom)))
-                            sgroup.addBond(bond);
+                // special case, if we have a single atom it may have been a link
+                // node if there is exactly 2 ring bonds we shouldn't need users
+                // to specify what the repeat pattern was
+                if (sgroupAtoms.size() == 1 && xbonds.isEmpty()) {
+
+                    IAtom atom = sgroupAtoms.iterator().next();
+                    for (IBond bond : atom.bonds()) {
+                        if (bond.isInRing())
+                            xbonds.add(bond);
                     }
-                    sgroup.addAtom(atom);
+
+                    if (xbonds.size() != 2)
+                        xbonds.clear();
+                }
+
+                // crossing bonds are implied
+                if (xbonds.isEmpty()) {
+                    for (IAtom atom : sgroupAtoms) {
+                        for (IBond bond : mol.getConnectedBondsList(atom)) {
+                            IAtom nbor = bond.getOther(atom);
+                            if (!sgroupAtoms.contains(nbor)) {
+                                boolean crossing = true;
+
+                                // check for variable attachments see https://github.com/cdk/depict/issues/36
+                                if (cxstate.positionVar != null) {
+                                    List<Integer> ends = cxstate.positionVar.get(mol.indexOf(nbor));
+                                    if (ends != null) {
+                                        for (Integer end : ends) {
+                                            if (sgroupAtoms.contains(mol.getAtom(end)))
+                                                crossing = false;
+                                        }
+                                    }
+                                }
+
+                                if (crossing)
+                                    sgroup.addBond(bond);
+                            }
+                        }
+                        sgroup.addAtom(atom);
+                    }
+                } else {
+                    Deque<IAtom> queue = new ArrayDeque<>(sgroupAtoms);
+                    while (!queue.isEmpty()) {
+                        IAtom atom = queue.poll();
+                        for (IBond bond : atom.bonds()) {
+                            if (xbonds.contains(bond))
+                                continue;
+                            IAtom nbor = bond.getOther(atom);
+                            if (sgroupAtoms.add(nbor)) {
+                                queue.add(nbor);
+                            }
+                        }
+                    }
+                    for (IAtom atom : sgroupAtoms)
+                        sgroup.addAtom(atom);
+                    for (IBond bond : xbonds)
+                        sgroup.addBond(bond);
                 }
 
                 sgroup.setSubscript(psgroup.subscript);
@@ -660,13 +928,404 @@ public final class SmilesParser {
                         break;
                 }
 
-                sgroupMap.put(mol, sgroup);
+                sgroupMap.computeIfAbsent(mol, k -> new ArrayList<>())
+                         .add(sgroup);
+                // CxState Sgroup => CDK Sgroup lookup
+                sgroupRemap.put(psgroup, sgroup);
             }
         }
 
+        // data sgroups
+        if (cxstate.mysgroups != null) {
+
+            DataSgroup:
+            for (CxSmilesState.CxSgroup cxsgroup : cxstate.mysgroups) {
+                if (!(cxsgroup instanceof CxDataSgroup))
+                    continue;
+                CxDataSgroup dsgroup = (CxDataSgroup) cxsgroup;
+
+                Set<IAtom> atomset = new HashSet<>();
+                IAtomContainer mol = null;
+                for (Integer idx : dsgroup.atoms) {
+                    if (idx >= atoms.size())
+                        continue;
+                    IAtom atom = atoms.get(idx);
+                    IAtomContainer amol = atomToMol.get(atom);
+
+                    if (mol == null)
+                        mol = amol;
+                    else if (amol != mol)
+                        continue DataSgroup;
+
+                    atomset.add(atom);
+                }
+
+                if (dsgroup.field != null && dsgroup.field.startsWith("cdk:")) {
+                    chemObj.setProperty(dsgroup.field, dsgroup.value);
+                } else {
+                    Sgroup cdkSgroup = new Sgroup();
+                    cdkSgroup.setType(SgroupType.CtabData);
+                    for (IAtom atom : atomset)
+                        cdkSgroup.addAtom(atom);
+                    cdkSgroup.putValue(SgroupKey.DataFieldName, dsgroup.field);
+                    cdkSgroup.putValue(SgroupKey.DataFieldUnits, dsgroup.unit);
+                    cdkSgroup.putValue(SgroupKey.Data, dsgroup.value);
+                    sgroupRemap.put(dsgroup, cdkSgroup);
+                    if (mol != null)
+                        sgroupMap.computeIfAbsent(mol, k -> new ArrayList<>())
+                                 .add(cdkSgroup);
+                    else
+                        sgroupMap.computeIfAbsent(chemObj, k -> new ArrayList<>())
+                                 .add(cdkSgroup);
+                }
+            }
+        }
+
+        if (cxstate.mysgroups != null) {
+            for (CxSmilesState.CxSgroup parent : cxstate.mysgroups) {
+                Sgroup cdkParent = sgroupRemap.get(parent);
+                if (cdkParent == null)
+                    continue;
+                for (CxSmilesState.CxSgroup child : parent.children) {
+                    Sgroup cdkChild = sgroupRemap.get(child);
+                    if (cdkChild == null)
+                        continue;
+                    cdkChild.addParent(cdkParent);
+                }
+            }
+        }
+
+        // IMPORTANT: state.racemicComps is handled in the fragment grouping step
+        if (cxstate.racemic) {
+            if (chemObj instanceof IAtomContainer) {
+                for (IStereoElement<?, ?> e : ((IAtomContainer) chemObj).stereoElements()) {
+                    // maybe also Al and AT?
+                    if (e.getConfigClass() == IStereoElement.TH) {
+                        e.setGroupInfo(IStereoElement.GRP_RAC1);
+                    }
+                }
+            } else if (chemObj instanceof IReaction) {
+                for (IAtomContainer mol : ReactionManipulator.getAllAtomContainers((IReaction) chemObj)) {
+                    for (IStereoElement<?, ?> e : mol.stereoElements()) {
+                        // maybe also Al and AT?
+                        if (e.getConfigClass() == IStereoElement.TH) {
+                            e.setGroupInfo(IStereoElement.GRP_RAC1);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        if (cxstate.stereoGrps != null) {
+            for (Map.Entry<Integer, Integer> e : cxstate.stereoGrps.entrySet()) {
+                IAtom atm = atoms.get(e.getKey());
+                IAtomContainer mol = atomToMol.get(atm);
+                for (IStereoElement<?, ?> stereo : mol.stereoElements()) {
+                    // maybe also Al and AT?
+                    if (stereo.getConfigClass() == IStereoElement.TH &&
+                        stereo.getFocus().equals(atm)) {
+                        stereo.setGroupInfo(e.getValue());
+                    }
+                }
+            }
+        }
+
+
         // assign Sgroups
-        for (Map.Entry<IAtomContainer, Collection<Sgroup>> e : sgroupMap.asMap().entrySet())
+        for (Map.Entry<IChemObject, List<Sgroup>> e : sgroupMap.entrySet())
             e.getKey().setProperty(CDKConstants.CTAB_SGROUPS, new ArrayList<>(e.getValue()));
+
+        if (cxstate.atomHighlight != null || cxstate.bongHighlight != null) {
+            AtomBondSelection selection = new AtomBondSelection();
+            if (cxstate.atomHighlight != null)
+                for (Integer idx : cxstate.atomHighlight)
+                    selection.select(atoms.get(idx));
+            if (cxstate.bongHighlight != null)
+                for (Integer idx : cxstate.bongHighlight)
+                    selection.select(bonds.get(idx));
+            chemObj.setProperty(CDKConstants.SELECTION, selection);
+        }
+
+        // append R-Groups, currently only for molecules... I'm not sure
+        // where we would put them on a reaction or even how they are specified
+        // in CXSMILES!
+        if (cxstate.rgrps != null && chemObj instanceof IAtomContainer) {
+
+            IAtomContainer rootStructure = (IAtomContainer)chemObj;
+
+            Map<String,List<IPseudoAtom>> rLabToAtom = new HashMap<>();
+            for (IAtom atom : atomToMol.keySet()) {
+                if (atom instanceof IPseudoAtom &&
+                    ((IPseudoAtom) atom).getLabel() != null) {
+                    rLabToAtom.computeIfAbsent(((IPseudoAtom) atom).getLabel(),
+                                               k -> new ArrayList<>())
+                              .add(((IPseudoAtom) atom));
+                }
+            }
+
+            Set<String> rGrpVisit = new HashSet<>();
+
+            int compGroupId = 1, nextGroupId = 2;
+            for (Map.Entry<String,List<String>> e : cxstate.rgrps.entrySet()) {
+
+                String rLabel = e.getKey();
+                List<IPseudoAtom> rAtoms = rLabToAtom.getOrDefault(rLabel,
+                                                                   Collections.emptyList());
+
+                List<IBond.Order> bondOrders = getIncomingBondOrders(rAtoms);
+                for (String rGrpSmiles : e.getValue()) {
+
+                    IAtomContainer rDef = parseSmiles(rGrpSmiles);
+
+                    ensureNonOverlappingDefinitions(rDef, rGrpVisit);
+
+                    // verify attachment points are present and add them if
+                    // required
+                    if (bondOrders != null) {
+                        List<IPseudoAtom> attachmentPoints = new ArrayList<>();
+                        for (IAtom atom : rDef.atoms()) {
+                            if ((atom instanceof IPseudoAtom &&
+                                 ((IPseudoAtom) atom).getAttachPointNum() > 0) &&
+                                atom.getProperty(CDKConstants.RGROUP_MEMBERSHIP) == null) {
+                                attachmentPoints.add((IPseudoAtom) atom);
+                            }
+                        }
+
+                        // empty attachments imply we attach to the first atom
+                        if (attachmentPoints.isEmpty()) {
+                            IAtom first = rDef.getAtom(0);
+                            int num = 1;
+                            int hAdjust = 0;
+                            for (IBond.Order order : bondOrders) {
+                                hAdjust += order.numeric();
+                                IPseudoAtom attach = rootStructure.getBuilder().newInstance(IPseudoAtom.class);
+                                attach.setAttachPointNum(num++);
+                                rDef.addAtom(attach);
+                                rDef.newBond(first, attach, order);
+                                attachmentPoints.add(attach);
+                            }
+                            Integer implH = first.getImplicitHydrogenCount();
+                            if (implH != null)
+                                first.setImplicitHydrogenCount(Math.max(0, implH - hAdjust));
+                        }
+
+                        if (attachmentPoints.size() != bondOrders.size())
+                            throw new InvalidSmilesException("Number of attachments does not match! " + attachmentPoints.size() + " " + bondOrders.size());
+                    }
+
+                    // tag any atoms that aren't already part of an R-Group
+                    // as part of this R-Group and synchronise the component
+                    // grouping id's
+                    for (IAtom atom : rDef.atoms()) {
+                        if (atom.getProperty(CDKConstants.RGROUP_MEMBERSHIP) == null)
+                            atom.setProperty(CDKConstants.RGROUP_MEMBERSHIP, rLabel);
+                        Integer grpId = atom.getProperty(CDKConstants.REACTION_GROUP);
+                        if (grpId != null) {
+                            atom.setProperty(CDKConstants.REACTION_GROUP, compGroupId + grpId);
+                            nextGroupId = Math.max(nextGroupId, compGroupId + grpId + 1);
+                        }
+                        else
+                            atom.setProperty(CDKConstants.REACTION_GROUP, compGroupId);
+                    }
+
+                    compGroupId = nextGroupId++;
+
+                    rootStructure.add(rDef);
+
+                    List<Sgroup> childSgroups = rDef.getProperty(CDKConstants.CTAB_SGROUPS);
+                    if (childSgroups != null) {
+                        List<Sgroup> mainSgroups = rootStructure.getProperty(CDKConstants.CTAB_SGROUPS);
+                        mainSgroups = mainSgroups != null ? new ArrayList<>(mainSgroups) : new ArrayList<>();
+                        mainSgroups.addAll(childSgroups);
+                        rootStructure.setProperty(CDKConstants.CTAB_SGROUPS, mainSgroups);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Since we store RGroups in a flatten'd manner we need to ensure
+     * @param rDef a new Rgroup definition being added
+     * @param seen if we have seen it already
+     */
+    private static void ensureNonOverlappingDefinitions(IAtomContainer rDef,
+                                                        Set<String> seen) {
+        for (IAtom atom : rDef.atoms()) {
+            String label = null;
+            if (atom instanceof IPseudoAtom)
+                label = ((IPseudoAtom) atom).getLabel();
+            if (label != null && !seen.add(label) && label.matches("R\\d*")) {
+                // find a new unique label
+                int rnum = label.length() > 1 ? Integer.parseInt(label.substring(1)) : 0;
+                String newLabel = "R" + rnum;
+                for (; rnum < 999; ++rnum) {
+                    newLabel = "R" + rnum;
+                    if (seen.add(newLabel))
+                        break;
+                }
+                ((IPseudoAtom) atom).setLabel(newLabel);
+                for (IAtom tmp : rDef.atoms()) {
+                    String rMember = tmp.getProperty(CDKConstants.RGROUP_MEMBERSHIP);
+                    if (label.equals(rMember))
+                        tmp.setProperty(CDKConstants.RGROUP_MEMBERSHIP, newLabel);
+                }
+            }
+        }
+    }
+
+    private static List<IBond.Order> getIncomingBondOrders(List<IPseudoAtom> rAtoms) throws InvalidSmilesException {
+        List<IBond.Order> result = null;
+        for (IPseudoAtom atom : rAtoms) {
+            if (result == null) {
+                result = new ArrayList<>(4);
+                for (IBond bond : atom.bonds()) {
+                    result.add(bond.getOrder());
+                }
+                Collections.sort(result);
+            } else {
+                List<IBond.Order> tmp = new ArrayList<>(4);
+                for (IBond bond : atom.bonds())
+                    tmp.add(bond.getOrder());
+                Collections.sort(tmp);
+                if (!tmp.equals(result))
+                    throw new InvalidSmilesException("R-Group " + atom.getLabel() +
+                                                     " have different incoming bond orders: "
+                                                     + result + " != " + tmp);
+            }
+        }
+        return result;
+    }
+
+
+    /**
+     * This logic is used to allow reading of Atropisomer configurations (e.g.
+     * BiNOL) from CXSMILES.
+     *
+     * @param atomToMol mapping from atom to the containing molecule
+     * @param atomToWedgeFrom atom at small end of wedge
+     * @param bondToWedge the bond being wedged
+     * @param style the wedge style
+     */
+    private void handleRdkitAtropisomerExtension(Map<IAtom, IAtomContainer> atomToMol,
+                                                 IAtom atomToWedgeFrom,
+                                                 IBond bondToWedge,
+                                                 IBond.Display style) {
+        // check for RDKit atropisomers
+        if (!isAtropisomerAtom(atomToWedgeFrom))
+            return;
+
+        // Find the bond to apply the atropisomerism to
+        IBond atropisomerBond = null;
+        for (IBond b : atomToWedgeFrom.bonds()) {
+            if (!b.equals(bondToWedge) &&
+                b.getOrder() == IBond.Order.SINGLE &&
+                isAtropisomerAtom(b.getOther(atomToWedgeFrom)) &&
+                Cycles.smallRingSize(b, 7) == 0) {
+                if (atropisomerBond != null) {
+                    atropisomerBond = null;
+                    break;
+                }
+                atropisomerBond = b;
+            }
+        }
+
+        if (atropisomerBond != null) {
+            IAtom atBeg = atropisomerBond.getBegin();
+            IAtom atEnd = atropisomerBond.getEnd();
+            if (bondToWedge.contains(atBeg) ||
+                bondToWedge.contains(atEnd)) {
+                List<IAtom> storeOrder = new ArrayList<>();
+
+                for (IBond b : atBeg.bonds()) {
+                    if (b.equals(atropisomerBond))
+                        continue;
+                    IAtom nbor = b.getOther(atBeg);
+                    storeOrder.add(nbor);
+                }
+                for (IBond b : atEnd.bonds()) {
+                    if (b.equals(atropisomerBond))
+                        continue;
+                    IAtom nbor = b.getOther(atEnd);
+                    storeOrder.add(nbor);
+                }
+
+                if (storeOrder.size() == 4) {
+
+                    if (storeOrder.get(0).getIndex() > storeOrder.get(1).getIndex())
+                        swap(storeOrder, 0, 1);
+                    if (storeOrder.get(2).getIndex() > storeOrder.get(3).getIndex())
+                        swap(storeOrder, 2, 3);
+
+                    IBond.Display bond1dir = IBond.Display.Solid;
+                    IBond.Display bond2dir = IBond.Display.Solid;
+                    if (bondToWedge.contains(atBeg)) {
+                        if (bondToWedge.contains(storeOrder.get(0))) {
+                            bond1dir = style;
+                        } else if (bondToWedge.contains(storeOrder.get(1))) {
+                            bond1dir = flip(style);
+                        }
+                    } else if (bondToWedge.contains(atEnd)) {
+                        if (bondToWedge.contains(storeOrder.get(2))) {
+                            bond2dir = style;
+                        } else if (bondToWedge.contains(storeOrder.get(3))) {
+                            bond2dir = flip(style);
+                        }
+                    }
+
+                    int cfg = 0;
+                    if (bond1dir == IBond.Display.WedgeBegin ||
+                        bond2dir == IBond.Display.WedgedHashBegin) {
+                        cfg = IStereoElement.LEFT;
+                    } else if (bond1dir == IBond.Display.WedgedHashBegin ||
+                               bond2dir == IBond.Display.WedgeBegin) {
+                        cfg = IStereoElement.RIGHT;
+                    }
+
+                    IAtomContainer mol = atomToMol.get(atomToWedgeFrom);
+                    mol.addStereoElement(new Atropisomeric(atropisomerBond,
+                                                           storeOrder.toArray(new IAtom[4]),
+                                                           cfg));
+                }
+            }
+        }
+    }
+
+    private static void swap(List<IAtom> atoms, int i, int j) {
+        IAtom tmp = atoms.get(i);
+        atoms.set(i, atoms.get(j));
+        atoms.set(j, tmp);
+    }
+
+    private static IBond.Display flip(IBond.Display disp) {
+        if (disp == IBond.Display.WedgeBegin)
+            return IBond.Display.WedgedHashBegin;
+        else if (disp == IBond.Display.WedgeEnd)
+            return IBond.Display.WedgedHashEnd;
+        else if (disp == IBond.Display.WedgedHashBegin)
+            return IBond.Display.WedgeBegin;
+        else if (disp == IBond.Display.WedgedHashEnd)
+            return IBond.Display.WedgeEnd;
+        return IBond.Display.Solid;
+    }
+
+    // Check if an atom can potentially by part of an atropisomer
+    private boolean isAtropisomerAtom(IAtom atom) {
+        if (atom.getBondCount() != 3)
+            return false;
+        if (atom.isAromatic())
+            return true;
+        int dbcount = 0;
+        for (IBond bond : atom.bonds()) {
+            if (bond.getOrder() == IBond.Order.DOUBLE)
+                dbcount++;
+        }
+        return dbcount == 1 || (dbcount == 0 &&
+                                atom.getFormalCharge() == 0 &&
+                                (atom.getAtomicNumber() == IAtom.N ||
+                                 atom.getAtomicNumber() == IAtom.P ||
+                                 atom.getAtomicNumber() == IAtom.As));
     }
 
     /**

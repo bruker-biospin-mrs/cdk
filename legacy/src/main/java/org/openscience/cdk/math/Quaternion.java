@@ -29,12 +29,14 @@ package org.openscience.cdk.math;
  * This class handles quaternions.
  * Quaternion are 2*2 complex matrices.
  *
- * @cdk.module qm
  */
 public class Quaternion {
 
     /** The content of the quaternion */
-    private double a, b, c, d;
+    private final double a;
+    private final double b;
+    private final double c;
+    private final double d;
 
     public Quaternion() {
         a = b = c = d = 0d;

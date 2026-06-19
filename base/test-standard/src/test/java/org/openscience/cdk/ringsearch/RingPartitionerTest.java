@@ -20,9 +20,9 @@ package org.openscience.cdk.ringsearch;
 
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IRingSet;
@@ -31,47 +31,46 @@ import org.openscience.cdk.templates.TestMoleculeFactory;
 /**
  * This class tests the RingPartitioner class.
  *
- * @cdk.module test-standard
  *
  * @author         kaihartmann
  * @cdk.created    2005-05-24
  */
-public class RingPartitionerTest extends CDKTestCase {
+class RingPartitionerTest extends CDKTestCase {
 
     static boolean standAlone = false;
 
     //private static ILoggingTool logger = null;
 
-    public RingPartitionerTest() {
+    RingPartitionerTest() {
         super();
     }
 
     @Test
-    public void testConvertToAtomContainer_IRingSet() {
+    void testConvertToAtomContainer_IRingSet() {
         IAtomContainer molecule = TestMoleculeFactory.makeAlphaPinene();
 
         IRingSet ringSet = Cycles.sssr(molecule).toRingSet();
         IAtomContainer ac = RingPartitioner.convertToAtomContainer(ringSet);
-        Assert.assertEquals(7, ac.getAtomCount());
-        Assert.assertEquals(8, ac.getBondCount());
+        Assertions.assertEquals(7, ac.getAtomCount());
+        Assertions.assertEquals(8, ac.getBondCount());
     }
 
     @Test
-    public void testPartitionIntoRings() {
+    void testPartitionIntoRings() {
         IAtomContainer azulene = TestMoleculeFactory.makeAzulene();
         IRingSet ringSet = Cycles.sssr(azulene).toRingSet();
         List<IRingSet> list = RingPartitioner.partitionRings(ringSet);
-        Assert.assertEquals(1, list.size());
+        Assertions.assertEquals(1, list.size());
 
         IAtomContainer biphenyl = TestMoleculeFactory.makeBiphenyl();
         ringSet = Cycles.sssr(biphenyl).toRingSet();
         list = RingPartitioner.partitionRings(ringSet);
-        Assert.assertEquals(2, list.size());
+        Assertions.assertEquals(2, list.size());
 
         IAtomContainer spiro = TestMoleculeFactory.makeSpiroRings();
         ringSet = Cycles.sssr(spiro).toRingSet();
         list = RingPartitioner.partitionRings(ringSet);
-        Assert.assertEquals(1, list.size());
+        Assertions.assertEquals(1, list.size());
 
     }
 

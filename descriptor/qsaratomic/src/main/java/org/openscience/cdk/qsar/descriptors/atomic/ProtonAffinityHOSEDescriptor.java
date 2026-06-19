@@ -57,8 +57,6 @@ import java.util.StringTokenizer;
  *
  * @author       Miguel Rojas
  * @cdk.created  2006-05-26
- * @cdk.module   qsaratomic
- * @cdk.githash
  * @cdk.dictref  qsar-descriptors:protonaffinity
  */
 public class ProtonAffinityHOSEDescriptor extends AbstractAtomicDescriptor {
@@ -66,9 +64,9 @@ public class ProtonAffinityHOSEDescriptor extends AbstractAtomicDescriptor {
     private static final String[] NAMES = {"protonAffiHOSE"};
 
     /** Maximum spheres to use by the HoseCode model.*/
-    int                           maxSpheresToUse = 10;
+    final int                           maxSpheresToUse = 10;
 
-    private Affinitydb            db              = new Affinitydb();
+    private final Affinitydb            db              = new Affinitydb();
 
     /**
      *  Constructor for the ProtonAffinityDescriptor object.
@@ -225,7 +223,7 @@ public class ProtonAffinityHOSEDescriptor extends AbstractAtomicDescriptor {
                 return 0;
 
             try {
-                HOSECodeGenerator hcg = new HOSECodeGenerator();
+                HOSECodeGenerator hcg = new HOSECodeGenerator(HOSECodeGenerator.LEGACY_MODE);
                 //Check starting from the exact sphere hose code and maximal a value of 10
                 int exactSphere = 0;
                 String hoseCode = "";
@@ -275,7 +273,8 @@ public class ProtonAffinityHOSEDescriptor extends AbstractAtomicDescriptor {
                     }
                 }
             } catch (CDKException e) {
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(ProtonAffinityHOSEDescriptor.class)
+                                  .warn("Unexpected Error:", e);
             }
             return 0;
         }
@@ -298,7 +297,8 @@ public class ProtonAffinityHOSEDescriptor extends AbstractAtomicDescriptor {
                     hoseVSenergy.put(values.get(0), Double.valueOf(values.get(1)));
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(ProtonAffinityHOSEDescriptor.class)
+                                  .warn("Unexpected Error:", e);
             }
             return hoseVSenergy;
         }

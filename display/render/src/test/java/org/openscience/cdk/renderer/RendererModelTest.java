@@ -28,12 +28,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.event.ICDKChangeListener;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -49,15 +48,14 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @cdk.module test-render
  */
-public class RendererModelTest {
+class RendererModelTest {
 
     @Test
-    public void testGetRenderingParameter() {
+    void testGetRenderingParameter() {
         IGenerator<IChemObject> generator = new IGenerator<IChemObject>() {
 
-            IGeneratorParameter<Boolean> someParam = new SomeParam();
+            final IGeneratorParameter<Boolean> someParam = new SomeParam();
 
             @Override
             public List<IGeneratorParameter<?>> getParameters() {
@@ -77,14 +75,14 @@ public class RendererModelTest {
         };
         RendererModel model = new RendererModel();
         model.registerParameters(generator);
-        Assert.assertEquals(Boolean.FALSE, model.getParameter(SomeParam.class).getDefault());
+        Assertions.assertEquals(Boolean.FALSE, model.getParameter(SomeParam.class).getDefault());
     }
 
     @Test
-    public void testHasParameter() {
+    void testHasParameter() {
         IGenerator<IChemObject> generator = new IGenerator<IChemObject>() {
 
-            IGeneratorParameter<Boolean> someParam = new SomeParam();
+            final IGeneratorParameter<Boolean> someParam = new SomeParam();
 
             @Override
             public List<IGeneratorParameter<?>> getParameters() {
@@ -103,16 +101,16 @@ public class RendererModelTest {
             }
         };
         RendererModel model = new RendererModel();
-        Assert.assertFalse(model.hasParameter(SomeParam.class));
+        Assertions.assertFalse(model.hasParameter(SomeParam.class));
         model.registerParameters(generator);
-        Assert.assertTrue(model.hasParameter(SomeParam.class));
+        Assertions.assertTrue(model.hasParameter(SomeParam.class));
     }
 
     @Test
-    public void testReturningTheRealParamaterValue() {
+    void testReturningTheRealParamaterValue() {
         IGenerator<IChemObject> generator = new IGenerator<IChemObject>() {
 
-            IGeneratorParameter<Boolean> someParam = new SomeParam();
+            final IGeneratorParameter<Boolean> someParam = new SomeParam();
 
             @Override
             public List<IGeneratorParameter<?>> getParameters() {
@@ -134,16 +132,16 @@ public class RendererModelTest {
         model.registerParameters(generator);
         IGeneratorParameter<Boolean> param = model.getParameter(SomeParam.class);
         // test the default value
-        Assert.assertEquals(Boolean.FALSE, param.getValue());
+        Assertions.assertEquals(Boolean.FALSE, param.getValue());
         param.setValue(Boolean.TRUE);
-        Assert.assertEquals(Boolean.TRUE, model.getParameter(SomeParam.class).getValue());
+        Assertions.assertEquals(Boolean.TRUE, model.getParameter(SomeParam.class).getValue());
     }
 
     @Test
-    public void testSetRenderingParameter() {
+    void testSetRenderingParameter() {
         IGenerator<IChemObject> generator = new IGenerator<IChemObject>() {
 
-            IGeneratorParameter<Boolean> someParam = new SomeParam();
+            final IGeneratorParameter<Boolean> someParam = new SomeParam();
 
             @Override
             public List<IGeneratorParameter<?>> getParameters() {
@@ -163,16 +161,16 @@ public class RendererModelTest {
         };
         RendererModel model = new RendererModel();
         model.registerParameters(generator);
-        Assert.assertEquals(Boolean.FALSE, model.get(SomeParam.class));
+        Assertions.assertEquals(Boolean.FALSE, model.get(SomeParam.class));
         model.set(SomeParam.class, true);
-        Assert.assertEquals(Boolean.TRUE, model.get(SomeParam.class));
+        Assertions.assertEquals(Boolean.TRUE, model.get(SomeParam.class));
     }
 
     @Test
-    public void testGetDefaultRenderingParameter() {
+    void testGetDefaultRenderingParameter() {
         IGenerator<IChemObject> generator = new IGenerator<IChemObject>() {
 
-            IGeneratorParameter<Boolean> someParam = new SomeParam();
+            final IGeneratorParameter<Boolean> someParam = new SomeParam();
 
             @Override
             public List<IGeneratorParameter<?>> getParameters() {
@@ -192,14 +190,14 @@ public class RendererModelTest {
         };
         RendererModel model = new RendererModel();
         model.registerParameters(generator);
-        Assert.assertEquals(Boolean.FALSE, model.getDefault(SomeParam.class));
+        Assertions.assertEquals(Boolean.FALSE, model.getDefault(SomeParam.class));
     }
 
     @Test
-    public void testGetRenderingParameters() {
+    void testGetRenderingParameters() {
         IGenerator<IChemObject> generator = new IGenerator<IChemObject>() {
 
-            IGeneratorParameter<Boolean> someParam = new SomeParam();
+            final IGeneratorParameter<Boolean> someParam = new SomeParam();
 
             @Override
             public List<IGeneratorParameter<?>> getParameters() {
@@ -221,10 +219,10 @@ public class RendererModelTest {
         int nDefaultParams = model.getRenderingParameters().size();
         model.registerParameters(generator);
         List<IGeneratorParameter<?>> params = model.getRenderingParameters();
-        Assert.assertNotNull(params);
-        Assert.assertEquals(nDefaultParams + 1, params.size()); // the registered one + defaults
+        Assertions.assertNotNull(params);
+        Assertions.assertEquals(nDefaultParams + 1, params.size()); // the registered one + defaults
 
-        List<Class<?>> paramClasses = new ArrayList<Class<?>>();
+        List<Class<?>> paramClasses = new ArrayList<>();
         for (IGeneratorParameter<?> param : params)
             paramClasses.add(param.getClass());
 
@@ -232,82 +230,82 @@ public class RendererModelTest {
     }
 
     @Test
-    public void testGetSetNotification() {
+    void testGetSetNotification() {
         RendererModel model = new RendererModel();
         // test the default setting
-        Assert.assertTrue(model.getNotification());
+        Assertions.assertTrue(model.getNotification());
         model.setNotification(false);
-        Assert.assertFalse(model.getNotification());
+        Assertions.assertFalse(model.getNotification());
         model.setNotification(true);
-        Assert.assertTrue(model.getNotification());
+        Assertions.assertTrue(model.getNotification());
     }
 
     @Test
-    public void testNoDefaultToolTips() {
+    void testNoDefaultToolTips() {
         RendererModel model = new RendererModel();
         // test: no default tool tips
-        Assert.assertNull(model.getToolTipText(new Atom()));
+        Assertions.assertNull(model.getToolTipText(new Atom()));
         // but a non-null map
-        Assert.assertNotNull(model.getToolTipTextMap());
+        Assertions.assertNotNull(model.getToolTipTextMap());
     }
 
     @Test
-    public void testToolTipFunctionality() {
-        Map<IAtom, String> tips = new HashMap<IAtom, String>();
+    void testToolTipFunctionality() {
+        Map<IAtom, String> tips = new HashMap<>();
         IAtom anonAtom = new Atom();
         tips.put(anonAtom, "Repelsteeltje");
         RendererModel model = new RendererModel();
         model.setToolTipTextMap(tips);
-        Assert.assertEquals(tips, model.getToolTipTextMap());
-        Assert.assertEquals("Repelsteeltje", model.getToolTipText(anonAtom));
+        Assertions.assertEquals(tips, model.getToolTipTextMap());
+        Assertions.assertEquals("Repelsteeltje", model.getToolTipText(anonAtom));
     }
 
     @Test
-    public void testClipboardContent() {
+    void testClipboardContent() {
         RendererModel model = new RendererModel();
         // test default
-        Assert.assertNull(model.getClipboardContent());
-        IAtomContainer content = new AtomContainer();
+        Assertions.assertNull(model.getClipboardContent());
+        IAtomContainer content = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         model.setClipboardContent(content);
-        Assert.assertEquals(content, model.getClipboardContent());
+        Assertions.assertEquals(content, model.getClipboardContent());
         model.setClipboardContent(null);
-        Assert.assertNull(model.getClipboardContent());
+        Assertions.assertNull(model.getClipboardContent());
     }
 
     @Test
-    public void testExternalSelectedPart() {
+    void testExternalSelectedPart() {
         RendererModel model = new RendererModel();
         // test default
-        Assert.assertNull(model.getExternalSelectedPart());
-        IAtomContainer content = new AtomContainer();
+        Assertions.assertNull(model.getExternalSelectedPart());
+        IAtomContainer content = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         model.setExternalSelectedPart(content);
-        Assert.assertEquals(content, model.getExternalSelectedPart());
+        Assertions.assertEquals(content, model.getExternalSelectedPart());
         model.setExternalSelectedPart(null);
-        Assert.assertNull(model.getExternalSelectedPart());
+        Assertions.assertNull(model.getExternalSelectedPart());
     }
 
     @Test
-    public void testHighlightedAtom() {
+    void testHighlightedAtom() {
         RendererModel model = new RendererModel();
         // test default
-        Assert.assertNull(model.getHighlightedAtom());
+        Assertions.assertNull(model.getHighlightedAtom());
         IAtom content = new Atom();
         model.setHighlightedAtom(content);
-        Assert.assertEquals(content, model.getHighlightedAtom());
+        Assertions.assertEquals(content, model.getHighlightedAtom());
         model.setHighlightedAtom(null);
-        Assert.assertNull(model.getHighlightedAtom());
+        Assertions.assertNull(model.getHighlightedAtom());
     }
 
     @Test
-    public void testHighlightedBond() {
+    void testHighlightedBond() {
         RendererModel model = new RendererModel();
         // test default
-        Assert.assertNull(model.getHighlightedBond());
+        Assertions.assertNull(model.getHighlightedBond());
         IBond content = new Bond();
         model.setHighlightedBond(content);
-        Assert.assertEquals(content, model.getHighlightedBond());
+        Assertions.assertEquals(content, model.getHighlightedBond());
         model.setHighlightedBond(null);
-        Assert.assertNull(model.getHighlightedBond());
+        Assertions.assertNull(model.getHighlightedBond());
     }
 
     class MockSelection implements IChemObjectSelection {
@@ -337,15 +335,15 @@ public class RendererModelTest {
     }
 
     @Test
-    public void testSelection() {
+    void testSelection() {
         RendererModel model = new RendererModel();
         // test default
-        Assert.assertNull(model.getSelection());
+        Assertions.assertNull(model.getSelection());
         IChemObjectSelection content = new MockSelection();
         model.setSelection(content);
-        Assert.assertEquals(content, model.getSelection());
+        Assertions.assertEquals(content, model.getSelection());
         model.setSelection(null);
-        Assert.assertNull(model.getSelection());
+        Assertions.assertNull(model.getSelection());
     }
 
     class MockListener implements ICDKChangeListener {
@@ -359,27 +357,27 @@ public class RendererModelTest {
     }
 
     @Test
-    public void testListening() {
+    void testListening() {
         RendererModel model = new RendererModel();
         // test default
         MockListener listener = new MockListener();
         model.addCDKChangeListener(listener);
-        Assert.assertFalse(listener.isChanged);
+        Assertions.assertFalse(listener.isChanged);
         model.fireChange();
-        Assert.assertTrue(listener.isChanged);
+        Assertions.assertTrue(listener.isChanged);
 
         // test unregistering
         listener.isChanged = false;
-        Assert.assertFalse(listener.isChanged);
+        Assertions.assertFalse(listener.isChanged);
         model.removeCDKChangeListener(listener);
         model.fireChange();
-        Assert.assertFalse(listener.isChanged);
+        Assertions.assertFalse(listener.isChanged);
     }
 
     @Test
-    public void testMerge() {
+    void testMerge() {
         RendererModel model = new RendererModel();
-        Assert.assertNotNull(model.getMerge());
+        Assertions.assertNotNull(model.getMerge());
         // any further testing I can do here?
     }
 }

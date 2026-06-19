@@ -23,11 +23,10 @@
 package org.openscience.cdk.io.formats;
 
 /**
- * @cdk.module test-ioformats
  */
-public class FenskeHall_ZMatrixFormatTest extends ChemFormatTest {
+class FenskeHall_ZMatrixFormatTest extends ChemFormatTest {
 
-    public FenskeHall_ZMatrixFormatTest() {
+    FenskeHall_ZMatrixFormatTest() {
         super.setChemFormat((IChemFormat) FenskeHall_ZMatrixFormat.getInstance());
     }
 

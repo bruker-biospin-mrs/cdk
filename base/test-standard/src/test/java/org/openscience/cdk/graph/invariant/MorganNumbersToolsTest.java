@@ -21,10 +21,9 @@ package org.openscience.cdk.graph.invariant;
 
 import java.io.InputStream;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.exception.CDKException;
@@ -37,39 +36,38 @@ import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 /**
  * Checks the functionality of the MorganNumberTools.
  *
- * @cdk.module test-standard
  */
-public class MorganNumbersToolsTest extends CDKTestCase {
+class MorganNumbersToolsTest extends CDKTestCase {
 
-    public MorganNumbersToolsTest() {
+    MorganNumbersToolsTest() {
         super();
     }
 
     @Test
-    public void testGetMorganNumbers_IAtomContainer() {
+    void testGetMorganNumbers_IAtomContainer() {
         // This is an array with the expected Morgan Numbers for a-pinene
         long[] reference = {28776, 17899, 23549, 34598, 31846, 36393, 9847, 45904, 15669, 15669};
 
         IAtomContainer mol = TestMoleculeFactory.makeAlphaPinene();
         long[] morganNumbers = MorganNumbersTools.getMorganNumbers(mol);
-        Assert.assertEquals(reference.length, morganNumbers.length);
+        Assertions.assertEquals(reference.length, morganNumbers.length);
         for (int f = 0; f < morganNumbers.length; f++) {
             //logger.debug(morganNumbers[f]);
-            Assert.assertEquals(reference[f], morganNumbers[f]);
+            Assertions.assertEquals(reference[f], morganNumbers[f]);
         }
     }
 
     @Test
-    public void testPhenylamine() {
+    void testPhenylamine() {
         // This is an array with the expected Morgan Numbers for a-pinene
         String[] reference = {"C-457", "C-428", "C-325", "C-354", "C-325", "C-428", "N-251"};
 
         IAtomContainer mol = TestMoleculeFactory.makePhenylAmine();
         String[] morganNumbers = MorganNumbersTools.getMorganNumbersWithElementSymbol(mol);
-        Assert.assertEquals(reference.length, morganNumbers.length);
+        Assertions.assertEquals(reference.length, morganNumbers.length);
         for (int f = 0; f < morganNumbers.length; f++) {
             //logger.debug(morganNumbers[f]);
-            Assert.assertEquals(reference[f], morganNumbers[f]);
+            Assertions.assertEquals(reference[f], morganNumbers[f]);
         }
     }
 
@@ -77,14 +75,14 @@ public class MorganNumbersToolsTest extends CDKTestCase {
      * @cdk.bug 2846213
      */
     @Test
-    public void testBug2846213() throws CDKException {
-        String filename = "data/mdl/bug2846213.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testBug2846213() throws CDKException {
+        String filename = "bug2846213.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLV2000Reader reader = new MDLV2000Reader(ins, Mode.STRICT);
         ChemFile chemFile = (ChemFile) reader.read((ChemObject) new ChemFile());
         IAtomContainer ac = ChemFileManipulator.getAllAtomContainers(chemFile).get(0);
         long[] morganNumbers = MorganNumbersTools.getMorganNumbers(ac);
-        Assert.assertFalse(morganNumbers[7] == morganNumbers[8]);
+        Assertions.assertFalse(morganNumbers[7] == morganNumbers[8]);
     }
 
 }

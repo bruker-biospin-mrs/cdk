@@ -22,7 +22,6 @@
 package org.openscience.cdk.iupac.parser;
 
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
@@ -38,7 +37,6 @@ import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -47,7 +45,6 @@ import java.util.List;
  *
  * @see Token
  * @author David Robinson
- * @cdk.githash
  * @author Bhupinder Sandhu
  * @author Stephen Tomkinson
  *
@@ -56,7 +53,7 @@ import java.util.List;
 public class MoleculeBuilder {
 
     /** The molecule which is worked upon throughout the class and returned at the end */
-    private IAtomContainer currentMolecule = null;
+    private IAtomContainer currentMolecule;
     private IAtom          endOfChain;
 
     public MoleculeBuilder(IChemObjectBuilder builder) {
@@ -105,13 +102,8 @@ public class MoleculeBuilder {
      * @see #addFunGroup
      */
     private void buildFunGroups(List<AttachedGroup> attachedGroups) {
-        Iterator<AttachedGroup> groupsIterator = attachedGroups.iterator();
-        while (groupsIterator.hasNext()) {
-            AttachedGroup attachedGroup = groupsIterator.next();
-
-            Iterator<Token> locationsIterator = attachedGroup.getLocations().iterator();
-            while (locationsIterator.hasNext()) {
-                Token locationToken = locationsIterator.next();
+        for (AttachedGroup attachedGroup : attachedGroups) {
+            for (Token locationToken : attachedGroup.getLocations()) {
                 addFunGroup(attachedGroup.getName(), Integer.parseInt(locationToken.image) - 1);
             }
         }
@@ -392,14 +384,8 @@ public class MoleculeBuilder {
      * @param attachedSubstituents A vector of AttachedGroup's representing substituents.
      */
     private void addHeads(List<AttachedGroup> attachedSubstituents) {
-        Iterator<AttachedGroup> substituentsIterator = attachedSubstituents.iterator();
-        while (substituentsIterator.hasNext()) {
-            AttachedGroup attachedSubstituent = substituentsIterator.next();
-
-            Iterator<Token> locationsIterator = attachedSubstituent.getLocations().iterator();
-            while (locationsIterator.hasNext()) {
-                Token locationToken = locationsIterator.next();
-
+        for (AttachedGroup attachedSubstituent : attachedSubstituents) {
+            for (Token locationToken : attachedSubstituent.getLocations()) {
                 int joinLocation = Integer.parseInt(locationToken.image) - 1;
                 IAtom connectingAtom;
 
@@ -450,9 +436,7 @@ public class MoleculeBuilder {
 
         //Add the hydrogens to create a balanced molecule
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(currentMolecule.getBuilder());
-        Iterator<IAtom> atoms = currentMolecule.atoms().iterator();
-        while (atoms.hasNext()) {
-            IAtom atom = atoms.next();
+        for (IAtom atom : currentMolecule.atoms()) {
             IAtomType type = matcher.findMatchingAtomType(currentMolecule, atom);
             AtomTypeManipulator.configure(atom, type);
         }
@@ -463,7 +447,7 @@ public class MoleculeBuilder {
     }
 
     private static IAtomContainer makeBenzene() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -491,7 +475,7 @@ public class MoleculeBuilder {
      * @cdk.created 2003-08-15
      */
     private static IAtomContainer makeAlkane(int chainLength) {
-        IAtomContainer currentChain = new AtomContainer();
+        IAtomContainer currentChain = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         //Add the initial atom
         currentChain.addAtom(new Atom("C"));

@@ -22,66 +22,65 @@
  */
 package org.openscience.cdk.io.formats;
 
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.tools.DataFeatures;
 
 /**
- * @cdk.module test-ioformats
  */
-abstract public class ChemFormatTest extends ResourceFormatTest {
+abstract class ChemFormatTest extends ResourceFormatTest {
 
     private IChemFormat chemFormat;
 
-    public void setChemFormat(IChemFormat format) {
+    void setChemFormat(IChemFormat format) {
         super.setResourceFormat(format);
         this.chemFormat = format;
     }
 
     @Test
-    public void testChemFormatSet() {
-        Assert.assertNotNull("You must use setChemFormat() to set the IChemFormat object.", chemFormat);
+    void testChemFormatSet() {
+        Assertions.assertNotNull(chemFormat, "You must use setChemFormat() to set the IChemFormat object.");
     }
 
-    @Ignore("Test cannot be run because it causes a circular dependency cycle")
-    public void testGetReaderClassName() throws Exception {
+    @Disabled("Test cannot be run because it causes a circular dependency cycle")
+    void testGetReaderClassName() throws Exception {
         // two valid output options: NULL and non-zero, existing class
         if (chemFormat.getReaderClassName() != null) {
             String readerClass = chemFormat.getReaderClassName();
-            Assert.assertNotSame("Reader Class name String must be of non-zero length", 0, readerClass.length());
+            Assertions.assertNotSame(0, readerClass.length(), "Reader Class name String must be of non-zero length");
             Class<?> reader = Class.forName(readerClass);
-            Assert.assertNotNull(reader);
+            Assertions.assertNotNull(reader);
         }
     }
 
-    @Ignore("Test cannot be run because it causes a circular dependency cycle")
-    public void testGetWriterClassName() throws Exception {
+    @Disabled("Test cannot be run because it causes a circular dependency cycle")
+    void testGetWriterClassName() throws Exception {
         // two valid output options: NULL and non-zero, existing class
         if (chemFormat.getWriterClassName() != null) {
             String writerClass = chemFormat.getWriterClassName();
-            Assert.assertNotSame("Writer Class name String must be of non-zero length", 0, writerClass.length());
+            Assertions.assertNotSame(0, writerClass.length(), "Writer Class name String must be of non-zero length");
             Class<?> writer = Class.forName(writerClass);
-            Assert.assertNotNull(writer);
+            Assertions.assertNotNull(writer);
         }
     }
 
     @Test
-    public void testGetSupportedDataFeatures() {
+    void testGetSupportedDataFeatures() {
         int supported = chemFormat.getSupportedDataFeatures();
-        Assert.assertTrue(supported >= DataFeatures.NONE);
-        Assert.assertTrue(supported <= 1 << 13); // 13 features, so: all summed <= 1<<13
+        Assertions.assertTrue(supported >= DataFeatures.NONE);
+        Assertions.assertTrue(supported <= 1 << 13); // 13 features, so: all summed <= 1<<13
     }
 
     @Test
-    public void testGetRequiredDataFeatures() {
+    void testGetRequiredDataFeatures() {
         int required = chemFormat.getRequiredDataFeatures();
-        Assert.assertTrue(required >= DataFeatures.NONE);
-        Assert.assertTrue(required <= 1 << 13); // 13 features, so: all summed <= 1<<13
+        Assertions.assertTrue(required >= DataFeatures.NONE);
+        Assertions.assertTrue(required <= 1 << 13); // 13 features, so: all summed <= 1<<13
 
         // test that the required features is a subset of the supported features
         int supported = chemFormat.getSupportedDataFeatures();
-        Assert.assertTrue(supported - required >= 0);
+        Assertions.assertTrue(supported - required >= 0);
     }
 
 }

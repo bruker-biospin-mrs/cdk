@@ -22,12 +22,11 @@
  */
 package org.openscience.cdk.smsd;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.SlowTest;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -41,35 +40,34 @@ import org.openscience.cdk.smsd.tools.ExtAtomContainerManipulator;
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
-@Category(SlowTest.class)
-public class SMSDBondSensitiveTest {
+@Tag("SlowTest")
+class SMSDBondSensitiveTest {
 
     private static IAtomContainer Napthalene;
     private static IAtomContainer Cyclohexane;
     private static IAtomContainer Benzene;
 
-    @BeforeClass
-    public static void setUp() throws CDKException {
+    @BeforeAll
+    static void setUp() throws CDKException {
         Napthalene = Molecules.createNaphthalene();
         Cyclohexane = Molecules.createCyclohexane();
         Benzene = Molecules.createBenzene();
     }
 
     @Test
-    public void testSubgraph() throws Exception {
+    void testSubgraph() throws Exception {
 
         Isomorphism sbf = new Isomorphism(Algorithm.SubStructure, true);
         sbf.init(Benzene, Napthalene, true, true);
         sbf.setChemFilters(false, false, false);
-        Assert.assertTrue(sbf.isSubgraph());
-        Assert.assertEquals(24, sbf.getAllAtomMapping().size());
+        Assertions.assertTrue(sbf.isSubgraph());
+        Assertions.assertEquals(24, sbf.getAllAtomMapping().size());
     }
 
     @Test
-    public void testMatchCount() throws CDKException {
+    void testMatchCount() throws CDKException {
         Isomorphism smsd = new Isomorphism(Algorithm.VFLibMCS, true);
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer query = sp.parseSmiles("CC");
@@ -77,59 +75,59 @@ public class SMSDBondSensitiveTest {
 
         smsd.init(query, target, false, true);
         boolean foundMatches = smsd.isSubgraph();
-        Assert.assertEquals(18, smsd.getAllAtomMapping().size());
-        Assert.assertTrue(foundMatches);
+        Assertions.assertEquals(18, smsd.getAllAtomMapping().size());
+        Assertions.assertTrue(foundMatches);
 
         IQueryAtomContainer queryContainer = QueryAtomContainerCreator.createSymbolAndBondOrderQueryContainer(query);
         smsd.init(queryContainer, target);
         foundMatches = smsd.isSubgraph();
-        Assert.assertTrue(foundMatches);
+        Assertions.assertTrue(foundMatches);
     }
 
     @Test
-    public void testVFLib() throws Exception {
+    void testVFLib() throws Exception {
 
         Isomorphism sbf = new Isomorphism(Algorithm.VFLibMCS, true);
         sbf.init(Benzene, Benzene, true, true);
         sbf.setChemFilters(true, true, true);
-        Assert.assertTrue(sbf.isSubgraph());
+        Assertions.assertTrue(sbf.isSubgraph());
 
     }
 
     @Test
-    public void testSubStructure() throws Exception {
+    void testSubStructure() throws Exception {
         Isomorphism sbf = new Isomorphism(Algorithm.SubStructure, true);
         sbf.init(Benzene, Benzene, true, true);
         sbf.setChemFilters(false, false, false);
-        Assert.assertTrue(sbf.isSubgraph());
+        Assertions.assertTrue(sbf.isSubgraph());
     }
 
     @Test
-    public void testCDKMCS() throws Exception {
+    void testCDKMCS() throws Exception {
         Isomorphism ebimcs = new Isomorphism(Algorithm.CDKMCS, true);
         ebimcs.init(Benzene, Benzene, true, true);
         ebimcs.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs.getFirstMapping().size());
-        Assert.assertTrue(ebimcs.isSubgraph());
+        Assertions.assertEquals(6, ebimcs.getFirstMapping().size());
+        Assertions.assertTrue(ebimcs.isSubgraph());
     }
 
     @Test
-    public void testMCSPlus() throws Exception {
+    void testMCSPlus() throws Exception {
 
         Isomorphism ebimcs = new Isomorphism(Algorithm.MCSPlus, false);
         ebimcs.init(Cyclohexane, Benzene, true, true);
         ebimcs.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs.getFirstMapping().size());
-        Assert.assertTrue(ebimcs.isSubgraph());
+        Assertions.assertEquals(6, ebimcs.getFirstMapping().size());
+        Assertions.assertTrue(ebimcs.isSubgraph());
 
         ebimcs = new Isomorphism(Algorithm.CDKMCS, true);
         ebimcs.init(Cyclohexane, Benzene, true, true);
         ebimcs.setChemFilters(true, true, true);
-        Assert.assertFalse(ebimcs.isSubgraph());
+        Assertions.assertFalse(ebimcs.isSubgraph());
     }
 
     @Test
-    public void testSMSD() throws Exception {
+    void testSMSD() throws Exception {
 
         //        Isomorphism ebimcs = new Isomorphism(Algorithm.VFLibMCS, true);
         //        ebimcs.init(Cyclohexane, Benzene, true, true);
@@ -139,82 +137,82 @@ public class SMSDBondSensitiveTest {
         Isomorphism ebimcs1 = new Isomorphism(Algorithm.DEFAULT, true);
         ebimcs1.init(Benzene, Napthalene, true, true);
         ebimcs1.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
 
         ebimcs1 = new Isomorphism(Algorithm.DEFAULT, false);
         ebimcs1.init(Benzene, Napthalene, true, true);
         ebimcs1.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
 
         ebimcs1 = new Isomorphism(Algorithm.VFLibMCS, true);
         ebimcs1.init(Benzene, Napthalene, true, true);
         ebimcs1.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
 
         ebimcs1 = new Isomorphism(Algorithm.CDKMCS, true);
         ebimcs1.init(Benzene, Napthalene, true, true);
         ebimcs1.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
 
         ebimcs1 = new Isomorphism(Algorithm.MCSPlus, true);
         ebimcs1.init(Benzene, Napthalene, true, true);
         ebimcs1.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs1.getFirstAtomMapping().size());
     }
 
     @Test
-    public void testSMSDCyclohexaneBenzeneSubgraph() throws Exception {
+    void testSMSDCyclohexaneBenzeneSubgraph() throws Exception {
 
         //        IQueryAtomContainer queryContainer = QueryAtomContainerCreator.createSymbolAndBondOrderQueryContainer(Cyclohexane);
 
         Isomorphism ebimcs = new Isomorphism(Algorithm.VFLibMCS, true);
         ebimcs.init(Cyclohexane, Benzene, true, true);
         ebimcs.setChemFilters(true, true, true);
-        Assert.assertFalse(ebimcs.isSubgraph());
+        Assertions.assertFalse(ebimcs.isSubgraph());
     }
 
     @Test
-    public void testSMSDBondSensitive() throws Exception {
+    void testSMSDBondSensitive() throws Exception {
 
         Isomorphism ebimcs3 = new Isomorphism(Algorithm.CDKMCS, true);
         ebimcs3.init(Cyclohexane, Benzene, true, true);
         ebimcs3.setChemFilters(false, false, false);
-        Assert.assertFalse(ebimcs3.isSubgraph());
+        Assertions.assertFalse(ebimcs3.isSubgraph());
 
         Isomorphism ebimcs4 = new Isomorphism(Algorithm.CDKMCS, true);
         ebimcs4.init(Benzene, Napthalene, true, true);
         ebimcs4.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs4.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs4.getFirstAtomMapping().size());
 
         Isomorphism ebimcs5 = new Isomorphism(Algorithm.VFLibMCS, true);
         ebimcs5.init(Cyclohexane, Benzene, true, true);
         ebimcs5.setChemFilters(true, true, true);
-        Assert.assertFalse(ebimcs5.isSubgraph());
+        Assertions.assertFalse(ebimcs5.isSubgraph());
 
         Isomorphism ebimcs6 = new Isomorphism(Algorithm.VFLibMCS, true);
         ebimcs6.init(Benzene, Napthalene, true, true);
         ebimcs6.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs6.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs6.getFirstAtomMapping().size());
 
         Isomorphism ebimcs7 = new Isomorphism(Algorithm.MCSPlus, true);
         ebimcs7.init(Cyclohexane, Benzene, true, true);
         ebimcs7.setChemFilters(true, true, true);
-        Assert.assertFalse(ebimcs7.isSubgraph());
+        Assertions.assertFalse(ebimcs7.isSubgraph());
 
         Isomorphism ebimcs8 = new Isomorphism(Algorithm.MCSPlus, true);
         ebimcs8.init(Benzene, Napthalene, true, true);
         ebimcs8.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs8.getFirstAtomMapping().size());
+        Assertions.assertEquals(6, ebimcs8.getFirstAtomMapping().size());
     }
 
     @Test
-    public void testSMSDChemicalFilters() throws Exception {
+    void testSMSDChemicalFilters() throws Exception {
 
         Isomorphism ebimcs1 = new Isomorphism(Algorithm.DEFAULT, true);
         ebimcs1.init(Napthalene, Benzene, true, true);
         ebimcs1.setChemFilters(true, true, true);
-        Assert.assertEquals(6, ebimcs1.getAllMapping().size());
-        Assert.assertFalse(ebimcs1.isSubgraph());
+        Assertions.assertEquals(6, ebimcs1.getAllMapping().size());
+        Assertions.assertFalse(ebimcs1.isSubgraph());
     }
 
     //    @Test
@@ -249,7 +247,7 @@ public class SMSDBondSensitiveTest {
      * @throws Exception
      */
     @Test
-    public void testSMSDAdpAtpSubgraph() throws Exception {
+    void testSMSDAdpAtpSubgraph() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         String adp = "NC1=NC=NC2=C1N=CN2[C@@H]1O[C@H](COP(O)(=O)OP(O)(O)=O)[C@@H](O)[C@H]1O";
         String atp = "NC1=NC=NC2=C1N=CN2[C@@H]1O[C@H](COP(O)(=O)OP(O)(=O)OP(O)(O)=O)[C@@H](O)[C@H]1O";
@@ -275,14 +273,14 @@ public class SMSDBondSensitiveTest {
         comparison.setChemFilters(stereoMatch, fragmentMinimization, energyMinimization);
 
         //      Get modified Query and Target Molecules as Mappings will correspond to these molecules
-        Assert.assertTrue(comparison.isSubgraph());
-        Assert.assertEquals(2, comparison.getAllMapping().size());
-        Assert.assertEquals(27, comparison.getFirstMapping().size());
+        Assertions.assertTrue(comparison.isSubgraph());
+        Assertions.assertEquals(2, comparison.getAllMapping().size());
+        Assertions.assertEquals(27, comparison.getFirstMapping().size());
 
     }
 
     @Test
-    public void testSMSDLargeSubgraph() throws Exception {
+    void testSMSDLargeSubgraph() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         String c03374 = "CC1=C(C=C)\\C(NC1=O)=C" + "\\C1=C(C)C(CCC(=O)O[C@@H]2O[C@@H]"
                 + "([C@@H](O)[C@H](O)[C@H]2O)C(O)=O)" + "=C(CC2=C(CCC(O)=O)C(C)=C(N2)" + "\\C=C2NC(=O)C(C=C)=C/2C)N1";
@@ -315,8 +313,8 @@ public class SMSDBondSensitiveTest {
         comparison.init(source, target, removeHydrogen, true);
         comparison.setChemFilters(stereoMatch, fragmentMinimization, energyMinimization);
 
-        Assert.assertTrue(comparison.isSubgraph());
-        Assert.assertEquals(55, comparison.getFirstMapping().size());
+        Assertions.assertTrue(comparison.isSubgraph());
+        Assertions.assertEquals(55, comparison.getFirstMapping().size());
 
     }
 }

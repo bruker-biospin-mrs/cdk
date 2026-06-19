@@ -21,17 +21,15 @@ package org.openscience.cdk.qsar.descriptors.molecular;
 import javax.vecmath.Point3d;
 
 import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.dict.Dictionary;
 import org.openscience.cdk.dict.DictionaryDatabase;
 import org.openscience.cdk.dict.Entry;
 import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -42,31 +40,28 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.qsar.DescriptorValue;
 import org.openscience.cdk.qsar.IMolecularDescriptor;
-import org.openscience.cdk.qsar.descriptors.DescriptorTest;
+import org.openscience.cdk.test.qsar.DescriptorTest;
 import org.openscience.cdk.qsar.result.BooleanResult;
 import org.openscience.cdk.qsar.result.DoubleArrayResult;
 import org.openscience.cdk.qsar.result.DoubleResult;
 import org.openscience.cdk.qsar.result.IDescriptorResult;
 import org.openscience.cdk.qsar.result.IntegerArrayResult;
 import org.openscience.cdk.qsar.result.IntegerResult;
-import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.templates.TestMoleculeFactory;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.diff.AtomContainerDiff;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
-
-import java.util.Iterator;
 
 /**
  * Tests for molecular descriptors.
  *
- * @cdk.module test-qsarmolecular
  */
-public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularDescriptor> {
+abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularDescriptor> {
 
-    private static DictionaryDatabase dictDB = new DictionaryDatabase();
-    private static Dictionary         dict   = dictDB.getDictionary("descriptor-algorithms");
+    private static final DictionaryDatabase dictDB = new DictionaryDatabase();
+    private static final Dictionary         dict   = dictDB.getDictionary("descriptor-algorithms");
 
-    public MolecularDescriptorTest() {}
+    MolecularDescriptorTest() {}
 
     private Number[] getAtomFlags(IAtomContainer mol) {
         Number[] flags = new Number[mol.getAtomCount()];
@@ -85,7 +80,7 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
     }
 
     @Test
-    public void descriptorDoesNotChangeFlags() throws CDKException {
+    void descriptorDoesNotChangeFlags() throws CDKException {
         IAtomContainer mol = TestMoleculeFactory.makeBenzene();
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
         Cycles.markRingAtomsAndBonds(mol);
@@ -93,49 +88,50 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
         Number[] aflags = getAtomFlags(mol);
         Number[] bflags = getBondFlags(mol);
         descriptor.calculate(mol);
-        Assert.assertThat("Molecule flags were modified by descriptor!",
+        org.hamcrest.MatcherAssert.assertThat("Molecule flags were modified by descriptor!",
                           mol.getFlagValue(), CoreMatchers.is(mflags));
-        Assert.assertThat("Molecule's Atom flags were modified by descriptor!",
+        org.hamcrest.MatcherAssert.assertThat("Molecule's Atom flags were modified by descriptor!",
                           getAtomFlags(mol), CoreMatchers.is(aflags));
-        Assert.assertThat("Molecule's Bond flags were modified by descriptor!",
+        org.hamcrest.MatcherAssert.assertThat("Molecule's Bond flags were modified by descriptor!",
                           getBondFlags(mol), CoreMatchers.is(bflags));
     }
 
     @Test
-    public void testDescriptorIdentifierExistsInOntology() {
+    void testDescriptorIdentifierExistsInOntology() {
         Entry ontologyEntry = dict.getEntry(descriptor.getSpecification().getSpecificationReference()
                 .substring(dict.getNS().length()).toLowerCase());
-        Assert.assertNotNull(ontologyEntry);
+        Assertions.assertNotNull(ontologyEntry);
     }
 
     @Test
-    public void testCalculate_IAtomContainer() {
+    void testCalculate_IAtomContainer() {
         IAtomContainer mol = null;
         try {
             mol = someoneBringMeSomeWater(DefaultChemObjectBuilder.getInstance());
         } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail("Error in generating the test molecule");
+            LoggingToolFactory.createLoggingTool(MolecularDescriptorTest.class)
+                              .warn("Unexpected Error:", e);
+            Assertions.fail("Error in generating the test molecule");
         }
 
         DescriptorValue v = null;
         try {
             v = descriptor.calculate(mol);
         } catch (Exception e) {
-            Assert.fail("A descriptor must not throw an exception. Exception was:\n" + e.getMessage());
+            Assertions.fail("A descriptor must not throw an exception. Exception was:\n" + e.getMessage());
         }
-        Assert.assertNotNull(v);
-        Assert.assertTrue("The descriptor did not calculate any value.", 0 != v.getValue().length());
+        Assertions.assertNotNull(v);
+        Assertions.assertTrue(0 != v.getValue().length(), "The descriptor did not calculate any value.");
     }
 
     @Test
-    public void testCalculate_NoModifications() throws Exception {
+    void testCalculate_NoModifications() throws Exception {
         IAtomContainer mol = someoneBringMeSomeWater(DefaultChemObjectBuilder.getInstance());
-        IAtomContainer clone = (IAtomContainer) mol.clone();
+        IAtomContainer clone = mol.clone();
         descriptor.calculate(mol);
         String diff = AtomContainerDiff.diff(clone, mol);
-        Assert.assertEquals("The descriptor must not change the passed molecule in any respect, but found this diff: "
-                + diff, 0, diff.length());
+        Assertions.assertEquals(0, diff.length(), "The descriptor must not change the passed molecule in any respect, but found this diff: "
+                + diff);
     }
 
     /**
@@ -144,22 +140,22 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
      * @throws Exception Passed on from calculate.
      */
     @Test
-    public void testLabels() throws Exception {
+    void testLabels() throws Exception {
         IAtomContainer mol = someoneBringMeSomeWater(DefaultChemObjectBuilder.getInstance());
 
         DescriptorValue v = descriptor.calculate(mol);
-        Assert.assertNotNull(v);
+        Assertions.assertNotNull(v);
         String[] names = v.getNames();
-        Assert.assertNotNull("The descriptor must return labels using the getNames() method.", names);
-        Assert.assertNotSame("At least one label must be given.", 0, names.length);
-        for (int i = 0; i < names.length; i++) {
-            Assert.assertNotNull("A descriptor label may not be null.", names[i]);
-            Assert.assertNotSame("The label string must not be empty.", 0, names[i].length());
+        Assertions.assertNotNull(names, "The descriptor must return labels using the getNames() method.");
+        Assertions.assertNotSame(0, names.length, "At least one label must be given.");
+        for (String name : names) {
+            Assertions.assertNotNull(name, "A descriptor label may not be null.");
+            Assertions.assertNotSame(0, name.length(), "The label string must not be empty.");
             //        	System.out.println("Label: " + names[i]);
         }
-        Assert.assertNotNull(v.getValue());
+        Assertions.assertNotNull(v.getValue());
         int valueCount = v.getValue().length();
-        Assert.assertEquals("The number of labels must equals the number of values.", names.length, valueCount);
+        Assertions.assertEquals(names.length, valueCount, "The number of labels must equals the number of values.");
     }
 
     /**
@@ -169,37 +165,34 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
     * of the names
     */
     @Test
-    public void testNamesConsistency() throws Exception {
+    void testNamesConsistency() throws Exception {
         IAtomContainer mol = someoneBringMeSomeWater(DefaultChemObjectBuilder.getInstance());
 
         String[] names1 = descriptor.getDescriptorNames();
         DescriptorValue v = descriptor.calculate(mol);
         String[] names2 = v.getNames();
 
-        Assert.assertEquals(names1.length, names2.length);
-        Assert.assertArrayEquals(names1, names2);
+        Assertions.assertEquals(names1.length, names2.length);
+        Assertions.assertArrayEquals(names1, names2);
 
         int valueCount = v.getValue().length();
-        Assert.assertEquals(valueCount, names1.length);
+        Assertions.assertEquals(valueCount, names1.length);
     }
 
     @Test
-    public void testGetDescriptorResultType() throws Exception {
+    void testGetDescriptorResultType() throws Exception {
         IDescriptorResult result = descriptor.getDescriptorResultType();
-        Assert.assertNotNull("The getDescriptorResultType() must not be null.", result);
+        Assertions.assertNotNull(result, "The getDescriptorResultType() must not be null.");
 
         IAtomContainer mol = someoneBringMeSomeWater(DefaultChemObjectBuilder.getInstance());
         DescriptorValue v = descriptor.calculate(mol);
 
-        Assert.assertTrue("The getDescriptorResultType() is inconsistent with the calculated descriptor results",
-                result.getClass().getName().contains(v.getValue().getClass().getName()));
-        Assert.assertEquals(
-                "The specified getDescriptorResultType() length does not match the actually calculated result vector length",
-                v.getValue().length(), result.length());
+        Assertions.assertTrue(result.getClass().getName().contains(v.getValue().getClass().getName()), "The getDescriptorResultType() is inconsistent with the calculated descriptor results");
+        Assertions.assertEquals(v.getValue().length(), result.length(), "The specified getDescriptorResultType() length does not match the actually calculated result vector length");
     }
 
     @Test
-    public void testTakeIntoAccountImplicitHydrogens() throws Exception {
+    void testTakeIntoAccountImplicitHydrogens() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer methane1 = builder.newInstance(IAtomContainer.class);
         IAtom c1 = builder.newInstance(IAtom.class, "C");
@@ -237,7 +230,7 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
     }
 
     @Test
-    public void testTakeIntoAccountImplicitHydrogensInEthane() throws Exception {
+    void testTakeIntoAccountImplicitHydrogensInEthane() throws Exception {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer ethane1 = builder.newInstance(IAtomContainer.class);
         IAtom c1 = builder.newInstance(IAtom.class, "C");
@@ -301,29 +294,28 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
      */
     private void assertEqualOutput(IDescriptorResult v1, IDescriptorResult v2, String errorMessage) {
         if (v1 instanceof IntegerResult) {
-            Assert.assertEquals(errorMessage, ((IntegerResult) v1).intValue(), ((IntegerResult) v2).intValue());
+            Assertions.assertEquals(((IntegerResult) v1).intValue(), ((IntegerResult) v2).intValue(), errorMessage);
         } else if (v1 instanceof DoubleResult) {
-            Assert.assertEquals(errorMessage, ((DoubleResult) v1).doubleValue(), ((DoubleResult) v2).doubleValue(),
-                    0.00001);
+            Assertions.assertEquals(((DoubleResult) v1).doubleValue(), ((DoubleResult) v2).doubleValue(), 0.00001, errorMessage);
         } else if (v1 instanceof BooleanResult) {
-            Assert.assertEquals(errorMessage, ((BooleanResult) v1).booleanValue(), ((BooleanResult) v2).booleanValue());
+            Assertions.assertEquals(((BooleanResult) v1).booleanValue(), ((BooleanResult) v2).booleanValue(), errorMessage);
         } else if (v1 instanceof DoubleArrayResult) {
             DoubleArrayResult da1 = (DoubleArrayResult) v1;
             DoubleArrayResult da2 = (DoubleArrayResult) v2;
             for (int i = 0; i < da1.length(); i++) {
-                Assert.assertEquals(errorMessage, da1.get(i), da2.get(i), 0.00001);
+                Assertions.assertEquals(da1.get(i), da2.get(i), 0.00001, errorMessage);
             }
         } else if (v1 instanceof IntegerArrayResult) {
             IntegerArrayResult da1 = (IntegerArrayResult) v1;
             IntegerArrayResult da2 = (IntegerArrayResult) v2;
             for (int i = 0; i < da1.length(); i++) {
-                Assert.assertEquals(errorMessage, da1.get(i), da2.get(i));
+                Assertions.assertEquals(da1.get(i), da2.get(i), errorMessage);
             }
         }
     }
 
     @Test
-    public void testImplementationIndependence() throws Exception {
+    void testImplementationIndependence() throws Exception {
         IAtomContainer water1 = someoneBringMeSomeWater(DefaultChemObjectBuilder.getInstance());
         IAtomContainer water2 = someoneBringMeSomeWater(SilentChemObjectBuilder.getInstance());
 
@@ -337,7 +329,7 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
     }
 
     @Test
-    public void testAtomContainerHandling() throws Exception {
+    void testAtomContainerHandling() throws Exception {
         IAtomContainer water1 = someoneBringMeSomeWater(DefaultChemObjectBuilder.getInstance());
         // creates an AtomContainer with the atoms / bonds from water1
         IAtomContainer water2 = SilentChemObjectBuilder.getInstance().newAtomContainer();
@@ -357,7 +349,7 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
      * but return NA instead.
      */
     @Test
-    public void testDisconnectedStructureHandling() throws Exception {
+    void testDisconnectedStructureHandling() throws Exception {
         IAtomContainer disconnected = SilentChemObjectBuilder.getInstance()
                                                              .newAtomContainer();
         IAtom chloride = new Atom("Cl");
@@ -373,9 +365,9 @@ public abstract class MolecularDescriptorTest extends DescriptorTest<IMolecularD
         IDescriptorResult v1 = descriptor.calculate(disconnected).getValue();
     }
 
-    @Ignore
+    @Disabled
     @Test
-    public void testTakeIntoAccountBondHybridization() {
+    void testTakeIntoAccountBondHybridization() {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer ethane1 = builder.newInstance(IAtomContainer.class);
         IAtom c1 = builder.newInstance(IAtom.class, "C");

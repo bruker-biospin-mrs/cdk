@@ -23,6 +23,7 @@
 package org.openscience.cdk.geometry.cip.rules;
 
 import org.openscience.cdk.geometry.cip.ILigand;
+import org.openscience.cdk.interfaces.IElement;
 
 /**
  * Compares to {@link ILigand}s based on CIP sequences sub rules. The used CIP sub rules are:
@@ -31,13 +32,11 @@ import org.openscience.cdk.geometry.cip.ILigand;
  *   <li>{@link AtomicNumberRule}</li>
  * </ol>
  *
- * @cdk.module cip
- * @cdk.githash
  */
 class CombinedAtomicMassNumberRule implements ISequenceSubRule<ILigand> {
 
-    MassNumberRule   massNumberRule   = new MassNumberRule();
-    AtomicNumberRule atomicNumberRule = new AtomicNumberRule();
+    final MassNumberRule   massNumberRule   = new MassNumberRule();
+    final AtomicNumberRule atomicNumberRule = new AtomicNumberRule();
 
     /** {@inheritDoc} */
     @Override
@@ -48,7 +47,7 @@ class CombinedAtomicMassNumberRule implements ISequenceSubRule<ILigand> {
         int massNumberComp = massNumberRule.compare(ligand1, ligand2);
         if (massNumberComp != 0) return massNumberComp;
 
-        if ("H".equals(ligand1.getLigandAtom().getSymbol())) {
+        if (ligand1.getLigandAtom().getAtomicNumber() == IElement.H) {
             // both atoms are hydrogens
             return 0;
         }

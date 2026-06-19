@@ -33,8 +33,6 @@ import org.openscience.cdk.interfaces.ICrystal;
  * <p>The crystal is designed to store only the asymmetric atoms.
  * Though this is not enforced, it is assumed by all methods.
  *
- * @cdk.module  silent
- * @cdk.githash
  *
  * @cdk.keyword crystal
  */
@@ -227,7 +225,7 @@ public class Crystal extends AtomContainer implements Serializable, ICrystal, Cl
      */
     @Override
     public String toString() {
-        StringBuffer resultString = new StringBuffer(64);
+        StringBuilder resultString = new StringBuilder(64);
         resultString.append("Crystal(").append(hashCode());
         if (getSpaceGroup() != null) {
             resultString.append(", SG=").append(getSpaceGroup());

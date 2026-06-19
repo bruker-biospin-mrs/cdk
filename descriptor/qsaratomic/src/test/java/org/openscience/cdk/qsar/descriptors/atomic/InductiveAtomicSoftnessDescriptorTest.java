@@ -20,31 +20,29 @@ package org.openscience.cdk.qsar.descriptors.atomic;
 
 import javax.vecmath.Point3d;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.qsar.IAtomicDescriptor;
 import org.openscience.cdk.qsar.result.DoubleResult;
 
 /**
- * @cdk.module test-qsaratomic
  */
-public class InductiveAtomicSoftnessDescriptorTest extends AtomicDescriptorTest {
+class InductiveAtomicSoftnessDescriptorTest extends AtomicDescriptorTest {
 
-    public InductiveAtomicSoftnessDescriptorTest() {}
+    InductiveAtomicSoftnessDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(InductiveAtomicSoftnessDescriptor.class);
     }
 
     @Test
-    public void testInductiveAtomicSoftnessDescriptor() throws ClassNotFoundException, CDKException,
+    void testInductiveAtomicSoftnessDescriptor() throws
             java.lang.Exception {
         double[] testResult = {0.78};
 
@@ -54,7 +52,7 @@ public class InductiveAtomicSoftnessDescriptorTest extends AtomicDescriptorTest 
         Point3d h2_coord = new Point3d(1.7439615035767404, -0.5279422553651107, 0.914422809754875);
         Point3d h3_coord = new Point3d(1.7439615035767402, -0.5279422553651113, -0.9144228097548747);
 
-        IAtomContainer mol = new AtomContainer(); // molecule is CF
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer(); // molecule is CF
 
         Atom c = new Atom("C");
         mol.addAtom(c);
@@ -84,7 +82,7 @@ public class InductiveAtomicSoftnessDescriptorTest extends AtomicDescriptorTest 
         IAtomicDescriptor descriptor = new InductiveAtomicSoftnessDescriptor();
 
         double retval = ((DoubleResult) descriptor.calculate(mol.getAtom(0), mol).getValue()).doubleValue();
-        Assert.assertEquals(testResult[0], retval, 0.1);
+        Assertions.assertEquals(testResult[0], retval, 0.1);
 
         // F: expected is 0.32, calculated is 0.35
         // difference depends on different starting values (3D distances and small differences

@@ -27,8 +27,8 @@ package org.openscience.cdk.graph;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.openscience.cdk.graph.InitialCycles.Cycle;
 
 /**
@@ -73,7 +73,6 @@ import static org.openscience.cdk.graph.InitialCycles.Cycle;
  * </pre></blockquote>
  *
  * @author John May
- * @cdk.module core
  * @cdk.keyword relevant cycles
  * @cdk.keyword relevant rings
  * @cdk.keyword R(G)
@@ -81,7 +80,6 @@ import static org.openscience.cdk.graph.InitialCycles.Cycle;
  * @cdk.keyword cycle
  * @cdk.keyword ring
  * @cdk.keyword ring perception
- * @cdk.githash
  * @see org.openscience.cdk.ringsearch.RingSearch
  * @see org.openscience.cdk.ringsearch.SSSRFinder#findRelevantRings()
  * @see GreedyBasis
@@ -111,7 +109,7 @@ public final class RelevantCycles {
      */
     RelevantCycles(final InitialCycles initial) {
 
-        checkNotNull(initial, "No InitialCycles provided");
+        Objects.requireNonNull(initial, "No InitialCycles provided");
 
         this.basis = new GreedyBasis(initial.numberOfCycles(), initial.numberOfEdges());
 
@@ -129,7 +127,7 @@ public final class RelevantCycles {
      * @return cycles which were independent
      */
     private List<Cycle> independent(final Collection<Cycle> cycles) {
-        final List<Cycle> independent = new ArrayList<Cycle>(cycles.size());
+        final List<Cycle> independent = new ArrayList<>(cycles.size());
         for (final Cycle cycle : cycles) {
             if (basis.isIndependent(cycle)) independent.add(cycle);
         }

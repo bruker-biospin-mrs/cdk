@@ -19,35 +19,26 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractMonomerTest;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractMonomerTest;
 import org.openscience.cdk.interfaces.IMonomer;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugMonomer}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugMonomerTest extends AbstractMonomerTest {
+class DebugMonomerTest extends AbstractMonomerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugMonomer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugMonomer::new);
     }
 
     @Test
-    public void testDebugMonomer() {
+    void testDebugMonomer() {
         IMonomer oMonomer = new DebugMonomer();
-        Assert.assertNotNull(oMonomer);
+        Assertions.assertNotNull(oMonomer);
     }
 }

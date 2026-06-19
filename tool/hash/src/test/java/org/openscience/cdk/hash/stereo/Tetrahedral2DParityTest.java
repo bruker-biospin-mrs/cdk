@@ -24,10 +24,8 @@
 
 package org.openscience.cdk.hash.stereo;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.hash.stereo.GeometricParity;
-import org.openscience.cdk.hash.stereo.Tetrahedral2DParity;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import javax.vecmath.Point2d;
 
@@ -35,22 +33,27 @@ import static org.hamcrest.CoreMatchers.is;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class Tetrahedral2DParityTest {
+class Tetrahedral2DParityTest {
 
     private static final int CLOCKWISE     = -1;
     private static final int ANTICLOCKWISE = +1;
     private static final int NONE          = 0;
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testConstruction_InvalidCoords() {
-        new Tetrahedral2DParity(new Point2d[0], new int[4]);
+    @Test
+    void testConstruction_InvalidCoords() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    new Tetrahedral2DParity(new Point2d[0], new int[4]);
+                                });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testConstruction_InvalidElev() {
-        new Tetrahedral2DParity(new Point2d[4], new int[0]);
+    @Test
+    void testConstruction_InvalidElev() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    new Tetrahedral2DParity(new Point2d[4], new int[0]);
+                                });
     }
 
     /**
@@ -59,7 +62,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Four_NNND() {
+    void testParity_Four_NNND() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -67,7 +70,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{0, 0, 0, -1};
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(CLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(CLOCKWISE));
     }
 
     /**
@@ -76,7 +79,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Four_NNNU() {
+    void testParity_Four_NNNU() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -84,7 +87,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{0, 0, 0, 1};
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(ANTICLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(ANTICLOCKWISE));
     }
 
     /**
@@ -94,7 +97,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Four_NNNN() {
+    void testParity_Four_NNNN() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -102,7 +105,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{0, 0, 0, 0}; // no wedge/hatch bonds
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(NONE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(NONE));
     }
 
     /**
@@ -112,7 +115,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Four_UUUN() {
+    void testParity_Four_UUUN() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -120,7 +123,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{1, 1, 1, 0}; // no wedge/hatch bonds
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(CLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(CLOCKWISE));
     }
 
     /**
@@ -130,7 +133,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Four_DDDN() {
+    void testParity_Four_DDDN() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -138,7 +141,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{-1, -1, -1, 0}; // no wedge/hatch bonds
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(ANTICLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(ANTICLOCKWISE));
     }
 
     /**
@@ -148,7 +151,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Four_UUUU() {
+    void testParity_Four_UUUU() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -156,7 +159,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{1, 1, 1, 1}; // no wedge/hatch bonds
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(NONE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(NONE));
     }
 
     /**
@@ -166,7 +169,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Four_DDDD() {
+    void testParity_Four_DDDD() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -174,7 +177,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{-1, -1, -1, -1}; // no wedge/hatch bonds
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(NONE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(NONE));
     }
 
     /**
@@ -183,7 +186,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Three_UNN() {
+    void testParity_Three_UNN() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O (up)
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -191,7 +194,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{1, 0, 0, 0};
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(CLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(CLOCKWISE));
     }
 
     /**
@@ -200,7 +203,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Three_UUU() {
+    void testParity_Three_UUU() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O (up)
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -208,7 +211,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{1, 1, 1, 0};
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(CLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(CLOCKWISE));
     }
 
     /**
@@ -217,7 +220,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Three_DNN() {
+    void testParity_Three_DNN() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O (down)
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -225,7 +228,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{-1, 0, 0, 0};
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(ANTICLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(ANTICLOCKWISE));
     }
 
     /**
@@ -234,7 +237,7 @@ public class Tetrahedral2DParityTest {
      * @cdk.inchi InChI=1S/C2H7NO/c1-2(3)4/h2,4H,3H2,1H3/t2-/m1/s1
      */
     @Test
-    public void testParity_Three_DDD() {
+    void testParity_Three_DDD() {
         Point2d[] coords = new Point2d[]{new Point2d(-7.75, 5.79), // -O (down)
                 new Point2d(-6.42, 3.48), // -N
                 new Point2d(-9.09, 3.48), // -C
@@ -242,7 +245,7 @@ public class Tetrahedral2DParityTest {
         };
         int[] elev = new int[]{-1, -1, -1, 0};
         GeometricParity parity = new Tetrahedral2DParity(coords, elev);
-        Assert.assertThat(parity.parity(), is(ANTICLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(parity.parity(), is(ANTICLOCKWISE));
     }
 
 }

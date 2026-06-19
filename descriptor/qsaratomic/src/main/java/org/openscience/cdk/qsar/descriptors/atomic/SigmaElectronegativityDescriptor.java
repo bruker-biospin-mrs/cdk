@@ -50,8 +50,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  *
  * @author      mfe4
  * @cdk.created 2004-11-03
- * @cdk.module  qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:sigmaElectronegativity
  * @see Electronegativity
  */
@@ -62,7 +60,7 @@ public class SigmaElectronegativityDescriptor extends AbstractAtomicDescriptor i
 
     private static final String[] NAMES = {"elecSigmA"};
 
-    private Electronegativity     electronegativity;
+    private final Electronegativity     electronegativity;
 
     /**
      *  Constructor for the SigmaElectronegativityDescriptor object
@@ -136,13 +134,10 @@ public class SigmaElectronegativityDescriptor extends AbstractAtomicDescriptor i
         IAtomContainer clone;
         IAtom localAtom;
         try {
-            clone = (IAtomContainer) ac.clone();
+            clone = ac.clone();
             localAtom = clone.getAtom(ac.indexOf(atom));
             AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(clone);
-        } catch (CDKException e) {
-            return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new DoubleResult(
-                    Double.NaN), NAMES, e);
-        } catch (CloneNotSupportedException e) {
+        } catch (CDKException | CloneNotSupportedException e) {
             return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new DoubleResult(
                     Double.NaN), NAMES, e);
         }

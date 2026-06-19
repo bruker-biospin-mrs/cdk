@@ -18,14 +18,12 @@
  */
 package org.openscience.cdk.qsar.descriptors.atomic;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
@@ -37,14 +35,13 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsaratomic
  */
-public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
+class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
 
-    public AtomHybridizationVSEPRDescriptorTest() {}
+    AtomHybridizationVSEPRDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(AtomHybridizationVSEPRDescriptor.class);
     }
 
@@ -52,12 +49,12 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
      *  A unit test for JUnit with O-C
      */
     @Test
-    public void testAtomHybridizationVSEPRDescriptorTest_1() throws ClassNotFoundException, CDKException,
+    void testAtomHybridizationVSEPRDescriptorTest_1() throws
             java.lang.Exception {
         AtomHybridizationVSEPRDescriptor descriptor = new AtomHybridizationVSEPRDescriptor();
 
         //O=CC
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom O1 = new Atom("O");
         Atom c2 = new Atom("C");
         c2.setImplicitHydrogenCount(1);
@@ -72,24 +69,21 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
         molecule.addBond(b2);
 
         assertAtomTypesPerceived(molecule);
-        Assert.assertEquals(IAtomType.Hybridization.SP2.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
-        Assert.assertEquals(IAtomType.Hybridization.SP2.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(1), molecule).getValue()).intValue());
-        Assert.assertEquals(IAtomType.Hybridization.SP3.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(2), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP2.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP2.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(1), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP3.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(2), molecule).getValue()).intValue());
     }
 
     /**
      *  A unit test for JUnit with [O+]=C-C
      */
     @Test
-    public void testAtomHybridizationVSEPRDescriptorTest_2() throws ClassNotFoundException, CDKException,
+    void testAtomHybridizationVSEPRDescriptorTest_2() throws
             java.lang.Exception {
         AtomHybridizationVSEPRDescriptor descriptor = new AtomHybridizationVSEPRDescriptor();
 
         //[O+]#CC
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom O1 = new Atom("O");
         O1.setFormalCharge(1);
         Atom c2 = new Atom("C");
@@ -104,24 +98,21 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
         molecule.addBond(b2);
 
         assertAtomTypesPerceived(molecule);
-        Assert.assertEquals(IAtomType.Hybridization.SP1.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
-        Assert.assertEquals(IAtomType.Hybridization.SP1.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(1), molecule).getValue()).intValue());
-        Assert.assertEquals(IAtomType.Hybridization.SP3.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(2), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP1.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP1.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(1), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP3.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(2), molecule).getValue()).intValue());
     }
 
     /**
      *  A unit test for JUnit
      */
     @Test
-    public void testAtomHybridizationVSEPRDescriptorTest_3() throws ClassNotFoundException, CDKException,
+    void testAtomHybridizationVSEPRDescriptorTest_3() throws
             java.lang.Exception {
         AtomHybridizationVSEPRDescriptor descriptor = new AtomHybridizationVSEPRDescriptor();
 
         //[C+]CC
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom c1 = new Atom("C");
         c1.setFormalCharge(1);
         c1.setImplicitHydrogenCount(2);
@@ -138,24 +129,21 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
         molecule.addBond(b2);
 
         assertAtomTypesPerceived(molecule);
-        Assert.assertEquals(IAtomType.Hybridization.PLANAR3.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
-        Assert.assertEquals(IAtomType.Hybridization.SP3.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(1), molecule).getValue()).intValue());
-        Assert.assertEquals(IAtomType.Hybridization.SP3.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(2), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.PLANAR3.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP3.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(1), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP3.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(2), molecule).getValue()).intValue());
     }
 
     /**
      * @cdk.bug 2323124
      */
     @Test
-    public void testAtomHybridizationVSEPRDescriptorTest_4() throws ClassNotFoundException, CDKException,
+    void testAtomHybridizationVSEPRDescriptorTest_4() throws
             java.lang.Exception {
         AtomHybridizationVSEPRDescriptor descriptor = new AtomHybridizationVSEPRDescriptor();
 
         //SO3
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom S1 = new Atom("S");
         Atom O2 = new Atom("O");
         Atom O3 = new Atom("O");
@@ -172,8 +160,7 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
         molecule.addBond(b3);
 
         assertAtomTypesPerceived(molecule);
-        Assert.assertEquals(IAtomType.Hybridization.SP2.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP2.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
 
     }
 
@@ -183,12 +170,12 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
      * @cdk.bug 2323133
      */
     @Test
-    public void testAtomHybridizationVSEPRDescriptorTest_5() throws ClassNotFoundException, CDKException,
+    void testAtomHybridizationVSEPRDescriptorTest_5() throws
             java.lang.Exception {
         AtomHybridizationVSEPRDescriptor descriptor = new AtomHybridizationVSEPRDescriptor();
 
         //XeF4
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom Xe1 = new Atom("Xe");
         Atom F2 = new Atom("F");
         Atom F3 = new Atom("F");
@@ -209,8 +196,7 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
         molecule.addBond(b4);
 
         assertAtomTypesPerceived(molecule);
-        Assert.assertEquals(IAtomType.Hybridization.SP3D2.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP3D2.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
 
     }
 
@@ -220,12 +206,12 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
      * @cdk.bug 2323126
      */
     @Test
-    public void testAtomHybridizationVSEPRDescriptorTest_6() throws ClassNotFoundException, CDKException,
+    void testAtomHybridizationVSEPRDescriptorTest_6() throws
             java.lang.Exception {
         AtomHybridizationVSEPRDescriptor descriptor = new AtomHybridizationVSEPRDescriptor();
 
         //IF2-
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom I1 = new Atom("I");
         I1.setFormalCharge(-1);
         Atom F2 = new Atom("F");
@@ -239,8 +225,7 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
         molecule.addBond(b2);
 
         assertAtomTypesPerceived(molecule);
-        Assert.assertEquals(IAtomType.Hybridization.SP3D1.ordinal(),
-                ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
+        Assertions.assertEquals(IAtomType.Hybridization.SP3D1.ordinal(), ((IntegerResult) descriptor.calculate(molecule.getAtom(0), molecule).getValue()).intValue());
 
     }
 
@@ -248,7 +233,7 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
      *  A unit test for JUnit with F-C=C
      */
     @Test
-    public void testAtomHybridizationVSEPRDescriptorTest_7() throws ClassNotFoundException, CDKException,
+    void testAtomHybridizationVSEPRDescriptorTest_7() throws
             java.lang.Exception {
         int[] testResult = {IAtomType.Hybridization.SP3.ordinal(), IAtomType.Hybridization.SP2.ordinal(),
                 IAtomType.Hybridization.SP2.ordinal()}; /*
@@ -274,8 +259,7 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
 
         assertAtomTypesPerceived(mol);
         for (int i = 0; i < 3; i++) {
-            Assert.assertEquals(testResult[i],
-                    ((IntegerResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).intValue());
+            Assertions.assertEquals(testResult[i], ((IntegerResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).intValue());
         }
     }
 
@@ -283,7 +267,7 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
      *  A unit test for JUnit with [F+]=C-[C-]
      */
     @Test
-    public void testAtomHybridizationVSEPRDescriptorTest_8() throws ClassNotFoundException, CDKException,
+    void testAtomHybridizationVSEPRDescriptorTest_8() throws
             java.lang.Exception {
         int[] testResult = {IAtomType.Hybridization.SP2.ordinal(), IAtomType.Hybridization.SP2.ordinal(),
                 IAtomType.Hybridization.SP3.ordinal()};
@@ -302,8 +286,7 @@ public class AtomHybridizationVSEPRDescriptorTest extends AtomicDescriptorTest {
 
         assertAtomTypesPerceived(mol);
         for (int i = 0; i < 3; i++) {
-            Assert.assertEquals(testResult[i],
-                    ((IntegerResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).intValue());
+            Assertions.assertEquals(testResult[i], ((IntegerResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).intValue());
         }
     }
 }

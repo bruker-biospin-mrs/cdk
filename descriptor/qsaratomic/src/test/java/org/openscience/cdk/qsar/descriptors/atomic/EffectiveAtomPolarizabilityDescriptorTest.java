@@ -18,11 +18,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.atomic;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.IAtomicDescriptor;
 import org.openscience.cdk.qsar.result.DoubleResult;
@@ -31,14 +30,13 @@ import org.openscience.cdk.smiles.SmilesParser;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsaratomic
  */
-public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorTest {
+class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorTest {
 
-    public EffectiveAtomPolarizabilityDescriptorTest() {}
+    EffectiveAtomPolarizabilityDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(EffectiveAtomPolarizabilityDescriptor.class);
     }
 
@@ -46,7 +44,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
      *  A unit test for JUnit with 2-(dimethylamino)ethyl)amino
      */
     @Test
-    public void testEffectivePolarizabilityDescriptor() throws ClassNotFoundException, CDKException,
+    void testEffectivePolarizabilityDescriptor() throws
             java.lang.Exception {
         double[] testResult = {4.7253, 6.1345, 6.763, 6.925, 5.41, 5.41};
         IAtomicDescriptor descriptor = new EffectiveAtomPolarizabilityDescriptor();
@@ -57,7 +55,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
 
         for (int i = 0; i < 6; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.01);
+            Assertions.assertEquals(testResult[i], result, 0.01);
         }
     }
 
@@ -65,7 +63,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
      *  A unit test for JUnit with Ethyl chloride
      */
     @Test
-    public void testPolarizabilityDescriptor_Ethyl_chloride() throws Exception {
+    void testPolarizabilityDescriptor_Ethyl_chloride() throws Exception {
         double[] testResult = {4.8445, 5.824, 4.6165};/*
                                                        * from Petra online:
                                                        * http:
@@ -81,7 +79,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
         addExplicitHydrogens(mol);
         for (int i = 0; i < 3; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.01);
+            Assertions.assertEquals(testResult[i], result, 0.01);
         }
     }
 
@@ -89,7 +87,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
      *  A unit test for JUnit with Allyl bromide
      */
     @Test
-    public void testPolarizabilityDescriptor_Allyl_bromide() throws Exception {
+    void testPolarizabilityDescriptor_Allyl_bromide() throws Exception {
         double testResult = 6.1745; /*
                                      * from Petra online:
                                      * http://www2.chemie.uni-
@@ -102,14 +100,14 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
         addExplicitHydrogens(mol);
 
         double result = ((DoubleResult) descriptor.calculate(mol.getAtom(3), mol).getValue()).doubleValue();
-        Assert.assertEquals(testResult, result, 0.01);
+        Assertions.assertEquals(testResult, result, 0.01);
     }
 
     /**
      *  A unit test for JUnit with Isopentyl iodide
      */
     @Test
-    public void testPolarizabilityDescriptor_Isopentyl_iodide() throws Exception {
+    void testPolarizabilityDescriptor_Isopentyl_iodide() throws Exception {
         double[] testResult = {8.3585, 6.1118, 6.1118, 9.081, 10.526, 8.69}; /*
                                                                               * from
                                                                               * Petra
@@ -145,7 +143,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
 
         for (int i = 0; i < 6; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.01);
+            Assertions.assertEquals(testResult[i], result, 0.01);
         }
     }
 
@@ -153,7 +151,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
      *  A unit test for JUnit with Ethoxy ethane
      */
     @Test
-    public void testPolarizabilityDescriptor_Ethoxy_ethane() throws Exception {
+    void testPolarizabilityDescriptor_Ethoxy_ethane() throws Exception {
         double testResult = 5.207; /*
                                     * from Petra online:
                                     * http://www2.chemie.uni-erlangen
@@ -166,14 +164,14 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
         addExplicitHydrogens(mol);
 
         double result = ((DoubleResult) descriptor.calculate(mol.getAtom(2), mol).getValue()).doubleValue();
-        Assert.assertEquals(testResult, result, 0.01);
+        Assertions.assertEquals(testResult, result, 0.01);
     }
 
     /**
      *  A unit test for JUnit with Ethanolamine
      */
     @Test
-    public void testPolarizabilityDescriptor_Ethanolamine() throws Exception {
+    void testPolarizabilityDescriptor_Ethanolamine() throws Exception {
         double[] testResult = {4.2552, 5.1945, 4.883, 3.595}; /*
                                                                * from Petra
                                                                * online:
@@ -191,7 +189,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
         addExplicitHydrogens(mol);
         for (int i = 0; i < 4; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.01);
+            Assertions.assertEquals(testResult[i], result, 0.01);
         }
     }
 
@@ -199,7 +197,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
      *  A unit test for JUnit with Allyl mercaptan
      */
     @Test
-    public void testPolarizabilityDescriptor_Allyl_mercaptan() throws Exception {
+    void testPolarizabilityDescriptor_Allyl_mercaptan() throws Exception {
         double[] testResult = {5.2995, 6.677, 7.677, 6.2545}; /*
                                                                * from Petra
                                                                * online:
@@ -217,7 +215,7 @@ public class EffectiveAtomPolarizabilityDescriptorTest extends AtomicDescriptorT
         addExplicitHydrogens(mol);
         for (int i = 0; i < 4; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getAtom(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.02);
+            Assertions.assertEquals(testResult[i], result, 0.02);
         }
     }
 }

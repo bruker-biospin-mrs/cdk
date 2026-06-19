@@ -18,12 +18,11 @@
  */
 package org.openscience.cdk.charges;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.CDKTestCase;
-import org.openscience.cdk.SlowTest;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -34,29 +33,28 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
 * TestSuite that runs all tests.
 *
-* @cdk.module test-charges
 */
-public class StabilizationChargesTest extends CDKTestCase {
+class StabilizationChargesTest extends CDKTestCase {
 
-    private IChemObjectBuilder      builder = SilentChemObjectBuilder.getInstance();
-    private LonePairElectronChecker lpcheck = new LonePairElectronChecker();
+    private final IChemObjectBuilder      builder = SilentChemObjectBuilder.getInstance();
+    private final LonePairElectronChecker lpcheck = new LonePairElectronChecker();
 
     /**
      * Constructor of the StabilizationChargesTest.
      */
-    public StabilizationChargesTest() {
+    StabilizationChargesTest() {
         super();
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testStabilizationCharges() {
+    void testStabilizationCharges() {
 
-        Assert.assertNotNull(new StabilizationCharges());
+        Assertions.assertNotNull(new StabilizationCharges());
     }
 
     /**
@@ -64,12 +62,12 @@ public class StabilizationChargesTest extends CDKTestCase {
      *
      *  @cdk.inchi InChI=1/C4H8/c1-3-4-2/h3H,1,4H2,2H3
      *
-     * @return    The test suite
+     *
      * @throws Exception
      */
     @Test
-    @Category(SlowTest.class)
-    public void testCalculatePositive_IAtomContainer_IAtom() throws Exception {
+    @Tag("SlowTest")
+    void testCalculatePositive_IAtomContainer_IAtom() throws Exception {
 
         StabilizationCharges sc = new StabilizationCharges();
 
@@ -89,9 +87,9 @@ public class StabilizationChargesTest extends CDKTestCase {
 
         for (int i = 0; i < molecule.getAtomCount(); i++) {
             if (i == 1)
-                Assert.assertNotSame(0.0, sc.calculatePositive(molecule, molecule.getAtom(i)));
+                Assertions.assertNotSame(0.0, sc.calculatePositive(molecule, molecule.getAtom(i)));
             else
-                Assert.assertEquals(0.0, sc.calculatePositive(molecule, molecule.getAtom(i)), 0.001);
+                Assertions.assertEquals(0.0, sc.calculatePositive(molecule, molecule.getAtom(i)), 0.001);
 
         }
     }

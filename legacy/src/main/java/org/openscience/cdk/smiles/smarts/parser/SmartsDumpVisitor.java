@@ -22,8 +22,6 @@ package org.openscience.cdk.smiles.smarts.parser;
  *
  * @author Dazhi Jiao
  * @cdk.created 2007-04-24
- * @cdk.module smarts
- * @cdk.githash
  * @cdk.keyword SMARTS AST
  */
 @Deprecated
@@ -48,7 +46,7 @@ public class SmartsDumpVisitor implements SMARTSParserVisitor {
     private int indent = 0;
 
     private String indentString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < indent; ++i) {
             sb.append("  ");
         }

@@ -24,8 +24,9 @@
 
 package org.openscience.cdk.renderer;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
 import org.openscience.cdk.Bond;
 import org.openscience.cdk.interfaces.IAtom;
@@ -35,46 +36,43 @@ import javax.vecmath.Point2d;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-public class SymbolVisibilityTest {
+class SymbolVisibilityTest {
 
     @Test
-    public void anyAtom() {
-        assertTrue(SymbolVisibility.all().visible(null, null, null));
+    void anyAtom() {
+        Assertions.assertTrue(SymbolVisibility.all().visible(null, null, null));
     }
 
     @Test
-    public void iupacOxygen() {
-        assertTrue(SymbolVisibility.iupacRecommendations().visible(new Atom("O"), Collections.<IBond> emptyList(),
-                new RendererModel()));
+    void iupacOxygen() {
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendations().visible(new Atom("O"), Collections.emptyList(),
+                                                                              new RendererModel()));
     }
 
     @Test
-    public void iupacNitrogen() {
-        assertTrue(SymbolVisibility.iupacRecommendations().visible(new Atom("N"), Collections.<IBond> emptyList(),
-                new RendererModel()));
+    void iupacNitrogen() {
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendations().visible(new Atom("N"), Collections.emptyList(),
+                                                                              new RendererModel()));
     }
 
     @Test
-    public void iupacMethane() {
-        assertTrue(SymbolVisibility.iupacRecommendations().visible(new Atom("C"), Collections.<IBond> emptyList(),
-                new RendererModel()));
+    void iupacMethane() {
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendations().visible(new Atom("C"), Collections.emptyList(),
+                                                                              new RendererModel()));
     }
 
     @Test
-    public void iupacMethylPreferred() {
+    void iupacMethylPreferred() {
         IAtom a1 = new Atom("C");
         IAtom a2 = new Atom("C");
         IBond bond = new Bond(a1, a2);
         a1.setPoint2d(new Point2d(0, 0));
         a2.setPoint2d(new Point2d(0, 0));
-        assertTrue(SymbolVisibility.iupacRecommendations().visible(a1, Arrays.asList(bond), new RendererModel()));
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendations().visible(a1, Arrays.asList(bond), new RendererModel()));
     }
 
     @Test
-    public void iupacMethylAcceptable() {
+    void iupacMethylAcceptable() {
         IAtom a1 = new Atom("C");
         IAtom a2 = new Atom("C");
         a1.setImplicitHydrogenCount(null);
@@ -82,12 +80,12 @@ public class SymbolVisibilityTest {
         IBond bond = new Bond(a1, a2);
         a1.setPoint2d(new Point2d(0, 0));
         a2.setPoint2d(new Point2d(0, 0));
-        assertFalse(SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon().visible(a1, Arrays.asList(bond),
-                new RendererModel()));
+        Assertions.assertFalse(SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon().visible(a1, Arrays.asList(bond),
+                                                                                                    new RendererModel()));
     }
 
     @Test
-    public void iupacUnlabelledCarbon() {
+    void iupacUnlabelledCarbon() {
         IAtom a1 = new Atom("C");
         IAtom a2 = new Atom("C");
         IAtom a3 = new Atom("C");
@@ -103,12 +101,12 @@ public class SymbolVisibilityTest {
         a2.setImplicitHydrogenCount(3);
         a3.setImplicitHydrogenCount(3);
 
-        assertFalse(SymbolVisibility.iupacRecommendations().visible(a1, Arrays.asList(bond1, bond2),
-                new RendererModel()));
+        Assertions.assertFalse(SymbolVisibility.iupacRecommendations().visible(a1, Arrays.asList(bond1, bond2),
+                                                                               new RendererModel()));
     }
 
     @Test
-    public void iupacCarbonIon() {
+    void iupacCarbonIon() {
         IAtom a1 = new Atom("C");
         IAtom a2 = new Atom("C");
         IAtom a3 = new Atom("C");
@@ -125,12 +123,12 @@ public class SymbolVisibilityTest {
         a2.setImplicitHydrogenCount(3);
         a3.setImplicitHydrogenCount(3);
 
-        assertTrue(SymbolVisibility.iupacRecommendations()
-                .visible(a1, Arrays.asList(bond1, bond2), new RendererModel()));
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendations()
+                                              .visible(a1, Arrays.asList(bond1, bond2), new RendererModel()));
     }
 
     @Test
-    public void iupacCarbonParallel() {
+    void iupacCarbonParallel() {
         IAtom a1 = new Atom("C");
         IAtom a2 = new Atom("C");
         IAtom a3 = new Atom("C");
@@ -146,13 +144,13 @@ public class SymbolVisibilityTest {
         a2.setImplicitHydrogenCount(3);
         a3.setImplicitHydrogenCount(3);
 
-        assertTrue(SymbolVisibility.iupacRecommendations()
-                .visible(a1, Arrays.asList(bond1, bond2), new RendererModel()));
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendations()
+                                              .visible(a1, Arrays.asList(bond1, bond2), new RendererModel()));
     }
 
     // produces an NaN internally
-    @Ignore("Multiple Group Sgroup rendering can have zero length C-C bonds (e.g. overlaid coords), we don't want to show the symbols")
-    public void iupacCarbonCornerCase() {
+    @Disabled("Multiple Group Sgroup rendering can have zero length C-C bonds (e.g. overlaid coords), we don't want to show the symbols")
+    void iupacCarbonCornerCase() {
         IAtom a1 = new Atom("C");
         IAtom a2 = new Atom("C");
         IAtom a3 = new Atom("C");
@@ -168,12 +166,12 @@ public class SymbolVisibilityTest {
         a2.setImplicitHydrogenCount(3);
         a3.setImplicitHydrogenCount(3);
 
-        assertTrue(SymbolVisibility.iupacRecommendations()
-                .visible(a1, Arrays.asList(bond1, bond2), new RendererModel()));
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendations()
+                                              .visible(a1, Arrays.asList(bond1, bond2), new RendererModel()));
     }
 
     @Test
-    public void carbonIsotope() {
+    void carbonIsotope() {
         IAtom a1 = new Atom("C");
         IAtom a2 = new Atom("C");
         IAtom a3 = new Atom("C");
@@ -191,12 +189,12 @@ public class SymbolVisibilityTest {
         a2.setImplicitHydrogenCount(3);
         a3.setImplicitHydrogenCount(3);
 
-        assertTrue(SymbolVisibility.iupacRecommendations()
-                .visible(a1, Arrays.asList(bond1, bond2), new RendererModel()));
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendations()
+                                              .visible(a1, Arrays.asList(bond1, bond2), new RendererModel()));
     }
 
     @Test
-    public void ethaneNonTerminal() {
+    void ethaneNonTerminal() {
         IAtom a1 = new Atom("C");
         IAtom a2 = new Atom("C");
 
@@ -208,12 +206,12 @@ public class SymbolVisibilityTest {
         a1.setImplicitHydrogenCount(3);
         a2.setImplicitHydrogenCount(3);
 
-        assertTrue(SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon()
-                                   .visible(a1, Collections.singletonList(bond1), new RendererModel()));
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon()
+                                              .visible(a1, Collections.singletonList(bond1), new RendererModel()));
     }
 
     @Test
-    public void alwaysDisplayCharges() {
+    void alwaysDisplayCharges() {
         IAtom a1 = new Atom("CH-");
         IAtom a2 = new Atom("CH2");
         IAtom a3 = new Atom("CH3");
@@ -225,12 +223,12 @@ public class SymbolVisibilityTest {
         IBond bond1 = new Bond(a1, a2, IBond.Order.DOUBLE);
         IBond bond2 = new Bond(a2, a3, IBond.Order.SINGLE);
 
-        assertTrue(SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon()
-                                   .visible(a1, Collections.singletonList(bond1), new RendererModel()));
+        Assertions.assertTrue(SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon()
+                                              .visible(a1, Collections.singletonList(bond1), new RendererModel()));
     }
 
     @Test
-    public void delocalisedCarbons() {
+    void delocalisedCarbons() {
         IAtom a1 = new Atom("CH");
         IAtom a2 = new Atom("CH");
         IAtom a3 = new Atom("CH");
@@ -247,8 +245,8 @@ public class SymbolVisibilityTest {
         a2.setIsAromatic(true);
         a3.setIsAromatic(true);
 
-        assertFalse(SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon()
-                                    .visible(a2, Arrays.asList(bond1, bond2), new RendererModel()));
+        Assertions.assertFalse(SymbolVisibility.iupacRecommendationsWithoutTerminalCarbon()
+                                               .visible(a2, Arrays.asList(bond1, bond2), new RendererModel()));
     }
 
 }

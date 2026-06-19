@@ -35,8 +35,6 @@ import static org.openscience.cdk.graph.InitialCycles.Cycle;
  * Gaussian elimination.
  *
  * @author John May
- * @cdk.module core
- * @cdk.githash
  * @see RelevantCycles
  */
 final class GreedyBasis {
@@ -61,7 +59,7 @@ final class GreedyBasis {
      * @see org.openscience.cdk.graph.InitialCycles#numberOfEdges()
      */
     GreedyBasis(final int n, final int m) {
-        this.basis = new ArrayList<Cycle>(n);
+        this.basis = new ArrayList<>(n);
         this.edgesOfBasis = new BitSet(m);
         this.m = m;
     }
@@ -71,7 +69,7 @@ final class GreedyBasis {
      *
      * @return cycles ordered by length
      */
-    final List<Cycle> members() {
+    List<Cycle> members() {
         return Collections.unmodifiableList(basis);
     }
 
@@ -80,7 +78,7 @@ final class GreedyBasis {
      *
      * @return number of cycles in the basis
      */
-    final int size() {
+    int size() {
         return members().size();
     }
 
@@ -89,7 +87,7 @@ final class GreedyBasis {
      *
      * @param cycle new basis member
      */
-    final void add(final Cycle cycle) {
+    void add(final Cycle cycle) {
         basis.add(cycle);
         edgesOfBasis.or(cycle.edgeVector());
     }
@@ -99,7 +97,7 @@ final class GreedyBasis {
      *
      * @param cycles new members of the basis
      */
-    final void addAll(final Iterable<Cycle> cycles) {
+    void addAll(final Iterable<Cycle> cycles) {
         for (final Cycle cycle : cycles)
             add(cycle);
     }
@@ -111,7 +109,7 @@ final class GreedyBasis {
      * @param cycle an initial cycle
      * @return any edges of the basis are present
      */
-    final boolean isSubsetOfBasis(final Cycle cycle) {
+    boolean isSubsetOfBasis(final Cycle cycle) {
         final BitSet edgeVector = cycle.edgeVector();
         final int intersect = and(edgesOfBasis, edgeVector).cardinality();
         return intersect == cycle.length();
@@ -124,7 +122,7 @@ final class GreedyBasis {
      * @param candidate a cycle not in currently in the basis
      * @return the candidate is independent
      */
-    final boolean isIndependent(final Cycle candidate) {
+    boolean isIndependent(final Cycle candidate) {
 
         // simple checks for independence
         if (basis.isEmpty() || !isSubsetOfBasis(candidate)) return true;
@@ -139,7 +137,7 @@ final class GreedyBasis {
     }
 
     /** and <i>s</i> and <i>t</i> without modifying <i>s</i> */
-    private static final BitSet and(final BitSet s, final BitSet t) {
+    private static BitSet and(final BitSet s, final BitSet t) {
         final BitSet u = (BitSet) s.clone();
         u.and(t);
         return u;

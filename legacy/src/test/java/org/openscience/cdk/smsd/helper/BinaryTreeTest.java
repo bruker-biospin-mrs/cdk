@@ -22,80 +22,78 @@
  */
 package org.openscience.cdk.smsd.helper;
 
-import static org.junit.Assert.assertEquals;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
-public class BinaryTreeTest {
+class BinaryTreeTest {
 
     public BinaryTreeTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     /**
      * Test of getValue method, of class BinaryTree.
      */
     @Test
-    public void testGetValue() {
+    void testGetValue() {
         BinaryTree instance = new BinaryTree(15);
         int expResult = 15;
         int result = instance.getValue();
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of getEqual method, of class BinaryTree.
      */
     @Test
-    public void testGetEqual() {
+    void testGetEqual() {
         BinaryTree instance = new BinaryTree(15);
         BinaryTree equal = new BinaryTree(15);
         instance.setEqual(equal);
         instance.setNotEqual(new BinaryTree(10));
         BinaryTree expResult = equal;
         BinaryTree result = instance.getEqual();
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of setEqual method, of class BinaryTree.
      */
     @Test
-    public void testSetEqual() {
+    void testSetEqual() {
         BinaryTree instance = new BinaryTree(15);
         BinaryTree equal = new BinaryTree(15);
         instance.setEqual(equal);
         instance.setNotEqual(new BinaryTree(10));
         BinaryTree expResult = equal;
         BinaryTree result = instance.getEqual();
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of getNotEqual method, of class BinaryTree.
      */
     @Test
-    public void testGetNotEqual() {
+    void testGetNotEqual() {
         BinaryTree instance = new BinaryTree(15);
         BinaryTree equal = new BinaryTree(15);
         BinaryTree notEqual = new BinaryTree(10);
@@ -103,14 +101,14 @@ public class BinaryTreeTest {
         instance.setNotEqual(notEqual);
         BinaryTree expResult = notEqual;
         BinaryTree result = instance.getNotEqual();
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of setNotEqual method, of class BinaryTree.
      */
     @Test
-    public void testSetNotEqual() {
+    void testSetNotEqual() {
         BinaryTree instance = new BinaryTree(15);
         BinaryTree equal = new BinaryTree(15);
         BinaryTree notEqual = new BinaryTree(10);
@@ -118,6 +116,6 @@ public class BinaryTreeTest {
         instance.setNotEqual(notEqual);
         BinaryTree expResult = notEqual;
         BinaryTree result = instance.getNotEqual();
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 }

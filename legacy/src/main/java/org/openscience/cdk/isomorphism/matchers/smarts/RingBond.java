@@ -17,15 +17,13 @@
  */
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 /**
  * This smarts bond matches any bond that is in a ring.
  *
- * @cdk.module  smarts
- * @cdk.githash
  * @cdk.keyword SMARTS
  */
 @Deprecated
@@ -39,7 +37,7 @@ public class RingBond extends SMARTSBond {
      */
     public RingBond(IChemObjectBuilder builder) {
         super(builder);
-        this.setFlag(CDKConstants.ISINRING, true);
+        this.setFlag(IChemObject.IN_RING, true);
     }
 
     /*
@@ -50,6 +48,6 @@ public class RingBond extends SMARTSBond {
      */
     @Override
     public boolean matches(IBond bond) {
-        return bond.getFlag(CDKConstants.ISINRING);
+        return bond.getFlag(IChemObject.IN_RING);
     }
 }

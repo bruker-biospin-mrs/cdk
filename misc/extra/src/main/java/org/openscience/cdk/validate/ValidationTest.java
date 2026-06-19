@@ -25,7 +25,6 @@ import org.openscience.cdk.interfaces.IChemObject;
  * Error found during sematical validation of a IChemObject.
  *
  * @author   Egon Willighagen
- * @cdk.githash
  * @cdk.created  2003-03-28
  *
  * @see      org.openscience.cdk.ChemObject
@@ -34,9 +33,9 @@ import org.openscience.cdk.interfaces.IChemObject;
 public class ValidationTest {
 
     /** IChemObject which has the error. */
-    private IChemObject object;
+    private final IChemObject object;
     /** String representation of the found error. */
-    private String      error;
+    private final String      error;
     /** Multiline String with details on the error. */
     private String      details;
 

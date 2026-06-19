@@ -1,5 +1,6 @@
 package org.openscience.cdk.formula;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IIsotope;
 import org.openscience.cdk.interfaces.IMolecularFormula;
@@ -47,7 +48,7 @@ class RoundRobinFormulaGenerator implements IFormulaGenerator {
     /**
      * is used to estimate which part of the search space is already traversed
      */
-    protected volatile int[] lastDecomposition;
+    protected int[] lastDecomposition;
     /**
      * a flag indicating if the algorithm is done or should be canceled.
      * This flag have to be volatile to allow other threads to cancel the enumeration procedure.
@@ -156,10 +157,10 @@ final class DecomposerFactory {
 
     private static final int maximalNumberOfCachedDecomposers = 10;
     private final static DecomposerFactory instance = new DecomposerFactory();
-    private final List<RangeMassDecomposer> decomposerCache;
+    // use a thread safe collection as decomposers may be requested from multiple threads concurrently
+    private final ConcurrentLinkedQueue<RangeMassDecomposer> decomposerCache = new ConcurrentLinkedQueue<>();
 
     private DecomposerFactory() {
-        this.decomposerCache = new ArrayList<>(maximalNumberOfCachedDecomposers);
     }
 
     public static DecomposerFactory getInstance() {
@@ -172,7 +173,7 @@ final class DecomposerFactory {
                 return decomposer;
             }
         }
-        if (decomposerCache.size() >= maximalNumberOfCachedDecomposers) decomposerCache.remove(0);
+        if (decomposerCache.size() >= maximalNumberOfCachedDecomposers) decomposerCache.poll();
         final RangeMassDecomposer decomposer = new RangeMassDecomposer(alphabet);
         decomposerCache.add(decomposer);
         return decomposer;
@@ -200,7 +201,7 @@ class RangeMassDecomposer {
      * the same ERT tables. However, as soon as an ERT table is written it is synchronized around all threads. After
      * writing an ERT table it is never changed, so additional locking is not necessary.
      */
-    private volatile int[][][] ERTs;
+    private int[][][] ERTs;
 
     /**
      * @param allowedIsotopes array of the elements of the alphabet

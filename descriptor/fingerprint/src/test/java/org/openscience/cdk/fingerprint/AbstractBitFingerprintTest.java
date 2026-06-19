@@ -22,36 +22,34 @@
  */
 package org.openscience.cdk.fingerprint;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Assertions;
+import org.openscience.cdk.test.CDKTestCase;
 
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
+abstract class AbstractBitFingerprintTest extends CDKTestCase {
 
-public abstract class AbstractBitFingerprintTest extends CDKTestCase {
+    private IBitFingerprint                bitsetFP;
+    private final Class<? extends IBitFingerprint> C;
 
-    protected IBitFingerprint                bitsetFP;
-    private Class<? extends IBitFingerprint> C;
-
-    public AbstractBitFingerprintTest(Class<? extends IBitFingerprint> C) throws Exception {
+    AbstractBitFingerprintTest(Class<? extends IBitFingerprint> C) throws Exception {
         this.C = C;
         bitsetFP = C.newInstance();
     }
 
     @Test
-    public void testCreate() {
-        assertFalse(bitsetFP.get(0));
+    void testCreate() {
+        Assertions.assertFalse(bitsetFP.get(0));
     }
 
     @Test
-    public void testGetAndSet() {
+    void testGetAndSet() {
         testCreate();
         bitsetFP.set(1, true);
-        assertTrue(bitsetFP.get(1));
-        assertFalse(bitsetFP.get(2));
+        Assertions.assertTrue(bitsetFP.get(1));
+        Assertions.assertFalse(bitsetFP.get(2));
         bitsetFP.set(3, true);
-        assertTrue(bitsetFP.get(3));
+        Assertions.assertTrue(bitsetFP.get(3));
     }
 
     private IBitFingerprint createFP2() throws Exception {
@@ -62,27 +60,27 @@ public abstract class AbstractBitFingerprintTest extends CDKTestCase {
     }
 
     @Test
-    public void testAnd() throws Exception {
+    void testAnd() throws Exception {
         testGetAndSet();
         bitsetFP.and(createFP2());
-        assertFalse(bitsetFP.get(0));
-        assertFalse(bitsetFP.get(1));
-        assertFalse(bitsetFP.get(2));
-        assertTrue(bitsetFP.get(3));
+        Assertions.assertFalse(bitsetFP.get(0));
+        Assertions.assertFalse(bitsetFP.get(1));
+        Assertions.assertFalse(bitsetFP.get(2));
+        Assertions.assertTrue(bitsetFP.get(3));
     }
 
     @Test
-    public void testOr() throws Exception {
+    void testOr() throws Exception {
         testGetAndSet();
         bitsetFP.or(createFP2());
-        assertFalse(bitsetFP.get(0));
-        assertTrue(bitsetFP.get(1));
-        assertTrue(bitsetFP.get(2));
-        assertTrue(bitsetFP.get(3));
+        Assertions.assertFalse(bitsetFP.get(0));
+        Assertions.assertTrue(bitsetFP.get(1));
+        Assertions.assertTrue(bitsetFP.get(2));
+        Assertions.assertTrue(bitsetFP.get(3));
     }
 
     @Test
-    public void testEquals() throws Exception {
+    void testEquals() throws Exception {
         IBitFingerprint fp1 = C.newInstance();
         IBitFingerprint fp2 = C.newInstance();
 
@@ -91,8 +89,8 @@ public abstract class AbstractBitFingerprintTest extends CDKTestCase {
             fp.set(1, false);
             fp.set(2, true);
         }
-        assertTrue("identical fingerprints should be equal", fp1.equals(fp2));
-        assertFalse("different fingerprints should not be equal", bitsetFP.equals(fp1));
-        assertTrue("equal fingerprints must have same hashcode", fp1.hashCode() == fp2.hashCode());
+        Assertions.assertTrue(fp1.equals(fp2), "identical fingerprints should be equal");
+        Assertions.assertFalse(bitsetFP.equals(fp1), "different fingerprints should not be equal");
+        Assertions.assertTrue(fp1.hashCode() == fp2.hashCode(), "equal fingerprints must have same hashcode");
     }
 }

@@ -18,12 +18,12 @@
  */
 package org.openscience.cdk.normalize;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.w3c.dom.Document;
@@ -32,11 +32,11 @@ import org.w3c.dom.Element;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-public class NormalizerTest extends CDKTestCase {
+class NormalizerTest extends CDKTestCase {
 
     @Test
-    public void testNormalize() throws Exception {
-        IAtomContainer ac = new AtomContainer();
+    void testNormalize() throws Exception {
+        IAtomContainer ac = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         ac.addAtom(new Atom("C"));
         ac.addAtom(new Atom("N"));
         ac.addAtom(new Atom("O"));
@@ -56,7 +56,7 @@ public class NormalizerTest extends CDKTestCase {
         set.appendChild(replacement);
         replacement.appendChild(doc.createTextNode("[O-][N+]=O"));
         Normalizer.normalize(ac, doc);
-        Assert.assertTrue(ac.getBond(1).getOrder() == IBond.Order.SINGLE
+        Assertions.assertTrue(ac.getBond(1).getOrder() == IBond.Order.SINGLE
                 ^ ac.getBond(2).getOrder() == IBond.Order.SINGLE);
     }
 }

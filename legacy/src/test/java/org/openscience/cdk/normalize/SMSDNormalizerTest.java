@@ -21,49 +21,46 @@
  */
 package org.openscience.cdk.normalize;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.CDKConstants;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  */
-public class SMSDNormalizerTest {
+class SMSDNormalizerTest {
 
-    public SMSDNormalizerTest() {}
+    SMSDNormalizerTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     /**
      * Test of makeDeepCopy method, of class SMSDNormalizer.
      * @throws InvalidSmilesException
      */
     @Test
-    public void testMakeDeepCopy() throws InvalidSmilesException {
+    void testMakeDeepCopy() throws InvalidSmilesException {
         String rawMolSmiles = "[H]POOSC(Br)C(Cl)C(F)I";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer container = sp.parseSmiles(rawMolSmiles);
@@ -75,8 +72,8 @@ public class SMSDNormalizerTest {
 
         IAtomContainer result = SMSDNormalizer.makeDeepCopy(container);
         for (int i = 0; i < result.getAtomCount(); i++) {
-            assertEquals(result.getAtom(i).getSymbol(), container.getAtom(i).getSymbol());
-            assertEquals(result.getAtom(i).getID(), container.getAtom(i).getID());
+            Assertions.assertEquals(result.getAtom(i).getSymbol(), container.getAtom(i).getSymbol());
+            Assertions.assertEquals(result.getAtom(i).getID(), container.getAtom(i).getID());
         }
 
     }
@@ -86,18 +83,18 @@ public class SMSDNormalizerTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testAromatizeMolecule() throws InvalidSmilesException {
+    void testAromatizeMolecule() throws InvalidSmilesException {
         String rawMolSmiles = "C1=CC2=C(C=C1)C=CC=C2";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles(rawMolSmiles);
         SMSDNormalizer.aromatizeMolecule(mol);
         int count = 0;
         for (IBond b : mol.bonds()) {
-            if (b.getFlag(CDKConstants.ISAROMATIC) && b.getOrder().equals(IBond.Order.DOUBLE)) {
+            if (b.getFlag(IChemObject.AROMATIC) && b.getOrder().equals(IBond.Order.DOUBLE)) {
                 count++;
             }
         }
-        assertEquals(5, count);
+        Assertions.assertEquals(5, count);
     }
 
     /**
@@ -105,7 +102,7 @@ public class SMSDNormalizerTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testGetExplicitHydrogenCount() throws InvalidSmilesException {
+    void testGetExplicitHydrogenCount() throws InvalidSmilesException {
 
         String rawMolSmiles = "[H]POOSC(Br)C(Cl)C(F)I";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
@@ -120,7 +117,7 @@ public class SMSDNormalizerTest {
 
         int expResult = 1;
         int result = SMSDNormalizer.getExplicitHydrogenCount(atomContainer, atom);
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
@@ -128,7 +125,7 @@ public class SMSDNormalizerTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testGetImplicitHydrogenCount() throws InvalidSmilesException {
+    void testGetImplicitHydrogenCount() throws InvalidSmilesException {
 
         String rawMolSmiles = "[H]POOSC(Br)C(Cl)C(F)I";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
@@ -143,7 +140,7 @@ public class SMSDNormalizerTest {
 
         int expResult = 1;
         int result = SMSDNormalizer.getImplicitHydrogenCount(atomContainer, atom);
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
@@ -151,7 +148,7 @@ public class SMSDNormalizerTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testGetHydrogenCount() throws InvalidSmilesException {
+    void testGetHydrogenCount() throws InvalidSmilesException {
         String rawMolSmiles = "[H]POOSC(Br)C(Cl)C(F)I";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer atomContainer = sp.parseSmiles(rawMolSmiles);
@@ -164,7 +161,7 @@ public class SMSDNormalizerTest {
         }
         int expResult = 2;
         int result = SMSDNormalizer.getHydrogenCount(atomContainer, atom);
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
@@ -172,7 +169,7 @@ public class SMSDNormalizerTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testRemoveHydrogensAndPreserveAtomID() throws InvalidSmilesException {
+    void testRemoveHydrogensAndPreserveAtomID() throws InvalidSmilesException {
         String rawMolSmiles = "[H]POOSC(Br)C(Cl)C(F)I";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer atomContainer = sp.parseSmiles(rawMolSmiles);
@@ -194,7 +191,7 @@ public class SMSDNormalizerTest {
             }
         }
 
-        assertEquals(afterAtom.getID(), beforeAtom.getID());
+        Assertions.assertEquals(afterAtom.getID(), beforeAtom.getID());
     }
 
     /**
@@ -202,13 +199,13 @@ public class SMSDNormalizerTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testConvertExplicitToImplicitHydrogens() throws InvalidSmilesException {
+    void testConvertExplicitToImplicitHydrogens() throws InvalidSmilesException {
         String rawMolSmiles = "[H]POOSC(Br)C(Cl)C(F)I";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer atomContainer = sp.parseSmiles(rawMolSmiles);
         int expResult = 11;
         IAtomContainer result = SMSDNormalizer.convertExplicitToImplicitHydrogens(atomContainer);
-        assertEquals(expResult, result.getAtomCount());
+        Assertions.assertEquals(expResult, result.getAtomCount());
     }
 
     /**
@@ -216,11 +213,11 @@ public class SMSDNormalizerTest {
      * @throws Exception
      */
     @Test
-    public void testPercieveAtomTypesAndConfigureAtoms() throws Exception {
+    void testPercieveAtomTypesAndConfigureAtoms() throws Exception {
         String rawMolSmiles = "[H]POOSC(Br)C(Cl)C(F)I";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer atomContainer = sp.parseSmiles(rawMolSmiles);
         SMSDNormalizer.percieveAtomTypesAndConfigureAtoms(atomContainer);
-        assertNotNull(atomContainer);
+        Assertions.assertNotNull(atomContainer);
     }
 }

@@ -42,16 +42,14 @@ import java.util.Iterator;
  *
  * @author      Miguel Howard
  * @cdk.created 2003-05-23
- * @cdk.module  standard
- * @cdk.githash
  *
  * @see org.openscience.cdk.graph.rebond.Bspt
  */
 public class RebondTool {
 
     private double maxCovalentRadius;
-    private double minBondDistance;
-    private double bondTolerance;
+    private final double minBondDistance;
+    private final double bondTolerance;
 
     private Bspt   bspt;
 
@@ -86,7 +84,7 @@ public class RebondTool {
         // rebond all atoms
         atoms = container.atoms().iterator();
         while (atoms.hasNext()) {
-            bondAtom(container, (IAtom) atoms.next());
+            bondAtom(container, atoms.next());
         }
     }
 
@@ -124,7 +122,7 @@ public class RebondTool {
 
     class TupleAtom implements Bspt.Tuple {
 
-        IAtom atom;
+        final IAtom atom;
 
         TupleAtom(IAtom atom) {
             this.atom = atom;

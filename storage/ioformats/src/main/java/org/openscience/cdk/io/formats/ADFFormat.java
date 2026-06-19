@@ -21,8 +21,6 @@ package org.openscience.cdk.io.formats;
 import org.openscience.cdk.tools.DataFeatures;
 
 /**
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class ADFFormat extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 
@@ -74,7 +72,7 @@ public class ADFFormat extends SimpleChemFormatMatcher implements IChemFormatMat
     /** {@inheritDoc} */
     @Override
     public boolean matches(int lineNumber, String line) {
-        if (line.indexOf("Amsterdam Density Functional") >= 0) {
+        if (line.contains("Amsterdam Density Functional")) {
             return true;
         }
         return false;

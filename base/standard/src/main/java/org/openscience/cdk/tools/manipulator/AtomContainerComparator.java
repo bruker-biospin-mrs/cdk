@@ -30,6 +30,7 @@ import org.openscience.cdk.config.IsotopeFactory;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IIsotope;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
@@ -47,13 +48,11 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * @author Andreas Schueller
  * @cdk.created  2007-09-05
- * @cdk.module   standard
- * @cdk.githash
  */
 public class AtomContainerComparator implements Comparator<IAtomContainer> {
 
     /** Configure LoggingTool */
-    private ILoggingTool logger = LoggingToolFactory.createLoggingTool(AtomContainerComparator.class);
+    private final ILoggingTool logger = LoggingToolFactory.createLoggingTool(AtomContainerComparator.class);
 
     /** Creates a new instance of AtomContainerComparator */
     public AtomContainerComparator() {}
@@ -89,8 +88,8 @@ public class AtomContainerComparator implements Comparator<IAtomContainer> {
             return -1;
         else {
             // 2. Atom count equal, compare molecular weight (heavy atoms only)
-            double mw1 = 0;
-            double mw2 = 0;
+            double mw1;
+            double mw2;
             try {
                 mw1 = getMolecularWeight(atomContainer1);
                 mw2 = getMolecularWeight(atomContainer2);
@@ -137,11 +136,11 @@ public class AtomContainerComparator implements Comparator<IAtomContainer> {
             final IsotopeFactory isotopeFactory = Isotopes.getInstance();
 
             for (IAtom atom : atomContainer.atoms()) {
-                if (!atom.getSymbol().equals("H")) {
+                if (atom.getAtomicNumber() != IElement.H) {
                     final IIsotope majorIsotope = isotopeFactory.getMajorIsotope(atom.getSymbol());
 
                     if (majorIsotope != null && majorIsotope.getExactMass() != null) {
-                        mw += majorIsotope.getExactMass().doubleValue();
+                        mw += majorIsotope.getExactMass();
                     }
                 }
             }

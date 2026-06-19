@@ -26,17 +26,15 @@ import org.openscience.cdk.IImplementationSpecification;
 /**
  * Class that is used to distribute descriptor specifications.
  *
- * @cdk.module standard
- * @cdk.githash
  */
 public class DescriptorSpecification implements Serializable, IImplementationSpecification {
 
     private static final long serialVersionUID = 7044545275802343828L;
 
-    private String            specificationReference;
-    private String            implementationTitle;
-    private String            implementationIdentifier;
-    private String            implementationVendor;
+    private final String            specificationReference;
+    private final String            implementationTitle;
+    private final String            implementationIdentifier;
+    private final String            implementationVendor;
 
     /**
      * Container for specifying the type of descriptor.

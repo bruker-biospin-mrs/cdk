@@ -25,8 +25,8 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -47,15 +47,14 @@ import org.openscience.cdk.renderer.generators.IGenerator;
 
 /**
  * @author     maclean
- * @cdk.module test-renderbasic
  */
-public class AtomContainerRendererTest {
+class AtomContainerRendererTest {
 
-    private IChemObjectBuilder        builder = SilentChemObjectBuilder.getInstance();
+    private final IChemObjectBuilder        builder = SilentChemObjectBuilder.getInstance();
 
-    private StructureDiagramGenerator sdg     = new StructureDiagramGenerator();
+    private final StructureDiagramGenerator sdg     = new StructureDiagramGenerator();
 
-    public IAtomContainer layout(IAtomContainer molecule) {
+    IAtomContainer layout(IAtomContainer molecule) {
         sdg.setMolecule(molecule);
         try {
             sdg.generateCoordinates();
@@ -65,7 +64,7 @@ public class AtomContainerRendererTest {
         return sdg.getMolecule();
     }
 
-    public IAtomContainer makeSquare() {
+    IAtomContainer makeSquare() {
         IAtomContainer square = builder.newInstance(IAtomContainer.class);
         square.addAtom(builder.newInstance(IAtom.class, "C"));
         square.addAtom(builder.newInstance(IAtom.class, "C"));
@@ -80,10 +79,10 @@ public class AtomContainerRendererTest {
     }
 
     @Test
-    public void testSquareMolecule() {
+    void testSquareMolecule() {
         IAtomContainer square = makeSquare();
 
-        List<IGenerator<IAtomContainer>> generators = new ArrayList<IGenerator<IAtomContainer>>();
+        List<IGenerator<IAtomContainer>> generators = new ArrayList<>();
         generators.add(new BasicSceneGenerator());
         generators.add(new BasicBondGenerator());
         BasicAtomGenerator atomGenerator = new BasicAtomGenerator();
@@ -102,7 +101,7 @@ public class AtomContainerRendererTest {
         renderer.paint(square, visitor);
 
         for (IRenderingElement element : visitor.getElements()) {
-            Assert.assertTrue(visitor.toString(element).contains("Line") || visitor.toString(element).contains("Oval"));
+            Assertions.assertTrue(visitor.toString(element).contains("Line") || visitor.toString(element).contains("Oval"));
         }
     }
 

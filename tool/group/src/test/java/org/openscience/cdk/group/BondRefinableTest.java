@@ -22,60 +22,58 @@
  */
 package org.openscience.cdk.group;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 /**
  * @author maclean
- * @cdk.module group
  */
-public class BondRefinableTest {
+class BondRefinableTest {
     
-    public static IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+    private static final IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
     
     @Test
-    public void getVertexCount() {
+    void getVertexCount() {
         String acpString = "C0C1C2C3 0:1(1),1:2(1),2:3(1)";
         BondRefinable bondRefinable = refinable(acpString);
-        assertEquals(3, bondRefinable.getVertexCount());
+        Assertions.assertEquals(3, bondRefinable.getVertexCount());
     }
     
     @Test
-    public void getConnectivity() {
+    void getConnectivity() {
         String acpString = "C0C1C2C3 0:1(1),0:3(1),1:2(1),2:3(1)";
         BondRefinable bondRefinable = refinable(acpString);
-        assertEquals(1, bondRefinable.getConnectivity(0, 1));
-        assertEquals(1, bondRefinable.getConnectivity(0, 2));
-        assertEquals(1, bondRefinable.getConnectivity(1, 3));
-        assertEquals(1, bondRefinable.getConnectivity(2, 3));
+        Assertions.assertEquals(1, bondRefinable.getConnectivity(0, 1));
+        Assertions.assertEquals(1, bondRefinable.getConnectivity(0, 2));
+        Assertions.assertEquals(1, bondRefinable.getConnectivity(1, 3));
+        Assertions.assertEquals(1, bondRefinable.getConnectivity(2, 3));
     }
     
     @Test
-    public void neighboursInBlock() {
+    void neighboursInBlock() {
         String acpString = "C0C1C2C3 0:1(1),0:3(1),1:2(1),2:3(1)";
         BondRefinable bondRefinable = refinable(acpString);
-        Set<Integer> block = new HashSet<Integer>();
+        Set<Integer> block = new HashSet<>();
         block.add(1);
         block.add(3);
-        assertEquals(new IntegerInvariant(1), bondRefinable.neighboursInBlock(block, 0));
-        assertEquals(new IntegerInvariant(1), bondRefinable.neighboursInBlock(block, 2));
+        Assertions.assertEquals(new IntegerInvariant(1), bondRefinable.neighboursInBlock(block, 0));
+        Assertions.assertEquals(new IntegerInvariant(1), bondRefinable.neighboursInBlock(block, 2));
     }
     
     @Test
-    public void getBondPartitionTest() {
+    void getBondPartitionTest() {
         String acpString = "C0C1C2C3O4 0:1(2),0:4(1),1:2(1),2:3(2),3:4(1)";
         IAtomContainer ac = AtomContainerPrinter.fromString(acpString, builder);
         BondRefinable refinable = new BondRefinable(ac);
         Partition bondPartition = refinable.getInitialPartition();
         Partition expected = Partition.fromString("0,3|1,4|2");
-        assertEquals(expected, bondPartition);
+        Assertions.assertEquals(expected, bondPartition);
     }
     
     private BondRefinable refinable(String acpString) {

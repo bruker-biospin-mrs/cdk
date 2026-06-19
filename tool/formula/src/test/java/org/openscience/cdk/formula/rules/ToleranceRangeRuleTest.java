@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.formula.rules;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.formula.MolecularFormula;
 import org.openscience.cdk.interfaces.IIsotope;
@@ -28,17 +28,16 @@ import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
 /**
- * @cdk.module test-formula
  */
-public class ToleranceRangeRuleTest extends FormulaRuleTest {
+class ToleranceRangeRuleTest extends FormulaRuleTest {
 
     private static IChemObjectBuilder builder;
 
     /**
     *  The JUnit setup method
     */
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         builder = DefaultChemObjectBuilder.getInstance();
         setRule(ToleranceRangeRule.class);
     }
@@ -46,42 +45,42 @@ public class ToleranceRangeRuleTest extends FormulaRuleTest {
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testToleranceRangeRule() throws Exception {
+    void testToleranceRangeRule() throws Exception {
 
         IRule rule = new ToleranceRangeRule();
-        Assert.assertNotNull(rule);
+        Assertions.assertNotNull(rule);
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testDefault() throws Exception {
+    void testDefault() throws Exception {
 
         IRule rule = new ToleranceRangeRule();
         Object[] objects = rule.getParameters();
-        Assert.assertEquals(2, objects.length);
+        Assertions.assertEquals(2, objects.length);
 
         double mass = (Double) objects[0];
-        Assert.assertEquals(0.0, mass, 0.00001);
+        Assertions.assertEquals(0.0, mass, 0.00001);
         double tolerance = (Double) objects[1];
-        Assert.assertEquals(0.05, tolerance, 0.00001);
+        Assertions.assertEquals(0.05, tolerance, 0.00001);
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testSetParameters() throws Exception {
+    void testSetParameters() throws Exception {
 
         IRule rule = new ToleranceRangeRule();
 
@@ -92,22 +91,22 @@ public class ToleranceRangeRuleTest extends FormulaRuleTest {
 
         Object[] objects = rule.getParameters();
 
-        Assert.assertEquals(2, objects.length);
+        Assertions.assertEquals(2, objects.length);
 
         double mass = (Double) objects[0];
-        Assert.assertEquals(133.0, mass, 0.00001);
+        Assertions.assertEquals(133.0, mass, 0.00001);
         double tolerance = (Double) objects[1];
-        Assert.assertEquals(0.00005, tolerance, 0.00001);
+        Assertions.assertEquals(0.00005, tolerance, 0.00001);
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testDefaultValidFalse() throws Exception {
+    void testDefaultValidFalse() throws Exception {
 
         IRule rule = new ToleranceRangeRule();
 
@@ -119,16 +118,16 @@ public class ToleranceRangeRuleTest extends FormulaRuleTest {
         formula.addIsotope(carb);
         formula.addIsotope(cl);
 
-        Assert.assertEquals(0.0, rule.validate(formula), 0.0001);
+        Assertions.assertEquals(0.0, rule.validate(formula), 0.0001);
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testDefaultValidFalse_SetParam() throws Exception {
+    void testDefaultValidFalse_SetParam() throws Exception {
 
         IRule rule = new ToleranceRangeRule();
 
@@ -145,16 +144,16 @@ public class ToleranceRangeRuleTest extends FormulaRuleTest {
         params[1] = 0.00005;
         rule.setParameters(params);
 
-        Assert.assertEquals(0.0, rule.validate(formula), 0.0001);
+        Assertions.assertEquals(0.0, rule.validate(formula), 0.0001);
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testDefaultValidTrue() throws Exception {
+    void testDefaultValidTrue() throws Exception {
 
         IRule rule = new ToleranceRangeRule();
 
@@ -171,7 +170,7 @@ public class ToleranceRangeRuleTest extends FormulaRuleTest {
         params[1] = 0.00005;
         rule.setParameters(params);
 
-        Assert.assertEquals(1.0, rule.validate(formula), 0.0001);
+        Assertions.assertEquals(1.0, rule.validate(formula), 0.0001);
     }
 
 }

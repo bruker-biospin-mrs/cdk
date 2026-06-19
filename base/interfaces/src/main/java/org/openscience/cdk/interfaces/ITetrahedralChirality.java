@@ -35,8 +35,6 @@ import java.util.Map;
  * chiral atom is also stored as one of the ligands. This serves as a
  * placeholder to indicate where the implicit hydrogen or lone pair would be.
  *
- * @cdk.module interfaces
- * @cdk.githash
  */
 public interface ITetrahedralChirality extends IStereoElement<IAtom, IAtom> {
 
@@ -119,6 +117,6 @@ public interface ITetrahedralChirality extends IStereoElement<IAtom, IAtom> {
      *{@inheritDoc}
      */
     @Override
-    public ITetrahedralChirality map(Map<IAtom, IAtom> atoms, Map<IBond, IBond> bonds);
+    ITetrahedralChirality map(Map<IAtom, IAtom> atoms, Map<IBond, IBond> bonds);
 
 }

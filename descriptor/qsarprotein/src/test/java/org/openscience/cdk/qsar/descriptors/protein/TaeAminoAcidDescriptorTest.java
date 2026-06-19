@@ -19,11 +19,10 @@
 
 package org.openscience.cdk.qsar.descriptors.protein;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.exception.CDKException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IBioPolymer;
 import org.openscience.cdk.qsar.DescriptorValue;
 import org.openscience.cdk.qsar.IMolecularDescriptor;
@@ -35,29 +34,28 @@ import org.openscience.cdk.tools.ProteinBuilderTool;
 /**
  * TestSuite that runs test for the TAE descriptors
  *
- * @cdk.module test-qsarprotein
  *
  */
-public class TaeAminoAcidDescriptorTest extends MolecularDescriptorTest {
+class TaeAminoAcidDescriptorTest extends MolecularDescriptorTest {
 
     private static IMolecularDescriptor descriptor;
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         descriptor = new TaeAminoAcidDescriptor();
     }
 
-    @Before
-    public void setDescriptor() throws Exception {
+    @BeforeEach
+    void setDescriptor() throws Exception {
         super.setDescriptor(TaeAminoAcidDescriptor.class);
     }
 
     @Test
-    public void testTaeAminoAcidDescriptor() throws ClassNotFoundException, CDKException, Exception {
+    void testTaeAminoAcidDescriptor() throws Exception {
         IBioPolymer pepseq = ProteinBuilderTool.createProtein("ACDEFGH", SilentChemObjectBuilder.getInstance());
         DescriptorValue result = descriptor.calculate(pepseq);
 
         DoubleArrayResult dar = (DoubleArrayResult) result.getValue();
-        Assert.assertEquals(147, dar.length());
+        Assertions.assertEquals(147, dar.length());
     }
 }

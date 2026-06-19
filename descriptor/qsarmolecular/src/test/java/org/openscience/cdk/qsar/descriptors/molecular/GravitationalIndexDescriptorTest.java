@@ -19,12 +19,11 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.HINReader;
 import org.openscience.cdk.io.ISimpleChemObjectReader;
@@ -37,22 +36,21 @@ import java.util.List;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class GravitationalIndexDescriptorTest extends MolecularDescriptorTest {
+class GravitationalIndexDescriptorTest extends MolecularDescriptorTest {
 
-    public GravitationalIndexDescriptorTest() {}
+    GravitationalIndexDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(GravitationalIndexDescriptor.class);
     }
 
     @Test
-    public void testGravitationalIndex() throws ClassNotFoundException, CDKException, java.lang.Exception {
-        String filename = "data/hin/gravindex.hin";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testGravitationalIndex() throws java.lang.Exception {
+        String filename = "gravindex.hin";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new HINReader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
@@ -60,14 +58,14 @@ public class GravitationalIndexDescriptorTest extends MolecularDescriptorTest {
 
         DoubleArrayResult retval = (DoubleArrayResult) descriptor.calculate(ac).getValue();
 
-        Assert.assertEquals(1756.5060703860984, retval.get(0), 0.00000001);
-        Assert.assertEquals(41.91069159994975, retval.get(1), 0.00000001);
-        Assert.assertEquals(12.06562671430088, retval.get(2), 0.00000001);
-        Assert.assertEquals(1976.6432599699767, retval.get(3), 0.00000001);
-        Assert.assertEquals(44.45945636161082, retval.get(4), 0.00000001);
-        Assert.assertEquals(12.549972243701887, retval.get(5), 0.00000001);
-        Assert.assertEquals(4333.097373073368, retval.get(6), 0.00000001);
-        Assert.assertEquals(65.82626658920714, retval.get(7), 0.00000001);
-        Assert.assertEquals(16.302948232909483, retval.get(8), 0.00000001);
+        Assertions.assertEquals(1756.5060703860984, retval.get(0), 0.00000001);
+        Assertions.assertEquals(41.91069159994975, retval.get(1), 0.00000001);
+        Assertions.assertEquals(12.06562671430088, retval.get(2), 0.00000001);
+        Assertions.assertEquals(1976.6432599699767, retval.get(3), 0.00000001);
+        Assertions.assertEquals(44.45945636161082, retval.get(4), 0.00000001);
+        Assertions.assertEquals(12.549972243701887, retval.get(5), 0.00000001);
+        Assertions.assertEquals(4333.097373073368, retval.get(6), 0.00000001);
+        Assertions.assertEquals(65.82626658920714, retval.get(7), 0.00000001);
+        Assertions.assertEquals(16.302948232909483, retval.get(8), 0.00000001);
     }
 }

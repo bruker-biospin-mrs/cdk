@@ -33,8 +33,6 @@ import org.openscience.cdk.interfaces.IChemObjectChangeEvent;
 import org.openscience.cdk.interfaces.IChemObjectListener;
 
 /**
- * @cdk.module  isomorphism
- * @cdk.githash
  */
 public class QueryChemObject implements IChemObject {
 
@@ -51,7 +49,7 @@ public class QueryChemObject implements IChemObject {
     /**
      * String representing the identifier for this atom type with null as default.
      */
-    private String                    identifier = (String) CDKConstants.UNSET;
+    private String                    identifier;
 
     /**
      *  You will frequently have to use some flags on a IChemObject. For example, if
@@ -61,7 +59,7 @@ public class QueryChemObject implements IChemObject {
      *  flag array with self-defined constants (flags[VISITED] = true). 100 flags
      *  per object should be more than enough.
      */
-    private short                     flags;                                   // flags are currently stored as a single short value MAX_FLAG_INDEX < 16
+    private int                       flags;                                   // flags are currently stored as a single short value MAX_FLAG_INDEX < 16
 
     private final IChemObjectBuilder  builder;
 
@@ -79,7 +77,7 @@ public class QueryChemObject implements IChemObject {
      */
     private List<IChemObjectListener> lazyChemObjectListeners() {
         if (chemObjectListeners == null) {
-            chemObjectListeners = new ArrayList<IChemObjectListener>();
+            chemObjectListeners = new ArrayList<>();
         }
         return chemObjectListeners;
     }
@@ -174,7 +172,7 @@ public class QueryChemObject implements IChemObject {
      */
     private Map<Object, Object> lazyProperties() {
         if (properties == null) {
-            properties = new HashMap<Object, Object>();
+            properties = new HashMap<>();
         }
         return properties;
     }
@@ -354,8 +352,28 @@ public class QueryChemObject implements IChemObject {
      *{@inheritDoc}
      */
     @Override
-    public Short getFlagValue() {
+    public Integer getFlagValue() {
         return flags;
+    }
+
+    @Override
+    public void set(int flags) {
+        this.flags |= flags;
+    }
+
+    @Override
+    public void clear(int flags) {
+        this.flags &= ~flags;
+    }
+
+    @Override
+    public boolean is(int flags) {
+        return (this.flags&flags) == flags;
+    }
+
+    @Override
+    public int flags() {
+        return this.flags;
     }
 
     @Override

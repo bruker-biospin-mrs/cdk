@@ -32,9 +32,7 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  * the generation of atomic hash codes.
  *
  * @author John May
- * @cdk.module interfaces
  * @see org.openscience.cdk.hash.AtomHashGenerator
- * @cdk.githash
  */
 public interface AtomEncoder {
 
@@ -46,6 +44,6 @@ public interface AtomEncoder {
      * @param container non-null container
      * @return encoding of an invariant atom attribute
      */
-    public int encode(IAtom atom, IAtomContainer container);
+    int encode(IAtom atom, IAtomContainer container);
 
 }

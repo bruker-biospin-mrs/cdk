@@ -19,49 +19,40 @@
  */
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.ISingleElectron;
-import org.openscience.cdk.interfaces.AbstractSingleElectronTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractSingleElectronTest;
 
 /**
  * Checks the functionality of the SingleElectron class.
  *
  * @see org.openscience.cdk.SingleElectron
  *
- * @cdk.module test-data
  */
-public class SingleElectronTest extends AbstractSingleElectronTest {
+class SingleElectronTest extends AbstractSingleElectronTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new SingleElectron();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(SingleElectron::new);
     }
 
     @Test
-    public void testSingleElectron() {
+    void testSingleElectron() {
         ISingleElectron radical = new SingleElectron();
-        Assert.assertNull(radical.getAtom());
-        Assert.assertEquals(1, radical.getElectronCount().intValue());
+        Assertions.assertNull(radical.getAtom());
+        Assertions.assertEquals(1, radical.getElectronCount().intValue());
     }
 
     @Test
-    public void testSingleElectron_IAtom() {
+    void testSingleElectron_IAtom() {
         IAtom atom = newChemObject().getBuilder().newInstance(IAtom.class, "N");
         ISingleElectron radical = new SingleElectron(atom);
-        Assert.assertEquals(1, radical.getElectronCount().intValue());
-        Assert.assertEquals(atom, radical.getAtom());
-        Assert.assertTrue(radical.contains(atom));
+        Assertions.assertEquals(1, radical.getElectronCount().intValue());
+        Assertions.assertEquals(atom, radical.getAtom());
+        Assertions.assertTrue(radical.contains(atom));
     }
 
 }

@@ -38,8 +38,6 @@ import java.util.List;
  * will replace the Atom in the AtomContainer, but in all the ElectronContainer's
  * it participates too.
  *
- * @cdk.module  core
- * @cdk.githash
  *
  * @author  Egon Willighagen
  * @cdk.created 2003-08-07
@@ -250,7 +248,6 @@ public class BondManipulator {
             return secondOrder;
         }
         if (secondOrder == Order.UNSET) {
-            if (firstOrder == Order.UNSET) throw new IllegalArgumentException("Both bond orders are unset");
             return firstOrder;
         }
 

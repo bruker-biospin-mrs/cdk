@@ -41,7 +41,6 @@ import java.util.Set;
  * Stereo encoder factory for 2D and 3D cumulative double bonds.
  *
  * @author John May
- * @cdk.module hash
  */
 public class GeometricCumulativeDoubleBondFactory implements StereoEncoderFactory {
 
@@ -58,14 +57,14 @@ public class GeometricCumulativeDoubleBondFactory implements StereoEncoderFactor
         int n = container.getAtomCount();
         BondMap map = new BondMap(n);
 
-        List<StereoEncoder> encoders = new ArrayList<StereoEncoder>(1);
+        List<StereoEncoder> encoders = new ArrayList<>(1);
 
         // index double bonds by their atoms
         for (IBond bond : container.bonds()) {
             if (isDoubleBond(bond)) map.add(bond);
         }
 
-        Set<IAtom> visited = new HashSet<IAtom>(n);
+        Set<IAtom> visited = new HashSet<>(n);
 
         // find atoms which are connected between two double bonds
         for (IAtom a : map.atoms()) {
@@ -339,14 +338,16 @@ public class GeometricCumulativeDoubleBondFactory implements StereoEncoderFactor
      *         plane
      */
     static int elevation(IBond bond) {
-        IBond.Stereo stereo = bond.getStereo();
-        if (stereo == null) return 0;
-        switch (stereo) {
-            case UP:
-            case DOWN_INVERTED:
+        IBond.Display display = bond.getDisplay();
+        if (display == null) return 0;
+        switch (display) {
+            case WedgeBegin:
+            case HollowWedgeBegin:
+            case WedgedHashEnd:
                 return +1;
-            case DOWN:
-            case UP_INVERTED:
+            case WedgedHashBegin:
+            case WedgeEnd:
+            case HollowWedgeEnd:
                 return -1;
             default:
                 return 0;
@@ -379,7 +380,7 @@ public class GeometricCumulativeDoubleBondFactory implements StereoEncoderFactor
      */
     private static class BondMap {
 
-        private Map<IAtom, List<IBond>> bonds;
+        private final Map<IAtom, List<IBond>> bonds;
 
         /**
          * Create new bond map for the specified number of atoms.
@@ -387,7 +388,7 @@ public class GeometricCumulativeDoubleBondFactory implements StereoEncoderFactor
          * @param n atom count
          */
         BondMap(int n) {
-            bonds = new HashMap<IAtom, List<IBond>>(n > 3 ? n + (n / 3) : n);
+            bonds = new HashMap<>(n > 3 ? n + (n / 3) : n);
         }
 
         /**
@@ -398,7 +399,7 @@ public class GeometricCumulativeDoubleBondFactory implements StereoEncoderFactor
          */
         public List<IBond> bonds(IAtom a) {
             List<IBond> bs = bonds.get(a);
-            return bs != null ? bs : Collections.<IBond> emptyList();
+            return bs != null ? bs : Collections.emptyList();
         }
 
         /**
@@ -430,7 +431,7 @@ public class GeometricCumulativeDoubleBondFactory implements StereoEncoderFactor
          */
         private void add(IAtom a, IBond b) {
             if (bonds(a).isEmpty()) {
-                bonds.put(a, new ArrayList<IBond>(2));
+                bonds.put(a, new ArrayList<>(2));
             }
             bonds.get(a).add(b);
         }

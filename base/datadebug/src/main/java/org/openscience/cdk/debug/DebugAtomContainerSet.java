@@ -33,14 +33,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author     egonw
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugAtomContainerSet extends AtomContainerSet implements IAtomContainerSet {
 
     private static final long serialVersionUID = -8358480615782437454L;
 
-    ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugAtomContainerSet.class);
+    final ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugAtomContainerSet.class);
 
     /** {@inheritDoc} */
     @Override

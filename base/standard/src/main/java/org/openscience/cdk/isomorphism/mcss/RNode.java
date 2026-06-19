@@ -38,19 +38,17 @@ import java.util.BitSet;
  *
  * @author      Stephane Werner from IXELIS mail@ixelis.net
  * @cdk.created 2002-07-17
- * @cdk.module  standard
- * @cdk.githash
  */
 public class RNode {
 
     // G1/G2 mapping
-    RMap   rMap      = null;
+    RMap   rMap;
 
     // set of neighbour nodes in the RGraph
-    BitSet extension = null;
+    BitSet extension;
 
     // set of incompatible nodes in the RGraph
-    BitSet forbidden = null;
+    BitSet forbidden;
 
     /**
      *  Constructor for the RNode object.

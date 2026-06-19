@@ -18,11 +18,12 @@
  */
 package org.openscience.cdk.tools;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.ringsearch.AllRingsFinder;
@@ -38,8 +39,6 @@ import java.util.List;
  * <p>TODO: merge with Normalizer.
  *
  * @author     Todd Martin
- * @cdk.module extra
- * @cdk.githash
  *
  * @see        org.openscience.cdk.normalize.Normalizer
  * @deprecated better accomplished with SMARTS patterns or simple REGEX
@@ -64,7 +63,7 @@ public class CDKUtilities {
         try {
             for (int i = 0; i <= m.getAtomCount() - 1; i++) {
                 IAtom a = m.getAtom(i);
-                if (a.getSymbol().equals("N")) {
+                if (a.getAtomicNumber() == IElement.N) {
                     List<IAtom> ca = m.getConnectedAtomsList(a);
 
                     if (ca.size() == 3) {
@@ -74,7 +73,7 @@ public class CDKUtilities {
                         int count = 0;
 
                         for (int j = 0; j <= 2; j++) {
-                            if (((IAtom) ca.get(j)).getSymbol().equals("O")) {
+                            if (ca.get(j).getAtomicNumber() == IElement.O) {
                                 count++;
                             }
                         }
@@ -83,8 +82,8 @@ public class CDKUtilities {
 
                             count = 0;
                             for (int j = 0; j <= 2; j++) {
-                                IAtom caj = (IAtom) ca.get(j);
-                                if (caj.getSymbol().equals("O")) {
+                                IAtom caj = ca.get(j);
+                                if (caj.getAtomicNumber() == IElement.O) {
                                     if (m.getConnectedBondsCount(caj) == 1) {// account for possibility of ONO2
                                         cao[count] = caj;
                                         count++;
@@ -124,7 +123,7 @@ public class CDKUtilities {
         try {
             for (int i = 0; i <= m.getAtomCount() - 1; i++) {
                 IAtom a = m.getAtom(i);
-                if (a.getSymbol().equals("N")) {
+                if (a.getAtomicNumber() == IElement.N) {
                     List<IAtom> ca = m.getConnectedAtomsList(a);
 
                     if (ca.size() == 3) {
@@ -135,7 +134,7 @@ public class CDKUtilities {
 
                         for (int j = 0; j <= 2; j++) {
                             IAtom caj = ca.get(j);
-                            if (caj.getSymbol().equals("O")) {
+                            if (caj.getAtomicNumber() == IElement.O) {
                                 count++;
                             }
                         }
@@ -144,8 +143,8 @@ public class CDKUtilities {
 
                             count = 0;
                             for (int j = 0; j <= 2; j++) {
-                                IAtom caj = (IAtom) ca.get(j);
-                                if (caj.getSymbol().equals("O")) {
+                                IAtom caj = ca.get(j);
+                                if (caj.getAtomicNumber() == IElement.O) {
                                     if (m.getConnectedBondsCount(caj) == 1) {// account for possibility of ONO2
                                         cao[count] = caj;
                                         count++;
@@ -196,7 +195,8 @@ public class CDKUtilities {
             // srs = s.findEssentialRings();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(CDKUtilities.class)
+                              .warn("Unexpected Error:", e);
         }
 
         try {
@@ -208,7 +208,8 @@ public class CDKUtilities {
             // figure out which simple (non cycles) rings are aromatic:
             // HueckelAromaticityDetector.detectAromaticity(m, srs);
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(CDKUtilities.class)
+                              .warn("Unexpected Error:", e);
         }
 
         // only atoms in 6 membered rings are aromatic
@@ -216,12 +217,12 @@ public class CDKUtilities {
 
         for (int i = 0; i <= m.getAtomCount() - 1; i++) {
 
-            m.getAtom(i).setFlag(CDKConstants.ISAROMATIC, false);
+            m.getAtom(i).setFlag(IChemObject.AROMATIC, false);
 
             jloop: for (int j = 0; j <= rs.getAtomContainerCount() - 1; j++) {
                 //logger.debug(i+"\t"+j);
                 IRing r = (IRing) rs.getAtomContainer(j);
-                if (!r.getFlag(CDKConstants.ISAROMATIC)) {
+                if (!r.getFlag(IChemObject.AROMATIC)) {
                     continue jloop;
                 }
 
@@ -230,7 +231,7 @@ public class CDKUtilities {
                 //logger.debug("haveatom="+haveatom);
 
                 if (haveatom && r.getAtomCount() == 6) {
-                    m.getAtom(i).setFlag(CDKConstants.ISAROMATIC, true);
+                    m.getAtom(i).setFlag(IChemObject.AROMATIC, true);
                 }
 
             }
@@ -246,14 +247,13 @@ public class CDKUtilities {
         for (int i = 0; i <= m.getAtomCount() - 1; i++) {
             IAtom a = m.getAtom(i);
 
-            if (a.getSymbol().equals("S")) {
+            if (a.getAtomicNumber() == IElement.S) {
                 List<IAtom> connectedAtoms = m.getConnectedAtomsList(a);
 
                 int bondOrderSum = 0;
 
-                for (int j = 0; j < connectedAtoms.size(); j++) {
-                    IAtom conAtom = connectedAtoms.get(j);
-                    if (!conAtom.getSymbol().equals("H")) {
+                for (IAtom conAtom : connectedAtoms) {
+                    if (conAtom.getAtomicNumber() != IElement.H) {
                         IBond bond = m.getBond(a, conAtom);
                         if (bond.getOrder() == IBond.Order.SINGLE) {
                             bondOrderSum += 1;
@@ -268,9 +268,9 @@ public class CDKUtilities {
                 }
 
                 if (bondOrderSum > 1) {
-                    for (int j = 0; j < connectedAtoms.size(); j++) {
-                        IAtom conAtom = (IAtom) connectedAtoms.get(j);
-                        if (conAtom.getSymbol().equals("H")) {
+                    for (IAtom connectedAtom : connectedAtoms) {
+                        IAtom conAtom = connectedAtom;
+                        if (conAtom.getAtomicNumber() == IElement.H) {
                             m.removeAtom(conAtom);
                         }
                     }

@@ -85,16 +85,14 @@ import signature.SymmetryClass;
  * - which is just a convenience method equivalent to calling the constructor of
  * an AtomSignature class.
  *
- * @cdk.module signature
  * @author maclean
- * @cdk.githash
  */
 public class MoleculeSignature extends AbstractGraphSignature {
 
     /**
      * The molecule to use when making atom signatures
      */
-    private IAtomContainer molecule;
+    private final IAtomContainer molecule;
 
     /**
      * Creates a signature that represents this molecule.
@@ -156,7 +154,7 @@ public class MoleculeSignature extends AbstractGraphSignature {
      * @return a list of orbits
      */
     public List<Orbit> calculateOrbits() {
-        List<Orbit> orbits = new ArrayList<Orbit>();
+        List<Orbit> orbits = new ArrayList<>();
         List<SymmetryClass> symmetryClasses = super.getSymmetryClasses();
         for (SymmetryClass symmetryClass : symmetryClasses) {
             Orbit orbit = new Orbit(symmetryClass.getSignatureString(), -1);

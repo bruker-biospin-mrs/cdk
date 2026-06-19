@@ -30,10 +30,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-import com.google.common.collect.FluentIterable;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IIsotope;
@@ -53,8 +51,6 @@ import org.openscience.cdk.tools.periodictable.PeriodicTable;
  * repository.
  *
  * @author      egonw
- * @cdk.module  core
- * @cdk.githash
  */
 public class Isotopes extends IsotopeFactory {
 
@@ -76,23 +72,27 @@ public class Isotopes extends IsotopeFactory {
 
     private Isotopes() throws IOException {
         String configFile = "org/openscience/cdk/config/data/isotopes.dat";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(configFile);
-        int streamSize = ins.available();
-        ReadableByteChannel fcIn = Channels.newChannel(ins);
-        ByteBuffer bin = ByteBuffer.allocate(streamSize);
-        fcIn.read(bin);
-        fcIn.close();
-        ins.close();
-        ((Buffer) bin).position(0);
-        int isotopeCount = bin.getInt();
-        for (int i = 0; i < isotopeCount; i++) {
-            int atomicNum = (int) bin.get();
-            int massNum = (int) bin.getShort();
-            double exactMass = bin.getDouble();
-            double natAbund = bin.get() == 1 ? bin.getDouble() : 0.0;
-            IIsotope isotope = new BODRIsotope(PeriodicTable.getSymbol(atomicNum), atomicNum, massNum, exactMass,
-                    natAbund);
-            add(isotope);
+        try (InputStream ins = this.getClass().getClassLoader().getResourceAsStream(configFile)) {
+            if (ins == null) {
+                throw new IllegalStateException("Could not load isotope data");
+            } else {
+                int streamSize = ins.available();
+                try (ReadableByteChannel fcIn = Channels.newChannel(ins)) {
+                    ByteBuffer bin = ByteBuffer.allocate(streamSize);
+                    fcIn.read(bin);
+                    ((Buffer) bin).position(0);
+                    int isotopeCount = bin.getInt();
+                    for (int i = 0; i < isotopeCount; i++) {
+                        int atomicNum = bin.get();
+                        int massNum = bin.getShort();
+                        double exactMass = bin.getDouble();
+                        double natAbund = bin.get() == 1 ? bin.getDouble() : 0.0;
+                        IIsotope isotope = new BODRIsotope(PeriodicTable.getSymbol(atomicNum), atomicNum, massNum, exactMass,
+                                natAbund);
+                        add(isotope);
+                    }
+                }
+            }
         }
     }
 
@@ -132,19 +132,22 @@ public class Isotopes extends IsotopeFactory {
      * @param formula the formula
      */
     public static void clearMajorIsotopes(IMolecularFormula formula) {
-        for (IIsotope iso : FluentIterable.from(formula.isotopes()).toList())
-            if (isMajor(iso)) {
-                int count = formula.getIsotopeCount(iso);
-                formula.removeIsotope(iso);
-                iso.setMassNumber(null);
-                // may be immutable
-                if (iso.getMassNumber() != null) {
-                    iso = formula.getBuilder().newInstance(IIsotope.class, iso.getSymbol());
-                    iso.setAtomicNumber(iso.getAtomicNumber());
-                }
-                iso.setExactMass(null);
-                iso.setNaturalAbundance(null);
-                formula.addIsotope(iso, count);
+        List<IIsotope> majorIsotopes = new ArrayList<>();
+        formula.isotopes().forEach(i -> {
+            if (isMajor(i)) majorIsotopes.add(i);
+        });
+        for (IIsotope iso : majorIsotopes) {
+            int count = formula.getIsotopeCount(iso);
+            formula.removeIsotope(iso);
+            iso.setMassNumber(null);
+            // may be immutable
+            if (iso.getMassNumber() != null) {
+                iso = formula.getBuilder().newInstance(IIsotope.class, iso.getSymbol());
+                iso.setAtomicNumber(iso.getAtomicNumber());
             }
+            iso.setExactMass(null);
+            iso.setNaturalAbundance(null);
+            formula.addIsotope(iso, count);
+        }
     }
 }

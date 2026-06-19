@@ -26,14 +26,12 @@ import org.openscience.cdk.exception.CDKException;
  * An class for a reader setting which must be found in the list
  * of possible settings.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
  */
 public class OptionIOSetting extends IOSetting {
 
-    private List<String> settings;
+    private final List<String> settings;
 
     /**
      * OptionIOSetting is IOSetting for which the value must be
@@ -69,7 +67,7 @@ public class OptionIOSetting extends IOSetting {
      */
     public void setSetting(int setting) throws CDKException {
         if (setting < settings.size() + 1 && setting > 0) {
-            this.setting = (String) settings.get(setting - 1);
+            this.setting = settings.get(setting - 1);
         } else {
             throw new CDKException("Setting " + setting + " does not exist.");
         }

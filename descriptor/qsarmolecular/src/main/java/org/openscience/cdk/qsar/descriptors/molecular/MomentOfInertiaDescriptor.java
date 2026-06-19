@@ -80,14 +80,12 @@ import Jama.Matrix;
  *
  * @author           Rajarshi Guha
  * @cdk.created      2005-02-07
- * @cdk.module       qsarmolecular
- * @cdk.githash
  * @cdk.dictref      qsar-descriptors:momentOfInertia
  * @cdk.keyword      moment of inertia
  */
 public class MomentOfInertiaDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
 
-    private static ILoggingTool   logger = LoggingToolFactory.createLoggingTool(MomentOfInertiaDescriptor.class);
+    private static final ILoggingTool   logger = LoggingToolFactory.createLoggingTool(MomentOfInertiaDescriptor.class);
 
     private static final String[] NAMES  = {"MOMI-X", "MOMI-Y", "MOMI-Z", "MOMI-XY", "MOMI-XZ", "MOMI-YZ", "MOMI-R"};
 
@@ -175,7 +173,7 @@ public class MomentOfInertiaDescriptor extends AbstractMolecularDescriptor imple
         IAtomContainer clone;
         IsotopeFactory factory;
         try {
-            clone = (IAtomContainer) container.clone();
+            clone = container.clone();
             factory = Isotopes.getInstance();
             factory.configureAtoms(clone);
         } catch (CloneNotSupportedException | IOException e) {

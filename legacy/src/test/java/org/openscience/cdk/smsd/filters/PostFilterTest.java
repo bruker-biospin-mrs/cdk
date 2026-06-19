@@ -22,47 +22,45 @@
  */
 package org.openscience.cdk.smsd.filters;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
-public class PostFilterTest {
+class PostFilterTest {
 
     public PostFilterTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     /**
      * Test of filter method, of class PostFilter.
      */
     @Test
-    public void testFilter() {
+    void testFilter() {
 
-        List<Integer> l1 = new ArrayList<Integer>(6);
+        List<Integer> l1 = new ArrayList<>(6);
         l1.add(1);
         l1.add(2);
         l1.add(3);
@@ -70,7 +68,7 @@ public class PostFilterTest {
         l1.add(5);
         l1.add(6);
 
-        List<Integer> l2 = new ArrayList<Integer>(6);
+        List<Integer> l2 = new ArrayList<>(6);
         l2.add(1);
         l2.add(2);
         l2.add(3);
@@ -78,7 +76,7 @@ public class PostFilterTest {
         l2.add(5);
         l2.add(6);
 
-        List<Integer> l3 = new ArrayList<Integer>(6);
+        List<Integer> l3 = new ArrayList<>(6);
         l3.add(1);
         l3.add(2);
         l3.add(5);
@@ -86,13 +84,13 @@ public class PostFilterTest {
         l3.add(3);
         l3.add(6);
 
-        List<List<Integer>> mappings = new ArrayList<List<Integer>>(3);
+        List<List<Integer>> mappings = new ArrayList<>(3);
         mappings.add(l1);
         mappings.add(l2);
         mappings.add(l3);
 
-        assertEquals(3, mappings.size());
+        Assertions.assertEquals(3, mappings.size());
         List<Map<Integer, Integer>> expResult = PostFilter.filter(mappings);
-        assertEquals(2, expResult.size());
+        Assertions.assertEquals(2, expResult.size());
     }
 }

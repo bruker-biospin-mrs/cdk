@@ -26,8 +26,6 @@ import java.util.List;
 /**
  * A group of rendering elements, of any type.
  *
- * @cdk.module  renderbasic
- * @cdk.githash
  */
 public class ElementGroup implements IRenderingElement, Iterable<IRenderingElement> {
 
@@ -60,6 +58,12 @@ public class ElementGroup implements IRenderingElement, Iterable<IRenderingEleme
                 elements.addAll(((ElementGroup) element).elements);
             else
                 elements.add(element);
+        }
+    }
+
+    public void add(List<IRenderingElement> elements) {
+        for (IRenderingElement element : elements) {
+            add(element);
         }
     }
 

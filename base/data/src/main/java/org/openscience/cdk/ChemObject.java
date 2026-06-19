@@ -23,7 +23,6 @@
  */
 package org.openscience.cdk;
 
-import com.google.common.base.Objects;
 import org.openscience.cdk.event.ChemObjectChangeEvent;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -37,6 +36,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *  The base class for all chemical objects in this cdk. It provides methods for
@@ -44,8 +44,6 @@ import java.util.Map;
  *  table for administration of physical or chemical properties
  *
  *@author        steinbeck
- * @cdk.githash
- *@cdk.module    data
  */
 public class ChemObject implements Serializable, IChemObject, Cloneable {
 
@@ -75,7 +73,7 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
      *  flag array with self-defined constants (flags[VISITED] = true). 100 flags
      *  per object should be more than enough.
      */
-    private short                     flags;                                  // flags are currently stored as a single short value MAX_FLAG_INDEX < 16
+    private int                       flags;
 
     /**
      *  The ID is null by default.
@@ -99,7 +97,7 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
      */
     public ChemObject(IChemObject chemObject) {
         // copy the flags
-        flags = chemObject.getFlagValue().shortValue();
+        flags = chemObject.flags();
         // copy the identifier
         identifier = chemObject.getID();
     }
@@ -111,7 +109,7 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
      */
     private List<IChemObjectListener> lazyChemObjectListeners() {
         if (chemObjectListeners == null) {
-            chemObjectListeners = new ArrayList<IChemObjectListener>();
+            chemObjectListeners = new ArrayList<>();
         }
         return chemObjectListeners;
     }
@@ -310,12 +308,12 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
         ChemObject clone = (ChemObject) super.clone();
 
         // clone the flags
-        clone.flags = getFlagValue().shortValue();
+        clone.flags = getFlagValue();
 
         // clone the properties - using the HashMap copy constructor
         // this doesn't deep clone the keys/values but this wasn't happening
         // already
-        if (properties != null) clone.properties = new HashMap<Object, Object>(getProperties());
+        if (properties != null) clone.properties = new HashMap<>(getProperties());
 
         // delete all listeners
         clone.chemObjectListeners = null;
@@ -333,7 +331,7 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
             return false;
         }
         ChemObject chemObj = (ChemObject) object;
-        return Objects.equal(identifier, chemObj.identifier);
+        return Objects.equals(identifier, chemObj.identifier);
     }
 
     /**
@@ -390,8 +388,29 @@ public class ChemObject implements Serializable, IChemObject, Cloneable {
      *{@inheritDoc}
      */
     @Override
-    public Short getFlagValue() {
+    public Integer getFlagValue() {
         return flags;
+    }
+
+
+    @Override
+    public void set(int flags) {
+        this.flags |= flags;
+    }
+
+    @Override
+    public boolean is(int flags) {
+        return (this.flags&flags) == flags;
+    }
+
+    @Override
+    public void clear(int flags) {
+        this.flags &= ~flags;
+    }
+
+    @Override
+    public int flags() {
+        return this.flags;
     }
 
     /**{@inheritDoc} */

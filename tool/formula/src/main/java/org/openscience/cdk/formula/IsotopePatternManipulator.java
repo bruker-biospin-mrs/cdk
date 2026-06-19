@@ -1,6 +1,7 @@
 package org.openscience.cdk.formula;
 
-import java.util.Collections;
+import org.openscience.cdk.tools.LoggingToolFactory;
+
 import java.util.Comparator;
 import java.util.List;
 
@@ -9,8 +10,6 @@ import java.util.List;
  *
  * @author Miguel Rojas Cherto
  *
- * @cdk.module  formula
- * @cdk.githash
  */
 public class IsotopePatternManipulator {
 
@@ -32,6 +31,8 @@ public class IsotopePatternManipulator {
                 isoHighest = isoContainer;
             }
         }
+        if (isoHighest == null)
+            throw new IllegalStateException("No isotope had the largest abundance");
         /* Normalize */
         IsotopePattern isoNormalized = new IsotopePattern();
         for (IsotopeContainer isoContainer : isotopeP.getIsotopes()) {
@@ -46,7 +47,8 @@ public class IsotopePatternManipulator {
                     isoNormalized.addIsotope(icClone);
 
             } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(IsotopePatternGenerator.class)
+                                  .warn("Clone failed:", e);
             }
 
         }
@@ -84,10 +86,10 @@ public class IsotopePatternManipulator {
 
             // Sort the isotopes
             List<IsotopeContainer> listISO = isoSort.getIsotopes();
-            Collections.sort(listISO, new Comparator<IsotopeContainer>() {
+            listISO.sort(new Comparator<IsotopeContainer>() {
                 @Override
                 public int compare(IsotopeContainer o1, IsotopeContainer o2) {
-                    return Double.compare(o2.getIntensity(),o1.getIntensity());
+                    return Double.compare(o2.getIntensity(), o1.getIntensity());
                 }
             });
            
@@ -97,7 +99,8 @@ public class IsotopePatternManipulator {
             return isoSort;
 
         } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(IsotopePatternGenerator.class)
+                              .warn("Clone failed:", e);
         }
 
         return null;
@@ -120,10 +123,10 @@ public class IsotopePatternManipulator {
 
             // Sort the isotopes
             List<IsotopeContainer> listISO = isoSort.getIsotopes();
-            Collections.sort(listISO, new Comparator<IsotopeContainer>() {
+            listISO.sort(new Comparator<IsotopeContainer>() {
                 @Override
                 public int compare(IsotopeContainer o1, IsotopeContainer o2) {
-                    return Double.compare(o1.getMass(),o2.getMass());
+                    return Double.compare(o1.getMass(), o2.getMass());
                 }
             });
            
@@ -133,7 +136,8 @@ public class IsotopePatternManipulator {
             return isoSort;
 
         } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(IsotopePatternManipulator.class)
+                              .warn("Unexpected Error:", e);
         }
 
         return null;

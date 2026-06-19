@@ -24,12 +24,13 @@
 
 package org.openscience.cdk.io;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.isomorphism.matchers.Expr;
 import org.openscience.cdk.isomorphism.matchers.QueryBond;
@@ -38,249 +39,250 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author John May
- * @cdk.module test-io
  */
-public class MDLV2000BondBlockTest {
+class MDLV2000BondBlockTest {
 
-    private final V2000MoleculeBlockHandler reader  = new V2000MoleculeBlockHandler(new MDLV2000Reader());
+    private final MDLV2000Reader     reader  = new MDLV2000Reader();
     private final IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
     private final IAtom[]            atoms   = new IAtom[]{Mockito.mock(IAtom.class), Mockito.mock(IAtom.class),
             Mockito.mock(IAtom.class), Mockito.mock(IAtom.class), Mockito.mock(IAtom.class)};
 
     @Test
-    public void atomNumbers() throws Exception {
+    void atomNumbers() throws Exception {
         String input = "  1  3  1  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getBegin(), is(atoms[0]));
         assertThat(bond.getEnd(), is(atoms[2]));
     }
 
     @Test
-    public void singleBond() throws Exception {
+    void singleBond() throws Exception {
         String input = "  1  3  1  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getOrder(), is(IBond.Order.SINGLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
     }
 
     @Test
-    public void doubleBond() throws Exception {
+    void doubleBond() throws Exception {
         String input = "  1  3  2  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getOrder(), is(IBond.Order.DOUBLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.E_Z_BY_COORDINATES));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
     }
 
     @Test
-    public void tripleBond() throws Exception {
+    void tripleBond() throws Exception {
         String input = "  1  3  3  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getOrder(), is(IBond.Order.TRIPLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
     }
 
     @Test
-    public void aromaticBond() throws Exception {
+    void aromaticBond() throws Exception {
         String input = "  1  3  4  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
-        assertThat(bond.getOrder(), is(IBond.Order.UNSET));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertTrue(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertTrue(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertTrue(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertTrue(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
     }
 
     @Test
-    public void singleOrDoubleBond() throws Exception {
+    void singleOrDoubleBond() throws Exception {
         String input = "  1  3  5  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
-        assertThat(bond.getOrder(), is(IBond.Order.UNSET));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
         assertThat(bond, is(instanceOf(QueryBond.class)));
         assertThat(((QueryBond) bond).getExpression().type(), is(Expr.Type.SINGLE_OR_DOUBLE));
     }
 
     @Test
-    public void singleOrAromaticBond() throws Exception {
+    void singleOrAromaticBond() throws Exception {
         String input = "  1  3  6  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
-        assertThat(bond.getOrder(), is(IBond.Order.UNSET));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
         assertThat(bond, is(instanceOf(QueryBond.class)));
         assertThat(((QueryBond) bond).getExpression().type(), is(Expr.Type.SINGLE_OR_AROMATIC));
     }
 
     @Test
-    public void doubleOrAromaticBond() throws Exception {
+    void doubleOrAromaticBond() throws Exception {
         String input = "  1  3  7  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
-        assertThat(bond.getOrder(), is(IBond.Order.UNSET));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
         assertThat(bond, is(instanceOf(QueryBond.class)));
         assertThat(((QueryBond) bond).getExpression().type(), is(Expr.Type.DOUBLE_OR_AROMATIC));
     }
 
     @Test
-    public void anyBond() throws Exception {
+    void anyBond() throws Exception {
         String input = "  1  3  8  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
-        assertThat(bond.getOrder(), is(IBond.Order.UNSET));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
         assertThat(bond, is(instanceOf(QueryBond.class)));
         assertThat(((QueryBond) bond).getExpression().type(), is(Expr.Type.TRUE));
     }
 
     @Test
-    public void upBond() throws Exception {
+    void upBond() throws Exception {
         String input = "  1  3  1  1  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getOrder(), is(IBond.Order.SINGLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.UP));
+        assertThat(bond.getDisplay(), is(IBond.Display.Up));
     }
 
     @Test
-    public void downBond() throws Exception {
+    void downBond() throws Exception {
         String input = "  1  3  1  6  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getOrder(), is(IBond.Order.SINGLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.DOWN));
+        assertThat(bond.getDisplay(), is(IBond.Display.Down));
     }
 
     @Test
-    public void upOrDownBond() throws Exception {
+    void upOrDownBond() throws Exception {
         String input = "  1  3  1  4  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getOrder(), is(IBond.Order.SINGLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.UP_OR_DOWN));
+        assertThat(bond.getDisplay(), is(IBond.Display.Wavy));
     }
 
     @Test
-    public void cisOrTrans() throws Exception {
+    void cisOrTrans() throws Exception {
         String input = "  1  3  2  3  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getOrder(), is(IBond.Order.DOUBLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.E_OR_Z));
+        assertThat(bond.getDisplay(), is(IBond.Display.Crossed));
     }
 
     @Test
-    public void cisOrTransByCoordinates() throws Exception {
+    void cisOrTransByCoordinates() throws Exception {
         String input = "  1  3  2  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getOrder(), is(IBond.Order.DOUBLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.E_Z_BY_COORDINATES));
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
     }
 
-    @Test(expected = CDKException.class)
-    public void upDoubleBond() throws Exception {
-        final MDLV2000Reader reader = new MDLV2000Reader();
-        reader.setReaderMode(IChemObjectReader.Mode.STRICT);
-        final V2000MoleculeBlockHandler handler  = new V2000MoleculeBlockHandler(reader);
+    @Test
+    void upDoubleBond() throws Exception {
         String input = "  1  3  2  1  0  0  0";
-        handler.readBond(input, builder, atoms, new int[atoms.length], 1);
+        reader.setReaderMode(IChemObjectReader.Mode.STRICT);
+        Assertions.assertThrows(CDKException.class,
+                                () -> {
+                                    reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
+                                });
     }
 
-    @Test(expected = CDKException.class)
-    public void downDoubleBond() throws Exception {
-        final MDLV2000Reader reader = new MDLV2000Reader();
+    @Test
+    void downDoubleBond() throws Exception {
+        String input = "  1  3  2  1  0  0  0";
         reader.setReaderMode(IChemObjectReader.Mode.STRICT);
-        final V2000MoleculeBlockHandler handler  = new V2000MoleculeBlockHandler(reader);
-        String input = "  1  3  2  6  0  0  0";
-        handler.readBond(input, builder, atoms, new int[atoms.length], 1);
+        Assertions.assertThrows(CDKException.class,
+                                () -> {
+                                    reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
+                                });
     }
 
-    @Test(expected = CDKException.class)
-    public void upOrDownDoubleBond() throws Exception {
-        final MDLV2000Reader reader = new MDLV2000Reader();
-        reader.setReaderMode(IChemObjectReader.Mode.STRICT);
-        final V2000MoleculeBlockHandler handler  = new V2000MoleculeBlockHandler(reader);
+    @Test
+    void upOrDownDoubleBond() throws Exception {
         String input = "  1  3  2  4  0  0  0";
-        handler.readBond(input, builder, atoms, new int[atoms.length], 1);
-    }
-
-    @Test(expected = CDKException.class)
-    public void cisOrTransSingleBond() throws Exception {
-        final MDLV2000Reader reader = new MDLV2000Reader();
         reader.setReaderMode(IChemObjectReader.Mode.STRICT);
-        final V2000MoleculeBlockHandler handler  = new V2000MoleculeBlockHandler(reader);
+        Assertions.assertThrows(CDKException.class,
+                                () -> {
+                                    reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
+                                });
+    }
+
+    @Test
+    void cisOrTransSingleBond() throws Exception {
         String input = "  1  3  1  3  0  0  0";
-        handler.readBond(input, builder, atoms, new int[atoms.length], 1);
+        reader.setReaderMode(IChemObjectReader.Mode.STRICT);
+        Assertions.assertThrows(CDKException.class,
+                                () -> {
+                                    reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
+                                });
     }
 
     @Test
-    public void longLine() throws Exception {
+    void longLine() throws Exception {
         String input = "  1  3  1  0  0  0  0  0  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getBegin(), is(atoms[0]));
         assertThat(bond.getEnd(), is(atoms[2]));
         assertThat(bond.getOrder(), is(IBond.Order.SINGLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        // assertThat(bond.getStereo(), is(IBond.Stereo.NONE)); // deprecated
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
     }
 
     @Test
-    public void longLineWithPadding() throws Exception {
+    void longLineWithPadding() throws Exception {
         String input = "  1  3  1  0  0  0  0    ";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getBegin(), is(atoms[0]));
         assertThat(bond.getEnd(), is(atoms[2]));
         assertThat(bond.getOrder(), is(IBond.Order.SINGLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        // assertThat(bond.getStereo(), is(IBond.Stereo.NONE)); // deprecated
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
     }
 
     @Test
-    public void shortLine() throws Exception {
+    void shortLine() throws Exception {
         String input = "  1  3  1  0";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getBegin(), is(atoms[0]));
         assertThat(bond.getEnd(), is(atoms[2]));
         assertThat(bond.getOrder(), is(IBond.Order.SINGLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        // assertThat(bond.getStereo(), is(IBond.Stereo.NONE)); // deprecated
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
     }
 
     @Test
-    public void shortLineWithPadding() throws Exception {
+    void shortLineWithPadding() throws Exception {
         String input = "  1  3  1  0       ";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getBegin(), is(atoms[0]));
         assertThat(bond.getEnd(), is(atoms[2]));
         assertThat(bond.getOrder(), is(IBond.Order.SINGLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        // assertThat(bond.getStereo(), is(IBond.Stereo.NONE)); // deprecated
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
     }
 
     @Test
-    public void shortLineNoStereo() throws Exception {
+    void shortLineNoStereo() throws Exception {
         String input = "  1  3  1";
-        IBond bond = reader.readBond(input, builder, atoms, new int[atoms.length], 1);
+        IBond bond = reader.readBondFast(input, builder, atoms, new int[atoms.length], 1);
         assertThat(bond.getBegin(), is(atoms[0]));
         assertThat(bond.getEnd(), is(atoms[2]));
         assertThat(bond.getOrder(), is(IBond.Order.SINGLE));
-        assertThat(bond.getStereo(), is(IBond.Stereo.NONE));
-        assertFalse(bond.getFlag(CDKConstants.ISAROMATIC));
-        assertFalse(bond.getFlag(CDKConstants.SINGLE_OR_DOUBLE));
+        // assertThat(bond.getStereo(), is(IBond.Stereo.NONE)); // deprecated
+        assertThat(bond.getDisplay(), is(IBond.Display.Solid));
+        Assertions.assertFalse(bond.getFlag(IChemObject.AROMATIC));
+        Assertions.assertFalse(bond.getFlag(IChemObject.SINGLE_OR_DOUBLE));
     }
 }

@@ -36,7 +36,6 @@ import org.openscience.cdk.interfaces.IBond.Order;
  * A set of static utility classes for geometric calculations on Atoms.
  *
  * @author Peter Murray-Rust
- * @cdk.githash
  * @cdk.created 2003-06-14
  */
 public class AtomTools {
@@ -66,7 +65,7 @@ public class AtomTools {
             if (atom.getPoint3d() == null) {
                 List<IAtom> connectedAtoms = atomContainer.getConnectedAtomsList(atom);
                 if (connectedAtoms.size() == 1) {
-                    IAtom refAtom = (IAtom) connectedAtoms.get(0);;
+                    IAtom refAtom = connectedAtoms.get(0);
                     if (refAtom.getPoint3d() != null) {
                         refAtoms.addAtom(refAtom);
                         // store atoms with no coords and ref atoms in a
@@ -96,7 +95,7 @@ public class AtomTools {
             }
             Point3d[] newPoints = calculate3DCoordinatesForLigands(atomContainer, refAtom, nwanted, length, angle);
             for (int j = 0; j < nLigands; j++) {
-                IAtom ligand = (IAtom) noCoordLigands.get(j);
+                IAtom ligand = noCoordLigands.get(j);
                 Point3d newPoint = rescaleBondLength(refAtom, ligand, newPoints[j]);
                 ligand.setPoint3d(newPoint);
             }
@@ -175,7 +174,7 @@ public class AtomTools {
      */
     public static Point3d[] calculate3DCoordinatesForLigands(IAtomContainer atomContainer, IAtom refAtom, int nwanted,
             double length, double angle) {
-        Point3d newPoints[] = new Point3d[0];
+        Point3d[] newPoints = new Point3d[0];
         Point3d aPoint = refAtom.getPoint3d();
         // get ligands
         List<IAtom> connectedAtoms = atomContainer.getConnectedAtomsList(refAtom);
@@ -184,8 +183,7 @@ public class AtomTools {
         }
         int nligands = connectedAtoms.size();
         IAtomContainer ligandsWithCoords = atomContainer.getBuilder().newInstance(IAtomContainer.class);
-        for (int i = 0; i < nligands; i++) {
-            IAtom ligand = connectedAtoms.get(i);
+        for (IAtom ligand : connectedAtoms) {
             if (ligand.getPoint3d() != null) {
                 ligandsWithCoords.addAtom(ligand);
             }
@@ -203,8 +201,7 @@ public class AtomTools {
             connectedAtoms = ligandsWithCoords.getConnectedAtomsList(bAtom);
             // does B have a ligand (other than A)
             IAtom jAtom = null;
-            for (int i = 0; i < connectedAtoms.size(); i++) {
-                IAtom connectedAtom = connectedAtoms.get(i);
+            for (IAtom connectedAtom : connectedAtoms) {
                 if (!connectedAtom.equals(refAtom)) {
                     jAtom = connectedAtom;
                     break;
@@ -296,7 +293,7 @@ public class AtomTools {
      */
     public static Point3d[] calculate3DCoordinates1(Point3d aPoint, Point3d bPoint, Point3d cPoint, int nwanted,
             double length, double angle) {
-        Point3d points[] = new Point3d[nwanted];
+        Point3d[] points = new Point3d[nwanted];
         // BA vector
         Vector3d ba = new Vector3d(aPoint);
         ba.sub(bPoint);
@@ -362,7 +359,7 @@ public class AtomTools {
      */
     public static Point3d[] calculate3DCoordinates2(Point3d aPoint, Point3d bPoint, Point3d cPoint, int nwanted,
             double length, double angle) {
-        Point3d newPoints[] = new Point3d[0];
+        Point3d[] newPoints = new Point3d[0];
         double ang2 = angle / 2.0;
 
         Vector3d ba = new Vector3d(aPoint);
@@ -372,7 +369,7 @@ public class AtomTools {
         Vector3d baxca = new Vector3d();
         baxca.cross(ba, ca);
         if (baxca.length() < 0.00000001) {
-            ; // linear
+            // linear
         } else if (nwanted == 1) {
             newPoints = new Point3d[1];
             Vector3d ax = new Vector3d(ba);
@@ -406,31 +403,31 @@ public class AtomTools {
      *    (i) 1 points  required; if A, B, C, D coplanar, no points.
      *       else vector is resultant of BA, CA, DA
      *
-     * @param aPoint to which substituents are added
-     * @param bPoint first ligand of A
-     * @param cPoint second ligand of A
-     * @param dPoint third ligand of A
+     * @param focus to which substituents are added
+     * @param aNbor first ligand of A
+     * @param bNbor second ligand of A
+     * @param cNbor third ligand of A
      * @param length A-X length
      *
      * @return Point3d nwanted points (or null if failed (coplanar))
      */
-    public static Point3d calculate3DCoordinates3(Point3d aPoint, Point3d bPoint, Point3d cPoint, Point3d dPoint,
+    public static Point3d calculate3DCoordinates3(Point3d focus, Point3d aNbor, Point3d bNbor, Point3d cNbor,
             double length) {
-        Vector3d v1 = new Vector3d(aPoint);
-        v1.sub(bPoint);
-        Vector3d v2 = new Vector3d(aPoint);
-        v2.sub(cPoint);
-        Vector3d v3 = new Vector3d(aPoint);
-        v3.sub(dPoint);
-        Vector3d v = new Vector3d(bPoint);
-        v.add(cPoint);
-        v.add(dPoint);
+        Vector3d v1 = new Vector3d(focus);
+        v1.sub(aNbor);
+        Vector3d v2 = new Vector3d(focus);
+        v2.sub(bNbor);
+        Vector3d v3 = new Vector3d(focus);
+        v3.sub(cNbor);
+        Vector3d v = new Vector3d(v1);
+        v.add(v2);
+        v.add(v3);
         if (v.length() < 0.00001) {
             return null;
         }
         v.normalize();
         v.scale(length);
-        Point3d point = new Point3d(aPoint);
+        Point3d point = new Point3d(focus);
         point.add(v);
         return point;
     }

@@ -35,15 +35,13 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
  * implementations may store multiple values. A more portable term is the
  * ring connectivity which is specified as {@code x<NUMBER>}.
  *
- * @cdk.module smarts
  * @cdk.keyword SMARTS
- * @cdk.githash
  */
 @Deprecated
 public final class SmallestRingAtom extends SMARTSAtom {
 
     /** Ring size to check. */
-    private int ringSize;
+    private final int ringSize;
 
     /**
      * Creates a matcher for specified ring size.

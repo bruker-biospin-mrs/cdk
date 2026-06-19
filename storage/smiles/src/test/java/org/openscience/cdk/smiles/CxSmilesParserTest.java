@@ -25,21 +25,38 @@ package org.openscience.cdk.smiles;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.exception.InvalidSmilesException;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IPseudoAtom;
+import org.openscience.cdk.interfaces.IReaction;
+import org.openscience.cdk.interfaces.IStereoElement;
+import org.openscience.cdk.sgroup.Sgroup;
+import org.openscience.cdk.sgroup.SgroupType;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.tools.manipulator.ReactionManipulator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.junit.Assert.assertThat;
 
-public class CxSmilesParserTest {
+class CxSmilesParserTest {
 
     @Test
-    public void atomLabels() {
+    void atomLabels() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|$;;;Het;;;;;A$|", state), is(not(-1)));
         assertThat(state.atomLabels, hasEntry(3, "Het"));
@@ -47,21 +64,21 @@ public class CxSmilesParserTest {
     }
 
     @Test
-    public void escapedAtomLabels() {
+    void escapedAtomLabels() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|$R&#39;;;;;;;$|", state), is(not(-1)));
         assertThat(state.atomLabels, hasEntry(0, "R'"));
     }
 
     @Test
-    public void escapedAtomLabels2() {
+    void escapedAtomLabels2() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|$;;;&#40;C&#40;R41&#41;&#40;R41&#41;&#41;n;;R41;R41;R41;;_AP1;R41;R41;;_AP1$|", state), is(not(-1)));
         assertThat(state.atomLabels, hasEntry(3, "(C(R41)(R41))n"));
     }
 
     @Test
-    public void atomValues() {
+    void atomValues() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|$_AV:;;;5;;;;;8$|", state), is(not(-1)));
         assertThat(state.atomValues, hasEntry(3, "5"));
@@ -69,64 +86,64 @@ public class CxSmilesParserTest {
     }
 
     @Test
-    public void atomLabelsEmpty() {
+    void atomLabelsEmpty() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|$$|", state), is(not(-1)));
         assertThat(state.atomLabels.size(), is(0));
     }
 
     @Test
-    public void atomLabelsTruncated1() {
+    void atomLabelsTruncated1() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|$;;;Het", state), is(-1));
         assertThat(CxSmilesParser.processCx("|$;;;Het;", state), is(-1));
     }
 
     @Test
-    public void atomLabelsTruncated3() {
+    void atomLabelsTruncated3() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|$;;;Het;$", state), is(-1));
     }
 
     @Test
-    public void removeUnderscore() {
+    void removeUnderscore() {
         CxSmilesState state = new CxSmilesState();
         CxSmilesParser.processCx("|$;;;_R1;$|", state);
         assertThat(state.atomLabels.get(3), is("R1"));
     }
 
     @Test
-    public void skipCis() {
+    void skipCis() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|c:1,4,5|", state), is(not(-1)));
     }
 
     @Test
-    public void skipTrans() {
+    void skipTrans() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|t:1,4,5|", state), is(not(-1)));
     }
 
     @Test
-    public void skipCisTrans() {
+    void skipCisTrans() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|c:2,6,8,t:1,4,5|", state), is(not(-1)));
     }
 
     @Test
-    public void skipCisTransUnspec() {
+    void skipCisTransUnspec() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|c:2,6,8,ctu:10,t:1,4,5|", state), is(not(-1)));
     }
 
     @Test
-    public void skipLonePairDefinitions() {
+    void skipLonePairDefinitions() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|c:6,8,t:4,lp:2:2,4:1,11:1,m:1:8.9|", state), is(not(-1)));
     }
 
     @Test
-    public void fragmentGrouping() {
+    void fragmentGrouping() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|f:0.1.2.3,4.5.6|", state), is(not(-1)));
         assertThat(state.fragGroups, is(Arrays.asList(Arrays.asList(0, 1, 2, 3),
@@ -134,7 +151,7 @@ public class CxSmilesParserTest {
     }
 
     @Test
-    public void fragmentGroupingFollowedByAtomLabels() {
+    void fragmentGroupingFollowedByAtomLabels() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|f:0.1.2.3,4.5.6,$;;;R$|", state), is(not(-1)));
         assertThat(state.fragGroups, is(Arrays.asList(Arrays.asList(0, 1, 2, 3),
@@ -143,7 +160,7 @@ public class CxSmilesParserTest {
     }
 
     @Test
-    public void coords() {
+    void coords() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|(.0,-1.5,;-1.3,-.75,;-2.6,-1.5,;-3.9,-.75,;-3.9,.75,)|", state), is(not(-1)));
         assertThat(state.atomCoords.get(0), new AprxDoubleArray(0, -1.5, 0));
@@ -154,59 +171,83 @@ public class CxSmilesParserTest {
     }
 
     @Test
-    public void hydrogenBondingSkipped() {
+    void hydrogenBondingSkipped() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|H:0.1,2.3|", state), is(not(-1)));
     }
 
     @Test
-    public void hydrogenBondingTruncated() {
+    void hydrogenBondingTruncated() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|H:0.1,2.3", state), is(-1));
         assertThat(CxSmilesParser.processCx("|H:0.1,2.", state), is(-1));
     }
 
     @Test
-    public void hydrogenAndCoordinationBondingSkipped() {
+    void hydrogenAndCoordinationBondingSkipped() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|H:0.1,2.3,C:6.7,3.4|", state), is(not(-1)));
     }
 
-    @Test public void positionalVariation() {
+    @Test
+    void positionalVariation() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|m:2:5.6.7.8.9.10,m:4:5.6.7.8.9|", state), is(not(-1)));
         assertThat(state.positionVar, hasEntry(2, Arrays.asList(5,6,7,8,9,10)));
         assertThat(state.positionVar, hasEntry(4, Arrays.asList(5,6,7,8,9)));
     }
 
-    @Test public void positionalVariationImpliedLayer() {
+    @Test
+    void positionalVariationImpliedLayer() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|m:2:5.6.7.8.9.10,4:5.6.7.8.9|", state), is(not(-1)));
         assertThat(state.positionVar, hasEntry(2, Arrays.asList(5,6,7,8,9,10)));
         assertThat(state.positionVar, hasEntry(4, Arrays.asList(5,6,7,8,9)));
     }
 
-    @Test public void multiAtomSRU() {
+    @Test
+    void multiAtomSRU() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|Sg:n:1,2,3:m:ht|", state), is(not(-1)));
-        assertThat(state.sgroups,
-                   hasItem(new CxSmilesState.PolymerSgroup("n", Arrays.asList(1, 2, 3), "m", "ht")));
+        assertThat(state.mysgroups,
+                   hasItem(new CxSmilesState.CxPolymerSgroup("n", Arrays.asList(1, 2, 3), "m", "ht")));
     }
 
-    @Test public void dataSgroups() {
+    @Test
+    void dataSgroups() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|SgD::cdk&#58;ReactionConditions:Heat&#10;Hv|", state), is(not(-1)));
-        assertThat(state.dataSgroups,
-                   hasItem(new CxSmilesState.DataSgroup(new ArrayList<Integer>(), "cdk:ReactionConditions", "Heat\nHv", "", "", "")));
+        assertThat(state.mysgroups,
+                   hasItem(new CxSmilesState.CxDataSgroup(new ArrayList<>(),  CDKConstants.REACTION_CONDITIONS, "Heat\nHv", "", "", "")));
     }
 
-    @Test public void unescape() {
+    @Test
+    void dataSgroupsArrow() {
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx("|SgD::cdk&#58;Arrow:RES|", state), is(not(-1)));
+        assertThat(state.mysgroups,
+                   hasItem(new CxSmilesState.CxDataSgroup(new ArrayList<>(), CDKConstants.REACTION_ARROW, "RES", "", "", "")));
+    }
+
+    // a ':' needs to be escaped in CXSMILES, if we "cdk." as a Data prop, convert this to cdk:
+    // which then also gets picked up and set in the porperties
+    @Test
+    void dataSgroupsArrowWithDot() {
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx("|SgD::cdk.Arrow:RES|", state), is(not(-1)));
+        assertThat(state.mysgroups,
+                   hasItem(new CxSmilesState.CxDataSgroup(new ArrayList<>(), CDKConstants.REACTION_ARROW, "RES", "", "", "")));
+    }
+
+    @Test
+    void unescape() {
         assertThat(CxSmilesParser.unescape("&#36;"), is("$"));
         assertThat(CxSmilesParser.unescape("&#127;"), is("\u007F")); // DEL
         assertThat(CxSmilesParser.unescape("&#9;"), is("\t")); // TAB
     }
 
-    @Test public void relativeStereoMolecule() {
+    @Test
+    void relativeStereoMolecule() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|r|", state), is(not(-1)));
         assertThat(CxSmilesParser.processCx("|r,$_R1$|", state), is(not(-1)));
@@ -214,10 +255,179 @@ public class CxSmilesParserTest {
     }
 
 
-    @Test public void relativeStereoReaction() {
+    @Test
+    void relativeStereoReaction() {
         CxSmilesState state = new CxSmilesState();
         assertThat(CxSmilesParser.processCx("|r:2,4,5|", state), is(not(-1)));
     }
+
+    @Test
+    void sgroupHierarchy() {
+        String cxsmilayers = "|Sg:c:0,1,2,3,4,5,6::,Sg:c:7,8::,Sg:c:9::,Sg:mix:0,1,2,3,4,5,6,7,8,9::,Sg:mix:7,8,9::,SgH:3:4.0,4:2.1|";
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx(cxsmilayers, state), is(not(-1)));
+    }
+
+    @Test
+    void cxSmiLay() {
+        String cxsmilayers = "|Sg:c:0,1,2,3,4,5,6::,Sg:c:7,8::,Sg:c:9::,Sg:mix:0,1,2,3,4,5,6,7,8,9::,Sg:mix:7,8,9::,SgD::RATIO:1/3::,SgD::RATIO:2/3::,SgD::WEIGHT_PERCENT:15::%,SgH:3:4.0,0:7,4:2.1,1:5,2:6|";
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx(cxsmilayers, state), is(not(-1)));
+    }
+
+    @Test
+    void cxSmiLay2() {
+        String cxsmilayers = "|Sg:c:0,1,2::,Sg:c:3::,Sg:mix:0,1,2,3::,SgH:2:1.0|";
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx(cxsmilayers, state), is(not(-1)));
+    }
+
+    @Test
+    void stereogroups_and1() {
+        String cxsmilayers = "|&1:0,1|";
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx(cxsmilayers, state), is(not(-1)));
+        Map<Integer,Integer> expected = new HashMap<>();
+        expected.put(0, IStereoElement.GRP_RAC1);
+        expected.put(1, IStereoElement.GRP_RAC1);
+        assertThat(state.stereoGrps, is(expected));
+    }
+
+    @Test
+    void stereogroups_or1() {
+        String cxsmilayers = "|o1:0,1|";
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx(cxsmilayers, state), is(not(-1)));
+        Map<Integer,Integer> expected = new HashMap<>();
+        expected.put(0, IStereoElement.GRP_REL1);
+        expected.put(1, IStereoElement.GRP_REL1);
+        assertThat(state.stereoGrps, is(expected));
+    }
+
+    @Test
+    void stereogroups_or1_and1() {
+        String cxsmilayers = "|o1:0,1,&5:6|";
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx(cxsmilayers, state), is(not(-1)));
+        Map<Integer,Integer> expected = new HashMap<>();
+        expected.put(0, IStereoElement.GRP_REL1);
+        expected.put(1, IStereoElement.GRP_REL1);
+        expected.put(6, IStereoElement.GRP_RAC5);
+        assertThat(state.stereoGrps, is(expected));
+    }
+
+    @Test
+    void stereogroups_rac() {
+        String cxsmilayers = "|r|";
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx(cxsmilayers, state), is(not(-1)));
+        Assertions.assertTrue(state.racemic);
+    }
+
+    @Test
+    void stereogroups_racFrags() {
+        String cxsmilayers = "|r:1,2|";
+        CxSmilesState state = new CxSmilesState();
+        assertThat(CxSmilesParser.processCx(cxsmilayers, state), is(not(-1)));
+        assertThat(state.racemicFrags, is(Arrays.asList(1, 2)));
+    }
+
+    @Test
+    void loadAnd1() throws InvalidSmilesException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles("CC[C@H](O)[C@H](O)CCCCCC |&1:2|");
+        Iterable<IStereoElement> iter = mol.stereoElements();
+        Assertions.assertTrue(iter.iterator().hasNext());
+        for (IStereoElement<?,?> se : iter) {
+            IAtom focus = (IAtom)se.getFocus();
+            if (focus.getIndex() == 2) {
+                assertThat(se.getGroupInfo(), is(IStereoElement.GRP_RAC1));
+            } else {
+                assertThat(se.getGroupInfo(), is(IStereoElement.GRP_ABS));
+            }
+        }
+    }
+
+    @Test
+    void loadRacGlobal() throws InvalidSmilesException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles("CC[C@H](O)[C@H](O)CCCCCC |r|");
+        Iterable<IStereoElement> iter = mol.stereoElements();
+        Assertions.assertTrue(iter.iterator().hasNext());
+        for (IStereoElement<?,?> se : iter) {
+            assertThat(se.getGroupInfo(), is(IStereoElement.GRP_RAC1));
+        }
+    }
+
+    @Test
+    void loadRacComponents() throws InvalidSmilesException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IReaction rxn = smipar.parseReactionSmiles("c1ccccc1[C@H](O)C>>CC[C@H](O)[C@H](O)CCCCCC |r:1|");
+        for (IAtomContainer mol : rxn.getReactants().atomContainers()) {
+            Iterable<IStereoElement> iter = mol.stereoElements();
+            Assertions.assertTrue(iter.iterator().hasNext());
+            for (IStereoElement<?, ?> se : iter) {
+                assertThat(se.getGroupInfo(), is(IStereoElement.GRP_ABS));
+            }
+        }
+        for (IAtomContainer mol : rxn.getProducts().atomContainers()) {
+            Iterable<IStereoElement> iter = mol.stereoElements();
+            Assertions.assertTrue(iter.iterator().hasNext());
+            for (IStereoElement<?, ?> se : iter) {
+                assertThat(se.getGroupInfo(), is(IStereoElement.GRP_RAC1));
+            }
+        }
+    }
+
+    @Test
+    void loadRacComponentsWithFragGrouping() throws InvalidSmilesException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IReaction rxn = smipar.parseReactionSmiles("c1ccccc1[C@H](O)C>[Na+].[Cl-]>CC[C@H](O)[C@H](O)CCCCCC |f:1.2,r:3|");
+        for (IAtomContainer mol : rxn.getReactants().atomContainers()) {
+            Iterable<IStereoElement> iter = mol.stereoElements();
+            Assertions.assertTrue(iter.iterator().hasNext());
+            for (IStereoElement<?, ?> se : iter) {
+                assertThat(se.getGroupInfo(), is(IStereoElement.GRP_ABS));
+            }
+        }
+        for (IAtomContainer mol : rxn.getProducts().atomContainers()) {
+            Iterable<IStereoElement> iter = mol.stereoElements();
+            Assertions.assertTrue(iter.iterator().hasNext());
+            for (IStereoElement<?, ?> se : iter) {
+                assertThat(se.getGroupInfo(), is(IStereoElement.GRP_RAC1));
+            }
+        }
+    }
+
+    @Test
+    void atomOrderingWithNonContiguousFragments() throws CDKException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IReaction rxn = smipar.parseReactionSmiles("C.*.C>> |$;R1;$,f:0.2|");
+        List<IAtomContainer> mols = ReactionManipulator.getAllAtomContainers(rxn);
+        assertThat(mols.get(0).getAtomCount(), is(2));
+        assertThat(mols.get(1).getAtomCount(), is(1));
+        assertThat(mols.get(1).getAtom(0), is(instanceOf(IPseudoAtom.class)));
+        assertThat(((IPseudoAtom)mols.get(1).getAtom(0)).getLabel(),
+                is("R1"));
+    }
+
+    @Test
+    void variableAttachCrossingBonds() throws CDKException {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol = smipar.parseSmiles("[H]OCCO.C* |lp:1:2,4:2,m:6:3.2,Sg:n:1,2,3,5::ht|");
+        List<Sgroup> sgroups = mol.getProperty(CDKConstants.CTAB_SGROUPS);
+        Sgroup sru = null;
+        for (Sgroup sgroup : sgroups) {
+            if (sgroup.getType() == SgroupType.CtabStructureRepeatUnit) {
+                sru = sgroup;
+                break;
+            }
+        }
+        Assertions.assertNotNull(sru);
+        Assertions.assertEquals(4, sru.getAtoms().size());
+        Assertions.assertEquals(2, sru.getBonds().size());
+    }
+
 
     /**
      * Custom matcher for checking an array of doubles closely matches (epsilon=0.01)
@@ -225,10 +435,10 @@ public class CxSmilesParserTest {
      */
     private static class AprxDoubleArray extends BaseMatcher<double[]> {
 
-        double[] expected;
-        double epsilon = 0.01;
+        final double[] expected;
+        final double epsilon = 0.01;
 
-        public AprxDoubleArray(double ... expected) {
+        AprxDoubleArray(double... expected) {
             this.expected = expected;
         }
 

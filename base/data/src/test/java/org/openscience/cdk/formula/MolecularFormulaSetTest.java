@@ -19,47 +19,46 @@
  */
 package org.openscience.cdk.formula;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.interfaces.AbstractMolecularFormulaSetTest;
+import org.openscience.cdk.test.interfaces.AbstractMolecularFormulaSetTest;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.interfaces.IMolecularFormulaSet;
 
 /**
  * Checks the functionality of the MolecularFormulaSet class.
  *
- * @cdk.module test-data
  *
  * @see MolecularFormulaSet
  */
-public class MolecularFormulaSetTest extends AbstractMolecularFormulaSetTest {
+class MolecularFormulaSetTest extends AbstractMolecularFormulaSetTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setBuilder(DefaultChemObjectBuilder.getInstance());
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testMolecularFormulaSet() {
+    void testMolecularFormulaSet() {
         IMolecularFormulaSet mfS = new MolecularFormulaSet();
-        Assert.assertNotNull(mfS);
+        Assertions.assertNotNull(mfS);
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testMolecularFormulaSet_IMolecularFormula() {
+    void testMolecularFormulaSet_IMolecularFormula() {
         IMolecularFormulaSet mfS = new MolecularFormulaSet(getBuilder().newInstance(IMolecularFormula.class));
-        Assert.assertEquals(1, mfS.size());
+        Assertions.assertEquals(1, mfS.size());
     }
 }

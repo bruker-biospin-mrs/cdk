@@ -26,8 +26,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.openscience.cdk.AtomRef;
+import org.openscience.cdk.BondRef;
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -44,8 +47,6 @@ import org.openscience.cdk.interfaces.IStereoElement;
 import static org.openscience.cdk.isomorphism.matchers.Expr.Type.*;
 
 /**
- * @cdk.module  isomorphism
- * @cdk.githash
  */
 public class QueryAtomContainer extends QueryChemObject implements IQueryAtomContainer {
 
@@ -123,7 +124,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
     /**
      * Internal list of atom parities.
      */
-    protected List<IStereoElement> stereoElements;
+    protected final List<IStereoElement> stereoElements;
 
     /**
      *  Constructs an empty AtomContainer.
@@ -150,14 +151,14 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
         this.lonePairs = new ILonePair[this.lonePairCount];
         this.singleElectrons = new ISingleElectron[this.singleElectronCount];
 
-        stereoElements = new ArrayList<IStereoElement>(atomCount / 2);
+        stereoElements = new ArrayList<>(atomCount / 2);
 
         for (int f = 0; f < container.getAtomCount(); f++) {
-            atoms[f] = container.getAtom(f);
+            atoms[f] = AtomRef.deref(container.getAtom(f));
             container.getAtom(f).addListener(this);
         }
         for (int f = 0; f < this.bondCount; f++) {
-            bonds[f] = container.getBond(f);
+            bonds[f] = BondRef.deref(container.getBond(f));
             container.getBond(f).addListener(this);
         }
         for (int f = 0; f < this.lonePairCount; f++) {
@@ -191,7 +192,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
         bonds = new IBond[bondCount];
         lonePairs = new ILonePair[lpCount];
         singleElectrons = new ISingleElectron[seCount];
-        stereoElements = new ArrayList<IStereoElement>(atomCount / 2);
+        stereoElements = new ArrayList<>(atomCount / 2);
     }
 
     /** {@inheritDoc} */
@@ -221,8 +222,9 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
     @Override
     public void setAtoms(IAtom[] atoms) {
         this.atoms = atoms;
-        for (IAtom atom : atoms) {
-            atom.addListener(this);
+        for (int i = 0; i < atoms.length; i++) {
+            atoms[i] = AtomRef.deref(atoms[i]);
+            atoms[i].addListener(this);
         }
         this.atomCount = atoms.length;
         notifyChanged();
@@ -238,8 +240,9 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
     @Override
     public void setBonds(IBond[] bonds) {
         this.bonds = bonds;
-        for (IBond bond : bonds) {
-            bond.addListener(this);
+        for (int i = 0; i < bonds.length; i++) {
+            bonds[i] = BondRef.deref(bonds[i]);
+            bonds[i].addListener(this);
         }
         this.bondCount = bonds.length;
     }
@@ -251,6 +254,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
     public void setAtom(int idx, IAtom atom) {
         if (idx >= atomCount)
             throw new IndexOutOfBoundsException("No atom at index: " + idx);
+        atom = AtomRef.deref(atom);
         int aidx = indexOf(atom);
         if (aidx >= 0)
             throw new IllegalArgumentException("Atom already in container at index: " + idx);
@@ -346,13 +350,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public Iterable<IAtom> atoms() {
-        return new Iterable<IAtom>() {
-
-            @Override
-            public Iterator<IAtom> iterator() {
-                return new AtomIterator();
-            }
-        };
+        return AtomIterator::new;
     }
 
     /**
@@ -370,6 +368,8 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
 
         @Override
         public IAtom next() {
+            if (pointer >= atomCount)
+                throw new NoSuchElementException();
             return atoms[pointer++];
         }
 
@@ -387,13 +387,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public Iterable<IBond> bonds() {
-        return new Iterable<IBond>() {
-
-            @Override
-            public Iterator<IBond> iterator() {
-                return new BondIterator();
-            }
-        };
+        return BondIterator::new;
     }
 
     /**
@@ -411,6 +405,8 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
 
         @Override
         public IBond next() {
+            if (pointer >= bondCount)
+                throw new NoSuchElementException();
             return bonds[pointer++];
         }
 
@@ -428,13 +424,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public Iterable<ILonePair> lonePairs() {
-        return new Iterable<ILonePair>() {
-
-            @Override
-            public Iterator<ILonePair> iterator() {
-                return new LonePairIterator();
-            }
-        };
+        return LonePairIterator::new;
     }
 
     /**
@@ -452,6 +442,8 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
 
         @Override
         public ILonePair next() {
+            if (pointer >= lonePairCount)
+                throw new NoSuchElementException();
             return lonePairs[pointer++];
         }
 
@@ -469,13 +461,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public Iterable<ISingleElectron> singleElectrons() {
-        return new Iterable<ISingleElectron>() {
-
-            @Override
-            public Iterator<ISingleElectron> iterator() {
-                return new SingleElectronIterator();
-            }
-        };
+        return SingleElectronIterator::new;
     }
 
     /**
@@ -493,6 +479,8 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
 
         @Override
         public ISingleElectron next() {
+            if (pointer >= singleElectronCount)
+                throw new NoSuchElementException();
             return singleElectrons[pointer++];
         }
 
@@ -510,13 +498,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public Iterable<IElectronContainer> electronContainers() {
-        return new Iterable<IElectronContainer>() {
-
-            @Override
-            public Iterator<IElectronContainer> iterator() {
-                return new ElectronContainerIterator();
-            }
-        };
+        return ElectronContainerIterator::new;
     }
 
     /**
@@ -540,7 +522,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
                 return lonePairs[(pointer++) - bondCount];
             else if (pointer < bondCount + lonePairCount + singleElectronCount)
                 return singleElectrons[(pointer++) - bondCount - lonePairCount];
-            return null;
+            throw new NoSuchElementException();
         }
 
         @Override
@@ -572,7 +554,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public IAtom getLastAtom() {
-        return getAtomCount() > 0 ? (IAtom) atoms[getAtomCount() - 1] : null;
+        return getAtomCount() > 0 ? atoms[getAtomCount() - 1] : null;
     }
 
     /**
@@ -761,7 +743,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public List<IAtom> getConnectedAtomsList(IAtom atom) {
-        List<IAtom> atomsList = new ArrayList<IAtom>();
+        List<IAtom> atomsList = new ArrayList<>();
         for (int i = 0; i < bondCount; i++) {
             if (bonds[i].contains(atom)) atomsList.add(bonds[i].getOther(atom));
         }
@@ -776,7 +758,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public List<IBond> getConnectedBondsList(IAtom atom) {
-        List<IBond> bondsList = new ArrayList<IBond>();
+        List<IBond> bondsList = new ArrayList<>();
         for (int i = 0; i < bondCount; i++) {
             if (bonds[i].contains(atom)) bondsList.add(bonds[i]);
         }
@@ -794,7 +776,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public List<ILonePair> getConnectedLonePairsList(IAtom atom) {
-        List<ILonePair> lps = new ArrayList<ILonePair>();
+        List<ILonePair> lps = new ArrayList<>();
         for (int i = 0; i < lonePairCount; i++) {
             if (lonePairs[i].contains(atom)) lps.add(lonePairs[i]);
         }
@@ -809,7 +791,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public List<ISingleElectron> getConnectedSingleElectronsList(IAtom atom) {
-        List<ISingleElectron> lps = new ArrayList<ISingleElectron>();
+        List<ISingleElectron> lps = new ArrayList<>();
         for (int i = 0; i < singleElectronCount; i++) {
             if (singleElectrons[i].contains(atom)) lps.add(singleElectrons[i]);
         }
@@ -824,7 +806,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public List<IElectronContainer> getConnectedElectronContainersList(IAtom atom) {
-        List<IElectronContainer> lps = new ArrayList<IElectronContainer>();
+        List<IElectronContainer> lps = new ArrayList<>();
         for (int i = 0; i < bondCount; i++) {
             if (bonds[i].contains(atom)) lps.add(bonds[i]);
         }
@@ -916,17 +898,9 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
     public double getBondOrderSum(IAtom atom) {
         double count = 0;
         for (int i = 0; i < bondCount; i++) {
-            if (bonds[i].contains(atom)) {
-                if (bonds[i].getOrder() == IBond.Order.SINGLE) {
-                    count += 1;
-                } else if (bonds[i].getOrder() == IBond.Order.DOUBLE) {
-                    count += 2;
-                } else if (bonds[i].getOrder() == IBond.Order.TRIPLE) {
-                    count += 3;
-                } else if (bonds[i].getOrder() == IBond.Order.QUADRUPLE) {
-                    count += 4;
-                }
-            }
+            IBond bond = bonds[i];
+            if (bond.contains(atom) && bond.getOrder() != null)
+                count += bond.getOrder().numeric();
         }
         return count;
     }
@@ -942,8 +916,11 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
     public Order getMaximumBondOrder(IAtom atom) {
         IBond.Order max = IBond.Order.SINGLE;
         for (int i = 0; i < bondCount; i++) {
-            if (bonds[i].contains(atom) && bonds[i].getOrder().ordinal() > max.ordinal()) {
-                max = bonds[i].getOrder();
+            IBond bond = bonds[i];
+            if (bond.contains(atom) &&
+                    bond.getOrder() != null &&
+                    bond.getOrder().numeric() > max.numeric()) {
+                max = bond.getOrder();
             }
         }
         return max;
@@ -960,8 +937,11 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
     public Order getMinimumBondOrder(IAtom atom) {
         IBond.Order min = IBond.Order.QUADRUPLE;
         for (int i = 0; i < bondCount; i++) {
-            if (bonds[i].contains(atom) && bonds[i].getOrder().ordinal() < min.ordinal()) {
-                min = bonds[i].getOrder();
+            IBond bond = bonds[i];
+            if (bond.contains(atom) &&
+                    bond.getOrder() != null &&
+                    bond.getOrder().numeric() < min.numeric()) {
+                min = bond.getOrder();
             }
         }
         return min;
@@ -1009,6 +989,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public void addAtom(IAtom atom) {
+        atom = AtomRef.deref(atom);
         if (contains(atom)) {
             return;
         }
@@ -1029,6 +1010,7 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      */
     @Override
     public void addBond(IBond bond) {
+        bond = BondRef.deref(bond);
         if (bondCount >= bonds.length) growBondArray();
         bonds[bondCount] = bond;
         ++bondCount;
@@ -1385,6 +1367,24 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
          */
     }
 
+    @Override
+    public void addBond(int atom1, int atom2, IBond.Order order, IBond.Display display) {
+        IBond bond = getBuilder().newInstance(IBond.class, getAtom(atom1), getAtom(atom2), order);
+        bond.setDisplay(display);
+
+        if (contains(bond)) {
+            return;
+        }
+
+        if (bondCount >= bonds.length) {
+            growBondArray();
+        }
+        addBond(bond);
+        /*
+         * no notifyChanged() here because addBond(bond) does it already
+         */
+    }
+
     /**
      *  Adds a bond to this container.
      *
@@ -1520,14 +1520,14 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
         clone.removeAllElements();
         // clone all atoms
         for (int f = 0; f < getAtomCount(); f++) {
-            clone.addAtom((IAtom) getAtom(f).clone());
+            clone.addAtom(getAtom(f).clone());
         }
         // clone bonds
         IBond bond;
         IBond newBond;
         for (int i = 0; i < getBondCount(); ++i) {
             bond = getBond(i);
-            newBond = (IBond) bond.clone();
+            newBond = bond.clone();
             newAtoms = new IAtom[bond.getAtomCount()];
             for (int j = 0; j < bond.getAtomCount(); ++j) {
                 newAtoms[j] = clone.getAtom(getAtomNumber(bond.getAtom(j)));
@@ -1646,6 +1646,295 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
     }
 
     /**
+     * Populate a query from a molecule and a provided set of expressions. The
+     * molecule is converted and any features specified in the {@code opts}
+     * will be matched. <br><br>
+     * A good starting point is the following options:
+     * <pre>{@code
+     * // [nH]1ccc(=O)cc1 => n1:c:c:c(=O):c:c:1
+     * QueryAtomContainer.create(qry, mol,
+     *                                ALIPHATIC_ELEMENT,
+     *                                AROMATIC_ELEMENT,
+     *                                SINGLE_OR_AROMATIC,
+     *                                ALIPHATIC_ORDER,
+     *                                STEREOCHEMISTRY);
+     * }</pre>
+     * <br>
+     * Specifying {@link Expr.Type#DEGREE} (or {@link Expr.Type#TOTAL_DEGREE} +
+     * {@link Expr.Type#IMPL_H_COUNT}) means the molecule will not match as a
+     * substructure.
+     * <br>
+     * <pre>{@code
+     * // [nH]1ccc(=O)cc1 => [nD2]1:[cD2]:[cD2]:[cD2](=[OD1]):[cD2]:[cD2]:1
+     * QueryAtomContainer.create(qry, mol,
+     *                                ALIPHATIC_ELEMENT,
+     *                                AROMATIC_ELEMENT,
+     *                                DEGREE,
+     *                                SINGLE_OR_AROMATIC,
+     *                                ALIPHATIC_ORDER);
+     * }</pre>
+     * <br>
+     * The {@link Expr.Type#RING_BOND_COUNT} property is useful for locking in
+     * ring systems. Specifying the ring bond count on benzene means it will
+     * not match larger ring systems (e.g. naphthalenee) but can still be
+     * substituted.
+     * <br>
+     * <pre>{@code
+     * // [nH]1ccc(=O)cc1 =>
+     * //   [nx2+0]1:[cx2+0]:[cx2+0]:[cx2+0](=[O&x0+0]):[cx2+0]:[cx2+0]:1
+     * // IMPORTANT! use Cycles.markRingAtomsAndBonds(mol) to set ring status
+     * QueryAtomContainer.create(qry, mol,
+     *                                ALIPHATIC_ELEMENT,
+     *                                AROMATIC_ELEMENT,
+     *                                FORMAL_CHARGE,
+     *                                ISOTOPE,
+     *                                RING_BOND_COUNT,
+     *                                SINGLE_OR_AROMATIC,
+     *                                ALIPHATIC_ORDER);
+     * }</pre>
+     * <br>
+     * Note that {@link Expr.Type#FORMAL_CHARGE},
+     * {@link Expr.Type#IMPL_H_COUNT}, and {@link Expr.Type#ISOTOPE} are ignored
+     * if null. Explicitly setting these to zero (only required for Isotope from
+     * SMILES) forces their inclusion.
+     * <br>
+     * <pre>{@code
+     * // [nH]1ccc(=O)cc1 =>
+     * //   [0n+0]1:[0c+0]:[0c+0]:[0c+0](=[O+0]):[0c+0]:[0c+0]:1
+     * QueryAtomContainer.create(qry, mol,
+     *                                ALIPHATIC_ELEMENT,
+     *                                AROMATIC_ELEMENT,
+     *                                FORMAL_CHARGE,
+     *                                ISOTOPE,
+     *                                RING_BOND_COUNT,
+     *                                SINGLE_OR_AROMATIC,
+     *                                ALIPHATIC_ORDER);
+     * }</pre>
+     *
+     * Please note not all {@link Expr.Type}s are currently supported, if you
+     * require a specific type that you think is useful please open an issue.
+     *
+     * @param dst the output destination
+     * @param src the input molecule
+     * @param opts set of the expr types to match
+     */
+    public static void create(IAtomContainer dst,
+                              IAtomContainer src,
+                              Expr.Type... opts) {
+        Set<Expr.Type> optset = EnumSet.noneOf(Expr.Type.class);
+        optset.addAll(Arrays.asList(opts));
+
+        Map<IChemObject, IChemObject>    mapping = new HashMap<>();
+        Map<IChemObject, IStereoElement> stereos = new HashMap<>();
+
+        for (IStereoElement se : src.stereoElements())
+            stereos.put(se.getFocus(), se);
+        List<IStereoElement> qstereo = new ArrayList<>();
+
+        for (IAtom atom : src.atoms()) {
+            Expr expr;
+            if (atom instanceof IQueryAtom) {
+                expr = ((QueryAtom)AtomRef.deref(atom)).getExpression();
+
+                IStereoElement se = stereos.get(atom);
+                if (se != null) qstereo.add(se);
+
+                expr = strip(expr, optset);
+            } else {
+                expr = new Expr();
+
+                // isotope first
+                if (optset.contains(ISOTOPE) && atom.getMassNumber() != null)
+                    expr.and(new Expr(ISOTOPE, atom.getMassNumber()));
+
+                if (atom.getAtomicNumber() != null &&
+                    atom.getAtomicNumber() != 0) {
+                    if (atom.isAromatic()) {
+                        if (optset.contains(AROMATIC_ELEMENT)) {
+                            expr.and(new Expr(AROMATIC_ELEMENT,
+                                              atom.getAtomicNumber()));
+                        } else {
+                            if (optset.contains(IS_AROMATIC)) {
+                                if (optset.contains(ELEMENT))
+                                    expr.and(new Expr(AROMATIC_ELEMENT,
+                                                      atom.getAtomicNumber()));
+                                else
+                                    expr.and(new Expr(Expr.Type.IS_AROMATIC));
+                            } else if (optset.contains(ELEMENT)) {
+                                expr.and(new Expr(ELEMENT,
+                                                  atom.getAtomicNumber()));
+                            }
+                        }
+                    } else {
+                        if (optset.contains(ALIPHATIC_ELEMENT)) {
+                            expr.and(new Expr(ALIPHATIC_ELEMENT,
+                                              atom.getAtomicNumber()));
+                        } else {
+                            if (optset.contains(IS_ALIPHATIC)) {
+                                if (optset.contains(ELEMENT))
+                                    expr.and(new Expr(ALIPHATIC_ELEMENT,
+                                                      atom.getAtomicNumber()));
+                                else
+                                    expr.and(new Expr(Expr.Type.IS_ALIPHATIC));
+                            } else if (optset.contains(ELEMENT)) {
+                                expr.and(new Expr(ELEMENT,
+                                                  atom.getAtomicNumber()));
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            if (optset.contains(DEGREE))
+                expr.and(new Expr(DEGREE,
+                        atom.getBondCount()));
+            if (optset.contains(TOTAL_DEGREE))
+                expr.and(new Expr(TOTAL_DEGREE,
+                        atom.getBondCount() + atom.getImplicitHydrogenCount()));
+            if (optset.contains(IS_IN_RING) && atom.isInRing())
+                expr.and(new Expr(IS_IN_RING));
+            if (optset.contains(IS_IN_CHAIN) && !atom.isInRing())
+                expr.and(new Expr(IS_IN_CHAIN));
+            if (optset.contains(IMPL_H_COUNT) && atom.getImplicitHydrogenCount() != null)
+                expr.and(new Expr(IMPL_H_COUNT, atom.getImplicitHydrogenCount()));
+            if (optset.contains(TOTAL_H_COUNT)) {
+                Integer totH = atom.getTotalHydrogenCount();
+                if (totH != null)
+                    expr.and(new Expr(TOTAL_H_COUNT, totH));
+            }
+            if (optset.contains(RING_BOND_COUNT)) {
+                int rbonds = 0;
+                for (IBond bond : src.getConnectedBondsList(atom))
+                    if (bond.isInRing())
+                        rbonds++;
+
+                expr.and(new Expr(RING_BOND_COUNT, rbonds));
+            }
+            if (optset.contains(FORMAL_CHARGE) && atom.getFormalCharge() != null)
+                expr.and(new Expr(FORMAL_CHARGE, atom.getFormalCharge()));
+
+            IStereoElement se = stereos.get(atom);
+            if (se != null &&
+                    se.getConfigClass() == IStereoElement.TH &&
+                    optset.contains(STEREOCHEMISTRY)) {
+                expr.and(new Expr(STEREOCHEMISTRY, se.getConfigOrder()));
+                qstereo.add(se);
+            }
+
+
+            QueryAtom qatom = new QueryAtom(expr);
+            qatom.setIsInRing(atom.isInRing());
+
+            // backward compatibility for naughty methods that are expecting
+            // these to be set for a query!
+            if (optset.contains(Expr.Type.ELEMENT) ||
+                optset.contains(Expr.Type.AROMATIC_ELEMENT) ||
+                optset.contains(Expr.Type.ALIPHATIC_ELEMENT)) {
+                qatom.setSymbol(atom.getSymbol());
+                qatom.setAtomicNumber(atom.getAtomicNumber());
+            }
+            if (optset.contains(Expr.Type.AROMATIC_ELEMENT) ||
+                optset.contains(Expr.Type.IS_AROMATIC))
+                qatom.setIsAromatic(atom.isAromatic());
+
+            mapping.put(atom, qatom);
+            dst.addAtom(qatom);
+        }
+
+        for (IBond bond : src.bonds()) {
+            Expr expr;
+            if (bond instanceof IQueryBond) {
+                expr = ((QueryBond)BondRef.deref(bond)).getExpression();
+                IStereoElement se = stereos.get(bond);
+                if (se != null) qstereo.add(se);
+            } else {
+                expr = new Expr();
+
+                if (bond.isAromatic() &&
+                        (optset.contains(SINGLE_OR_AROMATIC) ||
+                                optset.contains(DOUBLE_OR_AROMATIC) ||
+                                optset.contains(IS_AROMATIC)))
+                    expr.and(new Expr(Expr.Type.IS_AROMATIC));
+                else if ((optset.contains(SINGLE_OR_AROMATIC) ||
+                        optset.contains(DOUBLE_OR_AROMATIC) ||
+                        optset.contains(ALIPHATIC_ORDER)) && !bond.isAromatic())
+                    expr.and(new Expr(ALIPHATIC_ORDER, bond.getOrder().numeric()));
+                else if (bond.isAromatic() && optset.contains(IS_ALIPHATIC))
+                    expr.and(new Expr(IS_ALIPHATIC));
+                else if (optset.contains(ORDER))
+                    expr.and(new Expr(ORDER, bond.getOrder().numeric()));
+
+
+                if (optset.contains(IS_IN_RING) && bond.isInRing())
+                    expr.and(new Expr(IS_IN_RING));
+                else if (optset.contains(IS_IN_CHAIN) && !bond.isInRing())
+                    expr.and(new Expr(IS_IN_CHAIN));
+
+                IStereoElement se = stereos.get(bond);
+                if (se != null &&
+                        optset.contains(STEREOCHEMISTRY)) {
+                    expr.and(new Expr(STEREOCHEMISTRY, se.getConfigOrder()));
+                    qstereo.add(se);
+                }
+            }
+
+            QueryBond qbond = new QueryBond((IAtom) mapping.get(bond.getBegin()),
+                                            (IAtom) mapping.get(bond.getEnd()),
+                                            expr);
+            qbond.setIsInRing(bond.isInRing());
+            // backward compatibility for naughty methods that are expecting
+            // these to be set for a query!
+            if (optset.contains(Expr.Type.ALIPHATIC_ORDER) ||
+                optset.contains(Expr.Type.ORDER))
+                qbond.setOrder(bond.getOrder());
+            if (optset.contains(Expr.Type.SINGLE_OR_AROMATIC) ||
+                optset.contains(Expr.Type.DOUBLE_OR_AROMATIC) ||
+                optset.contains(Expr.Type.IS_AROMATIC))
+                qbond.setIsAromatic(bond.isAromatic());
+
+            mapping.put(bond, qbond);
+            dst.addBond(qbond);
+        }
+
+        for (IStereoElement se : qstereo)
+            dst.addStereoElement(se.map(mapping));
+    }
+
+    private static Expr strip(Expr expr, Set<Expr.Type> optset) {
+        switch (expr.type()) {
+            case AND:
+                return strip(expr.left(), optset).and(strip(expr.right(), optset));
+            case OR:
+                return strip(expr.left(), optset).or(strip(expr.right(), optset));
+            case NOT:
+                return strip(expr.left(), optset).negate();
+            case AROMATIC_ELEMENT:
+                if (optset.contains(expr.type()) ||
+                    (optset.contains(ELEMENT) && optset.contains(IS_AROMATIC)))
+                    return expr;
+                if (optset.contains(ELEMENT))
+                    return new Expr(ELEMENT, expr.value());
+                if (optset.contains(IS_AROMATIC))
+                    return new Expr(IS_AROMATIC);
+                return new Expr(TRUE);
+            case ALIPHATIC_ELEMENT:
+                if (optset.contains(expr.type()) ||
+                    (optset.contains(ELEMENT) && optset.contains(IS_ALIPHATIC)))
+                    return expr;
+                if (optset.contains(ELEMENT))
+                    return new Expr(ELEMENT, expr.value());
+                if (optset.contains(IS_ALIPHATIC))
+                    return new Expr(IS_ALIPHATIC);
+                return new Expr(TRUE);
+            default:
+                if (optset.contains(expr.type()))
+                    return expr;
+                return new Expr(TRUE);
+        }
+    }
+
+    /**
      * Create a query from a molecule and a provided set of expressions. The
      * molecule is converted and any features specified in the {@code opts}
      * will be matched. <br><br>
@@ -1710,162 +1999,14 @@ public class QueryAtomContainer extends QueryChemObject implements IQueryAtomCon
      * Please note not all {@link Expr.Type}s are currently supported, if you
      * require a specific type that you think is useful please open an issue.
      *
-     * @param mol the molecule
+     * @param src the input molecule
      * @param opts set of the expr types to match
-     * @return the query molecule
+     * @return the query container
      */
-    public static QueryAtomContainer create(IAtomContainer mol, Expr.Type... opts) {
-        Set<Expr.Type> optset = EnumSet.noneOf(Expr.Type.class);
-        optset.addAll(Arrays.asList(opts));
-
-        QueryAtomContainer               query   = new QueryAtomContainer(mol.getBuilder());
-        Map<IChemObject, IChemObject>    mapping = new HashMap<>();
-        Map<IChemObject, IStereoElement> stereos = new HashMap<>();
-
-        for (IStereoElement se : mol.stereoElements())
-            stereos.put(se.getFocus(), se);
-        List<IStereoElement> qstereo = new ArrayList<>();
-
-        for (IAtom atom : mol.atoms()) {
-            Expr expr = new Expr();
-
-            // isotope first
-            if (optset.contains(ISOTOPE) && atom.getMassNumber() != null)
-                expr.and(new Expr(ISOTOPE, atom.getMassNumber()));
-
-            if (atom.getAtomicNumber() != null &&
-                atom.getAtomicNumber() != 0) {
-                if (atom.isAromatic()) {
-                    if (optset.contains(AROMATIC_ELEMENT)) {
-                        expr.and(new Expr(AROMATIC_ELEMENT,
-                                          atom.getAtomicNumber()));
-                    } else {
-                        if (optset.contains(IS_AROMATIC)) {
-                            if (optset.contains(ELEMENT))
-                                expr.and(new Expr(AROMATIC_ELEMENT,
-                                                  atom.getAtomicNumber()));
-                            else
-                                expr.and(new Expr(Expr.Type.IS_AROMATIC));
-                        } else if (optset.contains(ELEMENT)) {
-                            expr.and(new Expr(ELEMENT,
-                                              atom.getAtomicNumber()));
-                        }
-                    }
-                } else {
-                    if (optset.contains(ALIPHATIC_ELEMENT)) {
-                        expr.and(new Expr(ALIPHATIC_ELEMENT,
-                                          atom.getAtomicNumber()));
-                    }  else {
-                        if (optset.contains(IS_ALIPHATIC)) {
-                            if (optset.contains(ELEMENT))
-                                expr.and(new Expr(ALIPHATIC_ELEMENT,
-                                                  atom.getAtomicNumber()));
-                            else
-                                expr.and(new Expr(Expr.Type.IS_ALIPHATIC));
-                        } else if (optset.contains(ELEMENT)) {
-                            expr.and(new Expr(ELEMENT,
-                                              atom.getAtomicNumber()));
-                        }
-                    }
-                }
-            }
-
-            if (optset.contains(DEGREE))
-                expr.and(new Expr(DEGREE,
-                                  atom.getBondCount()));
-            if (optset.contains(TOTAL_DEGREE))
-                expr.and(new Expr(DEGREE,
-                                  atom.getBondCount() + atom.getImplicitHydrogenCount()));
-            if (optset.contains(IS_IN_RING) ||
-                optset.contains(IS_IN_CHAIN))
-                expr.and(new Expr(atom.isInRing() ? IS_IN_RING : IS_IN_CHAIN));
-            if (optset.contains(IMPL_H_COUNT))
-                expr.and(new Expr(IMPL_H_COUNT));
-            if (optset.contains(RING_BOND_COUNT)) {
-                int rbonds = 0;
-                for (IBond bond : mol.getConnectedBondsList(atom))
-                    if (bond.isInRing())
-                        rbonds++;
-
-                expr.and(new Expr(RING_BOND_COUNT, rbonds));
-            }
-            if (optset.contains(FORMAL_CHARGE) && atom.getFormalCharge() != null)
-                expr.and(new Expr(FORMAL_CHARGE, atom.getFormalCharge()));
-
-            IStereoElement se = stereos.get(atom);
-            if (se != null &&
-                se.getConfigClass() == IStereoElement.TH &&
-                optset.contains(STEREOCHEMISTRY)) {
-                expr.and(new Expr(STEREOCHEMISTRY, se.getConfigOrder()));
-                qstereo.add(se);
-            }
-
-            QueryAtom qatom = new QueryAtom(expr);
-
-            // backward compatibility for naughty methods that are expecting
-            // these to be set for a query!
-            if (optset.contains(Expr.Type.ELEMENT) ||
-                optset.contains(Expr.Type.AROMATIC_ELEMENT) ||
-                optset.contains(Expr.Type.ALIPHATIC_ELEMENT))
-                qatom.setSymbol(atom.getSymbol());
-            if (optset.contains(Expr.Type.AROMATIC_ELEMENT) ||
-                optset.contains(Expr.Type.IS_AROMATIC))
-                qatom.setIsAromatic(atom.isAromatic());
-
-            mapping.put(atom, qatom);
-            query.addAtom(qatom);
-        }
-
-        for (IBond bond : mol.bonds()) {
-            Expr expr = new Expr();
-
-            if (bond.isAromatic() &&
-                (optset.contains(SINGLE_OR_AROMATIC) ||
-                 optset.contains(DOUBLE_OR_AROMATIC) ||
-                 optset.contains(IS_AROMATIC)))
-                expr.and(new Expr(Expr.Type.IS_AROMATIC));
-            else if ((optset.contains(SINGLE_OR_AROMATIC) ||
-                      optset.contains(DOUBLE_OR_AROMATIC) ||
-                      optset.contains(ALIPHATIC_ORDER)) && !bond.isAromatic())
-                expr.and(new Expr(ALIPHATIC_ORDER, bond.getOrder().numeric()));
-            else if (bond.isAromatic() && optset.contains(IS_ALIPHATIC))
-                expr.and(new Expr(IS_ALIPHATIC));
-            else if (optset.contains(ORDER))
-                expr.and(new Expr(ORDER, bond.getOrder().numeric()));
-
-
-            if (optset.contains(IS_IN_RING) && bond.isInRing())
-                expr.and(new Expr(IS_IN_RING));
-            else if (optset.contains(IS_IN_CHAIN) && !bond.isInRing())
-                expr.and(new Expr(IS_IN_CHAIN));
-
-            IStereoElement se = stereos.get(bond);
-            if (se != null &&
-                optset.contains(STEREOCHEMISTRY)) {
-                expr.and(new Expr(STEREOCHEMISTRY, se.getConfigOrder()));
-                qstereo.add(se);
-            }
-
-            QueryBond qbond = new QueryBond((IAtom) mapping.get(bond.getBegin()),
-                                            (IAtom) mapping.get(bond.getEnd()),
-                                            expr);
-            // backward compatibility for naughty methods that are expecting
-            // these to be set for a query!
-            if (optset.contains(Expr.Type.ALIPHATIC_ORDER) ||
-                optset.contains(Expr.Type.ORDER))
-                qbond.setOrder(bond.getOrder());
-            if (optset.contains(Expr.Type.SINGLE_OR_AROMATIC) ||
-                optset.contains(Expr.Type.DOUBLE_OR_AROMATIC) ||
-                optset.contains(Expr.Type.IS_AROMATIC))
-                qbond.setIsAromatic(bond.isAromatic());
-
-            mapping.put(bond, qbond);
-            query.addBond(qbond);
-        }
-
-        for (IStereoElement se : qstereo)
-            query.addStereoElement(se.map(mapping));
-
-        return query;
+    public static QueryAtomContainer create(IAtomContainer src,
+                                            Expr.Type... opts) {
+        QueryAtomContainer dst = new QueryAtomContainer(src.getBuilder());
+        create(dst, src, opts);
+        return dst;
     }
 }

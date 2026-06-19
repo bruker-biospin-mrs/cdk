@@ -18,11 +18,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.atomic;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.result.IntegerResult;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -30,24 +29,23 @@ import org.openscience.cdk.smiles.SmilesParser;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsaratomic
  */
-public class BondsToAtomDescriptorTest extends AtomicDescriptorTest {
+class BondsToAtomDescriptorTest extends AtomicDescriptorTest {
 
-    public BondsToAtomDescriptorTest() {}
+    BondsToAtomDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(BondsToAtomDescriptor.class);
     }
 
     @Test
-    public void testBondsToAtomDescriptor() throws ClassNotFoundException, CDKException, java.lang.Exception {
+    void testBondsToAtomDescriptor() throws java.lang.Exception {
         BondsToAtomDescriptor descriptor = new BondsToAtomDescriptor();
-        Object[] params = {Integer.valueOf(5)};
+        Object[] params = {5};
         descriptor.setParameters(params);
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CCCCCC"); //
-        Assert.assertEquals(5, ((IntegerResult) descriptor.calculate(mol.getAtom(0), mol).getValue()).intValue());
+        Assertions.assertEquals(5, ((IntegerResult) descriptor.calculate(mol.getAtom(0), mol).getValue()).intValue());
     }
 }

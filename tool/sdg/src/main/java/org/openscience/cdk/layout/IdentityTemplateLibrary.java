@@ -24,8 +24,6 @@
 
 package org.openscience.cdk.layout;
 
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -46,10 +44,13 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -85,9 +86,7 @@ import static java.util.Map.Entry;
  */
 final class IdentityTemplateLibrary {
 
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(".##", DecimalFormatSymbols.getInstance(Locale.ROOT));
-
-    private final Multimap<String, Point2d[]> templateMap = LinkedListMultimap.create();
+    private final Map<String, List<Point2d[]>> templateMap = new LinkedHashMap<>();
 
     private final SmilesGenerator smigen = SmilesGenerator.unique();
     private final ILoggingTool    logger = LoggingToolFactory.createLoggingTool(getClass());
@@ -102,7 +101,10 @@ final class IdentityTemplateLibrary {
      * @return this library with the other one added in (allows chaining)
      */
     public IdentityTemplateLibrary add(IdentityTemplateLibrary library) {
-        this.templateMap.putAll(library.templateMap);
+        for (Map.Entry<String,List<Point2d[]>> e : library.templateMap.entrySet()) {
+            this.templateMap.computeIfAbsent(e.getKey(), k -> new LinkedList<>())
+                            .addAll(e.getValue());
+        }
         return this;
     }
 
@@ -178,7 +180,7 @@ final class IdentityTemplateLibrary {
             }
         }
 
-        String smi = null;
+        String smi;
         try {
             smi = smigen.create(mol, ordering);
         } finally {
@@ -217,7 +219,7 @@ final class IdentityTemplateLibrary {
                 points[ordering[i]] = point;
             }
 
-            return new SimpleEntry<String, Point2d[]>(smiles, points);
+            return new SimpleEntry<>(smiles, points);
 
         } catch (CDKException e) {
             logger.warn("Could not encode container as SMILES: ", e);
@@ -237,7 +239,7 @@ final class IdentityTemplateLibrary {
     static Entry<String, Point2d[]> decodeEntry(String str) {
         final int i = str.indexOf(' ');
         if (i < 0) throw new IllegalArgumentException();
-        return new SimpleEntry<String, Point2d[]>(str.substring(0, i), decodeCoordinates(str.substring(i + 1)));
+        return new SimpleEntry<>(str.substring(0, i), decodeCoordinates(str.substring(i + 1)));
     }
 
     /**
@@ -257,8 +259,14 @@ final class IdentityTemplateLibrary {
                 String coord = strs[i];
                 int first  = coord.indexOf(',');
                 int second = coord.indexOf(',', first+1);
-                points[i] = new Point2d(Double.parseDouble(coord.substring(0, first)),
-                                        Double.parseDouble(coord.substring(first + 1, second)));
+                String x = coord.substring(0, first);
+                String y = coord.substring(first + 1, second);
+                if (x.isEmpty())
+                    x = "0";
+                if (y.isEmpty())
+                    y = "0";
+                points[i] = new Point2d(Double.parseDouble(x),
+                                        Double.parseDouble(y));
             }
             return points;
         } else {
@@ -293,13 +301,14 @@ final class IdentityTemplateLibrary {
      * @return extended SMILES format coordinates
      */
     static String encodeCoordinates(Point2d[] points) {
+        DecimalFormat fmt = new DecimalFormat(".##", DecimalFormatSymbols.getInstance(Locale.ROOT));
         StringBuilder sb = new StringBuilder();
         sb.append("|(");
         for (Point2d point : points) {
             if (sb.length() > 2) sb.append(";");
-            sb.append(DECIMAL_FORMAT.format(point.x));
+            sb.append(fmt.format(point.x));
             sb.append(',');
-            sb.append(DECIMAL_FORMAT.format(point.y));
+            sb.append(fmt.format(point.y));
             sb.append(',');
         }
         sb.append(")|");
@@ -312,7 +321,7 @@ final class IdentityTemplateLibrary {
      * @param entry entry
      */
     void add(Entry<String, Point2d[]> entry) {
-        if (entry != null) templateMap.put(entry.getKey(), entry.getValue());
+        if (entry != null) templateMap.computeIfAbsent(entry.getKey(), k -> new LinkedList<>()).add(entry.getValue());
     }
 
     /**
@@ -341,7 +350,9 @@ final class IdentityTemplateLibrary {
             String smiles = cansmi(container, ordering);
 
             // find the points in the library
-            for (Point2d[] points : templateMap.get(smiles)) {
+            List<Point2d[]> templatePoints = templateMap.get(smiles);
+            if (templatePoints != null && !templatePoints.isEmpty()) {
+                Point2d[] points = templatePoints.get(0);
                 // set the points
                 for (int i = 0; i < n; i++) {
                     container.getAtom(i).setPoint2d(new Point2d(points[ordering[i]]));
@@ -369,7 +380,7 @@ final class IdentityTemplateLibrary {
             int[] ordering = new int[n];
             String smiles = cansmi(mol, ordering);
 
-            final Collection<Point2d[]> coordSet = templateMap.get(smiles);
+            final Collection<Point2d[]> coordSet = templateMap.getOrDefault(smiles, Collections.emptyList());
             final List<Point2d[]> orderedCoordSet = new ArrayList<>(coordSet.size());
 
             for (Point2d[] coords : coordSet) {
@@ -423,7 +434,7 @@ final class IdentityTemplateLibrary {
      */
     static IdentityTemplateLibrary load(InputStream in) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        String line = null;
+        String line;
         IdentityTemplateLibrary library = new IdentityTemplateLibrary();
         while ((line = br.readLine()) != null) {
             // skip comments
@@ -455,14 +466,14 @@ final class IdentityTemplateLibrary {
      */
     void update(IChemObjectBuilder bldr) {
         final SmilesParser smipar = new SmilesParser(bldr);
-        Multimap<String,Point2d[]> updated = LinkedListMultimap.create();
-        for (Map.Entry<String,Collection<Point2d[]>> e : templateMap.asMap().entrySet()) {
+        Map<String,LinkedList<Point2d[]>> updated = new HashMap<>();
+        for (Map.Entry<String,List<Point2d[]>> e : templateMap.entrySet()) {
             try {
                 IAtomContainer mol = smipar.parseSmiles(e.getKey());
                 int[] order = new int[mol.getAtomCount()];
                 String key = cansmi(mol, order);
                 for (Point2d[] coords : e.getValue()) {
-                    updated.put(key, reorderCoords(coords, order));
+                    updated.computeIfAbsent(key, k -> new LinkedList<>()).add(reorderCoords(coords, order));
                 }
             } catch (CDKException ex) {
                 System.err.println(e.getKey() + " could not be updated: " + ex.getMessage());
@@ -482,9 +493,11 @@ final class IdentityTemplateLibrary {
 
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
 
-        for (Entry<String, Point2d[]> e : templateMap.entries()) {
-            bw.write(encodeEntry(e));
-            bw.write('\n');
+        for (Entry<String, List<Point2d[]>> e : templateMap.entrySet()) {
+            for (Point2d[] val : e.getValue()) {
+                bw.write(encodeEntry(new AbstractMap.SimpleImmutableEntry<>(e.getKey(), val)));
+                bw.write('\n');
+            }
         }
 
         bw.close();

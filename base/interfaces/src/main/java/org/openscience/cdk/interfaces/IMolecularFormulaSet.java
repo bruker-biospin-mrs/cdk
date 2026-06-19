@@ -29,11 +29,9 @@ package org.openscience.cdk.interfaces;
  *   <li><code><sup>12</sup>C<sub>5</sub><sup>13</sup>CH<sub>6</sub></code></li>
  * </ul>
  *
- * @cdk.module  interfaces
  * @author      miguelrojasch
  * @cdk.created 2007-11-20
  * @cdk.keyword molecular formula
- * @cdk.githash
  */
 public interface IMolecularFormulaSet extends ICDKObject {
 
@@ -42,14 +40,14 @@ public interface IMolecularFormulaSet extends ICDKObject {
      *
      * @param  formulaSet  The MolecularFormulaSet
      */
-    public void add(IMolecularFormulaSet formulaSet);
+    void add(IMolecularFormulaSet formulaSet);
 
     /**
      * Adds an IMolecularFormula to this chemObject.
      *
      * @param  formula  The IMolecularFormula to be added to this chemObject
      */
-    public void addMolecularFormula(IMolecularFormula formula);
+    void addMolecularFormula(IMolecularFormula formula);
 
     /**
      *
@@ -59,7 +57,7 @@ public interface IMolecularFormulaSet extends ICDKObject {
      * @param  position  The position of the MolecularFormula to be returned.
      * @return           The IMolecularFormula at position <code>number</code> .
      */
-    public IMolecularFormula getMolecularFormula(int position);
+    IMolecularFormula getMolecularFormula(int position);
 
     /**
      * Returns the array of IMolecularFormula of this chemObject.
@@ -68,14 +66,14 @@ public interface IMolecularFormulaSet extends ICDKObject {
      *
      * @see #addMolecularFormula(IMolecularFormula)
      */
-    public Iterable<IMolecularFormula> molecularFormulas();
+    Iterable<IMolecularFormula> molecularFormulas();
 
     /**
      * Returns the number of MolecularFormulas in this IMolecularFormulaSet.
      *
      * @return     The number of MolecularFormulas in this IMolecularFormulaSet
      */
-    public int size();
+    int size();
 
     /**
      *  True, if the IMolecularFormulaSet contains the given IMolecularFormula object.
@@ -83,32 +81,32 @@ public interface IMolecularFormulaSet extends ICDKObject {
      * @param  formula  The IMolecularFormula this IMolecularFormulaSet is searched for
      * @return          True, if the IMolecularFormulaSet contains the given formula object
      */
-    public boolean contains(IMolecularFormula formula);
+    boolean contains(IMolecularFormula formula);
 
     /**
      *  Removes the given IMolecularFormula from the IMolecularFormulaSet.
      *
      * @param formula  The IMolecularFormula to be removed
      */
-    public void removeMolecularFormula(IMolecularFormula formula);
+    void removeMolecularFormula(IMolecularFormula formula);
 
     /**
      *  Removes the IMolecularFormula at the given position from the IMolecularFormulaSet.
      *
      * @param  position  The position of the IMolecularFormula to be removed.
      */
-    public void removeMolecularFormula(int position);
+    void removeMolecularFormula(int position);
 
     /**
      * Removes all IMolecularFormula of this IMolecularFormulaSet.
      */
-    public void removeAllMolecularFormulas();
+    void removeAllMolecularFormulas();
 
     /**
      * Clones this IMolecularFormulaSet object and its content.
      *
      * @return    The cloned object
      */
-    public Object clone() throws CloneNotSupportedException;
+    Object clone() throws CloneNotSupportedException;
 
 }

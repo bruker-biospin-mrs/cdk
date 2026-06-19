@@ -40,8 +40,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * @author Miguel Rojas
  * @cdk.created 2006-04-11
- * @cdk.module qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:partialTChargeMMFF94
  * @cdk.bug 1628461
  * @see MMFF94PartialCharges
@@ -52,9 +50,9 @@ public class PartialTChargeMMFF94Descriptor extends AbstractAtomicDescriptor {
 
     private static final String CHARGE_CACHE = "mmff.qsar.charge.cache";
 
-    private Mmff mmff;
+    private final Mmff mmff;
 
-    private ILoggingTool logger = LoggingToolFactory.createLoggingTool(getClass());
+    private final ILoggingTool logger = LoggingToolFactory.createLoggingTool(getClass());
 
     /**
      * Constructor for the PartialTChargeMMFF94Descriptor object

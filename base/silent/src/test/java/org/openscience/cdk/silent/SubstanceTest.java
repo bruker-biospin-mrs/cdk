@@ -18,28 +18,19 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractSubstanceTest;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractSubstanceTest;
 
 /**
  * Checks the functionality of the {@link Substance} class.
  *
- * @cdk.module test-silent
  */
-public class SubstanceTest extends AbstractSubstanceTest {
+class SubstanceTest extends AbstractSubstanceTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new Substance();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(Substance::new);
     }
 
     // Overwrite default methods: no notifications are expected!

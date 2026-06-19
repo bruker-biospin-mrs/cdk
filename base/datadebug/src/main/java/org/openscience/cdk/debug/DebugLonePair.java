@@ -33,14 +33,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author     egonw
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugLonePair extends LonePair implements ILonePair {
 
     private static final long serialVersionUID = 5683399496728893341L;
 
-    ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugLonePair.class);
+    final ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugLonePair.class);
 
     public DebugLonePair() {
         super();

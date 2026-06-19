@@ -66,8 +66,6 @@ import java.util.Arrays;
  * shortest distances between atoms is required.
  *
  * @author John May
- * @cdk.module core
- * @cdk.githash
  * @see AllPairsShortestPaths
  * @see org.openscience.cdk.graph.matrix.TopologicalMatrix
  */
@@ -255,8 +253,10 @@ public final class ShortestPaths {
                             routeTo[w] = new Branch(routeTo[w], new SequentialRoute(routeTo[v], w));
                             nPathsTo[w] += nPathsTo[v];
                         } else {
+                            // we now have a 'preceding' path to the start
                             precedes[w] = true;
                             routeTo[w] = new SequentialRoute(routeTo[v], w);
+                            nPathsTo[w] = nPathsTo[v];
                         }
                     }
                 }
@@ -618,7 +618,7 @@ public final class ShortestPaths {
     }
 
     /** Helper class for building a route to the shortest path */
-    private static interface Route {
+    private interface Route {
 
         /**
          * Recursively convert this route to all possible shortest paths. The length

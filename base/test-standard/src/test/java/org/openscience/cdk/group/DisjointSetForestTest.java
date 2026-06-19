@@ -24,50 +24,48 @@ package org.openscience.cdk.group;
 
 import java.util.Arrays;
 
-import org.junit.Assert;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author maclean
- * @cdk.module test-standard
  */
-public class DisjointSetForestTest {
+class DisjointSetForestTest {
 
     @Test
-    public void constructorTest() {
+    void constructorTest() {
         int n = 10;
         DisjointSetForest forest = new DisjointSetForest(n);
-        Assert.assertNotNull(forest);
+        Assertions.assertNotNull(forest);
     }
 
     @Test
-    public void getTest() {
+    void getTest() {
         int n = 10;
         DisjointSetForest forest = new DisjointSetForest(n);
         for (int i = 0; i < n; i++) {
-            Assert.assertEquals(-1, forest.get(i));
+            Assertions.assertEquals(-1, forest.get(i));
         }
     }
 
     @Test
-    public void getRootTest() {
+    void getRootTest() {
         int n = 2;
         DisjointSetForest forest = new DisjointSetForest(n);
         forest.makeUnion(0, 1);
-        Assert.assertEquals(0, forest.getRoot(1));
+        Assertions.assertEquals(0, forest.getRoot(1));
     }
 
     @Test
-    public void makeUnionTest() {
+    void makeUnionTest() {
         int n = 2;
         DisjointSetForest forest = new DisjointSetForest(n);
         forest.makeUnion(0, 1);
-        Assert.assertEquals(0, forest.get(1));
+        Assertions.assertEquals(0, forest.get(1));
     }
 
     @Test
-    public void getSetsTest() {
+    void getSetsTest() {
         int n = 6;
         DisjointSetForest forest = new DisjointSetForest(n);
         forest.makeUnion(0, 1);
@@ -76,7 +74,7 @@ public class DisjointSetForestTest {
         int[][] sets = forest.getSets();
         int[][] expected = new int[][]{{0, 1}, {2, 3}, {4, 5}};
         String failMessage = "Expected " + Arrays.deepToString(expected) + " but was " + Arrays.deepToString(sets);
-        Assert.assertTrue(failMessage, Arrays.deepEquals(expected, sets));
+        Assertions.assertTrue(Arrays.deepEquals(expected, sets), failMessage);
     }
 
 }

@@ -25,27 +25,25 @@ package org.openscience.cdk.graph;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
+import org.junit.jupiter.api.Assertions;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author John May
- * @cdk.module test-core
  */
-public class GraphUtilTest {
+class GraphUtilTest {
 
     @Test
-    public void sequentialSubgraph() throws Exception {
+    void sequentialSubgraph() throws Exception {
         int[][] graph = new int[][]{{1, 2}, {0, 2}, {0, 1}};
         int[][] subgraph = GraphUtil.subgraph(graph, new int[]{0, 1});
         int[][] expected = new int[][]{{1}, {0}};
@@ -53,7 +51,7 @@ public class GraphUtilTest {
     }
 
     @Test
-    public void intermittentSubgraph() throws Exception {
+    void intermittentSubgraph() throws Exception {
         int[][] graph = new int[][]{{1, 2}, {0, 2, 3}, {0, 1}, {1}};
         int[][] subgraph = GraphUtil.subgraph(graph, new int[]{0, 2, 3});
         int[][] expected = new int[][]{{1}, {0}, {}};
@@ -61,7 +59,7 @@ public class GraphUtilTest {
     }
 
     @Test
-    public void resizeSubgraph() throws Exception {
+    void resizeSubgraph() throws Exception {
         int[][] graph = new int[][]{{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}, {0}, {0}, {0}, {0}, {0}, {0}, {0},
                 {0}, {0}, {0}, {0}, {0}, {0}, {0}};
         int[][] subgraph = GraphUtil.subgraph(graph, new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
@@ -70,36 +68,42 @@ public class GraphUtilTest {
     }
 
     @Test
-    public void testCycle() {
+    void testCycle() {
         // 0-1-2-3-4-5-
         int[][] g = new int[][]{{1, 5}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4, 0}};
         int[] path = GraphUtil.cycle(g, new int[]{0, 3, 4, 1, 5, 2});
         assertThat(path, is(new int[]{0, 1, 2, 3, 4, 5, 0}));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAcyclic() {
-        // 0-1-2-3-4-5 (5 and 0 not connected)
-        int[][] g = new int[][]{{1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4}};
-        GraphUtil.cycle(g, new int[]{0, 3, 4, 1, 5, 2});
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAcyclic2() {
-        // 0-1-2 3-4-5- (2 and 3) not connected
-        int[][] g = new int[][]{{1}, {0, 2}, {1}, {4}, {3, 5}, {4}};
-        GraphUtil.cycle(g, new int[]{0, 3, 4, 1, 5, 2});
+    @Test
+    void testAcyclic() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    // 0-1-2-3-4-5 (5 and 0 not connected)
+                                    int[][] g = new int[][]{{1}, {0, 2}, {1, 3}, {2, 4}, {3, 5}, {4}};
+                                    GraphUtil.cycle(g, new int[]{0, 3, 4, 1, 5, 2});
+                                });
     }
 
     @Test
-    public void firstMarked() {
+    void testAcyclic2() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    // 0-1-2 3-4-5- (2 and 3) not connected
+                                    int[][] g = new int[][]{{1}, {0, 2}, {1}, {4}, {3, 5}, {4}};
+                                    GraphUtil.cycle(g, new int[]{0, 3, 4, 1, 5, 2});
+                                });
+    }
+
+    @Test
+    void firstMarked() {
         assertThat(GraphUtil.firstMarked(new int[]{0, 1, 2}, new boolean[]{false, true, false}), is(1));
         assertThat(GraphUtil.firstMarked(new int[]{2, 1, 0}, new boolean[]{true, false, false}), is(0));
         assertThat(GraphUtil.firstMarked(new int[]{2, 1, 0}, new boolean[]{false, false, false}), is(-1));
     }
 
     @Test
-    public void testToAdjList() throws Exception {
+    void testToAdjList() throws Exception {
 
         IAtomContainer container = simple();
 
@@ -113,16 +117,16 @@ public class GraphUtilTest {
         assertThat("vertex 'd' should have degree 1", adjacent[3].length, is(1));
         assertThat("vertex 'e' should have degree 1", adjacent[4].length, is(1));
 
-        assertArrayEquals(new int[]{1}, adjacent[0]);
-        assertArrayEquals(new int[]{0, 2, 4}, adjacent[1]);
-        assertArrayEquals(new int[]{1, 3}, adjacent[2]);
-        assertArrayEquals(new int[]{2}, adjacent[3]);
-        assertArrayEquals(new int[]{1}, adjacent[4]);
+        Assertions.assertArrayEquals(new int[]{1}, adjacent[0]);
+        Assertions.assertArrayEquals(new int[]{0, 2, 4}, adjacent[1]);
+        Assertions.assertArrayEquals(new int[]{1, 3}, adjacent[2]);
+        Assertions.assertArrayEquals(new int[]{2}, adjacent[3]);
+        Assertions.assertArrayEquals(new int[]{1}, adjacent[4]);
 
     }
 
     @Test
-    public void testToAdjList_withMap() throws Exception {
+    void testToAdjList_withMap() throws Exception {
 
         IAtomContainer container = simple();
 
@@ -137,23 +141,23 @@ public class GraphUtilTest {
         assertThat("vertex 'd' should have degree 1", adjacent[3].length, is(1));
         assertThat("vertex 'e' should have degree 1", adjacent[4].length, is(1));
 
-        assertArrayEquals(new int[]{1}, adjacent[0]);
-        assertArrayEquals(new int[]{0, 2, 4}, adjacent[1]);
-        assertArrayEquals(new int[]{1, 3}, adjacent[2]);
-        assertArrayEquals(new int[]{2}, adjacent[3]);
-        assertArrayEquals(new int[]{1}, adjacent[4]);
+        Assertions.assertArrayEquals(new int[]{1}, adjacent[0]);
+        Assertions.assertArrayEquals(new int[]{0, 2, 4}, adjacent[1]);
+        Assertions.assertArrayEquals(new int[]{1, 3}, adjacent[2]);
+        Assertions.assertArrayEquals(new int[]{2}, adjacent[3]);
+        Assertions.assertArrayEquals(new int[]{1}, adjacent[4]);
 
-        assertNotNull(map.get(0, 1));
-        assertNotNull(map.get(1, 2));
+        Assertions.assertNotNull(map.get(0, 1));
+        Assertions.assertNotNull(map.get(1, 2));
 
         assertThat(map.get(0, 1), is(sameInstance(map.get(1, 0))));
         assertThat(map.get(1, 2), is(sameInstance(map.get(2, 1))));
     }
 
     @Test
-    public void testToAdjList_resize() throws Exception {
+    void testToAdjList_resize() throws Exception {
 
-        IAtomContainer container = new AtomContainer();
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom a = new Atom("C");
         container.addAtom(a);
@@ -182,26 +186,30 @@ public class GraphUtilTest {
 
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testToAdjList_missingAtom() throws Exception {
+    @Test
+    void testToAdjList_missingAtom() throws Exception {
 
         IAtomContainer container = simple();
 
         container.removeAtomOnly(4); // remove 'e'
-
-        GraphUtil.toAdjList(container);
-
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    GraphUtil.toAdjList(container);
+                                });
     }
 
     @Test
-    public void testToAdjList_Empty() throws Exception {
-        int[][] adjacent = GraphUtil.toAdjList(new AtomContainer());
+    void testToAdjList_Empty() throws Exception {
+        int[][] adjacent = GraphUtil.toAdjList(DefaultChemObjectBuilder.getInstance().newAtomContainer());
         assertThat(adjacent.length, is(0));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testToAdjList_Null() throws Exception {
-        GraphUtil.toAdjList(null);
+    @Test
+    void testToAdjList_Null() throws Exception {
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {
+                                    GraphUtil.toAdjList(null);
+                                });
     }
 
     /**
@@ -210,7 +218,7 @@ public class GraphUtilTest {
      */
     private static IAtomContainer simple() {
 
-        IAtomContainer container = new AtomContainer();
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         IAtom a = new Atom("C");
         IAtom b = new Atom("C");

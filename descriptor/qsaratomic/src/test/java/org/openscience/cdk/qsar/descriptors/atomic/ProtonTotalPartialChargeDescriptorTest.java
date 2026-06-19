@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.atomic;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.IAtomicDescriptor;
@@ -28,19 +28,18 @@ import org.openscience.cdk.qsar.result.DoubleArrayResult;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
- * @cdk.module test-qsaratomic
  */
-public class ProtonTotalPartialChargeDescriptorTest extends AtomicDescriptorTest {
+class ProtonTotalPartialChargeDescriptorTest extends AtomicDescriptorTest {
 
-    public ProtonTotalPartialChargeDescriptorTest() {}
+    ProtonTotalPartialChargeDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(ProtonTotalPartialChargeDescriptor.class);
     }
 
     @Test
-    public void testProtonTotalPartialChargeDescriptorTest() throws java.lang.Exception {
+    void testProtonTotalPartialChargeDescriptorTest() throws java.lang.Exception {
         double[] testResult = {0.07915, 0.05783, 0.05783, 0.05783};
         IAtomicDescriptor descriptor = new ProtonTotalPartialChargeDescriptor();
 
@@ -49,7 +48,7 @@ public class ProtonTotalPartialChargeDescriptorTest extends AtomicDescriptorTest
         addExplicitHydrogens(mol);
         DoubleArrayResult retval = (DoubleArrayResult) descriptor.calculate(mol.getAtom(0), mol).getValue();
         for (int i = 0; i < testResult.length; ++i) {
-            Assert.assertEquals(testResult[i], retval.get(i), 0.00001);
+            Assertions.assertEquals(testResult[i], retval.get(i), 0.00001);
         }
     }
 
@@ -57,14 +56,14 @@ public class ProtonTotalPartialChargeDescriptorTest extends AtomicDescriptorTest
      * @cdk.bug 2039739
      */
     @Test
-    public void testNaNs() throws java.lang.Exception {
+    void testNaNs() throws java.lang.Exception {
         IAtomicDescriptor descriptor = new ProtonTotalPartialChargeDescriptor();
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("C(F)(F)");
         addExplicitHydrogens(mol);
         DoubleArrayResult retval = (DoubleArrayResult) descriptor.calculate(mol.getAtom(0), mol).getValue();
-        Assert.assertEquals(5, retval.length());
-        Assert.assertTrue(Double.isNaN(retval.get(3)));
-        Assert.assertTrue(Double.isNaN(retval.get(4)));
+        Assertions.assertEquals(5, retval.length());
+        Assertions.assertTrue(Double.isNaN(retval.get(3)));
+        Assertions.assertTrue(Double.isNaN(retval.get(4)));
     }
 }

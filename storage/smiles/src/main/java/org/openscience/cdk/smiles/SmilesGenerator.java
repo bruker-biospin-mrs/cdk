@@ -26,17 +26,24 @@ import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.ConnectedComponents;
+import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.graph.GraphUtil;
 import org.openscience.cdk.graph.invariant.Canon;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.ISingleElectron;
+import org.openscience.cdk.interfaces.IStereoElement;
+import org.openscience.cdk.isomorphism.matchers.IRGroup;
+import org.openscience.cdk.isomorphism.matchers.IRGroupList;
+import org.openscience.cdk.isomorphism.matchers.IRGroupQuery;
 import org.openscience.cdk.sgroup.Sgroup;
 import org.openscience.cdk.sgroup.SgroupKey;
+import org.openscience.cdk.smiles.CxSmilesState.CxPolymerSgroup;
 import org.openscience.cdk.tools.manipulator.ReactionManipulator;
 import uk.ac.ebi.beam.Functions;
 import uk.ac.ebi.beam.Graph;
@@ -192,8 +199,6 @@ import java.util.Set;
  * @author         Stefan Kuhn (chiral smiles)
  * @author         John May
  * @cdk.keyword    SMILES, generator
- * @cdk.module     smiles
- * @cdk.githash
  *
  * @see org.openscience.cdk.aromaticity.Aromaticity
  * @see org.openscience.cdk.stereo.Stereocenters
@@ -500,6 +505,38 @@ public final class SmilesGenerator {
     }
 
     /**
+     * Create a SMILES for an {@link IRGroupQuery} - this really only makes
+     * sense when emitting CXSMILES so make sure that flavour is enabled.
+     *
+     * @param rGrpQry the rGroup query
+     * @return the SMILES string for the RGroup query
+     * @throws CDKException could not create the SMILES for the RGroup query
+     */
+    public String create(IRGroupQuery rGrpQry) throws CDKException {
+
+        String main = create(rGrpQry.getRootStructure());
+
+        // create the RG layer which we will insert into the base CXSMILES
+        // RG:_R1={def1},{def2},_R2={def3},{def4}
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Integer, IRGroupList> e : rGrpQry.getRGroupDefinitions().entrySet()) {
+            sb.append("_R").append(e.getKey()).append('=');
+            for (IRGroup rGroup : e.getValue().getRGroups()) {
+                sb.append('{').append(create(rGroup.getGroup())).append("},");
+            }
+        }
+        if (sb.charAt(sb.length()-1) == ',')
+            sb.setLength(sb.length()-1);
+
+        if (main == null) throw new IllegalStateException("No root structure defined/found");
+        int idx = main.indexOf('|');
+        if (idx < 0) return main; // no CXSMILES so we just return the root structure
+        idx = main.indexOf('|', idx+1);
+
+        return main.substring(0, idx) + ",RG:" + sb + main.substring(idx);
+    }
+
+    /**
      * Create a SMILES for a reaction.
      *
      * @param reaction CDK reaction instance
@@ -546,7 +583,11 @@ public final class SmilesGenerator {
         IAtomContainer    agentPart    = reaction.getBuilder().newInstance(IAtomContainer.class);
         IAtomContainer    productPart  = reaction.getBuilder().newInstance(IAtomContainer.class);
 
-        List<Sgroup> sgroups = new ArrayList<>();
+        List<Sgroup> sgroups = reaction.getProperty(CDKConstants.CTAB_SGROUPS);
+        if (sgroups == null)
+            sgroups = new ArrayList<>();
+        else
+            sgroups = new ArrayList<>(sgroups); // ensure not immutable
 
         for (IAtomContainer reactant : reactants.atomContainers()) {
             reactantPart.add(reactant);
@@ -572,9 +613,10 @@ public final class SmilesGenerator {
         }
 
         // we need to make sure we generate without the CXSMILES layers
-        String smi = create(reactantPart, flavour &~ SmiFlavor.CxSmilesWithCoords, reactantOrder) + ">" +
-                     create(agentPart, flavour &~ SmiFlavor.CxSmilesWithCoords, agentOrder) + ">" +
-                     create(productPart, flavour &~ SmiFlavor.CxSmilesWithCoords, productOrder);
+        int adjustedFlav = flavour & ~(SmiFlavor.CxSmilesWithCoords & ~SmiFlavor.StereoTetrahedral);
+        String smi = create(reactantPart, adjustedFlav, reactantOrder) + ">" +
+                     create(agentPart, adjustedFlav, agentOrder) + ">" +
+                     create(productPart, adjustedFlav, productOrder);
 
         // copy ordering back to unified array and adjust values
         int agentBeg = reactantOrder.length;
@@ -713,7 +755,7 @@ public final class SmilesGenerator {
             return (long[]) method.invoke(c, container);
         } catch (ClassNotFoundException e) {
             throw new CDKException("The cdk-inchi module is not loaded,"
-                    + " this module is need when generating absolute SMILES.");
+                    + " this module is needed when generating absolute SMILES.");
         } catch (NoSuchMethodException e) {
             throw new CDKException("The method " + mname + " was not found", e);
         } catch (InvocationTargetException e) {
@@ -826,9 +868,11 @@ public final class SmilesGenerator {
         }
 
         List<Sgroup> sgroups = mol.getProperty(CDKConstants.CTAB_SGROUPS);
+        Map<Sgroup, CxSmilesState.CxSgroup> mapping = new HashMap<>();
         if (sgroups != null) {
-            state.sgroups = new ArrayList<>();
+            state.mysgroups = new ArrayList<>();
             state.positionVar = new HashMap<>();
+            state.ligandOrdering = new HashMap<>();
             for (Sgroup sgroup : sgroups) {
                 switch (sgroup.getType()) {
                     // polymer SRU
@@ -844,17 +888,22 @@ public final class SmilesGenerator {
                     case CtabGeneric:
                     case CtabComponent:
                     case CtabGraft:
+                        if ((flavour&SmiFlavor.CxPolymer) == 0)
+                            break;
                         String supscript = sgroup.getValue(SgroupKey.CtabConnectivity);
-                        state.sgroups.add(new CxSmilesState.PolymerSgroup(getSgroupPolymerKey(sgroup),
-                                                                          toAtomIdxs(sgroup.getAtoms(), atomidx),
-                                                                          sgroup.getSubscript(),
-                                                                          supscript));
+                        CxPolymerSgroup cxSgrp;
+                        cxSgrp= new CxPolymerSgroup(getSgroupPolymerKey(sgroup),
+                                                                 toAtomIdxs(sgroup.getAtoms(), atomidx),
+                                                                 sgroup.getSubscript(),
+                                                                 supscript);
+                        state.mysgroups.add(cxSgrp);
+                        mapping.put(sgroup, cxSgrp);
                         break;
 
-                    case ExtMulticenter:
-                        IAtom beg = null;
-                        List<IAtom> ends = new ArrayList<>();
-                        Set<IBond> bonds = sgroup.getBonds();
+                    case ExtMulticenter: {
+                        IAtom       beg   = null;
+                        List<IAtom> ends  = new ArrayList<>();
+                        Set<IBond>  bonds = sgroup.getBonds();
                         if (bonds.size() != 1)
                             throw new IllegalArgumentException("Multicenter Sgroup in inconsistent state!");
                         IBond bond = bonds.iterator().next();
@@ -869,17 +918,93 @@ public final class SmilesGenerator {
                         }
                         state.positionVar.put(ensureNotNull(atomidx.get(beg)),
                                               toAtomIdxs(ends, atomidx));
+                        }
+                        break;
+                    case ExtAttachOrdering: {
+                        IAtom       beg;
+                        List<IAtom> ends  = new ArrayList<>();
+                        if (sgroup.getAtoms().size() != 1)
+                            throw new IllegalArgumentException("Attach ordering in inconsistent state!");
+                        beg = sgroup.getAtoms().iterator().next();
+                        for (IBond bond : sgroup.getBonds()) {
+                            IAtom nbr = bond.getOther(beg);
+                            if (nbr == null)
+                                throw new IllegalArgumentException("Attach ordering in inconsistent state!");
+                            ends.add(nbr);
+                        }
+                        // from MDL RGroup files we may have ligand ordered
+                        // even when we don't need it - skip these
+                        if (ends.size() > 1)
+                            state.ligandOrdering.put(ensureNotNull(atomidx.get(beg)),
+                                                     toAtomIdxs(ends, atomidx));
+                        }
                         break;
                     case CtabAbbreviation:
                     case CtabMultipleGroup:
                         // display shortcuts are not output
                         break;
                     case CtabData:
+                        if ((flavour&SmiFlavor.CxDataSgroups) == 0)
+                            break;
                         // can be generated but currently ignored
+                        CxSmilesState.CxDataSgroup cxDataSgrp;
+                        cxDataSgrp= new CxSmilesState.CxDataSgroup(toAtomIdxs(sgroup.getAtoms(), atomidx),
+                                sgroup.getValue(SgroupKey.DataFieldName),
+                                sgroup.getValue(SgroupKey.Data),
+                                                                   null,
+                                sgroup.getValue(SgroupKey.DataFieldUnits),
+                                                                  null);
+                        state.mysgroups.add(cxDataSgrp);
+                        mapping.put(sgroup, cxDataSgrp);
                         break;
                     default:
                         throw new UnsupportedOperationException("Unsupported Sgroup Polymer");
+                }
+            }
 
+            for (Sgroup sgroup : sgroups) {
+                CxSmilesState.CxSgroup cxChild = mapping.get(sgroup);
+                if (cxChild == null)
+                    continue;
+                for (Sgroup parent : sgroup.getParents()) {
+                    CxSmilesState.CxSgroup cxParent = mapping.get(parent);
+                    if (cxParent == null)
+                        continue;
+                    cxParent.children.add(cxChild);
+                }
+            }
+        }
+
+        // enhanced stereo
+        {
+            Map<Integer,Integer> stereoGrps = new HashMap<>();
+            boolean init  = false;
+            boolean mixed = false;
+            int     grp  = 0;
+            for (IStereoElement<?, ?> se : mol.stereoElements()) {
+                if (se.getConfigClass() == IStereoElement.TH) {
+                    IAtom focus = (IAtom) se.getFocus();
+                    stereoGrps.put(atomidx.get(focus), se.getGroupInfo());
+                    if (!init) {
+                        grp = se.getGroupInfo();
+                        init = true;
+                    } else if (grp != se.getGroupInfo()) {
+                        mixed = true;
+                    }
+                }
+            }
+
+            if (init) {
+                if (mixed) {
+                    state.stereoGrps = stereoGrps;
+                } else {
+                    int grpType = grp & IStereoElement.GRP_TYPE_MASK;
+                    if (grpType == IStereoElement.GRP_RAC)
+                        state.racemic = true;
+                    else if (grpType == IStereoElement.GRP_ABS)
+                        state.racemic = false;
+                    else
+                        state.stereoGrps = stereoGrps;
                 }
             }
         }
@@ -932,7 +1057,7 @@ public final class SmilesGenerator {
                                                      final int flavor) {
         return new Comparator<IAtom>() {
 
-            final int unbox(Integer x) {
+            int unbox(Integer x) {
                 return x != null ? x : 0;
             }
 

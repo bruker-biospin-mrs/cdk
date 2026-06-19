@@ -24,26 +24,23 @@
  */
 package org.openscience.cdk.fingerprint;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
-import org.openscience.cdk.smarts.SmartsPattern;
-import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @cdk.module test-fingerprint
  */
 public class EStateFingerprinterTest extends AbstractFixedLengthFingerprinterTest {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(EStateFingerprinterTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(EStateFingerprinterTest.class);
 
     @Override
     public IFingerprinter getBitFingerprinter() {
@@ -51,24 +48,24 @@ public class EStateFingerprinterTest extends AbstractFixedLengthFingerprinterTes
     }
 
     @Test
-    public void testGetSize() throws Exception {
+    void testGetSize() throws Exception {
         IFingerprinter printer = new EStateFingerprinter();
-        Assert.assertEquals(79, printer.getSize());
+        Assertions.assertEquals(79, printer.getSize());
     }
 
     @Test
-    public void testFingerprint() throws Exception {
+    void testFingerprint() throws Exception {
         SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IFingerprinter printer = new EStateFingerprinter();
 
         IBitFingerprint bs1 = printer.getBitFingerprint(parser.parseSmiles("C=C-C#N"));
         IBitFingerprint bs2 = printer.getBitFingerprint(parser.parseSmiles("C=CCC(O)CC#N"));
 
-        Assert.assertEquals(79, printer.getSize());
+        Assertions.assertEquals(79, printer.getSize());
 
-        Assert.assertTrue(bs1.get(7));
-        Assert.assertTrue(bs1.get(10));
-        Assert.assertTrue(FingerprinterTool.isSubset(bs2.asBitSet(), bs1.asBitSet()));
+        Assertions.assertTrue(bs1.get(7));
+        Assertions.assertTrue(bs1.get(10));
+        Assertions.assertTrue(FingerprinterTool.isSubset(bs2.asBitSet(), bs1.asBitSet()));
     }
 
     /**
@@ -78,7 +75,7 @@ public class EStateFingerprinterTest extends AbstractFixedLengthFingerprinterTes
      */
     @Test
     @Override
-    public void testBug706786() throws Exception {
+    void testBug706786() throws Exception {
 
         IAtomContainer superStructure = bug706786_1();
         IAtomContainer subStructure = bug706786_2();

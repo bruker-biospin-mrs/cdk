@@ -34,8 +34,6 @@ import javax.vecmath.Vector3d;
 /**
  * A set of static methods for working with crystal coordinates.
  *
- * @cdk.module standard
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
  *
@@ -173,9 +171,8 @@ public class CrystalGeometryTools {
      * @return  boolean indication that 3D coordinates are available
      */
     public static boolean hasCrystalCoordinates(IAtomContainer container) {
-        Iterator<IAtom> atoms = container.atoms().iterator();
-        while (atoms.hasNext()) {
-            if (atoms.next().getFractionalPoint3d() == null) {
+        for (IAtom iAtom : container.atoms()) {
+            if (iAtom.getFractionalPoint3d() == null) {
                 return false;
             }
         }

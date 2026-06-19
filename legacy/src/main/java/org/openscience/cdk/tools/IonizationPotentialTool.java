@@ -21,7 +21,6 @@ package org.openscience.cdk.tools;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.charges.Electronegativity;
 import org.openscience.cdk.charges.GasteigerMarsiliPartialCharges;
 import org.openscience.cdk.charges.GasteigerPEPEPartialCharges;
@@ -34,6 +33,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.reaction.IReactionProcess;
@@ -50,7 +50,6 @@ import org.openscience.cdk.tools.manipulator.RingSetManipulator;
  *
  * @author       Miguel Rojas
  * @cdk.created  2008-5-15
- * @cdk.module   ionpot
  *
  * @see org.openscience.cdk.qsar.descriptors.atomic.IPAtomicLearningDescriptor
  * @see org.openscience.cdk.qsar.descriptors.molecular.IPMolecularLearningDescriptor
@@ -165,7 +164,7 @@ public class IonizationPotentialTool {
      * @return           True, if it belongs
      */
     private static boolean familyBond(IAtomContainer container, IBond bond) {
-        List<String> normalAt = new ArrayList<String>();
+        List<String> normalAt = new ArrayList<>();
         normalAt.add("C");
         normalAt.add("H");
 
@@ -246,7 +245,8 @@ public class IonizationPotentialTool {
         try {
             pepe.assignGasteigerPiPartialCharges(container, true);
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(IonizationPotentialTool.class)
+                              .warn("Unexpected Error:", e);
         }
         results[3] = atom.getCharge();
         // effectiveAtomicPolarizability
@@ -267,7 +267,7 @@ public class IonizationPotentialTool {
             RingSetManipulator.markAromaticRings(ringSet);
             int aromRingCount = 0;
             for (IAtomContainer ring : ringSet.atomContainers()) {
-                if (ring.getFlag(CDKConstants.ISAROMATIC)) aromRingCount++;
+                if (ring.getFlag(IChemObject.AROMATIC)) aromRingCount++;
             }
             results[7] = aromRingCount;
         } else {
@@ -316,7 +316,8 @@ public class IonizationPotentialTool {
             try {
                 peoe.assignGasteigerMarsiliSigmaPartialCharges(container, true);
             } catch (Exception e) {
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(IonizationPotentialTool.class)
+                                  .warn("Unexpected Error:", e);
             }
             results[2] += atom.getCharge();
             // partialPiCharge
@@ -325,7 +326,8 @@ public class IonizationPotentialTool {
             try {
                 pepe.assignGasteigerPiPartialCharges(container, true);
             } catch (Exception e) {
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(IonizationPotentialTool.class)
+                                  .warn("Unexpected Error:", e);
             }
             results[3] += atom.getCharge();
             // effectiveAtomicPolarizability
@@ -363,7 +365,7 @@ public class IonizationPotentialTool {
      * @return              The result
      */
     private static double getDTHalogenF(double[] resultsH) {
-        double result = 0.0;
+        double result;
         double SE = resultsH[0];
         double PSC = resultsH[2];
         double PIC = resultsH[3];
@@ -388,7 +390,7 @@ public class IonizationPotentialTool {
      * @return              The result
      */
     private static double getDTOxygenF(double[] resultsH) {
-        double result = 0.0;
+        double result;
         double SE = resultsH[0];
         double PE = resultsH[1];
         double PSC = resultsH[2];
@@ -413,7 +415,7 @@ public class IonizationPotentialTool {
      * @return              The result
      */
     private static double getDTNitrogenF(double[] resultsH) {
-        double result = 0.0;
+        double result;
         double SE = resultsH[0];
         double PE = resultsH[1];
         double PSC = resultsH[2];
@@ -436,7 +438,7 @@ public class IonizationPotentialTool {
      * @return              The result
      */
     private static double getDTBondF(double[] resultsH) {
-        double result = 0.0;
+        double result;
         double SE = resultsH[0];
         double PE = resultsH[1];
         double PSC = resultsH[2];
@@ -464,8 +466,8 @@ public class IonizationPotentialTool {
         IAtomContainerSet setOfReactants = container.getBuilder().newInstance(IAtomContainerSet.class);
         setOfReactants.addAtomContainer(container);
 
-        atom.setFlag(CDKConstants.REACTIVE_CENTER, true);
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        atom.setFlag(IChemObject.REACTIVE_CENTER, true);
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.TRUE);
         paramList.add(param);
@@ -473,7 +475,7 @@ public class IonizationPotentialTool {
 
         /* initiate */
         IReactionSet setOfReactions = reactionNBE.initiate(setOfReactants, null);
-        atom.setFlag(CDKConstants.REACTIVE_CENTER, false);
+        atom.setFlag(IChemObject.REACTIVE_CENTER, false);
         if (setOfReactions != null && setOfReactions.getReactionCount() == 1
                 && setOfReactions.getReaction(0).getProducts().getAtomContainerCount() == 1)
             return setOfReactions.getReaction(0).getProducts().getAtomContainer(0);

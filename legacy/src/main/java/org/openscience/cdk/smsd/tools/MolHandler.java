@@ -29,7 +29,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import org.openscience.cdk.AtomContainer;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.geometry.BondTools;
@@ -45,8 +45,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
  * Class that handles molecules for MCS search.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated A more recent version of SMSD is available at <a href="http://github.com/asad/smsd">
  *             http://github.com/asad/smsd</a>
@@ -55,9 +53,9 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 public class MolHandler {
 
     private IAtomContainer             atomContainer  = null;
-    private boolean                    removeHydrogen = false;
+    private boolean                    removeHydrogen;
     private final ILoggingTool         logger         = LoggingToolFactory.createLoggingTool(MolHandler.class);
-    private ICanonicalMoleculeLabeller canonLabeler   = new CanonicalLabellingAdaptor();
+    private final ICanonicalMoleculeLabeller canonLabeler   = new CanonicalLabellingAdaptor();
 
     /**
      * Creates a new instance of MolHandler
@@ -71,11 +69,11 @@ public class MolHandler {
         MDLReader molRead = null;
         this.removeHydrogen = removeHydrogen;
         try {
-            FileInputStream readMolecule = null;
+            FileInputStream readMolecule;
 
             readMolecule = new FileInputStream(molFile);
             molRead = new MDLReader(new InputStreamReader(readMolecule));
-            this.atomContainer = (IAtomContainer) molRead.read(new AtomContainer());
+            this.atomContainer = molRead.read(DefaultChemObjectBuilder.getInstance().newAtomContainer());
             molRead.close();
             readMolecule.close();
             /* Remove Hydrogen by Asad */

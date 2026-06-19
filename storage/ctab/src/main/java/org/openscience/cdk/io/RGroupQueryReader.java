@@ -24,6 +24,7 @@
  */
 package org.openscience.cdk.io;
 
+import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,11 +33,16 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -45,12 +51,20 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.io.formats.RGroupQueryFormat;
+import org.openscience.cdk.isomorphism.matchers.IRGroup;
+import org.openscience.cdk.isomorphism.matchers.IRGroupList;
 import org.openscience.cdk.isomorphism.matchers.IRGroupQuery;
 import org.openscience.cdk.isomorphism.matchers.RGroup;
 import org.openscience.cdk.isomorphism.matchers.RGroupList;
 import org.openscience.cdk.isomorphism.matchers.RGroupQuery;
+import org.openscience.cdk.layout.AtomPlacer;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+
+import javax.vecmath.Point2d;
+import javax.vecmath.Tuple2d;
+import javax.vecmath.Vector2d;
 
 /**
  * A reader for Symyx' Rgroup files (RGFiles).
@@ -62,8 +76,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * <a href="http://www.symyx.com/downloads/public/ctfile/ctfile.pdf">
  * "CTFile Formats"</a> , Chapter 5.
  *
- * @cdk.module io
- * @cdk.githash
  * @cdk.iooptions
  *
  * @cdk.keyword Rgroup
@@ -83,8 +95,8 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
         String  occurence;
     }
 
-    BufferedReader              input  = null;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(RGroupQueryReader.class);
+    BufferedReader              input;
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(RGroupQueryReader.class);
 
     /**
      * Default constructor, input not set.
@@ -137,6 +149,7 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
 
     @Override
     public boolean accepts(Class<? extends IChemObject> classObject) {
+        if (IRGroupQuery.class.equals(classObject)) return true;
         Class<?>[] interfaces = classObject.getInterfaces();
         for (Class<?> anInterface : interfaces) {
             if (IRGroupQuery.class.equals(anInterface)) return true;
@@ -179,9 +192,9 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
         String line = "";
         int lineCount = 0;
         String eol = "\n";
-        StringTokenizer strTk = null;
+        StringTokenizer strTk;
         /* Variable to capture the LOG line(s) */
-        Map<Integer, RGroupLogic> logicDefinitions = new HashMap<Integer, RGroupLogic>();
+        Map<Integer, RGroupLogic> logicDefinitions = new HashMap<>();
 
         /*
          * Variable to captures attachment order for Rgroups. Contains: - pseudo
@@ -189,7 +202,7 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
          * order "integer" (1,2,3) for the Rgroup The order is based on the atom
          * block, unless there is an AAL line for the pseudo atom.
          */
-        Map<IAtom, Map<Integer, IBond>> attachmentPoints = new HashMap<IAtom, Map<Integer, IBond>>();
+        Map<IAtom, Map<Integer, IBond>> attachmentPoints = new HashMap<>();
 
         try {
             // Process the Header block_________________________________________
@@ -201,7 +214,8 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
 
             for (int i = 1; i <= 3; i++) {
                 lineCount++;
-                if (input.readLine() == null) {
+                line = input.readLine();
+                if (line == null) {
                     throw new CDKException("RGFile invalid, empty/null header line at #" + lineCount);
                 }
                 //optional: parse header info here (not implemented)
@@ -225,12 +239,12 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
                     strTk.nextToken();
                     strTk.nextToken();
                     strTk.nextToken();
-                    RGroupLogic log = null;
+                    RGroupLogic log;
 
                     log = new RGroupLogic();
-                    int rgroupNumber = Integer.valueOf(strTk.nextToken());
+                    int rgroupNumber = Integer.parseInt(strTk.nextToken());
                     String tok = strTk.nextToken();
-                    log.rgoupNumberRequired = tok.equals("0") ? 0 : Integer.valueOf(tok);
+                    log.rgoupNumberRequired = tok.equals("0") ? 0 : Integer.parseInt(tok);
                     log.restH = strTk.nextToken().equals("1") ? true : false;
                     tok = "";
                     while (strTk.hasMoreTokens()) {
@@ -258,15 +272,15 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
                     StringTokenizer stAAL = new StringTokenizer(line);
                     stAAL.nextToken();
                     stAAL.nextToken();
-                    int pos = Integer.valueOf(stAAL.nextToken());
+                    int pos = Integer.parseInt(stAAL.nextToken());
                     IAtom rGroup = root.getAtom(pos - 1);
                     stAAL.nextToken();
-                    Map<Integer, IBond> bondMap = new HashMap<Integer, IBond>();
+                    Map<Integer, IBond> bondMap = new HashMap<>();
                     while (stAAL.hasMoreTokens()) {
-                        pos = Integer.valueOf(stAAL.nextToken());
+                        pos = Integer.parseInt(stAAL.nextToken());
                         IAtom partner = root.getAtom(pos - 1);
                         IBond bond = root.getBond(rGroup, partner);
-                        int order = Integer.valueOf(stAAL.nextToken());
+                        int order = Integer.parseInt(stAAL.nextToken());
                         bondMap.put(order, bond);
                         logger.info("AAL " + order + " " + ((IPseudoAtom) rGroup).getLabel() + "-"
                                 + partner.getSymbol());
@@ -285,7 +299,7 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
                             !attachmentPoints.containsKey(rGroup)) {
                         //Order reflects the order of atoms in the Atom Block
                         int order = 0;
-                        Map<Integer, IBond> bondMap = new HashMap<Integer, IBond>();
+                        Map<Integer, IBond> bondMap = new HashMap<>();
                         for (IAtom atom2 : root.atoms()) {
                             if (!atom.equals(atom2)) {
                                 for (IBond bond : root.bonds()) {
@@ -297,7 +311,7 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
                                 }
                             }
                         }
-                        if (bondMap.size() != 0) {
+                        if (!bondMap.isEmpty()) {
                             attachmentPoints.put(rGroup, bondMap);
                         }
                     }
@@ -311,13 +325,13 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
             //__________________________________________________________________
 
             //Set up the RgroupLists, one for each unique R# (# = 1..32 max)
-            Map<Integer, RGroupList> rGroupDefinitions = new HashMap<Integer, RGroupList>();
+            Map<Integer, IRGroupList> rGroupDefinitions = new HashMap<>();
 
             for (IAtom atom : root.atoms()) {
                 if (atom instanceof IPseudoAtom) {
                     IPseudoAtom rGroup = (IPseudoAtom) atom;
                     if (RGroupQuery.isValidRgroupQueryLabel(rGroup.getLabel())) {
-                        int rgroupNum = Integer.valueOf(rGroup.getLabel().substring(1));
+                        int rgroupNum = Integer.parseInt(rGroup.getLabel().substring(1));
                         RGroupList rgroupList = new RGroupList(rgroupNum);
                         if (!rGroupDefinitions.containsKey(rgroupNum)) {
                             logger.info("Define Rgroup R" + rgroupNum);
@@ -331,7 +345,7 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
                                 rgroupList.setOccurrence(">0");
                                 rgroupList.setRequiredRGroupNumber(0);
                             }
-                            rgroupList.setRGroups(new ArrayList<RGroup>());
+                            rgroupList.setRGroups(new ArrayList<>());
                             rGroupDefinitions.put(rgroupNum, rgroupList);
                         }
                     }
@@ -348,7 +362,7 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
                 line = input.readLine();
                 ++lineCount;
                 logger.info("line for num is " + line);
-                int rgroupNum = Integer.valueOf(line.trim());
+                int rgroupNum = Integer.parseInt(line.trim());
                 line = input.readLine();
                 ++lineCount;
 
@@ -369,6 +383,9 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
                     RGroup rGroup = new RGroup();
                     rGroup.setGroup(group);
 
+                    IAtom fstAttach = null;
+                    IAtom sndAttach = null;
+
                     //Parse the Rgroup's attachment points (APO)
                     strTk = new StringTokenizer(groupStr, eol);
                     while (strTk.hasMoreTokens()) {
@@ -379,26 +396,32 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
                             stAPO.nextToken();
                             stAPO.nextToken();
                             while (stAPO.hasMoreTokens()) {
-                                int pos = Integer.valueOf(stAPO.nextToken());
-                                int apo = Integer.valueOf(stAPO.nextToken());
+                                int pos = Integer.parseInt(stAPO.nextToken());
+                                int apo = Integer.parseInt(stAPO.nextToken());
                                 IAtom at = group.getAtom(pos - 1);
                                 switch (apo) {
                                     case 1:
-                                        rGroup.setFirstAttachmentPoint(at);
+                                        fstAttach = at;
                                         break;
                                     case 2:
-                                        rGroup.setSecondAttachmentPoint(at);
+                                        sndAttach = at;
                                         break;
                                     case 3: {
-                                        rGroup.setFirstAttachmentPoint(at);
-                                        rGroup.setSecondAttachmentPoint(at);
+                                        fstAttach = at;
+                                        sndAttach = at;
                                     }
                                         break;
                                 }
                             }
                         }
                     }
-                    RGroupList rList = rGroupDefinitions.get(rgroupNum);
+
+                    if (fstAttach != null)
+                        sproutExplicitAttachment(fstAttach, 1);
+                    if (sndAttach != null)
+                        sproutExplicitAttachment(sndAttach, 2);
+
+                    IRGroupList rList = rGroupDefinitions.get(rgroupNum);
                     if (rList == null) {
                         throw new CDKException("R" + rgroupNum + " not defined but referenced in $RGP.");
                     } else {
@@ -421,6 +444,10 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
 
             rGroupQuery.setRGroupDefinitions(rGroupDefinitions);
             logger.info("Number of lines was " + lineCount);
+
+            if (mode == Mode.STRICT)
+                verifyRgroupDefinitions(rGroupQuery);
+
             return rGroupQuery;
 
         } catch (CDKException exception) {
@@ -429,13 +456,84 @@ public class RGroupQueryReader extends DefaultChemObjectReader {
             logger.debug(exception);
             throw exception;
         } catch (IOException | IllegalArgumentException exception) {
-            exception.printStackTrace();
             String error = exception.getClass() + "Error while parsing line " + lineCount + ": " + line + " -> "
                     + exception.getMessage();
             logger.error(error);
             logger.debug(exception);
             throw new CDKException(error, exception);
         }
+    }
+
+    private static void verifyRgroupDefinitions(IRGroupQuery rGroupQuery) throws CDKException {
+        Set<String> errors = new HashSet<>();
+
+        Map<String,Integer> numConnections = new HashMap<>();
+        // synchronise definitions
+        for (Map.Entry<IAtom, Map<Integer, IBond>> e : rGroupQuery.getRootAttachmentPoints().entrySet()) {
+            String label = ((IPseudoAtom) e.getKey()).getLabel();
+            Integer other = numConnections.get(label);
+            int numberOfConnections = e.getValue().size();
+            if (other == null)
+                numConnections.put(label, numberOfConnections);
+            else if (other != numberOfConnections)
+                errors.add("RGroup: " + label + " must have a fixed number of attachments");
+
+            int rnum = label.matches("R\\d+") ? Integer.parseInt(label.substring(1)) : 0;
+            IRGroupList rGroupList = rGroupQuery.getRGroupDefinitions().get(rnum);
+
+            if (rGroupList == null) {
+                errors.add("RGroup: " + label + " missing definition");
+                continue;
+            }
+
+            for (IRGroup rGroup : rGroupList.getRGroups()) {
+                int rGroupAttachments = 0;
+                if (rGroup.getFirstAttachmentPoint() != null)
+                    rGroupAttachments++;
+                if (rGroup.getSecondAttachmentPoint() != null)
+                    rGroupAttachments++;
+                if (rGroupAttachments != numberOfConnections) {
+                    errors.add("RGroup: " + label + " atom neighbour count must match number of RGroup attachments");
+                }
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new CDKException(String.join("; ", errors));
+        }
+    }
+
+    private static boolean hasExplicitAttachment(IAtom atom, int id) {
+        for (IBond bond : atom.bonds()) {
+            IAtom nbor = bond.getOther(atom);
+            if (nbor instanceof IPseudoAtom && ((IPseudoAtom) nbor).getAttachPointNum() == id)
+                return true;
+        }
+        return false;
+    }
+
+    private void sproutExplicitAttachment(IAtom atom, int id) {
+        if (atom == null || hasExplicitAttachment(atom, id))
+            return;
+        IAtomContainer container = atom.getContainer();
+
+        IChemObjectBuilder bldr = container.getBuilder();
+        container.addAtom(bldr.newInstance(IPseudoAtom.class));
+        IPseudoAtom attach = (IPseudoAtom)container.getAtom(container.getAtomCount()-1);
+        attach.setAtomicNumber(IAtom.Wildcard);
+        attach.setImplicitHydrogenCount(0);
+        attach.setAttachPointNum(id);
+
+        if (atom.getImplicitHydrogenCount() != null &&
+            atom.getImplicitHydrogenCount() > 0)
+            atom.setImplicitHydrogenCount(atom.getImplicitHydrogenCount()-1);
+
+        atom.getContainer().newBond(atom, attach, IBond.Order.SINGLE);
+        if (atom.getPoint2d() != null)
+            new AtomPlacer(atom.getContainer()).place(attach);
+
+        // to support 3D Rgroup... we need to sprout the explicit attachment point
+        // with AtomPlacer3D. 3D Rgroup structures are unlikely but possible
     }
 
     /**

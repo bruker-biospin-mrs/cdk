@@ -37,7 +37,6 @@ import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -81,10 +80,10 @@ final class LayoutRefiner {
     private static final double MIN_SCORE = 1 / (MIN_DIST * MIN_DIST);
 
     // How much do we add to a bond when making it longer.
-    private static final double STRETCH_STEP = 0.32 * BOND_LENGTH;
+    private static final double STRETCH_STEP = 0.25 * BOND_LENGTH;
 
     // How much we bend bonds by
-    private static final double BEND_STEP = Math.toRadians(10);
+    private static final double BEND_STEP = Math.toRadians(7.5);
 
     // Ensure we don't stretch bonds too long.
     private static final double MAX_BOND_LENGTH = 2 * BOND_LENGTH;
@@ -247,7 +246,7 @@ final class LayoutRefiner {
         }
 
         // sort the pairs to attempt consistent overlap resolution (order independent)
-        Collections.sort(pairs, new Comparator<AtomPair>() {
+        pairs.sort(new Comparator<AtomPair>() {
             @Override
             public int compare(AtomPair a, AtomPair b) {
                 int a1 = atoms[a.fst].getProperty(AtomPlacer.PRIORITY);
@@ -259,18 +258,16 @@ final class LayoutRefiner {
                 if (a1 < a2) {
                     amin = a1;
                     amax = a2;
-                }
-                else {
+                } else {
                     amin = a2;
                     amax = a1;
                 }
                 if (b1 < b2) {
-                    bmin = a1;
-                    bmax = a2;
-                }
-                else {
-                    bmin = a2;
-                    bmax = a1;
+                    bmin = b1;
+                    bmax = b2;
+                } else {
+                    bmin = b2;
+                    bmax = b1;
                 }
                 int cmp = Integer.compare(amin, bmin);
                 if (cmp != 0) return cmp;
@@ -459,7 +456,7 @@ final class LayoutRefiner {
             IAtom atom = mol.getAtom(v);
             if (!atom.isInRing() || adjList[v].length == 2)
                 continue;
-            if (atom.getProperty(MacroCycleLayout.MACROCYCLE_ATOM_HINT) == null)
+            if (atom.getProperty(AtomPlacer.MACROCYCLE_ATOM_HINT) == null)
                 continue;
             final List<IBond> acyclic = new ArrayList<>(2);
             final List<IBond> cyclic = new ArrayList<>(2);
@@ -471,6 +468,11 @@ final class LayoutRefiner {
                     acyclic.add(bond);
             }
             if (cyclic.size() > 2)
+                continue;
+
+            // do not reflect if there are multiple as it is rarely better
+            // e.g. SO2
+            if (acyclic.size() > 1)
                 continue;
 
             for (IBond bond : acyclic) {
@@ -642,6 +644,7 @@ final class LayoutRefiner {
                     stackBackup.copyFrom(stack);
                     min = congestion.score();
                 }
+                restoreCoords(stack, backup);
 
                 // bend other way
                 if (begPriority < endPriority)

@@ -52,8 +52,6 @@ import org.openscience.cdk.isomorphism.matchers.IQueryAtom;
 
 /**
  * Checks if atom is matching between query and target molecules.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
  *             access to internal implementation details. SMSD has been deprecated from the CDK with a newer, more recent
@@ -64,8 +62,8 @@ public class DefaultRGraphAtomMatcher implements AtomMatcher {
 
     static final long serialVersionUID = -7861469841127327812L;
     private int       maximumNeighbors;
-    private String    symbol           = null;
-    private IAtom     qAtom            = null;
+    private String    symbol;
+    private IAtom     qAtom;
     private boolean   shouldMatchBonds = false;
 
     /**

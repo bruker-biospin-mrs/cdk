@@ -29,8 +29,8 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.openscience.cdk.graph.InitialCycles.Cycle;
 
 /**
@@ -41,8 +41,6 @@ import static org.openscience.cdk.graph.InitialCycles.Cycle;
  * however may not be able generate the cycle space of a graph.
  *
  * @author John May
- * @cdk.module core
- * @cdk.githash
  * @cdk.keyword essential rings
  * @cdk.keyword essential cycles
  * @cdk.keyword graph
@@ -94,10 +92,10 @@ public final class EssentialCycles {
      * @param initial a molecule graph
      */
     EssentialCycles(final RelevantCycles relevant, final InitialCycles initial) {
-        checkNotNull(relevant, "No RelevantCycles provided");
-        this.initial = checkNotNull(initial, "No InitialCycles provided");
+        Objects.requireNonNull(relevant, "No RelevantCycles provided");
+        this.initial = Objects.requireNonNull(initial, "No InitialCycles provided");
         this.basis = new GreedyBasis(initial.numberOfCycles(), initial.numberOfEdges());
-        this.essential = new ArrayList<Cycle>();
+        this.essential = new ArrayList<>();
 
         // for each cycle added to the basis, if it can be
         // replaced with one of equal size it is non-essential
@@ -136,10 +134,10 @@ public final class EssentialCycles {
      * @return all relevant cycles groped by weight
      */
     private List<List<Cycle>> groupByLength(final RelevantCycles relevant) {
-        LinkedList<List<Cycle>> cyclesByLength = new LinkedList<List<Cycle>>();
+        LinkedList<List<Cycle>> cyclesByLength = new LinkedList<>();
         for (int[] path : relevant.paths()) {
             if (cyclesByLength.isEmpty() || path.length > cyclesByLength.getLast().get(0).path().length) {
-                cyclesByLength.add(new ArrayList<Cycle>());
+                cyclesByLength.add(new ArrayList<>());
             }
             cyclesByLength.getLast().add(new MyCycle(path));
         }
@@ -171,7 +169,7 @@ public final class EssentialCycles {
     private boolean isEssential(final Cycle candidate, final Collection<Cycle> relevant) {
 
         // construct an alternative basis with all equal weight relevant cycles
-        final List<Cycle> alternate = new ArrayList<Cycle>(relevant.size() + basis.size());
+        final List<Cycle> alternate = new ArrayList<>(relevant.size() + basis.size());
 
         final int weight = candidate.length();
         for (final Cycle cycle : basis.members()) {

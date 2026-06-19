@@ -22,70 +22,66 @@
  */
 package org.openscience.cdk.io.formats;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @cdk.module test-ioformats
  */
-abstract public class ResourceFormatTest {
+abstract class ResourceFormatTest {
 
     private IResourceFormat resourceFormat;
 
-    public void setResourceFormat(IResourceFormat format) {
+    void setResourceFormat(IResourceFormat format) {
         this.resourceFormat = format;
     }
 
     @Test
-    public void testResourceFormatSet() {
-        Assert.assertNotNull("You must use setResourceFormatSet() to set the resourceFormat object.", resourceFormat);
+    void testResourceFormatSet() {
+        Assertions.assertNotNull(resourceFormat, "You must use setResourceFormatSet() to set the resourceFormat object.");
     }
 
     @Test
-    public void testGetMIMEType() {
+    void testGetMIMEType() {
         if (resourceFormat.getMIMEType() == null) {
             // OK, that's fine
         } else {
-            Assert.assertNotSame(0, resourceFormat.getMIMEType().length());
+            Assertions.assertNotSame(0, resourceFormat.getMIMEType().length());
         }
     }
 
     @Test
-    public void testGetFormatName() {
-        Assert.assertNotNull(resourceFormat.getFormatName());
-        Assert.assertNotSame(0, resourceFormat.getFormatName().length());
+    void testGetFormatName() {
+        Assertions.assertNotNull(resourceFormat.getFormatName());
+        Assertions.assertNotSame(0, resourceFormat.getFormatName().length());
     }
 
     @Test
-    public void testGetPreferredNameExtension() {
+    void testGetPreferredNameExtension() {
         if (resourceFormat.getPreferredNameExtension() == null) {
             if (resourceFormat.getNameExtensions() == null || resourceFormat.getNameExtensions().length == 0) {
                 // Seems to be current practice
                 // FIXME: needs to be discussed
             } else {
-                Assert.fail("This format define file name extensions (getNameExtensions()), but does not provide a prefered extension (getPreferredNameExtension()).");
+                Assertions.fail("This format define file name extensions (getNameExtensions()), but does not provide a prefered extension (getPreferredNameExtension()).");
             }
         } else {
             String prefExtension = resourceFormat.getPreferredNameExtension();
-            Assert.assertNotSame(0, prefExtension.length());
-            Assert.assertNotNull(
-                    "This format defines a preferred file name extension (getPreferredNameExtension()), but does not provide a full list of extensions (getNameExtensions()).",
-                    resourceFormat.getNameExtensions());
+            Assertions.assertNotSame(0, prefExtension.length());
+            Assertions.assertNotNull(resourceFormat.getNameExtensions(), "This format defines a preferred file name extension (getPreferredNameExtension()), but does not provide a full list of extensions (getNameExtensions()).");
             String[] allExtensions = resourceFormat.getNameExtensions();
             boolean prefExtInAllExtList = false;
-            for (int i = 0; i < allExtensions.length; i++) {
-                if (allExtensions[i].equals(prefExtension)) prefExtInAllExtList = true;
+            for (String allExtension : allExtensions) {
+                if (allExtension.equals(prefExtension)) prefExtInAllExtList = true;
             }
-            Assert.assertTrue("The preferred extension is not found in the list of all extensions", prefExtInAllExtList);
+            Assertions.assertTrue(prefExtInAllExtList, "The preferred extension is not found in the list of all extensions");
         }
     }
 
     @Test
-    public void testGetNameExtensions() {
+    void testGetNameExtensions() {
         if (resourceFormat.getNameExtensions() == null) {
             // Seems to be current practice
             // FIXME: needs to be discussed
@@ -94,33 +90,32 @@ abstract public class ResourceFormatTest {
             // FIXME: needs to be discussed
         } else {
             String[] exts = resourceFormat.getNameExtensions();
-            for (int i = 0; i < exts.length; i++) {
-                String extension = exts[i];
-                Assert.assertNotNull(extension);
-                Assert.assertNotSame(0, extension.length());
-                assertFalse("File name extensions should not contain ',' characters", extension.contains(","));
-                assertFalse("File name extensions should not contain '.' characters", extension.contains("."));
+            for (String extension : exts) {
+                Assertions.assertNotNull(extension);
+                Assertions.assertNotSame(0, extension.length());
+                Assertions.assertFalse(extension.contains(","), "File name extensions should not contain ',' characters");
+                Assertions.assertFalse(extension.contains("."), "File name extensions should not contain '.' characters");
             }
         }
     }
 
     @Test
-    public void testHashCode() throws IllegalAccessException, InstantiationException {
+    void testHashCode() throws IllegalAccessException, InstantiationException {
         IResourceFormat a = resourceFormat.getClass().newInstance();
         IResourceFormat b = resourceFormat.getClass().newInstance();
         assertThat(a.hashCode(), is(b.hashCode()));
     }
 
     @Test
-    public void testEquals() throws IllegalAccessException, InstantiationException {
+    void testEquals() throws IllegalAccessException, InstantiationException {
         IResourceFormat a = resourceFormat.getClass().newInstance();
         IResourceFormat b = resourceFormat.getClass().newInstance();
         assertThat(a, is(b));
     }
 
     @Test
-    public void testEquals_null() throws IllegalAccessException, InstantiationException {
+    void testEquals_null() throws IllegalAccessException, InstantiationException {
         IResourceFormat a = resourceFormat.getClass().newInstance();
-        Assert.assertNotNull(a);
+        Assertions.assertNotNull(a);
     }
 }

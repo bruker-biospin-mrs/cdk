@@ -18,11 +18,11 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -30,8 +30,6 @@ import org.openscience.cdk.qsar.IMolecularDescriptor;
 import org.openscience.cdk.qsar.result.IDescriptorResult;
 import org.openscience.cdk.qsar.result.IntegerResult;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
-
-import java.util.Iterator;
 
 /**
  * This Class contains a method that returns the number of aromatic atoms in an AtomContainer.
@@ -53,8 +51,6 @@ import java.util.Iterator;
  *
  * @author      mfe4
  * @cdk.created 2004-11-03
- * @cdk.module  qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:aromaticBondsCount
  */
 public class AromaticBondsCountDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
@@ -145,7 +141,7 @@ public class AromaticBondsCountDescriptor extends AbstractMolecularDescriptor im
     public DescriptorValue calculate(IAtomContainer atomContainer) {
         IAtomContainer ac;
         try {
-            ac = (IAtomContainer) atomContainer.clone();
+            ac = atomContainer.clone();
         } catch (CloneNotSupportedException e) {
             return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new IntegerResult(
                     (int) Double.NaN), getDescriptorNames(), new CDKException("Error during clone"));
@@ -167,10 +163,8 @@ public class AromaticBondsCountDescriptor extends AbstractMolecularDescriptor im
                         "Error during aromaticity detection: " + e.getMessage()));
             }
         }
-        Iterator bonds = ac.bonds().iterator();
-        while (bonds.hasNext()) {
-            IBond bond = (IBond) bonds.next();
-            if (bond.getFlag(CDKConstants.ISAROMATIC)) {
+        for (IBond bond : ac.bonds()) {
+            if (bond.getFlag(IChemObject.AROMATIC)) {
                 aromaticBondsCount += 1;
             }
         }

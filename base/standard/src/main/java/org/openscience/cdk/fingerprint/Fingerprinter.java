@@ -40,7 +40,6 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -63,58 +62,61 @@ import java.util.Set;
  *   fingerprint.length(); // returns the highest set bit
  * </pre> <p>
  *
- *  The FingerPrinter assumes that hydrogens are explicitly given! Furthermore,
- *  if pseudo atoms or atoms with malformed symbols are present, their atomic
- *  number is taken as one more than the last element currently supported in
- *  {@link org.openscience.cdk.tools.periodictable.PeriodicTable}.
+ * <p>The FingerPrinter has the option to ignore explicit hydrogen's
+ * ({@link #setHashExplicitHydrogens(boolean)}) and pseudo atoms
+ * ({@link #setHashPseudoAtoms(boolean)}). This ensures the
+ * fingerprint can be used for substructure screening by default.</p>
  *
- *  <font color="#FF0000">Warning: The aromaticity detection for this
+ *  <span style="color: #FF0000;">Warning: The aromaticity detection for this
  *  FingerPrinter relies on AllRingsFinder, which is known to take very long
  *  for some molecules with many cycles or special cyclic topologies. Thus,
  *  the AllRingsFinder has a built-in timeout of 5 seconds after which it
  *  aborts and throws an Exception. If you want your SMILES generated at any
  *  expense, you need to create your own AllRingsFinder, set the timeout to a
  *  higher value, and assign it to this FingerPrinter. In the vast majority of
- *  cases, however, the defaults will be fine. </font> <p>
+ *  cases, however, the defaults will be fine. </span> <p>
  *
- *  <font color="#FF0000">Another Warning : The daylight manual says:
+ *  <span style="color: #FF0000;">Another Warning : The daylight manual says:
  *  "Fingerprints are not so definite: if a fingerprint indicates a pattern is
  *  missing then it certainly is, but it can only indicate a pattern's presence
  *  with some probability." In the case of very small molecules, the
  *  probability that you get the same fingerprint for different molecules is
- *  high. </font>
+ *  high. </span>
  *  </p>
  *
  * @author         steinbeck
  * @cdk.created    2002-02-24
  * @cdk.keyword    fingerprint
  * @cdk.keyword    similarity
- * @cdk.module     standard
- * @cdk.githash
  */
 public class Fingerprinter extends AbstractFingerprinter implements IFingerprinter {
 
-    /** Throw an exception if too many paths (per atom) are generated. */
-    private final static int                 DEFAULT_PATH_LIMIT   = 42000;
+    /**
+     * Throw an exception if too many paths (per atom) are generated.
+     */
+    private final static int DEFAULT_PATH_LIMIT = 42000;
 
-    /** The default length of created fingerprints. */
-    public final static int                  DEFAULT_SIZE         = 1024;
-    /** The default search depth used to create the fingerprints. */
-    public final static int                  DEFAULT_SEARCH_DEPTH = 7;
+    /**
+     * The default length of created fingerprints.
+     */
+    public final static int DEFAULT_SIZE = 1024;
+    /**
+     * The default search depth used to create the fingerprints.
+     */
+    public final static int DEFAULT_SEARCH_DEPTH = 7;
 
-    private int                              size;
-    private int                              searchDepth;
-    private int                              pathLimit = DEFAULT_PATH_LIMIT;
+    private final int size;
+    private final int searchDepth;
+    private int pathLimit = DEFAULT_PATH_LIMIT;
 
-    private boolean                          hashPseudoAtoms = false;
+    private boolean hashPseudoAtoms = false;
+    /** Encode paths with pass through a hydrogen atom. Hydrogens may be
+     *  implicit or explicit which will result in different FPs - default:
+     *  false*/
+    private boolean hashExplHydrogens = false;
 
-    static int                               debugCounter         = 0;
-
-
-    private static ILoggingTool              logger               = LoggingToolFactory
-                                                                          .createLoggingTool(Fingerprinter.class);
-
-
+    private static final ILoggingTool logger = LoggingToolFactory
+            .createLoggingTool(Fingerprinter.class);
 
     /**
      * Creates a fingerprint generator of length <code>DEFAULT_SIZE</code>
@@ -144,10 +146,11 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
 
     @Override
     protected List<Map.Entry<String, String>> getParameters() {
-        return Arrays.<Map.Entry<String,String>>asList(
+        return Arrays.asList(
             new SimpleImmutableEntry<>("searchDepth", Integer.toString(searchDepth)),
             new SimpleImmutableEntry<>("pathLimit", Integer.toString(pathLimit)),
-            new SimpleImmutableEntry<>("hashPseudoAtoms", Boolean.toString(hashPseudoAtoms))
+            new SimpleImmutableEntry<>("hashPseudoAtoms", Boolean.toString(hashPseudoAtoms)),
+            new SimpleImmutableEntry<>("hashExplicitHydrogens", Boolean.toString(hashExplHydrogens))
         );
     }
 
@@ -189,8 +192,27 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
 
     /** {@inheritDoc} */
     @Override
-    public Map<String, Integer> getRawFingerprint(IAtomContainer iAtomContainer) throws CDKException {
-        throw new UnsupportedOperationException();
+    public Map<String, Integer> getRawFingerprint(IAtomContainer container) throws CDKException {
+        if (!hasPseudoAtom(container.atoms())) {
+            AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(container);
+            Aromaticity.cdkLegacy().apply(container);
+        }
+        Map<String,Integer> rawFp = new HashMap<>();
+        BitSet bitSet = new BitSet(size);
+        State state = new State(container, bitSet, size, searchDepth+1);
+        state.setFeatureMap(rawFp);
+        for (IAtom atom : container.atoms()) {
+            state.numPaths = 0;
+            state.visit(atom);
+            traversePaths(state, atom, null);
+            state.unvisit(atom);
+        }
+        return rawFp;
+    }
+
+    @Override
+    public ICountFingerprint getCountFingerprint(IAtomContainer container) throws CDKException {
+        return new IntArrayCountFingerprint(getRawFingerprint(container));
     }
 
     private IBond findBond(List<IBond> bonds, IAtom beg, IAtom end) {
@@ -200,19 +222,13 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
         return null;
     }
 
-    private String encodePath(IAtomContainer mol, Map<IAtom, List<IBond>> cache, List<IAtom> path, StringBuilder buffer) {
+    private String encodePath(IAtomContainer mol, List<IAtom> path, StringBuilder buffer) {
         buffer.setLength(0);
         IAtom prev = path.get(0);
         buffer.append(getAtomSymbol(prev));
         for (int i = 1; i < path.size(); i++) {
             final IAtom next  = path.get(i);
-            List<IBond> bonds = cache.get(prev);
-
-            if (bonds == null) {
-                bonds = mol.getConnectedBondsList(prev);
-                cache.put(prev, bonds);
-            }
-
+            List<IBond> bonds = mol.getConnectedBondsList(prev);
             IBond bond = findBond(bonds, next, prev);
             if (bond == null)
                 throw new IllegalStateException("FATAL - Atoms in patch were connected?");
@@ -236,7 +252,24 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
         return buffer.toString();
     }
 
-    private int appendHash(int hash, String str) {
+    private String encodeRevPath(List<IAtom> apath, List<IBond> bpath, StringBuilder buffer) {
+        // atoms=[0, 1, 2, 3], bonds=[0, 1, 2]
+        // len=4 a0 | b0 a1 b1 a2 b2 a3 (fwd)
+        // len=4 a3 | b2 a2 b1 a1 b0 a0 (rev)
+        buffer.setLength(0);
+        int len = apath.size();
+        IAtom prev = apath.get(len-1);
+        buffer.append(getAtomSymbol(prev));
+        for (int i = len-2; i >= 0; i--) {
+            final IAtom next  = apath.get(i);
+            final IBond bond  = bpath.get(i);
+            buffer.append(getBondSymbol(bond));
+            buffer.append(getAtomSymbol(next));
+        }
+        return buffer.toString();
+    }
+
+    private static int appendHash(int hash, String str) {
         int len = str.length();
         for (int i = 0; i < len; i++)
             hash = 31 * hash + str.charAt(0);
@@ -268,18 +301,18 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
         return hash;
     }
 
-    private static final class State {
+    private final class State {
         private int    numPaths = 0;
-        private Random rand     = new Random();
-        private BitSet fp;
-        private IAtomContainer mol;
-        private Set<IAtom> visited = new HashSet<>();
-        private List<IAtom> apath = new ArrayList<>();
-        private List<IBond> bpath = new ArrayList<>();
+        private final Random rand     = new Random();
+        private final BitSet fp;
+        private Map<String,Integer> feats;
+        private final IAtomContainer mol;
+        private final Set<IAtom> visited = new HashSet<>();
+        private final List<IAtom> apath = new ArrayList<>();
+        private final List<IBond> bpath = new ArrayList<>();
         private final int maxDepth;
         private final int fpsize;
-        private Map<IAtom,List<IBond>> cache = new IdentityHashMap<>();
-        public StringBuilder buffer = new StringBuilder();
+        public final StringBuilder buffer = new StringBuilder();
 
         public State(IAtomContainer mol, BitSet fp, int fpsize, int maxDepth) {
             this.mol = mol;
@@ -288,13 +321,12 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
             this.maxDepth = maxDepth;
         }
 
+        public void setFeatureMap(Map<String,Integer> feats) {
+            this.feats = feats;
+        }
+
         List<IBond> getBonds(IAtom atom) {
-            List<IBond> bonds = cache.get(atom);
-            if (bonds == null) {
-                bonds = mol.getConnectedBondsList(atom);
-                cache.put(atom, bonds);
-            }
-            return bonds;
+            return mol.getConnectedBondsList(atom);
         }
 
         boolean visit(IAtom a) {
@@ -325,13 +357,64 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
             //      different bit
             fp.set(rand.nextInt(fpsize));
         }
+
+        private void storeFeat(String path) {
+            if (feats == null)
+                return;
+            feats.compute(path, (k, v) -> v == null ? 1 : v+1);
+        }
+
+        private void storeForward() {
+            addHash(hashPath(apath, bpath));
+            if (feats != null) {
+                storeFeat(encodePath(apath, bpath, buffer));
+            }
+        }
+
+        private void storeReverse() {
+            addHash(hashRevPath(apath, bpath));
+            if (feats != null) {
+                storeFeat(encodeRevPath(apath, bpath, buffer));
+            }
+        }
+
+        /**
+         * Optimisation - determine if the path if lexicographically smaller
+         * forwards rather than backwards. When we come to actually hash the
+         * path we hash it forwards and backwards and store the lowest so only
+         * need to do that more expensive encoding once.
+         * We can do this a couple of ways for example atom index - but since
+         * that may be a linear time lookup (at least in the old IAtomContainer
+         * implementation) we use the identity hash code (memory address).
+         *
+         * @return true - do encode/false - skip encoding
+         */
+        public boolean isOrderedPath() {
+            return System.identityHashCode(apath.get(0)) <
+                    System.identityHashCode(apath.get(apath.size()-1));
+        }
+
+        public void storePath() {
+            if (bpath.isEmpty()) {
+                addHash(getAtomSymbol(apath.get(0)).hashCode());
+                storeFeat(getAtomSymbol(apath.get(0)));
+            } else {
+                if (!isOrderedPath())
+                    return;
+                if (compare(apath, bpath) >= 0) {
+                    storeForward();
+                } else {
+                    storeReverse();
+                }
+            }
+        }
     }
 
     private void traversePaths(State state, IAtom beg, IBond prev) throws CDKException {
-        if (!hashPseudoAtoms && isPseudo(beg))
+        if (skipAtom(beg))
             return;
         state.push(beg, prev);
-        state.addHash(encodeUniquePath(state.apath, state.bpath, state.buffer));
+        state.storePath();
         if (state.numPaths > pathLimit)
             throw new CDKException("Too many paths! Structure is likely a cage, reduce path length or increase path limit");
         if (state.apath.size() < state.maxDepth) {
@@ -346,6 +429,12 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
             }
         }
         state.pop();
+    }
+
+    private boolean skipAtom(IAtom beg) {
+        int elem = getElem(beg);
+        return !hashPseudoAtoms && elem == IAtom.Wildcard ||
+                !hashExplHydrogens && elem == IAtom.H;
     }
 
     /**
@@ -364,13 +453,13 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
 
         Set<Integer> hashes = new HashSet<>();
 
-        Map<IAtom, List<IBond>> cache = new HashMap<>();
         StringBuilder buffer = new StringBuilder();
         for (IAtom startAtom : container.atoms()) {
             List<List<IAtom>> p = PathTools.getLimitedPathsOfLengthUpto(container, startAtom, searchDepth, pathLimit);
             for (List<IAtom> path : p) {
-                if (hashPseudoAtoms || !hasPseudoAtom(path))
-                    hashes.add(encodeUniquePath(container, cache, path, buffer));
+                if ((hashPseudoAtoms || !hasPseudoAtom(path)) &&
+                    (hashExplHydrogens || !hasExplHydrogen(path)))
+                    hashes.add(encodeUniquePath(container, path, buffer));
             }
         }
 
@@ -392,23 +481,30 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
         }
     }
 
-    private static boolean isPseudo(IAtom a) {
-        return getElem(a) == 0;
-    }
 
     private static boolean hasPseudoAtom(Iterable<IAtom> path) {
         for (IAtom atom : path)
-            if (isPseudo(atom))
+            if (getElem(atom) == IAtom.Wildcard)
                 return true;
         return false;
     }
 
-    private int encodeUniquePath(IAtomContainer container, Map<IAtom, List<IBond>> cache, List<IAtom> path, StringBuilder buffer) {
+    private static boolean hasExplHydrogen(Iterable<IAtom> path) {
+        for (IAtom atom : path)
+            if (getElem(atom) == IAtom.H)
+                return true;
+        return false;
+    }
+
+    private int encodeUniquePath(IAtomContainer container,
+                                 List<IAtom> path,
+                                 StringBuilder buffer) {
         if (path.size() == 1)
             return getAtomSymbol(path.get(0)).hashCode();
-        String forward = encodePath(container, cache, path, buffer);
+
+        String forward = encodePath(container, path, buffer);
         Collections.reverse(path);
-        String reverse = encodePath(container, cache, path, buffer);
+        String reverse = encodePath(container, path, buffer);
         Collections.reverse(path);
 
         final int x;
@@ -425,7 +521,7 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
      * @param b atom b
      * @return comparison &lt;0 a is less than b, &gt;0 a is more than b
      */
-    private int compare(IAtom a, IAtom b) {
+    private static int compare(IAtom a, IAtom b) {
         final int elemA = getElem(a);
         final int elemB = getElem(b);
         if (elemA == elemB)
@@ -470,18 +566,6 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
         return 0;
     }
 
-    private int encodeUniquePath(List<IAtom> apath, List<IBond> bpath, StringBuilder buffer) {
-        if (bpath.size() == 0)
-            return getAtomSymbol(apath.get(0)).hashCode();
-        final int x;
-        if (compare(apath, bpath) >= 0) {
-            x = hashPath(apath, bpath);
-        } else {
-            x = hashRevPath(apath, bpath);
-        }
-        return x;
-    }
-
     private static int getElem(IAtom atom) {
         Integer elem = atom.getAtomicNumber();
         if (elem == null)
@@ -489,7 +573,7 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
         return elem;
     }
 
-    private String getAtomSymbol(IAtom atom) {
+    private static String getAtomSymbol(IAtom atom) {
         // XXX: backwards compatibility
         // This is completely random, I believe the intention is because
         // paths were reversed with string manipulation to de-duplicate
@@ -554,8 +638,27 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
         this.pathLimit = limit;
     }
 
+    /**
+     * Include pseudo/query atoms in the fingerprint with atomic number 0.
+     * Generally for substructure screening, which path based fingerprints are
+     * most useful, this is not wanted.
+     *
+     * @param value the setting (false by default)
+     */
     public void setHashPseudoAtoms(boolean value) {
         this.hashPseudoAtoms = value;
+    }
+
+    /**
+     * Include explicit hydrogen atoms in the fingerprint. This means you
+     * get a different fingerprint if hydrogens are implicit/explicit.
+     * Generally for substructure screening, which path based fingerprints are
+     * most useful, this is not wanted.
+     *
+     * @param value the setting (false by default)
+     */
+    public void setHashExplicitHydrogens(boolean value) {
+        this.hashExplHydrogens = value;
     }
 
     public int getSearchDepth() {
@@ -566,10 +669,4 @@ public class Fingerprinter extends AbstractFingerprinter implements IFingerprint
     public int getSize() {
         return size;
     }
-
-    @Override
-    public ICountFingerprint getCountFingerprint(IAtomContainer container) throws CDKException {
-        throw new UnsupportedOperationException();
-    }
-
 }

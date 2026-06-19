@@ -22,41 +22,39 @@
  */
 package org.openscience.cdk.smsd.algorithm.mcsplus;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.io.IOException;
 
-import org.openscience.cdk.AtomContainer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 
 /**
- * @cdk.module test-smsd
  * @author Asad
  */
-public class GenerateCompatibilityGraphTest {
+class GenerateCompatibilityGraphTest {
 
     public GenerateCompatibilityGraphTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     @Test
-    public void testSomeMethod() throws IOException {
+    void testSomeMethod() throws IOException {
         // TODO review the generated test code and remove the default call to fail.
-        assertNotNull(new GenerateCompatibilityGraph(new AtomContainer(), new AtomContainer(), true));
+        Assertions.assertNotNull(new GenerateCompatibilityGraph(DefaultChemObjectBuilder.getInstance().newAtomContainer(), DefaultChemObjectBuilder.getInstance().newAtomContainer(), true));
     }
 }

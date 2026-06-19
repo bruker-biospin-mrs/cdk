@@ -87,8 +87,8 @@ import org.openscience.cdk.renderer.visitor.IDrawVisitor;
  * defined by the {@link RendererModel} parameter bondLength.<p>
  *
  * There are two numbers used to transform the model so that it fits on screen.
- * The first is <tt>scale</tt>, which is used to map model coordinates to
- * screen coordinates. The second is <tt>zoom</tt> which is used to, well,
+ * The first is <code>scale</code>, which is used to map model coordinates to
+ * screen coordinates. The second is <code>zoom</code> which is used to, well,
  * zoom the on screen coordinates. If the diagram is fit-to-screen, then the
  * ratio of the bounds when drawn using bondLength and the bounds of
  * the screen is used as the zoom.<p>
@@ -101,14 +101,12 @@ import org.openscience.cdk.renderer.visitor.IDrawVisitor;
  * zoom is just a floating point number, 100% = 1 and 200% = 2.
  *
  * @author maclean
- * @cdk.module renderextra
- * @cdk.githash
  */
 public class ChemModelRenderer extends AbstractRenderer<IChemModel> implements IRenderer<IChemModel> {
 
     private IRenderer<IAtomContainerSet> moleculeSetRenderer;
 
-    private IRenderer<IReactionSet>      reactionSetRenderer;
+    private final IRenderer<IReactionSet>      reactionSetRenderer;
 
     /**
      * A renderer that generates diagrams using the specified

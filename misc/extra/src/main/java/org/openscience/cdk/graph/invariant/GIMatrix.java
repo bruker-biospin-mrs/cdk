@@ -23,6 +23,9 @@ import org.openscience.cdk.graph.invariant.exception.BadMatrixFormatException;
 import org.openscience.cdk.graph.invariant.exception.IndexOutOfBoundsException;
 import org.openscience.cdk.graph.invariant.exception.MatrixNotInvertibleException;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 /**
  * This class is intended to provide the user an efficient way of implementing matrix of double number and
  * using normal operations (linear operations, addition, subtraction, multiplication, inversion, concatenation)
@@ -35,7 +38,6 @@ import org.openscience.cdk.graph.invariant.exception.MatrixNotInvertibleExceptio
  * to disturb Java language way of calling indexes; so the indexes used here take values between [0..n-1] instead.
  *
  * @author Jean-Sebastien Senecal
- * @cdk.githash
  * @version 1.0
  * @cdk.created 1999-05-20
  */
@@ -132,8 +134,7 @@ public class GIMatrix {
     public GIMatrix(GIMatrix[][] table) throws BadMatrixFormatException {
         verifyTableFormat(table);
         m = n = 0;
-        for (int i = 0; i < table.length; i++)
-            m += table[i][0].height();
+        for (GIMatrix[] giMatrices : table) m += giMatrices[0].height();
         for (int j = 0; j < table[0].length; j++)
             n += table[0][j].width();
         double[][] temp = new double[m][n];
@@ -322,18 +323,30 @@ public class GIMatrix {
     /**
      * Verifies if two given matrix are equal or not. The matrix must be of the same size and dimensions,
      * otherwise an exception will be thrown.
-     * @param matrix the Matrix object to be compared to
+     * @param obj the Matrix object to be compared to
      * @return true if both matrix are equal element to element
-     * @exception BadMatrixFormatException if the given matrix doesn't have the same dimensions as this one
      */
-    public boolean equals(GIMatrix matrix) throws BadMatrixFormatException {
-        if ((height() != matrix.height()) || (width() != matrix.width())) throw new BadMatrixFormatException();
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof GIMatrix))
+            return false;
+        GIMatrix matrix = (GIMatrix) obj;
+        if ((height() != matrix.height()) || (width() != matrix.width()))
+            throw new RuntimeException(new BadMatrixFormatException());
+        // return false?
         double[][] temp = matrix.getArrayValue();
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++)
                 if (!(array[i][j] == temp[i][j])) return false;
         return true;
     } // method equals(Matrix)
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(m, n);
+        result = 31 * result + Arrays.hashCode(array);
+        return result;
+    }
 
     /**
      * Verifies if the matrix is square, that is if it has an equal number of lines and columns.
@@ -547,7 +560,7 @@ public class GIMatrix {
      */
     public GIMatrix diagonal() throws BadMatrixFormatException {
         if (m != n) throw new BadMatrixFormatException();
-        double[][] diagonal = new double[array.length][array[0].length];;
+        double[][] diagonal = new double[array.length][array[0].length];
         for (int i = 0; i < m; i++)
             for (int j = 0; j < n; j++) {
                 if (i == j)
@@ -770,11 +783,11 @@ public class GIMatrix {
         if ((testedTable.length == 0) || (testedTable[0].length == 0)) throw new BadMatrixFormatException();
         int noOfColumns = testedTable[0].length;
         int currentHeigth, currentWidth;
-        for (int i = 0; i < testedTable.length; i++) { // verifies correspondence of m's (heigth)
-            if (testedTable[i].length != noOfColumns) throw new BadMatrixFormatException();
-            currentHeigth = testedTable[i][0].height();
+        for (GIMatrix[] giMatrices : testedTable) { // verifies correspondence of m's (heigth)
+            if (giMatrices.length != noOfColumns) throw new BadMatrixFormatException();
+            currentHeigth = giMatrices[0].height();
             for (int j = 1; j < testedTable[0].length; j++)
-                if (testedTable[i][j].height() != currentHeigth) throw new BadMatrixFormatException();
+                if (giMatrices[j].height() != currentHeigth) throw new BadMatrixFormatException();
         }
         for (int j = 0; j < testedTable[0].length; j++) { // verifies correspondence of n's (width)
             currentWidth = testedTable[0][j].width();

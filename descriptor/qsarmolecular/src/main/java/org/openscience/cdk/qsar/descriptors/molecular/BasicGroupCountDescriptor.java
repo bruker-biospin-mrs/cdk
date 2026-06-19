@@ -42,8 +42,6 @@ import org.openscience.cdk.smarts.SmartsPattern;
  * JOELib {@cdk.cite WEGNER2006}.
  *
  * @author      egonw
- * @cdk.module  qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:acidicGroupCount
  */
 public class BasicGroupCountDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
@@ -51,7 +49,7 @@ public class BasicGroupCountDescriptor extends AbstractMolecularDescriptor imple
     private final static String[] SMARTS_STRINGS = {"[$([NH2]-[CX4])]", "[$([NH](-[CX4])-[CX4])]",
             "[$(N(-[CX4])(-[CX4])-[CX4])]", "[$([*;+;!$(*~[*;-])])]", "[$(N=C-N)]", "[$(N-C=N)]"};
     private final static String[] NAMES          = {"nBase"};
-    private List<SmartsPattern> tools            = new ArrayList<SmartsPattern>();
+    private final List<SmartsPattern> tools            = new ArrayList<>();
 
     /**
      * Creates a new {@link BasicGroupCountDescriptor}.

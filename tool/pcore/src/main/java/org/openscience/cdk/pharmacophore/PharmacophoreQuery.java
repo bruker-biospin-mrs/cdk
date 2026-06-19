@@ -34,19 +34,17 @@ import java.util.List;
  * be represented as atom or bond analogs.
  *
  * @author Rajarshi Guha
- * @cdk.module pcore
  * @cdk.keyword pharmacophore
  * @cdk.keyword 3D isomorphism
- * @cdk.githash
  */
 public class PharmacophoreQuery extends QueryAtomContainer {
 
-    private List<Object> exclusionVolumes;
+    private final List<Object> exclusionVolumes;
 
     public PharmacophoreQuery() {
         // builder should be injected but this is difficult as this class is create in static methods
         super(DefaultChemObjectBuilder.getInstance());
-        exclusionVolumes = new ArrayList<Object>();
+        exclusionVolumes = new ArrayList<>();
     }
 
     /**

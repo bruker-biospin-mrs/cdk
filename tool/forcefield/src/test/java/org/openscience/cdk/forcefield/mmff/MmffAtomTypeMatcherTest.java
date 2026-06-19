@@ -24,14 +24,14 @@
 
 package org.openscience.cdk.forcefield.mmff;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.silent.AtomContainer;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -43,13 +43,13 @@ import static org.openscience.cdk.interfaces.IBond.Order.SINGLE;
  * failing cases from old implementations. The atom types of the MMFF validation suite is tested by
  * {@link MmffAtomTypeValidationSuiteTest}.
  */
-public class MmffAtomTypeMatcherTest {
+class MmffAtomTypeMatcherTest {
 
-    static MmffAtomTypeMatcher INSTANCE = new MmffAtomTypeMatcher();
+    private static final MmffAtomTypeMatcher INSTANCE = new MmffAtomTypeMatcher();
 
-    @Test(expected = IllegalArgumentException.class)
-    public void hydrogenCountMustBeDefined() {
-        IAtomContainer container = new AtomContainer();
+    @Test
+    void hydrogenCountMustBeDefined() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(new Atom("C"));
         container.addAtom(new Atom("H"));
         container.addAtom(new Atom("H"));
@@ -60,24 +60,30 @@ public class MmffAtomTypeMatcherTest {
         container.addBond(0, 3, SINGLE);
         container.addBond(0, 4, SINGLE);
         container.getAtom(0).setImplicitHydrogenCount(null);
-        INSTANCE.symbolicTypes(container);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            INSTANCE.symbolicTypes(container);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void hydrogenCountMustBeExplicit() {
-        IAtomContainer container = new AtomContainer();
+    @Test
+    void hydrogenCountMustBeExplicit() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(new Atom("C"));
         container.getAtom(0).setImplicitHydrogenCount(4);
-        INSTANCE.symbolicTypes(container);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            INSTANCE.symbolicTypes(container);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void aromaticCompoundsAreRejected() {
-        IAtomContainer container = new AtomContainer();
+    @Test
+    void aromaticCompoundsAreRejected() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(new Atom("C"));
         container.getAtom(0).setImplicitHydrogenCount(4);
-        container.getAtom(0).setFlag(CDKConstants.ISAROMATIC, true);
-        INSTANCE.symbolicTypes(container);
+        container.getAtom(0).setFlag(IChemObject.AROMATIC, true);
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            INSTANCE.symbolicTypes(container);
+        });
     }
 
     /**
@@ -87,8 +93,8 @@ public class MmffAtomTypeMatcherTest {
      * @cdk.bug #3523240
      */
     @Test
-    public void bug3523240IsResolved() throws Exception {
-        IAtomContainer container = new AtomContainer(50, 51, 0, 0);
+    void bug3523240IsResolved() throws Exception {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(atom("H", 0));
         container.addAtom(atom("O", 0));
         container.addAtom(atom("C", 0));
@@ -195,7 +201,7 @@ public class MmffAtomTypeMatcherTest {
                 "HC", "HC", "HC", "CR", "HC", "HC", "HC", "CR", "HC", "HC", "CB", "CB", "HC", "CB", "HC", "CB", "HC",
                 "CB", "HC", "CB", "HC"};
         String[] actual = INSTANCE.symbolicTypes(container);
-        Assert.assertArrayEquals(expected, actual);
+        Assertions.assertArrayEquals(expected, actual);
     }
 
     /**
@@ -205,8 +211,8 @@ public class MmffAtomTypeMatcherTest {
      * @cdk.bug #3524734
      */
     @Test
-    public void bug3524734IsResolved() throws Exception {
-        IAtomContainer container = new AtomContainer(10, 9, 0, 0);
+    void bug3524734IsResolved() throws Exception {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(atom("H", 0));
         container.addAtom(atom("C", 0));
         container.addAtom(atom("H", 0));
@@ -229,7 +235,7 @@ public class MmffAtomTypeMatcherTest {
 
         String[] expected = {"HC", "CR", "HC", "HC", "CR", "HC", "HC", "NO2", "O2N", "O2N"};
         String[] actual = INSTANCE.symbolicTypes(container);
-        Assert.assertArrayEquals(expected, actual);
+        Assertions.assertArrayEquals(expected, actual);
     }
 
     /**
@@ -238,8 +244,8 @@ public class MmffAtomTypeMatcherTest {
      * N2OX but this is for nitrogen cations so '*[NH+]([O-])*', NC=O is more likely to be correct.
      */
     @Test
-    public void hydroxyurea() {
-        IAtomContainer container = new AtomContainer(9, 8, 0, 0);
+    void hydroxyurea() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(atom("H", 0));
         container.addAtom(atom("O", 0));
         container.addAtom(atom("N", 0));
@@ -259,7 +265,7 @@ public class MmffAtomTypeMatcherTest {
         container.addBond(6, 8, IBond.Order.SINGLE);
         String[] expected = {"HO", "-O-", "NC=O", "HNCO", "CONN", "O=CN", "NC=O", "HNCO", "HNCO"};
         String[] actual = INSTANCE.symbolicTypes(container);
-        Assert.assertArrayEquals(expected, actual);
+        Assertions.assertArrayEquals(expected, actual);
     }
 
     /**
@@ -268,14 +274,14 @@ public class MmffAtomTypeMatcherTest {
      * break the assignment and are set to null.
      */
     @Test
-    public void molecularHydrogenDoesNotBreakAssignment() {
-        IAtomContainer container = new AtomContainer(2, 1, 0, 0);
+    void molecularHydrogenDoesNotBreakAssignment() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(atom("H", 0));
         container.addAtom(atom("H", 0));
         container.addBond(0, 1, SINGLE);
         String[] expected = {null, null};
         String[] actual = INSTANCE.symbolicTypes(container);
-        Assert.assertArrayEquals(expected, actual);
+        Assertions.assertArrayEquals(expected, actual);
     }
 
     /**
@@ -284,8 +290,8 @@ public class MmffAtomTypeMatcherTest {
      * NITROGEN IN ALIPHATIC AMINES'.
      */
     @Test
-    public void methylamine() {
-        IAtomContainer container = new AtomContainer(7, 6, 0, 0);
+    void methylamine() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(atom("H", 0));
         container.addAtom(atom("N", 0));
         container.addAtom(atom("H", 0));
@@ -301,7 +307,7 @@ public class MmffAtomTypeMatcherTest {
         container.addBond(3, 6, IBond.Order.SINGLE);
         String[] expected = {"HNR", "NR", "HNR", "CR", "HC", "HC", "HC"};
         String[] actual = INSTANCE.symbolicTypes(container);
-        Assert.assertArrayEquals(expected, actual);
+        Assertions.assertArrayEquals(expected, actual);
     }
 
     /**
@@ -309,8 +315,8 @@ public class MmffAtomTypeMatcherTest {
      * case.
      */
     @Test
-    public void thiophene() {
-        IAtomContainer container = new AtomContainer(9, 9, 0, 0);
+    void thiophene() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(atom("H", 0));
         container.addAtom(atom("C", 0));
         container.addAtom(atom("C", 0));
@@ -331,7 +337,7 @@ public class MmffAtomTypeMatcherTest {
         container.addBond(1, 8, IBond.Order.SINGLE);
         String[] expected = {"HC", "C5A", "C5B", "HC", "C5B", "HC", "C5A", "HC", "STHI"};
         String[] actual = INSTANCE.symbolicTypes(container);
-        Assert.assertArrayEquals(expected, actual);
+        Assertions.assertArrayEquals(expected, actual);
     }
 
     /**
@@ -339,8 +345,8 @@ public class MmffAtomTypeMatcherTest {
      * case. Note the CDK used 'Oar' instead of the actual 'OFUR' type.
      */
     @Test
-    public void furane() {
-        IAtomContainer container = new AtomContainer(9, 9, 0, 0);
+    void furane() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(atom("H", 0));
         container.addAtom(atom("C", 0));
         container.addAtom(atom("C", 0));
@@ -361,12 +367,12 @@ public class MmffAtomTypeMatcherTest {
         container.addBond(1, 8, IBond.Order.SINGLE);
         String[] expected = {"HC", "C5A", "C5B", "HC", "C5B", "HC", "C5A", "HC", "OFUR"};
         String[] actual = INSTANCE.symbolicTypes(container);
-        Assert.assertArrayEquals(expected, actual);
+        Assertions.assertArrayEquals(expected, actual);
     }
 
     @Test
-    public void methane() {
-        IAtomContainer container = new AtomContainer();
+    void methane() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(atom("C", 0));
         container.addAtom(atom("H", 0));
         container.addAtom(atom("H", 0));
@@ -378,26 +384,30 @@ public class MmffAtomTypeMatcherTest {
         container.addBond(0, 4, SINGLE);
         String[] expected = {"CR", "HC", "HC", "HC", "HC"};
         String[] actual = INSTANCE.symbolicTypes(container);
-        Assert.assertArrayEquals(expected, actual);
+        Assertions.assertArrayEquals(expected, actual);
     }
 
-    @Test(expected = IOException.class)
-    public void invalidSmilesThrowsIOExceptionForTokenManagerError() throws IOException {
+    @Test
+    void invalidSmilesThrowsIOExceptionForTokenManagerError() throws IOException {
         String row = "INVALID.SMILES X";
         ByteArrayInputStream in = new ByteArrayInputStream(row.getBytes());
         try {
-            MmffAtomTypeMatcher.loadPatterns(in);
+            Assertions.assertThrows(IOException.class, () -> {
+                MmffAtomTypeMatcher.loadPatterns(in);
+            });
         } finally {
             in.close();
         }
     }
 
-    @Test(expected = IOException.class)
-    public void invalidSmilesThrowsIOExceptionForIllegalArgument() throws IOException {
+    @Test
+    void invalidSmilesThrowsIOExceptionForIllegalArgument() throws IOException {
         String row = "23 X";
         ByteArrayInputStream in = new ByteArrayInputStream(row.getBytes());
         try {
-            MmffAtomTypeMatcher.loadPatterns(in);
+            Assertions.assertThrows(IOException.class, () -> {
+                MmffAtomTypeMatcher.loadPatterns(in);
+            });
         } finally {
             in.close();
         }

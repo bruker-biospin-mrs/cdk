@@ -35,8 +35,6 @@ import org.openscience.cdk.renderer.generators.parameter.AbstractGeneratorParame
  * for various generator parameters used by most drawings, such as the zoom,
  * background color, margin, etc.
  *
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
 
@@ -55,7 +53,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Double> arrowHeadWidth = new ArrowHeadWidth();
+    private final IGeneratorParameter<Double> arrowHeadWidth = new ArrowHeadWidth();
 
     /**
      * Determines if tooltips are to be shown.
@@ -70,7 +68,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private ShowTooltip showTooltip = new ShowTooltip();
+    private final ShowTooltip showTooltip = new ShowTooltip();
 
     /**
      * Determines if the molecule's title is depicted.
@@ -98,7 +96,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private ShowMoleculeTitle showMoleculeTitle = new ShowMoleculeTitle();
+    private final ShowMoleculeTitle showMoleculeTitle = new ShowMoleculeTitle();
 
     /**
      * If true, the scale is set such that the diagram
@@ -113,7 +111,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private FitToScreen fitToScreen = new FitToScreen();
+    private final FitToScreen fitToScreen = new FitToScreen();
 
     /**
      * The scale is the factor to multiply model coordinates by to convert the
@@ -130,7 +128,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Double> scale = new Scale();
+    private final IGeneratorParameter<Double> scale = new Scale();
 
     /**
      * The background color of the drawn image.
@@ -151,16 +149,16 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
     public static class BondLength extends AbstractGeneratorParameter<Double> {
 
         /** Returns the default value.
-         * @return 40.0 */
+         * @return 26 */
         @Override
         public Double getDefault() {
-            return 40.0;
+            return 26.1;
         }
     }
 
-    private IGeneratorParameter<Double> bondLength      = new BondLength();
+    private final IGeneratorParameter<Double> bondLength      = new BondLength();
 
-    private IGeneratorParameter<Color>  backgroundColor = new BackgroundColor();
+    private final IGeneratorParameter<Color>  backgroundColor = new BackgroundColor();
 
     /**
      * The foreground color, with which objects are drawn.
@@ -175,7 +173,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Color> foregroundColor = new ForegroundColor();
+    private final IGeneratorParameter<Color> foregroundColor = new ForegroundColor();
 
     /**
      * If set to true, uses anti-aliasing for drawing. Anti-aliasing makes
@@ -192,7 +190,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Boolean> useAntiAliasing = new UseAntiAliasing();
+    private final IGeneratorParameter<Boolean> useAntiAliasing = new UseAntiAliasing();
 
     /**
      * Area on each of the four margins to keep empty.
@@ -207,7 +205,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Double> margin = new Margin();
+    private final IGeneratorParameter<Double> margin = new Margin();
 
     /** The font style to use for text. */
     public static class UsedFontStyle extends AbstractGeneratorParameter<FontStyle> {
@@ -220,7 +218,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<FontStyle> fontStyle = new UsedFontStyle();
+    private final IGeneratorParameter<FontStyle> fontStyle = new UsedFontStyle();
 
     /**
      * Font to use for text.
@@ -235,7 +233,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<String> fontName = new FontName();
+    private final IGeneratorParameter<String> fontName = new FontName();
 
     /**
      * The zoom factor which is a user oriented parameter allowing the
@@ -255,7 +253,7 @@ public class BasicSceneGenerator implements IGenerator<IAtomContainer> {
     }
 
     /** A zoom of 100% is defined to be a value of 1.0 */
-    private IGeneratorParameter<Double> zoomFactor = new ZoomFactor();
+    private final IGeneratorParameter<Double> zoomFactor = new ZoomFactor();
 
     /**
      * An empty constructor necessary for reflection.

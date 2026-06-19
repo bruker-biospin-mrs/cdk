@@ -25,12 +25,14 @@ package org.openscience.cdk.io;
 
 import java.io.StringWriter;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
 import org.openscience.cdk.AtomContainer;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.test.io.ChemObjectIOTest;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -38,25 +40,24 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * TestCase for the writer CDK source code files using one test file.
  *
- * @cdk.module test-io
  * @see org.openscience.cdk.io.CDKSourceCodeWriterTest
  */
-public class CDKSourceCodeWriterTest extends ChemObjectIOTest {
+class CDKSourceCodeWriterTest extends ChemObjectIOTest {
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         setChemObjectIO(new CDKSourceCodeWriter());
     }
 
     @Test
-    public void testAccepts() throws Exception {
-        Assert.assertTrue(chemObjectIO.accepts(AtomContainer.class));
+    void testAccepts() throws Exception {
+        Assertions.assertTrue(chemObjectIO.accepts(IAtomContainer.class));
     }
 
     @Test
-    public void testOutput() throws Exception {
+    void testOutput() throws Exception {
         StringWriter writer = new StringWriter();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom atom = new Atom("C");
         atom.setMassNumber(14);
         molecule.addAtom(atom);

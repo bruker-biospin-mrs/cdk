@@ -26,8 +26,6 @@ import java.awt.geom.AffineTransform;
  * that the rendering engine is widget toolkit independent. Current
  * supported widget toolkits include SWT, Swing, and SVG.
  *
- * @cdk.module  render
- * @cdk.githash
  */
 public interface IRenderingVisitor {
 
@@ -38,13 +36,13 @@ public interface IRenderingVisitor {
      * @param element Abstract rendering element reflecting some part of the
      *                chemical drawing.
      */
-    public abstract void visit(IRenderingElement element);
+    void visit(IRenderingElement element);
 
     /**
      * Sets the affine transformations used.
      *
      * @param transform the affine transformation used.
      */
-    public abstract void setTransform(AffineTransform transform);
+    void setTransform(AffineTransform transform);
 
 }

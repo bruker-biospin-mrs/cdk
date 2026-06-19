@@ -20,11 +20,11 @@ package org.openscience.cdk.modeling.builder3d;
 
 import javax.vecmath.Point3d;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
 import org.openscience.cdk.Bond;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -32,13 +32,11 @@ import org.openscience.cdk.interfaces.IBond;
 /**
  * Tests for AtomPlacer3D
  *
- * @cdk.module test-builder3d
- * @cdk.githash
  */
-public class AtomTetrahedralLigandPlacer3DTest extends CDKTestCase {
+class AtomTetrahedralLigandPlacer3DTest extends CDKTestCase {
 
     @Test
-    public void testAdd3DCoordinatesForSinglyBondedLigands_IAtomContainer() throws Exception {
+    void testAdd3DCoordinatesForSinglyBondedLigands_IAtomContainer() throws Exception {
         IAtom atom1 = new Atom("C");
         atom1.setPoint3d(new Point3d(1, 1, 1));
         IAtom atom2 = new Atom("H");
@@ -69,7 +67,7 @@ public class AtomTetrahedralLigandPlacer3DTest extends CDKTestCase {
     }
 
     @Test
-    public void rescaleBondLength_IAtom_IAtom_Point3d() {
+    void rescaleBondLength_IAtom_IAtom_Point3d() {
         IAtom atom1 = new Atom("C");
         atom1.setPoint3d(new Point3d(1, 1, 1));
         atom1.setCovalentRadius(0.2);
@@ -77,11 +75,11 @@ public class AtomTetrahedralLigandPlacer3DTest extends CDKTestCase {
         atom2.setPoint3d(new Point3d(2, 2, 2));
         atom2.setCovalentRadius(0.2);
         Point3d newpoint = new AtomTetrahedralLigandPlacer3D().rescaleBondLength(atom1, atom2, atom2.getPoint3d());
-        Assert.assertEquals(0.4, newpoint.distance(atom1.getPoint3d()), 0.001);
+        Assertions.assertEquals(0.4, newpoint.distance(atom1.getPoint3d()), 0.001);
     }
 
     @Test
-    public void testGet3DCoordinatesForLigands_IAtom_IAtomContainer_IAtomContainer_IAtom_int_double_double()
+    void testGet3DCoordinatesForLigands_IAtom_IAtomContainer_IAtomContainer_IAtom_int_double_double()
             throws Exception {
         IAtom atom1 = new Atom("C");
         atom1.setPoint3d(new Point3d(1, 1, 1));
@@ -113,7 +111,7 @@ public class AtomTetrahedralLigandPlacer3DTest extends CDKTestCase {
         Point3d[] newPoints = new AtomTetrahedralLigandPlacer3D().get3DCoordinatesForLigands(atom1, noCoords,
                 withCoords, null, 4, AtomTetrahedralLigandPlacer3D.DEFAULT_BOND_LENGTH_H, -1);
         for (int j = 0; j < noCoords.getAtomCount(); j++) {
-            if (newPoints[j] == null) Assert.fail("No coordinates generated for atom " + j);
+            if (newPoints[j] == null) Assertions.fail("No coordinates generated for atom " + j);
             IAtom ligand = noCoords.getAtom(j);
             ligand.setPoint3d(newPoints[j]);
         }

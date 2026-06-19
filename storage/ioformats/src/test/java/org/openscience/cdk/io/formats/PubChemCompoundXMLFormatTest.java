@@ -22,15 +22,14 @@
  */
 package org.openscience.cdk.io.formats;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-ioformats
  */
 public class PubChemCompoundXMLFormatTest extends ChemFormatMatcherTest {
 
-    public PubChemCompoundXMLFormatTest() {
+    PubChemCompoundXMLFormatTest() {
         super.setChemFormatMatcher((IChemFormatMatcher) PubChemCompoundXMLFormat.getInstance());
     }
 
@@ -39,24 +38,24 @@ public class PubChemCompoundXMLFormatTest extends ChemFormatMatcherTest {
      */
     @Test
     @Override
-    public void testMatches() throws Exception {
+    void testMatches() throws Exception {
         String header = "<?xml version=\"\"?><PC-Compound/>";
-        Assert.assertTrue(matches(header));
+        Assertions.assertTrue(matches(header));
     }
 
     @Test
-    public void testFalsePositive() throws Exception {
+    void testFalsePositive() throws Exception {
         String header = "<?xml version=\"\"?><PC-Compounds><PC-Compound/></PC-Compounds>";
-        Assert.assertFalse(matches(header));
+        Assertions.assertFalse(matches(header));
     }
 
     /**
      * @cdk.bug 2832858
      */
     @Test
-    public void testFalsePositiveWithNewlines() throws Exception {
+    void testFalsePositiveWithNewlines() throws Exception {
         String header = "<PC-Compounds>\n<PC-Compound/>\n</PC-Compounds>";
-        Assert.assertFalse(matches(header));
+        Assertions.assertFalse(matches(header));
     }
 
 }

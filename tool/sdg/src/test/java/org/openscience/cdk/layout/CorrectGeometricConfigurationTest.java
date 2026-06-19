@@ -24,30 +24,29 @@
 
 package org.openscience.cdk.layout;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.silent.Atom;
-import org.openscience.cdk.silent.AtomContainer;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.stereo.DoubleBondStereochemistry;
 
 import javax.vecmath.Point2d;
 
-import static org.junit.Assert.assertEquals;
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation.OPPOSITE;
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation.TOGETHER;
 
 /**
  * @author John May
- * @cdk.module test-sdg
  */
-public class CorrectGeometricConfigurationTest {
+class CorrectGeometricConfigurationTest {
 
     // C/C=C/CCC
     @Test
-    public void cis() {
-        IAtomContainer m = new AtomContainer(5, 4, 0, 0);
+    void cis() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 3, -0.74d, 5.00d));
         m.addAtom(atom("C", 1, -1.49d, 3.70d));
         m.addAtom(atom("C", 1, -0.74d, 2.40d));
@@ -69,8 +68,8 @@ public class CorrectGeometricConfigurationTest {
 
     // C/C=C\CCC
     @Test
-    public void trans() {
-        IAtomContainer m = new AtomContainer(5, 4, 0, 0);
+    void trans() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 3, -0.74d, 5.00d));
         m.addAtom(atom("C", 1, -1.49d, 3.70d));
         m.addAtom(atom("C", 1, -0.74d, 2.40d));
@@ -92,8 +91,8 @@ public class CorrectGeometricConfigurationTest {
 
     static void assertPoint(IAtom a, double x, double y, double epsilon) {
         Point2d p = a.getPoint2d();
-        assertEquals(p.x, x, epsilon);
-        assertEquals(p.y, y, epsilon);
+        Assertions.assertEquals(p.x, x, epsilon);
+        Assertions.assertEquals(p.y, y, epsilon);
     }
 
     static IAtom atom(String symbol, int hCount, double x, double y) {

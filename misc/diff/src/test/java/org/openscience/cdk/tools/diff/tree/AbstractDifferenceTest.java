@@ -18,22 +18,20 @@
  */
 package org.openscience.cdk.tools.diff.tree;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-diff
  */
-public class AbstractDifferenceTest extends CDKTestCase {
+class AbstractDifferenceTest {
 
     @Test
-    public void testConstructor() {
+    void testConstructor() {
         DifferenceClass diffClass = new DifferenceClass();
-        Assert.assertNotNull(diffClass);
+        Assertions.assertNotNull(diffClass);
     }
 
-    protected class DifferenceClass extends AbstractDifference {
+    class DifferenceClass extends AbstractDifference {
 
     }
 

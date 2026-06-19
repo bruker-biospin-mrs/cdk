@@ -28,7 +28,6 @@ import javax.vecmath.Tuple3d;
 /**
  * This class handles vectors.
  *
- * @cdk.module  qm
  */
 public class Vector {
 
@@ -43,9 +42,9 @@ public class Vector {
 
     // Attention! Variables are unprotected
     /** The content of this vector */
-    public double[]            vector;
+    public final double[]            vector;
     /** The size of this vector */
-    public int                 size;
+    public final int                 size;
 
     /**
      * Constructs a Vector with "size" elements
@@ -192,7 +191,7 @@ public class Vector {
     @Override
     public String toString() {
         int i;
-        StringBuffer str = new StringBuffer();
+        StringBuilder str = new StringBuilder();
         str.append("[ ");
         for (i = 0; i < (size - 1); i++)
             str.append(vector[i] + " ");

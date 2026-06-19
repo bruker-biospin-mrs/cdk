@@ -26,8 +26,12 @@ package org.openscience.cdk.renderer.elements;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
+import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 import org.openscience.cdk.renderer.elements.path.Close;
@@ -41,8 +45,6 @@ import org.openscience.cdk.renderer.elements.path.QuadTo;
  * A path of rendering elements from the elements.path package.
  *
  * @author Arvid
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public class GeneralPath implements IRenderingElement {
 
@@ -130,7 +132,7 @@ public class GeneralPath implements IRenderingElement {
      * @return a new general path
      */
     public static GeneralPath shapeOf(Shape shape, Color color) {
-        List<PathElement> elements = new ArrayList<PathElement>();
+        List<PathElement> elements = new ArrayList<>();
         PathIterator pathIt = shape.getPathIterator(new AffineTransform());
         double[] data = new double[6];
         while (!pathIt.isDone()) {
@@ -164,7 +166,7 @@ public class GeneralPath implements IRenderingElement {
      * @return a new general path
      */
     public static GeneralPath outlineOf(Shape shape, double stroke, Color color) {
-        List<PathElement> elements = new ArrayList<PathElement>();
+        List<PathElement> elements = new ArrayList<>();
         PathIterator pathIt = shape.getPathIterator(new AffineTransform());
         double[] data = new double[6];
         while (!pathIt.isDone()) {
@@ -190,4 +192,54 @@ public class GeneralPath implements IRenderingElement {
         return new GeneralPath(elements, color, pathIt.getWindingRule(), stroke, false);
     }
 
+    /**
+     * Path iterators allow us to generalize many algorithms.
+     * @return the iterator
+     */
+    private PathIterator getAwtPathIterator() {
+        Deque<PathElement> queue = new ArrayDeque<>(elements);
+        return new PathIterator() {
+            @Override
+            public int getWindingRule() {
+                return winding;
+            }
+
+            @Override
+            public boolean isDone() {
+                return queue.isEmpty();
+            }
+
+            @Override
+            public void next() {
+                queue.pop();
+            }
+
+            @Override
+            public int currentSegment(float[] coords) {
+                PathElement e = queue.peek();
+                assert e != null;
+                e.points(coords);
+                return e.type().ordinal();
+            }
+
+            @Override
+            public int currentSegment(double[] coords) {
+                PathElement e = queue.peek();
+                assert e != null;
+                e.points(coords);
+                return e.type().ordinal();
+            }
+        };
+    }
+
+    /**
+     * Convert the GeneralPath to an awt.Area.
+     *
+     * @return the area
+     */
+    public Area toArea() {
+        Path2D path = new Path2D.Double();
+        path.append(getAwtPathIterator(), true);
+        return new Area(path);
+    }
 }

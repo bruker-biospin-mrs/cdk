@@ -19,47 +19,46 @@
  */
 package org.openscience.cdk.formula;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.interfaces.AbstractAdductFormulaTest;
+import org.openscience.cdk.test.interfaces.AbstractAdductFormulaTest;
 import org.openscience.cdk.interfaces.IAdductFormula;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 
 /**
  * Checks the functionality of the AdductFormula.
  *
- * @cdk.module test-data
  *
  * @see AdductFormula
  */
-public class AdductFormulaTest extends AbstractAdductFormulaTest {
+class AdductFormulaTest extends AbstractAdductFormulaTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setBuilder(DefaultChemObjectBuilder.getInstance());
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testAdductFormula() {
+    void testAdductFormula() {
         IAdductFormula mfS = new AdductFormula();
-        Assert.assertNotNull(mfS);
+        Assertions.assertNotNull(mfS);
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testAdductFormula_IMolecularFormula() {
+    void testAdductFormula_IMolecularFormula() {
         IAdductFormula mfS = new AdductFormula(getBuilder().newInstance(IMolecularFormula.class));
-        Assert.assertEquals(1, mfS.size());
+        Assertions.assertEquals(1, mfS.size());
     }
 }

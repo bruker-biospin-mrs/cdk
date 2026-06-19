@@ -33,16 +33,14 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * without electron electron interactions
  *
  * @author Stephan Michels &lt;stephan@vern.chem.tu-berlin.de&gt;
- * @cdk.githash
  * @cdk.created 2001-09-03
- * @cdk.module  qm
  */
 public class OneElectronJob {
 
-    private Orbitals            orbitals;
+    private final Orbitals            orbitals;
     private Vector              E;
 
-    private static ILoggingTool log = LoggingToolFactory.createLoggingTool(OneElectronJob.class);
+    private static final ILoggingTool log = LoggingToolFactory.createLoggingTool(OneElectronJob.class);
 
     /**
      * Constructs a one electron job

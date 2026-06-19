@@ -22,12 +22,12 @@
  */
 package org.openscience.cdk.graph;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.matrix.AdjacencyMatrix;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.ILonePair;
 import org.openscience.cdk.interfaces.ISingleElectron;
 
@@ -38,8 +38,6 @@ import java.util.List;
  * Tools class with methods for handling molecular graphs.
  *
  * @author      steinbeck
- * @cdk.module  core
- * @cdk.githash
  * @cdk.created 2001-06-17
  */
 public class PathTools {
@@ -75,7 +73,7 @@ public class PathTools {
      * @param costMatrix edge cost matrix
      * @return the topological distance matrix
      */
-    public static int[][] computeFloydAPSP(int costMatrix[][]) {
+    public static int[][] computeFloydAPSP(int[][] costMatrix) {
         int nrow = costMatrix.length;
         int[][] distMatrix = new int[nrow][nrow];
         //logger.debug("Matrix size: " + n);
@@ -114,7 +112,7 @@ public class PathTools {
      * @param costMatrix edge cost matrix
      * @return the topological distance matrix
      */
-    public static int[][] computeFloydAPSP(double costMatrix[][]) {
+    public static int[][] computeFloydAPSP(double[][] costMatrix) {
         int nrow = costMatrix.length;
         int[][] distMatrix = new int[nrow][nrow];
         //logger.debug("Matrix size: " + n);
@@ -154,13 +152,13 @@ public class PathTools {
     public static boolean depthFirstTargetSearch(IAtomContainer molecule, IAtom root, IAtom target, IAtomContainer path) {
         List<IBond> bonds = molecule.getConnectedBondsList(root);
         IAtom nextAtom;
-        root.setFlag(CDKConstants.VISITED, true);
+        root.setFlag(IChemObject.VISITED, true);
         boolean first = path.isEmpty();
         if (first)
             path.addAtom(root);
         for (IBond bond : bonds) {
             nextAtom = bond.getOther(root);
-            if (!nextAtom.getFlag(CDKConstants.VISITED)) {
+            if (!nextAtom.getFlag(IChemObject.VISITED)) {
                 path.addAtom(nextAtom);
                 path.addBond(bond);
                 if (nextAtom.equals(target)) {
@@ -217,7 +215,7 @@ public class PathTools {
      */
     public static IAtom[] findClosestByBond(IAtomContainer atomContainer, IAtom atom, int max) {
         IAtomContainer mol = atomContainer.getBuilder().newInstance(IAtomContainer.class);
-        List<IAtom> v = new ArrayList<IAtom>();
+        List<IAtom> v = new ArrayList<>();
         v.add(atom);
         breadthFirstSearch(atomContainer, v, mol, max);
         IAtom[] returnValue = new IAtom[mol.getAtomCount() - 1];
@@ -253,7 +251,7 @@ public class PathTools {
     public static void breadthFirstSearch(IAtomContainer atomContainer, List<IAtom> sphere, IAtomContainer molecule,
             int max) {
         IAtom nextAtom;
-        List<IAtom> newSphere = new ArrayList<IAtom>();
+        List<IAtom> newSphere = new ArrayList<>();
         for (IAtom atom : sphere) {
             //logger.debug("atoms  "+ atom + f);
             //logger.debug("sphere size  "+ sphere.size());
@@ -273,15 +271,15 @@ public class PathTools {
             List<IBond> bonds = atomContainer.getConnectedBondsList(atom);
             for (IBond bond : bonds) {
                 nextAtom = bond.getOther(atom);
-                if (!bond.getFlag(CDKConstants.VISITED)) {
+                if (!bond.getFlag(IChemObject.VISITED)) {
                     molecule.addAtom(nextAtom);
                     molecule.addBond(bond);
-                    bond.setFlag(CDKConstants.VISITED, true);
+                    bond.setFlag(IChemObject.VISITED, true);
                 }
-                if (!nextAtom.getFlag(CDKConstants.VISITED)) {
+                if (!nextAtom.getFlag(IChemObject.VISITED)) {
                     //					logger.debug("wie oft???");
                     newSphere.add(nextAtom);
-                    nextAtom.setFlag(CDKConstants.VISITED, true);
+                    nextAtom.setFlag(IChemObject.VISITED, true);
                 }
             }
             if (max > -1 && molecule.getAtomCount() > max) return;
@@ -316,20 +314,20 @@ public class PathTools {
         }
 
         IAtom nextAtom;
-        List<IAtom> newSphere = new ArrayList<IAtom>();
+        List<IAtom> newSphere = new ArrayList<>();
         for (IAtom atom : sphere) {
             List<IBond> bonds = atomContainer.getConnectedBondsList(atom);
             for (IBond bond : bonds) {
-                if (!bond.getFlag(CDKConstants.VISITED)) {
-                    bond.setFlag(CDKConstants.VISITED, true);
+                if (!bond.getFlag(IChemObject.VISITED)) {
+                    bond.setFlag(IChemObject.VISITED, true);
                 }
                 nextAtom = bond.getOther(atom);
-                if (!nextAtom.getFlag(CDKConstants.VISITED)) {
+                if (!nextAtom.getFlag(IChemObject.VISITED)) {
                     if (nextAtom.equals(target)) {
                         return pathLength;
                     }
                     newSphere.add(nextAtom);
-                    nextAtom.setFlag(CDKConstants.VISITED, true);
+                    nextAtom.setFlag(IChemObject.VISITED, true);
                 }
             }
         }
@@ -341,10 +339,10 @@ public class PathTools {
 
     protected static void resetFlags(IAtomContainer atomContainer) {
         for (int f = 0; f < atomContainer.getAtomCount(); f++) {
-            atomContainer.getAtom(f).setFlag(CDKConstants.VISITED, false);
+            atomContainer.getAtom(f).setFlag(IChemObject.VISITED, false);
         }
         for (int f = 0; f < atomContainer.getBondCount(); f++) {
-            atomContainer.getBond(f).setFlag(CDKConstants.VISITED, false);
+            atomContainer.getBond(f).setFlag(IChemObject.VISITED, false);
         }
 
     }
@@ -460,7 +458,7 @@ public class PathTools {
         }
         dist[atomContainer.indexOf(start)] = 0;
 
-        List<Integer> qList = new ArrayList<Integer>();
+        List<Integer> qList = new ArrayList<>();
         for (int i = 0; i < natom; i++)
             qList.add(i);
 
@@ -490,7 +488,7 @@ public class PathTools {
             }
         }
 
-        ArrayList<IAtom> tmp = new ArrayList<IAtom>();
+        ArrayList<IAtom> tmp = new ArrayList<>();
         int tmpSerial = endNumber;
         while (true) {
             tmp.add(0, atomContainer.getAtom(tmpSerial));
@@ -515,9 +513,9 @@ public class PathTools {
      * @return A <code>List</code> containing all the paths between the specified atoms
      */
     public static List<List<IAtom>> getAllPaths(IAtomContainer atomContainer, IAtom start, IAtom end) {
-        List<List<IAtom>> allPaths = new ArrayList<List<IAtom>>();
+        List<List<IAtom>> allPaths = new ArrayList<>();
         if (start.equals(end)) return allPaths;
-        findPathBetween(allPaths, atomContainer, start, end, new ArrayList<IAtom>());
+        findPathBetween(allPaths, atomContainer, start, end, new ArrayList<>());
         return allPaths;
     }
 
@@ -525,7 +523,7 @@ public class PathTools {
             IAtom end, List<IAtom> path) {
         if (start.equals(end)) {
             path.add(start);
-            allPaths.add(new ArrayList<IAtom>(path));
+            allPaths.add(new ArrayList<>(path));
             path.remove(path.size() - 1);
             return;
         }
@@ -549,18 +547,18 @@ public class PathTools {
      * @return A  <code>List</code> containing the paths found
      */
     public static List<List<IAtom>> getPathsOfLength(IAtomContainer atomContainer, IAtom start, int length) {
-        List<IAtom> curPath = new ArrayList<IAtom>();
-        List<List<IAtom>> paths = new ArrayList<List<IAtom>>();
+        List<IAtom> curPath = new ArrayList<>();
+        List<List<IAtom>> paths = new ArrayList<>();
         curPath.add(start);
         paths.add(curPath);
         for (int i = 0; i < length; i++) {
-            List<List<IAtom>> tmpList = new ArrayList<List<IAtom>>();
+            List<List<IAtom>> tmpList = new ArrayList<>();
             for (List<IAtom> path : paths) {
                 curPath = path;
                 IAtom lastVertex = curPath.get(curPath.size() - 1);
                 List<IAtom> neighbors = atomContainer.getConnectedAtomsList(lastVertex);
                 for (IAtom neighbor : neighbors) {
-                    List<IAtom> newPath = new ArrayList<IAtom>(curPath);
+                    List<IAtom> newPath = new ArrayList<>(curPath);
                     if (newPath.contains(neighbor)) continue;
                     newPath.add(neighbor);
                     tmpList.add(newPath);
@@ -584,20 +582,20 @@ public class PathTools {
      * @return A  <code>List</code> containing the paths found
      */
     public static List<List<IAtom>> getPathsOfLengthUpto(IAtomContainer atomContainer, IAtom start, int length) {
-        List<IAtom> curPath = new ArrayList<IAtom>();
-        List<List<IAtom>> paths = new ArrayList<List<IAtom>>();
-        List<List<IAtom>> allpaths = new ArrayList<List<IAtom>>();
+        List<IAtom> curPath = new ArrayList<>();
+        List<List<IAtom>> paths = new ArrayList<>();
+        List<List<IAtom>> allpaths = new ArrayList<>();
         curPath.add(start);
         paths.add(curPath);
         allpaths.add(curPath);
         for (int i = 0; i < length; i++) {
-            List<List<IAtom>> tmpList = new ArrayList<List<IAtom>>();
+            List<List<IAtom>> tmpList = new ArrayList<>();
             for (List<IAtom> path : paths) {
                 curPath = path;
                 IAtom lastVertex = curPath.get(curPath.size() - 1);
                 List<IAtom> neighbors = atomContainer.getConnectedAtomsList(lastVertex);
                 for (IAtom neighbor : neighbors) {
-                    List<IAtom> newPath = new ArrayList<IAtom>(curPath);
+                    List<IAtom> newPath = new ArrayList<>(curPath);
                     if (newPath.contains(neighbor)) continue;
                     newPath.add(neighbor);
                     tmpList.add(newPath);
@@ -628,20 +626,20 @@ public class PathTools {
      */
     public static List<List<IAtom>> getLimitedPathsOfLengthUpto(IAtomContainer atomContainer, IAtom start, int length,
             int limit) throws CDKException {
-        List<IAtom> curPath = new ArrayList<IAtom>();
-        List<List<IAtom>> paths = new ArrayList<List<IAtom>>();
-        List<List<IAtom>> allpaths = new ArrayList<List<IAtom>>();
+        List<IAtom> curPath = new ArrayList<>();
+        List<List<IAtom>> paths = new ArrayList<>();
+        List<List<IAtom>> allpaths = new ArrayList<>();
         curPath.add(start);
         paths.add(curPath);
         allpaths.add(curPath);
         for (int i = 0; i < length; i++) {
-            List<List<IAtom>> tmpList = new ArrayList<List<IAtom>>();
+            List<List<IAtom>> tmpList = new ArrayList<>();
             for (List<IAtom> path : paths) {
                 curPath = path;
                 IAtom lastVertex = curPath.get(curPath.size() - 1);
                 List<IAtom> neighbors = atomContainer.getConnectedAtomsList(lastVertex);
                 for (IAtom neighbor : neighbors) {
-                    List<IAtom> newPath = new ArrayList<IAtom>(curPath);
+                    List<IAtom> newPath = new ArrayList<>(curPath);
                     if (newPath.contains(neighbor)) continue;
                     newPath.add(neighbor);
                     tmpList.add(newPath);

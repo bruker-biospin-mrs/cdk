@@ -24,30 +24,31 @@
 
 package org.openscience.cdk.hash;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyLong;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class AbstractHashGeneratorTest {
+class AbstractHashGeneratorTest {
 
-    @Test(expected = NullPointerException.class)
-    public void testConstruction_Null() {
-        new AbstractHashGenerator(null);
+    @Test
+    void testConstruction_Null() {
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {new AbstractHashGenerator(null);});
     }
 
     @Test
-    public void testCopy() throws Exception {
+    void testCopy() throws Exception {
         long[] x = new long[]{2, 1, 3, 2};
         long[] y = AbstractHashGenerator.copy(x);
         assertThat(x, is(y));
@@ -55,7 +56,7 @@ public class AbstractHashGeneratorTest {
     }
 
     @Test
-    public void testCopy_SrcDest() throws Exception {
+    void testCopy_SrcDest() throws Exception {
         long[] x = new long[]{42, 23, 1, 72};
         long[] y = new long[4];
         AbstractHashGenerator.copy(x, y);
@@ -64,7 +65,7 @@ public class AbstractHashGeneratorTest {
     }
 
     @Test
-    public void testRotate() throws Exception {
+    void testRotate() throws Exception {
         Pseudorandom pseudorandom = mock(Pseudorandom.class);
         AbstractHashGenerator f = new AbstractHashGenerator(pseudorandom);
         f.rotate(5L);
@@ -72,7 +73,7 @@ public class AbstractHashGeneratorTest {
     }
 
     @Test
-    public void testRotate_N() throws Exception {
+    void testRotate_N() throws Exception {
         Pseudorandom pseudorandom = mock(Pseudorandom.class);
         AbstractHashGenerator f = new AbstractHashGenerator(pseudorandom);
         f.rotate(0, 5); // note 0 doesn't rotate...
@@ -80,7 +81,7 @@ public class AbstractHashGeneratorTest {
     }
 
     @Test
-    public void testLowestThreeBits() throws Exception {
+    void testLowestThreeBits() throws Exception {
         assertThat(AbstractHashGenerator.lowestThreeBits(0L), is(0));
         assertThat(AbstractHashGenerator.lowestThreeBits(1L), is(1));
         assertThat(AbstractHashGenerator.lowestThreeBits(2L), is(2));
@@ -107,7 +108,7 @@ public class AbstractHashGeneratorTest {
     }
 
     @Test
-    public void testDistribute_AtLeastOnce() throws Exception {
+    void testDistribute_AtLeastOnce() throws Exception {
         Pseudorandom pseudorandom = mock(Pseudorandom.class);
         AbstractHashGenerator f = new AbstractHashGenerator(pseudorandom);
         long x = f.distribute(8L); // lowest 3 bits = 0, make sure we rotate 1
@@ -116,7 +117,7 @@ public class AbstractHashGeneratorTest {
     }
 
     @Test
-    public void testDistribute() throws Exception {
+    void testDistribute() throws Exception {
         Pseudorandom pseudorandom = mock(Pseudorandom.class);
         AbstractHashGenerator f = new AbstractHashGenerator(pseudorandom);
         long x = f.distribute(5L); // lowest 3 bits = 5, rotate 6 times
@@ -125,7 +126,7 @@ public class AbstractHashGeneratorTest {
     }
 
     @Test
-    public void testToAdjList() {
+    void testToAdjList() {
         // already tests in ShortestPaths... this method be moved once all
         // pending patches are merged
     }

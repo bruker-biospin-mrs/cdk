@@ -24,19 +24,24 @@
 
 package org.openscience.cdk.layout;
 
-import com.google.common.collect.Maps;
-import com.google.common.primitives.Ints;
-import org.openscience.cdk.CDKConstants;
+import org.openscience.cdk.BondRef;
 import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.graph.GraphUtil;
+import org.openscience.cdk.graph.invariant.Canon;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
+import org.openscience.cdk.isomorphism.Pattern;
+import org.openscience.cdk.isomorphism.matchers.Expr;
+import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
+import org.openscience.cdk.isomorphism.matchers.QueryAtomContainer;
 import org.openscience.cdk.ringsearch.RingSearch;
 import org.openscience.cdk.stereo.Atropisomeric;
+import org.openscience.cdk.stereo.DoubleBondStereochemistry;
 import org.openscience.cdk.stereo.ExtendedTetrahedral;
 import org.openscience.cdk.stereo.Octahedral;
 import org.openscience.cdk.stereo.SquarePlanar;
@@ -50,55 +55,64 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import static org.openscience.cdk.interfaces.IBond.Display.*;
 import static org.openscience.cdk.interfaces.IBond.Order.DOUBLE;
 import static org.openscience.cdk.interfaces.IBond.Order.SINGLE;
-import static org.openscience.cdk.interfaces.IBond.Stereo.DOWN;
-import static org.openscience.cdk.interfaces.IBond.Stereo.DOWN_INVERTED;
-import static org.openscience.cdk.interfaces.IBond.Stereo.E_OR_Z;
-import static org.openscience.cdk.interfaces.IBond.Stereo.NONE;
-import static org.openscience.cdk.interfaces.IBond.Stereo.UP;
-import static org.openscience.cdk.interfaces.IBond.Stereo.UP_INVERTED;
-import static org.openscience.cdk.interfaces.IBond.Stereo.UP_OR_DOWN;
-import static org.openscience.cdk.interfaces.IBond.Stereo.UP_OR_DOWN_INVERTED;
 
 /**
  * Assigns non-planar labels (wedge/hatch) to the tetrahedral and extended tetrahedral
  * stereocentres in a 2D depiction. Labels are assigned to atoms using the following priority. <ol> <li>bond to non-stereo atoms</li> <li>acyclic
  * bonds</li> <li>bonds to atoms with lower degree (i.e. terminal)</li> <li>lower atomic number</li>
  * </ol>
- *
+ * <p>
  * Unspecified bonds are also marked.
  *
  * @author John May
- * @cdk.module sdg
  */
 final class NonplanarBonds {
 
-    /** The structure we are assigning labels to. */
+    /**
+     * The structure we are assigning labels to.
+     */
     private final IAtomContainer container;
 
-    /** Adjacency list graph representation of the structure. */
+    /**
+     * Adjacency list graph representation of the structure.
+     */
     private final int[][] graph;
 
-    /** Search for cyclic atoms. */
+    /**
+     * Search for cyclic atoms.
+     */
     private final RingSearch ringSearch;
 
-    /** Tetrahedral elements indexed by central atom. */
+    /**
+     * Tetrahedral elements indexed by central atom.
+     */
     private final ITetrahedralChirality[] tetrahedralElements;
 
-    /** Double-bond elements indexed by end atoms. */
+    /**
+     * Double-bond elements indexed by end atoms.
+     */
     private final IDoubleBondStereochemistry[] doubleBondElements;
 
-    /** Lookup atom index (avoid IAtomContainer). */
+    /**
+     * Lookup atom index (avoid IAtomContainer).
+     */
     private final Map<IAtom, Integer> atomToIndex;
 
-    /** Quick lookup of a bond give the atom index of it's atoms. */
+    /**
+     * Quick lookup of a bond give the atom index of it's atoms.
+     */
     private final GraphUtil.EdgeToBondMap edgeToBond;
 
     /**
@@ -130,7 +144,7 @@ final class NonplanarBonds {
         this.tetrahedralElements = new ITetrahedralChirality[container.getAtomCount()];
         this.doubleBondElements = new IDoubleBondStereochemistry[container.getAtomCount()];
         this.graph = g;
-        this.atomToIndex = Maps.newHashMapWithExpectedSize(container.getAtomCount());
+        this.atomToIndex = new HashMap<>(2 * container.getAtomCount());
         this.edgeToBond = edgeToBond;
         this.ringSearch = new RingSearch(container, graph);
 
@@ -138,12 +152,14 @@ final class NonplanarBonds {
         // needed if the atom positions weren't adjusted but we can't guarantee
         // that so it's safe to clear them
         for (IBond bond : container.bonds()) {
-            switch (bond.getStereo()) {
-                case UP:
-                case UP_INVERTED:
-                case DOWN:
-                case DOWN_INVERTED:
-                    bond.setStereo(NONE);
+            switch (bond.getDisplay()) {
+                case WedgeBegin:
+                case WedgeEnd:
+                case WedgedHashBegin:
+                case WedgedHashEnd:
+                case HollowWedgeBegin:
+                case HollowWedgeEnd:
+                    bond.setDisplay(IBond.Display.Solid);
             }
         }
 
@@ -163,8 +179,7 @@ final class NonplanarBonds {
                 int focus = atomToIndex.get(tc.getChiralAtom());
                 tetrahedralElements[focus] = tc;
                 foci[n++] = focus;
-            }
-            else if (element instanceof IDoubleBondStereochemistry) {
+            } else if (element instanceof IDoubleBondStereochemistry) {
                 IBond doubleBond = ((IDoubleBondStereochemistry) element).getStereoBond();
                 doubleBondElements[atomToIndex.get(doubleBond.getBegin())] =
                         doubleBondElements[atomToIndex.get(doubleBond.getEnd())] = (IDoubleBondStereochemistry) element;
@@ -176,7 +191,7 @@ final class NonplanarBonds {
 
             @Override
             public int compare(Integer i, Integer j) {
-                return -Ints.compare(nAdjacentCentres(i), nAdjacentCentres(j));
+                return -Integer.compare(nAdjacentCentres(i), nAdjacentCentres(j));
             }
         });
 
@@ -221,69 +236,174 @@ final class NonplanarBonds {
         return cpy;
     }
 
+    // moves multiple bonds into angles
+    private boolean snapBondsToPosition(IAtom beg, List<IBond> bonds, double... angles) {
+        Point2d p = beg.getPoint2d();
+        Point2d ref = new Point2d(p.x, p.y + 1);
+        if (angles.length != bonds.size())
+            throw new IllegalArgumentException();
+        boolean res = true;
+        for (int i = 0; i < bonds.size(); i++) {
+            if (!snapBondToPosition(beg, bonds.get(i), getRotated(ref, p, Math.toRadians(angles[i]))))
+                res = false;
+        }
+        return res;
+    }
+
     // tP=target point
-    private void snapBondToPosition(IAtom beg, IBond bond, Point2d tP) {
+    private boolean snapBondToPosition(IAtom beg, IBond bond, Point2d tP) {
+        if (bond == null)
+            return true;
         IAtom end = bond.getOther(beg);
         Point2d bP = beg.getPoint2d();
         Point2d eP = end.getPoint2d();
-        Vector2d curr = new Vector2d(eP.x-bP.x, eP.y-bP.y);
-        Vector2d dest = new Vector2d(tP.x-bP.x, tP.y-bP.y);
+        Vector2d curr = new Vector2d(eP.x - bP.x, eP.y - bP.y);
+        Vector2d dest = new Vector2d(tP.x - bP.x, tP.y - bP.y);
+
         double theta = Math.atan2(curr.y, curr.x) - Math.atan2(dest.y, dest.x);
+
         double sin = Math.sin(theta);
         double cos = Math.cos(theta);
-        bond.setFlag(CDKConstants.VISITED, true);
+
+        // if the bond is already visited it is in a ring with another atom, if it's
+        // spiro with the central atom (beg) we may be able to flip into position
+        if (bond.getFlag(IChemObject.VISITED)) {
+
+            curr.normalize();
+            dest.normalize();
+
+            // close enough, give it a little bump to be perfect
+            double dot = curr.dot(dest);
+            if (dot >= 0.97) {
+                rotate(end.getPoint2d(), bP, cos, sin);
+                return true;
+            }
+
+            Map<IAtom, Integer> visit = new HashMap<>();
+            visit.put(beg, 1);
+            floodFill(visit, end, 1);
+            IBond reflectBond = null;
+            for (IAtom atom : visit.keySet()) {
+                IBond tmp = atom.getBond(beg);
+                if (tmp != null && BondRef.deref(tmp) != BondRef.deref(bond)) {
+                    if (reflectBond != null)
+                        return false; // not spiro...
+                    reflectBond = tmp;
+                }
+            }
+
+            // should not be possible but if so just indicate we should rollback
+            if (reflectBond == null)
+                return false;
+
+            // reflect the atoms we collected around the other bond
+            GeometryUtil.reflect(visit.keySet(),
+                                 reflectBond.getBegin().getPoint2d(),
+                                 reflectBond.getEnd().getPoint2d());
+
+            curr = new Vector2d(eP.x - bP.x, eP.y - bP.y);
+            curr.normalize();
+
+            // did we get close?
+            double newdot = curr.dot(dest);
+            boolean okay = newdot >= 0.97;
+
+            // hard snap to expected position
+            if (newdot > dot) {
+                theta = Math.atan2(curr.y, curr.x) - Math.atan2(dest.y, dest.x);
+                rotate(end.getPoint2d(), bP, Math.cos(theta), Math.sin(theta));
+            } else if (newdot < dot) {
+                // reflect it back then snap
+                GeometryUtil.reflect(visit.keySet(),
+                                     reflectBond.getBegin().getPoint2d(),
+                                     reflectBond.getEnd().getPoint2d());
+                rotate(end.getPoint2d(), bP, Math.cos(theta), Math.sin(theta));
+            }
+
+            return okay;
+        }
+
+        beg.setFlag(IChemObject.VISITED, true);
+        bond.setFlag(IChemObject.VISITED, true);
         Deque<IAtom> queue = new ArrayDeque<>();
         queue.add(end);
         while (!queue.isEmpty()) {
             IAtom atom = queue.poll();
-            if (!atom.getFlag(CDKConstants.VISITED)) {
+            if (!atom.getFlag(IChemObject.VISITED)) {
                 rotate(atom.getPoint2d(), bP, cos, sin);
-                atom.setFlag(CDKConstants.VISITED, true);
+                atom.setFlag(IChemObject.VISITED, true);
+                for (IBond b : container.getConnectedBondsList(atom))
+                    if (!b.getFlag(IChemObject.VISITED)) {
+                        queue.add(b.getOther(atom));
+                        b.setFlag(IChemObject.VISITED, true);
+                    }
             }
-            for (IBond b : container.getConnectedBondsList(atom))
-                if (!b.getFlag(CDKConstants.VISITED)) {
-                    queue.add(b.getOther(atom));
-                    b.setFlag(CDKConstants.VISITED, true);
-                }
+        }
+        return true;
+    }
+
+    private void floodFill(Map<IAtom, Integer> visit, IAtom beg, int num) {
+        Deque<IAtom> queue = new ArrayDeque<>();
+        visit.put(beg, num);
+        queue.add(beg);
+        while (!queue.isEmpty()) {
+            IAtom atm = queue.poll();
+            visit.put(atm, num);
+            for (IBond bnd : atm.bonds()) {
+                IAtom nbr = bnd.getOther(atm);
+                if (visit.get(nbr) == null)
+                    queue.add(nbr);
+            }
         }
     }
 
     private void modifyAndLabel(SquarePlanar se) {
+        IAtom focus = se.getFocus();
         List<IAtom> atoms = se.normalize().getCarriers();
         List<IBond> bonds = new ArrayList<>(4);
-        double blen = 0;
+
+        int rcount = 0;
+        Map<IAtom, Integer> rmap = new HashMap<>();
+        List<Integer> rnums = new ArrayList<>(4);
+        rmap.put(focus, 0);
+
         for (IAtom atom : atoms) {
+            if (atom.equals(focus)) {
+                bonds.add(null);
+                rnums.add(0);
+                continue;
+            }
             IBond bond = container.getBond(se.getFocus(), atom);
-            // can't handled these using this method!
-            if (bond.isInRing())
-                return;
+            if (bond.isInRing()) {
+                if (!rmap.containsKey(atom))
+                    floodFill(rmap, atom, ++rcount);
+                rnums.add(rmap.get(atom));
+            } else
+                rnums.add(0);
             bonds.add(bond);
-            blen += GeometryUtil.getLength2D(bond);
         }
-        blen /= bonds.size();
-        IAtom focus = se.getFocus();
-        Point2d fp = focus.getPoint2d();
+
+        if (rcount > 0 &&
+                checkAndHandleRingSystems(bonds, rnums, rcount) == SPIRO_REJECT)
+            return;
 
         for (IAtom atom : container.atoms())
-            atom.setFlag(CDKConstants.VISITED, false);
+            atom.setFlag(IChemObject.VISITED, false);
         for (IBond bond : container.bonds())
-            bond.setFlag(CDKConstants.VISITED, false);
-        Point2d ref = new Point2d(fp.x, fp.y+blen);
-        snapBondToPosition(focus, bonds.get(0), getRotated(ref, fp, Math.toRadians(-60)));
-        snapBondToPosition(focus, bonds.get(1), getRotated(ref, fp, Math.toRadians(60)));
-        snapBondToPosition(focus, bonds.get(2), getRotated(ref, fp, Math.toRadians(120)));
-        snapBondToPosition(focus, bonds.get(3), getRotated(ref, fp, Math.toRadians(-120)));
-        setBondDisplay(bonds.get(0), focus, DOWN);
-        setBondDisplay(bonds.get(1), focus, DOWN);
-        setBondDisplay(bonds.get(2), focus, UP);
-        setBondDisplay(bonds.get(3), focus, UP);
+            bond.setFlag(IChemObject.VISITED, false);
+
+        snapBondsToPosition(focus, bonds, -60, 60, 120, -120);
+        setBondDisplay(bonds.get(0), focus, Down);
+        setBondDisplay(bonds.get(1), focus, Down);
+        setBondDisplay(bonds.get(2), focus, Up);
+        setBondDisplay(bonds.get(3), focus, Up);
     }
 
     private boolean doMirror(List<IAtom> atoms) {
         int p = 1;
         for (int i = 0; i < atoms.size(); i++) {
             IAtom a = atoms.get(i);
-            for (int j = i+1; j < atoms.size(); j++) {
+            for (int j = i + 1; j < atoms.size(); j++) {
                 IAtom b = atoms.get(j);
                 if (a.getAtomicNumber() > b.getAtomicNumber())
                     p *= -1;
@@ -293,109 +413,304 @@ final class NonplanarBonds {
     }
 
     private void modifyAndLabel(TrigonalBipyramidal se) {
-        List<IAtom> atoms = se.normalize().getCarriers();
-        List<IBond> bonds = new ArrayList<>(4);
-        double blen = 0;
-        for (IAtom atom : atoms) {
-            IBond bond = container.getBond(se.getFocus(), atom);
-            // can't handled these using this method!
-            if (bond.isInRing())
-                return;
-            bonds.add(bond);
-            blen += GeometryUtil.getLength2D(bond);
-        }
-        blen /= bonds.size();
+
         IAtom focus = se.getFocus();
-        Point2d fp = focus.getPoint2d();
+        List<IAtom> atoms = se.normalize().getCarriers();
+        List<IBond> bonds = new ArrayList<>(5);
+
+        int rcount = 0;
+        Map<IAtom, Integer> rmap = new HashMap<>();
+        List<Integer> rnums = new ArrayList<>(4);
+        rmap.put(focus, 0);
+
+        for (IAtom atom : atoms) {
+            if (atom.equals(focus)) {
+                bonds.add(null);
+                rnums.add(0);
+                continue;
+            }
+            IBond bond = container.getBond(se.getFocus(), atom);
+            if (bond.isInRing()) {
+                if (!rmap.containsKey(atom))
+                    floodFill(rmap, atom, ++rcount);
+                rnums.add(rmap.get(atom));
+            } else
+                rnums.add(0);
+            bonds.add(bond);
+        }
+
+        int res = SPIRO_ACCEPT;
+        if (rcount > 0 && (res = checkAndHandleRingSystems(bonds, rnums, rcount)) == SPIRO_REJECT)
+            return;
+
         for (IAtom atom : container.atoms())
-            atom.setFlag(CDKConstants.VISITED, false);
+            atom.setFlag(IChemObject.VISITED, false);
         for (IBond bond : container.bonds())
-            bond.setFlag(CDKConstants.VISITED, false);
-        Point2d ref = new Point2d(fp.x, fp.y+blen);
+            bond.setFlag(IChemObject.VISITED, false);
 
         // Optional but have a look at the equatorial ligands
         // and maybe invert the image based on the permutation
         // parity of their atomic numbers.
-        boolean mirror = doMirror(atoms.subList(1,4));
+        boolean mirror = res == SPIRO_MIRROR || rcount == 0 && doMirror(atoms.subList(1, 4));
 
         if (mirror) {
-            snapBondToPosition(focus, bonds.get(0), getRotated(ref, fp, Math.toRadians(0)));
-            snapBondToPosition(focus, bonds.get(3), getRotated(ref, fp, Math.toRadians(-60)));
-            snapBondToPosition(focus, bonds.get(2), getRotated(ref, fp, Math.toRadians(90)));
-            snapBondToPosition(focus, bonds.get(1), getRotated(ref, fp, Math.toRadians(-120)));
-            snapBondToPosition(focus, bonds.get(4), getRotated(ref, fp, Math.toRadians(180)));
-            setBondDisplay(bonds.get(1), focus, UP);
-            setBondDisplay(bonds.get(3), focus, DOWN);
+            snapBondsToPosition(focus, bonds, 0, -60, 90, -120, 180);
         } else {
-            snapBondToPosition(focus, bonds.get(0), getRotated(ref, fp, Math.toRadians(0)));
-            snapBondToPosition(focus, bonds.get(1), getRotated(ref, fp, Math.toRadians(60)));
-            snapBondToPosition(focus, bonds.get(2), getRotated(ref, fp, Math.toRadians(-90)));
-            snapBondToPosition(focus, bonds.get(3), getRotated(ref, fp, Math.toRadians(120)));
-            snapBondToPosition(focus, bonds.get(4), getRotated(ref, fp, Math.toRadians(180)));
-            setBondDisplay(bonds.get(1), focus, DOWN);
-            setBondDisplay(bonds.get(3), focus, UP);
+            snapBondsToPosition(focus, bonds, 0, 60, -90, 120, 180);
         }
+        setBondDisplay(bonds.get(1), focus, Down);
+        setBondDisplay(bonds.get(3), focus, Up);
     }
 
     private void modifyAndLabel(Octahedral oc) {
+        IAtom focus = oc.getFocus();
         List<IAtom> atoms = oc.normalize().getCarriers();
-        List<IBond> bonds = new ArrayList<>(4);
+        List<IBond> bonds = new ArrayList<>(6);
+
+        // determine which ring sets our bonds are in, if they are in spiro
+        // we can shuffle around, if more complex we can't
+        int rcount = 0;
+        Map<IAtom, Integer> rmap = new HashMap<>();
+        rmap.put(focus, 0);
+        List<Integer> rnums = new ArrayList<>(6);
 
         double blen = 0;
         for (IAtom atom : atoms) {
-            IBond bond = container.getBond(oc.getFocus(), atom);
-            // can't handled these using this method!
-            if (bond.isInRing())
-                return;
+            if (atom.equals(focus)) {
+                bonds.add(null);
+                rnums.add(0);
+                continue;
+            }
+            IBond bond = this.container.getBond((IAtom)oc.getFocus(), atom);
+            if (bond.isInRing()) {
+                if (!rmap.containsKey(atom))
+                    floodFill(rmap, atom, ++rcount);
+                rnums.add(rmap.get(atom));
+            } else {
+                rnums.add(0);
+            }
             bonds.add(bond);
             blen += GeometryUtil.getLength2D(bond);
         }
-        blen /= bonds.size();
-        IAtom focus = oc.getFocus();
-        Point2d fp = focus.getPoint2d();
-        for (IAtom atom : container.atoms())
-            atom.setFlag(CDKConstants.VISITED, false);
-        for (IBond bond : container.bonds())
-            bond.setFlag(CDKConstants.VISITED, false);
-        Point2d ref = new Point2d(fp.x, fp.y+blen);
-
-        snapBondToPosition(focus, bonds.get(0), getRotated(ref, fp, Math.toRadians(0)));
-        snapBondToPosition(focus, bonds.get(1), getRotated(ref, fp, Math.toRadians(60)));
-        snapBondToPosition(focus, bonds.get(2), getRotated(ref, fp, Math.toRadians(-60)));
-        snapBondToPosition(focus, bonds.get(3), getRotated(ref, fp, Math.toRadians(-120)));
-        snapBondToPosition(focus, bonds.get(4), getRotated(ref, fp, Math.toRadians(120)));
-        snapBondToPosition(focus, bonds.get(5), getRotated(ref, fp, Math.toRadians(180)));
-        setBondDisplay(bonds.get(1), focus, DOWN);
-        setBondDisplay(bonds.get(2), focus, DOWN);
-        setBondDisplay(bonds.get(3), focus, UP);
-        setBondDisplay(bonds.get(4), focus, UP);
+        int res = SPIRO_ACCEPT;
+        if (rcount > 0 &&
+            (res = checkAndHandleRingSystems(bonds, rnums, rcount)) == SPIRO_REJECT)
+            return;
+        for (IAtom atom : this.container.atoms())
+            atom.setFlag(IChemObject.VISITED, false);
+        for (IBond bond : this.container.bonds())
+            bond.setFlag(IChemObject.VISITED, false);
+        if (res == SPIRO_MIRROR) {
+            snapBondsToPosition(focus, bonds, new double[] { 0.0D, -60.0D, 60.0D, 120.0D, -120.0D, 180.0D });
+        } else {
+            snapBondsToPosition(focus, bonds, new double[] { 0.0D, 60.0D, -60.0D, -120.0D, 120.0D, 180.0D });
+        }
+        setBondDisplay(bonds.get(1), focus, Down);
+        setBondDisplay(bonds.get(2), focus, Down);
+        setBondDisplay(bonds.get(3), focus, Up);
+        setBondDisplay(bonds.get(4), focus, Up);
     }
 
-    private IBond.Stereo flip(IBond.Stereo disp) {
-        switch (disp) {
-            case UP: return UP_INVERTED;
-            case UP_INVERTED: return UP;
-            case DOWN: return DOWN_INVERTED;
-            case DOWN_INVERTED: return DOWN;
-            case UP_OR_DOWN: return UP_OR_DOWN_INVERTED;
-            case UP_OR_DOWN_INVERTED: return UP_OR_DOWN;
-            default: return disp;
+
+    private static final int SPIRO_REJECT = 0;
+    private static final int SPIRO_ACCEPT = 1;
+    private static final int SPIRO_MIRROR = 2;
+
+    /**
+     * This is complicated, we have a set of bonds and the rings they belong to. We move the bonds around such that
+     * we can depict them in a nice way given the constraints of the geometry.
+     *
+     * @param bonds the bonds
+     * @param rnums the ring membership
+     * @return the status
+     */
+    private int checkAndHandleRingSystems(List<IBond> bonds, List<Integer> rnums, int rcount) {
+
+        if (!isSpiro(rnums))
+            return SPIRO_REJECT;
+
+        // square planar
+        if (bonds.size() == 4) {
+
+            // check for trans-pairings which we can't lay out at the moment
+            if (rnums.get(0).equals(rnums.get(2)) || rnums.get(1).equals(rnums.get(3)))
+                return SPIRO_REJECT;
+
+            // rotate such that there is a spiro (or no rings) in position 1/2 in the plane, these are laid out
+            // adjacent so is the only place we can nicely place the spiro
+            int rotate;
+            if (rnums.get(1).equals(rnums.get(2)))
+                rotate = 0; // don't rotate
+            else if (rnums.get(2).equals(rnums.get(3)))
+                rotate = 1;
+            else if (rnums.get(3).equals(rnums.get(0)))
+                rotate = 2;
+            else
+                rotate = 0;
+            for (int i = 0; i < rotate; i++) {
+                rotate(bonds, 0, 4);
+                rotate(rnums, 0, 4);
+            }
+        }
+
+        // TBPY
+        if (bonds.size() == 5) {
+
+            // check for trans- pairing which we can't lay out at the moment
+            if (rnums.get(0) != 0 && rnums.get(0).equals(rnums.get(4)))
+                return SPIRO_REJECT;
+
+            // rotate such that there is a spiro (or no rings) in position 1/2 in the plane, these are laid out
+            // adjacent so is the only place we can nicely place the spiro
+            int rotate;
+            if (rnums.get(1) != 0 && rnums.get(1).equals(rnums.get(3)) ||
+                    rnums.get(2) == 0 && !rnums.get(1).equals(rnums.get(3)))
+                rotate = 0; // don't rotate
+            else if (rnums.get(2) != 0 && rnums.get(2).equals(rnums.get(1)) ||
+                    rnums.get(3) == 0 && !rnums.get(2).equals(rnums.get(1)))
+                rotate = 1;
+            else if (rnums.get(3) != 0 && rnums.get(3).equals(rnums.get(2)) ||
+                    rnums.get(1) == 0 && !rnums.get(3).equals(rnums.get(2)))
+                rotate = 2;
+            else
+                rotate = 0;
+            for (int i = 0; i < rotate; i++) {
+                rotate(bonds, 1, 3);
+                rotate(rnums, 1, 3);
+            }
+
+            if ((!rnums.get(0).equals(0) && rnums.get(0).equals(rnums.get(3)) ||
+                    (!rnums.get(1).equals(0) && rnums.get(1).equals(rnums.get(4))))) {
+                swap(bonds, 1, 3);
+                swap(rnums, 1, 3);
+                return SPIRO_MIRROR;
+            }
+        }
+
+        // octahedral
+        if (bonds.size() == 6) {
+
+            // check for trans-pairings which we can't lay out at the moment
+            if (rnums.get(0) != 0 && rnums.get(0).equals(rnums.get(5)) ||
+                    rnums.get(1) != 0 && rnums.get(1).equals(rnums.get(3)) ||
+                    rnums.get(2) != 0 && rnums.get(2).equals(rnums.get(4)))
+                return SPIRO_REJECT;
+
+            // rotate such that there is a spiro (or no rings) in position 2/3 in the plane, these are laid out
+            // adjacent so is the only place we can nicely place the spiro
+            if (rcount == 1 && rnums.get(0) != 0) {
+                int[] perms = Octahedral.PERMUTATIONS[0];
+                int best = 0;
+                for (int j = 24; j < perms.length; j += 24) {
+                    if (rnums.get(perms[j]) == 0 && rnums.get(perms[j + 6]) == 0) {
+                        best = j;
+                        break;
+                    }
+                }
+                permute(bonds, perms, best, 6);
+                permute(rnums, perms, best, 6);
+            }
+            int rotate;
+            if (rnums.get(2).equals(rnums.get(3)))
+                rotate = 0; // don't rotate
+            else if (rnums.get(3).equals(rnums.get(4)))
+                rotate = 1;
+            else if (rnums.get(4).equals(rnums.get(1)))
+                rotate = 2;
+            else if (rnums.get(1).equals(rnums.get(2)))
+                rotate = 3;
+            else
+                return SPIRO_REJECT;
+
+            for (int i = 0; i < rotate; i++) {
+                rotate(bonds, 1, 4);
+                rotate(rnums, 1, 4);
+            }
+
+            // now check the vertical axis, they should be pair 0,1 and 4,5 since again
+            // those are adjacent and allow us to depict nicely
+            if ((!rnums.get(0).equals(0) && rnums.get(0).equals(rnums.get(4))) ||
+                    (!rnums.get(1).equals(0) && rnums.get(1).equals(rnums.get(5)))) {
+                swap(bonds, 1, 4);
+                swap(bonds, 2, 3);
+                swap(rnums, 1, 4);
+                swap(rnums, 2, 3);
+                return SPIRO_MIRROR;
+            }
+
+            return SPIRO_ACCEPT;
+        }
+
+        return SPIRO_ACCEPT;
+    }
+
+    private <T> void permute(List<T> bonds, int[] perm, int offset, int n) {
+        List<T> backup = new ArrayList<>(bonds);
+        for (int i = 0; i < n; i++)
+            bonds.set(i, backup.get(perm[offset + i]));
+    }
+
+    /**
+     * Ensures out rings are only spiro by inspecting the ring set numbers. This is the case if we have &ge; 3 of a
+     * given number in the list.
+     * <pre>
+     *     [0,0,1,2,1,2] => yes
+     *     [0,0,1,0,1,0] => yes - 0 is not in a ring
+     *     [0,0,1,1,1,0] => no
+     * </pre>
+     *
+     * @param rnums rnums
+     * @return only spiro
+     */
+    private boolean isSpiro(List<Integer> rnums) {
+        // invariant the max number is < the total in the list
+        int[] counts = new int[1 + rnums.size()];
+        for (Integer rnum : rnums) {
+            if (rnum != 0 && ++counts[rnum] > 2)
+                return false;
+        }
+        return true;
+    }
+
+    private <T> void rotate(List<T> l, int off, int len) {
+        for (int i = 0; i < (len - 1); i++) {
+            swap(l, off + i, off + ((i + 1) % 4));
         }
     }
 
-    private void setBondDisplay(IBond bond, IAtom focus, IBond.Stereo display) {
+    private <T> void swap(List<T> l, int i, int j) {
+        T tmp = l.get(i);
+        l.set(i, l.get(j));
+        l.set(j, tmp);
+    }
+
+    private IBond.Display invert(IBond.Display disp) {
+        switch (disp) {
+            case WedgeBegin:
+                return IBond.Display.WedgedHashBegin;
+            case WedgedHashBegin:
+                return IBond.Display.WedgeBegin;
+            default:
+                return disp;
+        }
+    }
+
+    private void setBondDisplay(IBond bond, IAtom focus, IBond.Display display) {
+        if (bond == null)
+            return;
         if (bond.getBegin().equals(focus))
-            bond.setStereo(display);
+            bond.setDisplay(display);
         else
-            bond.setStereo(flip(display));
+            bond.setDisplay(display.flip());
     }
 
     /**
      * Find a bond between two possible atoms. For example beg1 - end or
      * beg2 - end.
+     *
      * @param beg1 begin 1
      * @param beg2 begin 2
-     * @param end end
+     * @param end  end
      * @return the bond (or null if none)
      */
     private IBond findBond(IAtom beg1, IAtom beg2, IAtom end) {
@@ -409,14 +724,15 @@ final class NonplanarBonds {
      * Sets a wedge bond, because wedges are relative we may need to flip
      * the storage order on the bond.
      *
-     * @param bond the bond
-     * @param end the expected end atom (fat end of wedge)
+     * @param bond  the bond
+     * @param end   the expected end atom (fat end of wedge)
      * @param style the wedge style
      */
-    private void setWedge(IBond bond, IAtom end, IBond.Stereo style) {
+    private void setWedge(IBond bond, IAtom end, IBond.Display style) {
+        // FIXME
         if (!bond.getEnd().equals(end))
             bond.setAtoms(new IAtom[]{bond.getEnd(), bond.getBegin()});
-        bond.setStereo(style);
+        bond.setDisplay(style);
     }
 
     /**
@@ -443,7 +759,7 @@ final class NonplanarBonds {
 
         IAtom[] terminals = element.findTerminalAtoms(container);
 
-        IAtom left  = terminals[0];
+        IAtom left = terminals[0];
         IAtom right = terminals[1];
 
         // some bonds may be null if, this happens when an implicit atom
@@ -460,11 +776,11 @@ final class NonplanarBonds {
         p *= sortClockwise(rank, focus, atoms, 4);
 
         // assign all up/down labels to an auxiliary array
-        IBond.Stereo[] labels = new IBond.Stereo[4];
+        IBond.Display[] labels = new IBond.Display[4];
         for (int i = 0; i < 4; i++) {
             int v = rank[i];
             p *= -1;
-            labels[v] = p > 0 ? UP : DOWN;
+            labels[v] = p > 0 ? IBond.Display.WedgeBegin : IBond.Display.WedgedHashBegin;
         }
 
         int[] priority = new int[]{5, 5, 5, 5};
@@ -475,7 +791,7 @@ final class NonplanarBonds {
         for (int v : priority(atomToIndex.get(focus), atoms, 4)) {
             IBond bond = bonds[v];
             if (bond == null) continue;
-            if (bond.getStereo() == NONE && bond.getOrder() == SINGLE) priority[v] = i++;
+            if (bond.getDisplay() == IBond.Display.Solid && bond.getOrder() == SINGLE) priority[v] = i++;
         }
 
         // we now check which side was more favourable and assign two labels
@@ -502,9 +818,9 @@ final class NonplanarBonds {
      */
     private void label(final Atropisomeric element) {
 
-        final IBond   focus = element.getFocus();
-        final IAtom   beg   = focus.getBegin();
-        final IAtom   end   = focus.getEnd();
+        final IBond focus = element.getFocus();
+        final IAtom beg = focus.getBegin();
+        final IAtom end = focus.getEnd();
         final IAtom[] atoms = element.getCarriers().toArray(new IAtom[0]);
         final IBond[] bonds = new IBond[4];
 
@@ -527,7 +843,7 @@ final class NonplanarBonds {
 
         // may be back to front?
         if (bonds[0] == null || bonds[1] == null ||
-            bonds[2] == null || bonds[3] == null)
+                bonds[2] == null || bonds[3] == null)
             throw new IllegalStateException("Unexpected configuration ordering, beg/end bonds should be in that order.");
 
         // find the clockwise ordering (in the plane of the page) by sorting by
@@ -538,15 +854,15 @@ final class NonplanarBonds {
 
         IAtom phantom = beg.getBuilder().newAtom();
         phantom.setPoint2d(new Point2d((beg.getPoint2d().x + end.getPoint2d().x) / 2,
-                                   (beg.getPoint2d().y + end.getPoint2d().y) / 2));
+                                       (beg.getPoint2d().y + end.getPoint2d().y) / 2));
         p *= sortClockwise(rank, phantom, atoms, 4);
 
         // assign all up/down labels to an auxiliary array
-        IBond.Stereo[] labels = new IBond.Stereo[4];
+        IBond.Display[] labels = new IBond.Display[4];
         for (int i = 0; i < 4; i++) {
             int v = rank[i];
             p *= -1;
-            labels[v] = p > 0 ? UP : DOWN;
+            labels[v] = p > 0 ? IBond.Display.WedgeBegin : IBond.Display.WedgedHashBegin;
         }
 
         int[] priority = new int[]{5, 5, 5, 5};
@@ -554,10 +870,10 @@ final class NonplanarBonds {
         // set the label for the highest priority and available bonds on one side
         // of the cumulated system, setting both sides doesn't make sense
         int i = 0;
-        for (int v : new int[]{0,1,2,3}) {
+        for (int v : new int[]{0, 1, 2, 3}) {
             IBond bond = bonds[v];
             if (bond == null) continue;
-            if (bond.getStereo() == NONE && bond.getOrder() == SINGLE) priority[v] = i++;
+            if (bond.getDisplay() == IBond.Display.Solid && bond.getOrder() == SINGLE) priority[v] = i++;
         }
 
         // we now check which side was more favourable and assign two labels
@@ -565,20 +881,20 @@ final class NonplanarBonds {
         if (priority[0] + priority[1] < priority[2] + priority[3]) {
             if (priority[0] < 5) {
                 bonds[0].setAtoms(new IAtom[]{beg, atoms[0]});
-                bonds[0].setStereo(labels[0]);
+                bonds[0].setDisplay(labels[0]);
             }
             if (priority[1] < 5) {
                 bonds[1].setAtoms(new IAtom[]{beg, atoms[1]});
-                bonds[1].setStereo(labels[1]);
+                bonds[1].setDisplay(labels[1]);
             }
         } else {
             if (priority[2] < 5) {
                 bonds[2].setAtoms(new IAtom[]{end, atoms[2]});
-                bonds[2].setStereo(labels[2]);
+                bonds[2].setDisplay(labels[2]);
             }
             if (priority[3] < 5) {
                 bonds[3].setAtoms(new IAtom[]{end, atoms[3]});
-                bonds[3].setStereo(labels[3]);
+                bonds[3].setDisplay(labels[3]);
             }
         }
 
@@ -610,9 +926,9 @@ final class NonplanarBonds {
                 bonds[n] = container.getBond(focus, atoms[i]);
                 if (bonds[n] == null)
                     throw new IllegalArgumentException("Inconsistent stereo,"
-                                                       + " tetrahedral centre"
-                                                       + " contained atom not"
-                                                       + " stored in molecule");
+                                                               + " tetrahedral centre"
+                                                               + " contained atom not"
+                                                               + " stored in molecule");
                 atoms[n] = atoms[i];
                 n++;
             }
@@ -628,7 +944,10 @@ final class NonplanarBonds {
         // hydrogen is opposite all three neighbors. The central label needs to
         // be inverted, atoms could be laid out like this automatically, consider
         // CC1C[C@H]2CC[C@@H]1C2
+        // Like wise if the other two bonds are co-linear we should not place a
+        // wedge on the one off to the side (avoid is set).
         int invert = -1;
+        int avoid = -1;
         if (n == 3) {
             // find a triangle of non-sequential neighbors (sorted clockwise)
             // which has anti-clockwise winding
@@ -637,35 +956,41 @@ final class NonplanarBonds {
                 Point2d b = focus.getPoint2d();
                 Point2d c = atoms[rank[(i + 2) % n]].getPoint2d();
                 double det = (a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x);
-                if (det > 0) {
-                    invert = rank[(i + 1) % n];
-                    break;
-                }
+                if (Math.abs(det) <= 0.05)
+                    avoid = rank[(i + 1) % n]; // i,i+2 are co-linear, i+1=no wedge
+                else if (det > 0.05 && invert == -1)
+                    invert = rank[(i + 1) % n]; // acute angle, invert wedge
             }
         }
 
         // assign all up/down labels to an auxiliary array
-        IBond.Stereo[] labels = new IBond.Stereo[n];
+        IBond.Display[] labels = new IBond.Display[n];
+        IBond.Display refWedge = p > 0 ? IBond.Display.WedgeBegin : IBond.Display.WedgedHashBegin;
         for (int i = 0; i < n; i++) {
             int v = rank[i];
-
-            // 4 neighbors (invert every other one)
-            if (n == 4) p *= -1;
-
-            labels[v] = invert == v ? p > 0 ? DOWN : UP : p > 0 ? UP : DOWN;
+            // no wedge here (would be ambiguous)
+            if (avoid == v)
+                labels[v] = IBond.Display.Solid;
+                // invert (if D3 acute, or odd index of D4)
+            else if (invert == v || (n == 4 && i % 2 == 0))
+                labels[v] = invert(refWedge);
+            else
+                labels[v] = refWedge;
         }
 
         // set the label for the highest priority and available bond
-        IBond.Stereo firstlabel      = null;
-        boolean      assignTwoLabels = assignTwoLabels(bonds, labels);
+        IBond.Display firstlabel = null;
+        boolean assignTwoLabels = assignTwoLabels(bonds, labels);
         for (int v : priority(atomToIndex.get(focus), atoms, n)) {
             IBond bond = bonds[v];
-            if (bond.getStereo() != NONE || bond.getOrder() != SINGLE)
+            if (bond.getDisplay() != Solid || bond.getOrder() != SINGLE)
+                continue;
+            if (labels[v] == IBond.Display.Solid)
                 continue;
             // first label
             if (firstlabel == null) {
                 bond.setAtoms(new IAtom[]{focus, atoms[v]}); // avoids UP_INVERTED/DOWN_INVERTED
-                bond.setStereo(labels[v]);
+                bond.setDisplay(labels[v]);
                 firstlabel = labels[v];
                 // don't assign a second label when there are only three ligands
                 if (!assignTwoLabels)
@@ -677,7 +1002,7 @@ final class NonplanarBonds {
                 if (isSp3Carbon(atoms[v], graph[container.indexOf(atoms[v])].length))
                     break;
                 bond.setAtoms(new IAtom[]{focus, atoms[v]}); // avoids UP_INVERTED/DOWN_INVERTED
-                bond.setStereo(labels[v]);
+                bond.setDisplay(labels[v]);
                 break;
             }
         }
@@ -687,7 +1012,7 @@ final class NonplanarBonds {
             throw new IllegalArgumentException("could not assign non-planar (up/down) labels");
     }
 
-    private boolean assignTwoLabels(IBond[] bonds, IBond.Stereo[] labels) {
+    private boolean assignTwoLabels(IBond[] bonds, IBond.Display[] labels) {
         return labels.length == 4 && countRingBonds(bonds) != 3;
     }
 
@@ -781,12 +1106,12 @@ final class NonplanarBonds {
                     for (IAtom terminal : terminals) {
                         if (Objects.equals(terminal.getAtomicNumber(),
                                            nbr.getAtomicNumber()) &&
-                            Objects.equals(terminal.getMassNumber(),
-                                           nbr.getMassNumber()) &&
-                            Objects.equals(terminal.getFormalCharge(),
-                                           nbr.getFormalCharge()) &&
-                            Objects.equals(terminal.getImplicitHydrogenCount(),
-                                           nbr.getImplicitHydrogenCount())) {
+                                Objects.equals(terminal.getMassNumber(),
+                                               nbr.getMassNumber()) &&
+                                Objects.equals(terminal.getFormalCharge(),
+                                               nbr.getFormalCharge()) &&
+                                Objects.equals(terminal.getImplicitHydrogenCount(),
+                                               nbr.getImplicitHydrogenCount())) {
                             return false;
                         }
                     }
@@ -828,6 +1153,34 @@ final class NonplanarBonds {
         if (tetrahedralElements[i] == null && tetrahedralElements[j] != null) return true;
         if (tetrahedralElements[i] != null && tetrahedralElements[j] == null) return false;
 
+        // focus = -1 is used for double bonds
+        if (focus >= 0 && isBridgeHead(container.getAtom(focus))) {
+
+            // if we are a bridgehead we prefer wedging to non
+            // bridgeheads
+            boolean bridgeHeadI = isBridgeHead(container.getAtom(i));
+            boolean bridgeHeadJ = isBridgeHead(container.getAtom(j));
+            if (bridgeHeadI != bridgeHeadJ)
+                return !bridgeHeadI;
+
+            // prefer getting the wedges to face each other
+            int numStereoBridgeHeadI = 0;
+            int numStereoBridgeHeadJ = 0;
+            for (IBond bond : container.getAtom(i).bonds()) {
+                IAtom atom = bond.getOther(container.getAtom(i));
+                if (isBridgeHead(atom) && tetrahedralElements[atom.getIndex()] != null)
+                    numStereoBridgeHeadI++;
+            }
+            for (IBond bond : container.getAtom(j).bonds()) {
+                IAtom atom = bond.getOther(container.getAtom(j));
+                if (isBridgeHead(atom) && tetrahedralElements[atom.getIndex()] != null)
+                    numStereoBridgeHeadJ++;
+            }
+            int cmp = Integer.compare(numStereoBridgeHeadI, numStereoBridgeHeadJ);
+            if (cmp != 0)
+                return cmp > 0;
+        }
+
         // prioritise acyclic bonds
         boolean iCyclic = focus >= 0 ? ringSearch.cyclic(focus, i) : ringSearch.cyclic(i);
         boolean jCyclic = focus >= 0 ? ringSearch.cyclic(focus, j) : ringSearch.cyclic(j);
@@ -841,9 +1194,9 @@ final class NonplanarBonds {
             return false;
 
         final int iDegree = graph[i].length;
-        int iElem   = iAtom.getAtomicNumber();
+        int iElem = iAtom.getAtomicNumber();
         final int jDegree = graph[j].length;
-        int jElem   = jAtom.getAtomicNumber();
+        int jElem = jAtom.getAtomicNumber();
 
         // rank carbon's last
         if (iElem == 6) iElem = 256;
@@ -866,6 +1219,15 @@ final class NonplanarBonds {
         if (iDegree > jDegree) return false;
 
         return false;
+    }
+
+    private boolean isBridgeHead(IAtom atom) {
+        int numRings = 0;
+        for (IBond bond : atom.bonds()) {
+            if (bond.isInRing())
+                numRings++;
+        }
+        return numRings == 3;
     }
 
     /**
@@ -955,7 +1317,7 @@ final class NonplanarBonds {
                 adj[nAdj++] = container.getAtom(neighbor);
             }
             // conjugated and someone else has marked it as unspecified
-            if (bond.getStereo() == UP_OR_DOWN || bond.getStereo() == UP_OR_DOWN_INVERTED) {
+            if (bond.getDisplay() == Wavy) {
                 return;
             }
         }
@@ -967,7 +1329,7 @@ final class NonplanarBonds {
                 adj[nAdj++] = container.getAtom(neighbor);
             }
             // conjugated and someone else has marked it as unspecified
-            if (bond.getStereo() == UP_OR_DOWN || bond.getStereo() == UP_OR_DOWN_INVERTED) {
+            if (bond.getDisplay() == Wavy) {
                 return;
             }
         }
@@ -980,31 +1342,33 @@ final class NonplanarBonds {
             if (doubleBondElements[atomToIndex.get(adj[rank[i]])] == null &&
                     tetrahedralElements[atomToIndex.get(adj[rank[i]])] == null) {
                 edgeToBond.get(atomToIndex.get(focus[rank[i]]),
-                               atomToIndex.get(adj[rank[i]])).setStereo(UP_OR_DOWN);
+                               atomToIndex.get(adj[rank[i]]))
+                          .setDisplay(IBond.Display.Wavy);
                 return;
             }
         }
 
-        // we got here an no bond was marked, fortunately we have a fallback and can use 
+        // we got here and no bond was marked, fortunately we have a fallback and can use
         // crossed bond
-        doubleBond.setStereo(E_OR_Z);
+        doubleBond.setDisplay(Crossed);
     }
 
 
     /**
      * Checks if the atom can be involved in a double-bond.
+     *
      * @param idx atom idx
      * @return the atom at index (idx) is valid for a double bond
      * @see <a href="http://www.inchi-trust.org/download/104/InChI_TechMan.pdf">Double bond stereochemistry, InChI Technical Manual</a>
      */
-    private boolean isCisTransEndPoint(int idx){
-        IAtom atom  = container.getAtom(idx);
+    private boolean isCisTransEndPoint(int idx) {
+        IAtom atom = container.getAtom(idx);
         // error: uninit atom
         if (atom.getAtomicNumber() == null ||
-            atom.getFormalCharge() == null ||
-            atom.getImplicitHydrogenCount() == null)
+                atom.getFormalCharge() == null ||
+                atom.getImplicitHydrogenCount() == null)
             return false;
-        final int chg    = atom.getFormalCharge();
+        final int chg = atom.getFormalCharge();
         final int btypes = getBondTypes(idx);
         switch (atom.getAtomicNumber()) {
             case 6:  // C
@@ -1044,12 +1408,19 @@ final class NonplanarBonds {
         return btypes;
     }
 
+    private enum Symmetry {
+        Unknown,
+        Asymmetric,
+        Symmetric
+    }
+
     /**
      * Locates double bonds to mark as unspecified stereochemistry.
      *
      * @return set of double bonds
      */
     private List<IBond> findUnspecifiedDoubleBonds(int[][] adjList) {
+        long[] symmetry = null;
         List<IBond> unspecifiedDoubleBonds = new ArrayList<>();
         for (IBond bond : container.bonds()) {
             // non-double bond, ignore it
@@ -1081,31 +1452,123 @@ final class NonplanarBonds {
             if (!hasOnlyPlainBonds(beg, bond) || !hasOnlyPlainBonds(end, bond))
                 continue;
 
-            if (hasLinearEqualPaths(adjList, beg, end) || hasLinearEqualPaths(adjList, end, beg))
+            Symmetry symBeg = isSymmetric(adjList, beg, end, bond);
+            Symmetry symEnd = isSymmetric(adjList, end, beg, bond);
+            if (symBeg == Symmetry.Symmetric || symEnd == Symmetry.Symmetric)
                 continue;
-
-            unspecifiedDoubleBonds.add(bond);
+            // expensive automorphism test needed to verify double bond stereo
+            if (symBeg == Symmetry.Asymmetric &&
+                    symEnd == Symmetry.Asymmetric) {
+                unspecifiedDoubleBonds.add(bond);
+            } else {
+                if (symmetry == null) {
+                    try {
+                        symmetry = Canon.symmetry(container, graph);
+                    } catch (Exception ex) {
+                        // something funky, e.g. pseudo atoms
+                    }
+                }
+                if (canHaveStereo(bond, symmetry))
+                    unspecifiedDoubleBonds.add(bond);
+            }
         }
         return unspecifiedDoubleBonds;
     }
 
-    private boolean hasLinearEqualPaths(int[][] adjList, int start, int prev) {
-        int a = -1;
-        int b = -1;
-        for (int w : adjList[start]) {
-            if (w == prev)    continue;
-            else if (a == -1) a = w;
-            else if (b == -1) b = w;
-            else return false; // ???
+    /**
+     * Determines if a double bond can support stereo (the hard way). After
+     * the preliminary fail-fast checks we need to verify if a bond is actually
+     * unspecified or not.
+     * <br/>
+     * 1. To do this we first check the canonical symmetry partition, note this does
+     * not account for stereochemistry. If both neighbors don't have any
+     * identical atoms (all atoms in their own partition cell/symmetry class)
+     * then the bond can be stereogenic and should be marked as such.
+     * <br/>
+     * 2. If that check fails, then we do the ultimate test which is we assign
+     * the stereochemistry and see if it matches it's self inverted. In other
+     * words, we cannot match on to our mirror image.
+     *
+     * @param bond the bond
+     * @param symmetry the symmetry
+     * @return the bond can have stereochemistry
+     */
+    private boolean canHaveStereo(IBond bond, long[] symmetry) {
+        IAtom beg = bond.getBegin();
+        IAtom end = bond.getEnd();
+        if (symmetry != null) {
+            Set<Long> begSymCls = container.getConnectedBondsList(beg)
+                                           .stream()
+                                           .filter(b -> b != bond)
+                                           .map(b -> symmetry[container.indexOf(b.getOther(beg))])
+                                           .collect(Collectors.toSet());
+            Set<Long> endSymCls = container.getConnectedBondsList(end)
+                                           .stream()
+                                           .filter(b -> b != bond)
+                                           .map(b -> symmetry[container.indexOf(b.getOther(end))])
+                                           .collect(Collectors.toSet());
+
+            // if the number of symmetry classes + 1 is the neighbour count they are all distinct
+            // +1 because we skipped the double bond connecting these two atoms
+            if (begSymCls.size() + 1 == container.getConnectedBondsCount(beg) &&
+                    endSymCls.size() + 1 == container.getConnectedBondsCount(end))
+                return true;
         }
-        if (b < 0)
+
+        // OK now we need to pull out the bit guns
+
+        if (bond.getContainer() == null)
+            return true; // not an AtomContainer2 impl, so presume true
+
+        List<IStereoElement> backup = new ArrayList<>();
+        for (IStereoElement se : container.stereoElements())
+            backup.add(se);
+        if (backup.isEmpty())
             return false;
+        Optional<IBond> firstRef = container.getConnectedBondsList(beg).stream().filter(b -> b != bond)
+                                            .findFirst();
+        Optional<IBond> secondRef = container.getConnectedBondsList(end).stream().filter(b -> b != bond)
+                                             .findFirst();
+        if (!firstRef.isPresent() || !secondRef.isPresent())
+            return false;
+        IBond[] refBonds = new IBond[]{firstRef.get(), secondRef.get()};
+        container.addStereoElement(new DoubleBondStereochemistry(bond, refBonds, IDoubleBondStereochemistry.Conformation.OPPOSITE));
+        IQueryAtomContainer query = QueryAtomContainer.create(container,
+                                                              Expr.Type.ELEMENT,
+                                                              Expr.Type.IS_IN_RING,
+                                                              Expr.Type.IS_AROMATIC,
+                                                              Expr.Type.ISOTOPE,
+                                                              Expr.Type.FORMAL_CHARGE,
+                                                              Expr.Type.ALIPHATIC_ORDER,
+                                                              Expr.Type.TOTAL_DEGREE,
+                                                              Expr.Type.TOTAL_H_COUNT,
+                                                              Expr.Type.STEREOCHEMISTRY);
+        container.addStereoElement(new DoubleBondStereochemistry(bond, refBonds, IDoubleBondStereochemistry.Conformation.TOGETHER));
+        boolean matched = Pattern.findSubstructure(query).matches(container);
+        container.setStereoElements(backup);
+        return !matched;
+    }
+
+    private Symmetry isSymmetric(int[][] adjList, int start, int prev, IBond bond) {
+        int nbor1 = -1;
+        int nbor2 = -1;
+        for (int w : adjList[start]) {
+            if (w == prev) continue;
+            else if (nbor1 == -1) nbor1 = w;
+            else if (nbor2 == -1) nbor2 = w;
+            else return Symmetry.Asymmetric; // extra bond???
+        }
+        // only one explicit neighbour, it is asymmetric!
+        if (nbor2 < 0)
+            return Symmetry.Asymmetric;
         Set<IAtom> visit = new HashSet<>();
-        IAtom aAtom = container.getAtom(a);
-        IAtom bAtom = container.getAtom(b);
+        IAtom aAtom = container.getAtom(nbor1);
+        IAtom bAtom = container.getAtom(nbor2);
         visit.add(container.getAtom(start));
-        if (aAtom.isInRing() || bAtom.isInRing())
-            return false;
+        if (aAtom.isInRing() || bAtom.isInRing()) {
+            // more work needed
+            return Symmetry.Unknown;
+        }
         IAtom aNext = aAtom;
         IAtom bNext = bAtom;
         while (aNext != null && bNext != null) {
@@ -1118,33 +1581,37 @@ final class NonplanarBonds {
 
             // different atoms
             if (notEqual(aAtom.getAtomicNumber(), bAtom.getAtomicNumber()))
-                return false;
+                return Symmetry.Asymmetric;
             if (notEqual(aAtom.getFormalCharge(), bAtom.getFormalCharge()))
-                return false;
+                return Symmetry.Asymmetric;
             if (notEqual(aAtom.getMassNumber(), bAtom.getMassNumber()))
-                return false;
+                return Symmetry.Asymmetric;
 
             int hCntA = aAtom.getImplicitHydrogenCount();
             int hCntB = bAtom.getImplicitHydrogenCount();
             int cntA = 0, cntB = 0;
-            for (int w : adjList[atomToIndex.get(aAtom)]) {
-                IAtom atom = container.getAtom(w);
+            for (IBond b : container.getConnectedBondsList(aAtom)) {
+                if (b.getOrder() != SINGLE)
+                    return Symmetry.Unknown;
+                IAtom atom = b.getOther(aAtom);
                 if (visit.contains(atom))
                     continue;
                 // hydrogen
-                if (atom.getAtomicNumber() == 1 && adjList[w].length == 1) {
+                if (atom.getAtomicNumber() == 1 && container.getConnectedBondsCount(atom) == 1) {
                     hCntA++;
                     continue;
                 }
                 aNext = cntA == 0 ? atom : null;
                 cntA++;
             }
-            for (int w : adjList[atomToIndex.get(bAtom)]) {
-                IAtom atom = container.getAtom(w);
+            for (IBond b : container.getConnectedBondsList(bAtom)) {
+                if (b.getOrder() != SINGLE)
+                    return Symmetry.Unknown;
+                IAtom atom = b.getOther(bAtom);
                 if (visit.contains(atom))
                     continue;
                 // hydrogen
-                if (atom.getAtomicNumber() == 1 && adjList[w].length == 1) {
+                if (atom.getAtomicNumber() == 1 && container.getConnectedBondsCount(atom) == 1) {
                     hCntB++;
                     continue;
                 }
@@ -1154,18 +1621,18 @@ final class NonplanarBonds {
 
             // hydrogen counts are different
             if (hCntA != hCntB)
-                return false;
+                return Symmetry.Asymmetric;
 
-            // differing in co
+            // differing in counts
             if (cntA != cntB || (cntA > 1 && cntB > 1))
-                return false;
+                return Symmetry.Unknown;
         }
 
         if (aNext != null || bNext != null)
-            return false;
+            return Symmetry.Asymmetric;
 
         // traversed the path till the end
-        return true;
+        return Symmetry.Symmetric;
     }
 
     private boolean notEqual(Integer a, Integer b) {
@@ -1193,7 +1660,7 @@ final class NonplanarBonds {
             }
             // single bonds
             else {
-                if (adjBond.getStereo() == UP_OR_DOWN || adjBond.getStereo() == UP_OR_DOWN_INVERTED) {
+                if (adjBond.getDisplay() == Wavy) {
                     return false;
                 }
                 count++;

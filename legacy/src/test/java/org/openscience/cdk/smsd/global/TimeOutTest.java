@@ -21,11 +21,8 @@
  */
 package org.openscience.cdk.smsd.global;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit testing for the {@link TimeOut} class.
@@ -33,61 +30,60 @@ import org.junit.Test;
  * @author     egonw
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
-public class TimeOutTest {
+class TimeOutTest {
 
     @Test
-    public void testGetInstance() {
-        Assert.assertNotNull(TimeOut.getInstance());
+    void testGetInstance() {
+        Assertions.assertNotNull(TimeOut.getInstance());
     }
 
     @Test
-    public void testSetTimeOut() {
+    void testSetTimeOut() {
         TimeOut timeOut = TimeOut.getInstance();
         timeOut.setTimeOut(0.1);
-        Assert.assertEquals(0.1, timeOut.getTimeOut(), 0.0001);
+        Assertions.assertEquals(0.1, timeOut.getTimeOut(), 0.0001);
         timeOut.setTimeOut(0.2);
-        Assert.assertEquals(0.2, timeOut.getTimeOut(), 0.0001);
+        Assertions.assertEquals(0.2, timeOut.getTimeOut(), 0.0001);
     }
 
     /**
      * Test of getTimeOut method, of class TimeOut.
      */
     @Test
-    public void testGetTimeOut() {
+    void testGetTimeOut() {
         TimeOut instance = new TimeOut();
         instance.setTimeOut(10);
         double expResult = 10.0;
         double result = instance.getTimeOut();
-        Assert.assertEquals(expResult, result, 10.0);
+        Assertions.assertEquals(expResult, result, 10.0);
     }
 
     /**
      * Test of isTimeOutFlag method, of class TimeOut.
      */
     @Test
-    public void testIsTimeOutFlag() {
+    void testIsTimeOutFlag() {
         TimeOut instance = new TimeOut();
         instance.setTimeOut(10);
         instance.setTimeOutFlag(true);
         boolean expResult = true;
         boolean result = instance.isTimeOutFlag();
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     /**
      * Test of setTimeOutFlag method, of class TimeOut.
      */
     @Test
-    public void testSetTimeOutFlag() {
+    void testSetTimeOutFlag() {
         boolean timeOut = true;
         TimeOut instance = new TimeOut();
         instance.setTimeOut(10);
         instance.setTimeOutFlag(timeOut);
         boolean expResult = false;
         boolean result = instance.isTimeOutFlag();
-        assertNotSame(expResult, result);
+        Assertions.assertNotSame(expResult, result);
     }
 }

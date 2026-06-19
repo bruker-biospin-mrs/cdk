@@ -18,9 +18,8 @@
  */
 package org.openscience.cdk.reaction.type;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKConstants;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
 import org.openscience.cdk.exception.CDKException;
@@ -28,6 +27,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.interfaces.ISingleElectron;
@@ -39,6 +39,7 @@ import org.openscience.cdk.reaction.ReactionProcessTest;
 import org.openscience.cdk.reaction.type.parameters.IParameterReact;
 import org.openscience.cdk.reaction.type.parameters.SetReactionCenter;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.LonePairElectronChecker;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ReactionManipulator;
@@ -50,18 +51,17 @@ import java.util.List;
 /**
  * TestSuite that runs a test for the ElectronImpactNBEReactionTest.
  *
- * @cdk.module test-reaction
  */
 
 public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
 
     private final LonePairElectronChecker lpcheck = new LonePairElectronChecker();
-    private IChemObjectBuilder            builder = SilentChemObjectBuilder.getInstance();
+    private final IChemObjectBuilder            builder = SilentChemObjectBuilder.getInstance();
 
     /**
      *  The JUnit setup method
      */
-    public ElectronImpactNBEReactionTest() throws Exception {
+    ElectronImpactNBEReactionTest() throws Exception {
         setReaction(ElectronImpactNBEReaction.class);
     }
 
@@ -69,9 +69,9 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
      *  The JUnit setup method
      */
     @Test
-    public void testElectronImpactNBEReaction() throws Exception {
+    void testElectronImpactNBEReaction() throws Exception {
         IReactionProcess type = new ElectronImpactNBEReaction();
-        Assert.assertNotNull(type);
+        Assertions.assertNotNull(type);
     }
 
     /**
@@ -102,11 +102,9 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(reactant);
         lpcheck.saturate(reactant);
 
-        Iterator<IAtom> atoms = reactant.atoms().iterator();
-        while (atoms.hasNext()) {
-            IAtom atom = (IAtom) atoms.next();
+        for (IAtom atom : reactant.atoms()) {
             if (reactant.getConnectedLonePairsCount(atom) > 0) {
-                atom.setFlag(CDKConstants.REACTIVE_CENTER, true);
+                atom.setFlag(IChemObject.REACTIVE_CENTER, true);
             }
         }
 
@@ -117,7 +115,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         makeSureAtomTypesAreRecognized(reactant);
 
         IReactionProcess type = new ElectronImpactNBEReaction();
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.TRUE);
         paramList.add(param);
@@ -125,14 +123,14 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
 
         IReactionSet setOfReactions = type.initiate(setOfReactants, null);
 
-        Assert.assertEquals(1, setOfReactions.getReactionCount());
-        Assert.assertEquals(1, setOfReactions.getReaction(0).getProductCount());
+        Assertions.assertEquals(1, setOfReactions.getReactionCount());
+        Assertions.assertEquals(1, setOfReactions.getReaction(0).getProductCount());
 
         IAtomContainer molecule = setOfReactions.getReaction(0).getProducts().getAtomContainer(0);
-        Assert.assertEquals(1, molecule.getAtom(4).getFormalCharge().intValue());
-        Assert.assertEquals(1, molecule.getConnectedSingleElectronsCount(molecule.getAtom(4)));
+        Assertions.assertEquals(1, molecule.getAtom(4).getFormalCharge().intValue());
+        Assertions.assertEquals(1, molecule.getConnectedSingleElectronsCount(molecule.getAtom(4)));
 
-        Assert.assertTrue(setOfReactions.getReaction(0).mappings().iterator().hasNext());
+        Assertions.assertTrue(setOfReactions.getReaction(0).mappings().iterator().hasNext());
 
     }
 
@@ -142,7 +140,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
      * @return    Description of the Return Value
      */
     @Test
-    public void testAutomatic_Set_Active_Atom() throws Exception {
+    void testAutomatic_Set_Active_Atom() throws Exception {
         /*
          * ionize(>C=O): C=CCC(=O)CC -> C=CCC(=O*)CC, without setting the
          * reactive center
@@ -174,12 +172,12 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         IReactionProcess type = new ElectronImpactNBEReaction();
         IReactionSet setOfReactions = type.initiate(setOfReactants, null);
 
-        Assert.assertEquals(1, setOfReactions.getReactionCount());
-        Assert.assertEquals(1, setOfReactions.getReaction(0).getProductCount());
+        Assertions.assertEquals(1, setOfReactions.getReactionCount());
+        Assertions.assertEquals(1, setOfReactions.getReaction(0).getProductCount());
 
         IAtomContainer molecule = setOfReactions.getReaction(0).getProducts().getAtomContainer(0);
-        Assert.assertEquals(1, molecule.getAtom(4).getFormalCharge().intValue());
-        Assert.assertEquals(1, molecule.getConnectedSingleElectronsCount(molecule.getAtom(4)));
+        Assertions.assertEquals(1, molecule.getAtom(4).getFormalCharge().intValue());
+        Assertions.assertEquals(1, molecule.getConnectedSingleElectronsCount(molecule.getAtom(4)));
 
     }
 
@@ -189,10 +187,10 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
      *
      * @cdk.inchi  InChI=1/CH5N/c1-2/h2H2,1H3
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testNsp3SingleB() throws Exception {
+    void testNsp3SingleB() throws Exception {
         //Smiles("CN")
         IAtomContainer molecule = builder.newInstance(IAtomContainer.class);
         molecule.addAtom(builder.newInstance(IAtom.class, "C"));
@@ -211,13 +209,13 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(molecule);
         lpcheck.saturate(molecule);
 
-        molecule.getAtom(1).setFlag(CDKConstants.REACTIVE_CENTER, true);
+        molecule.getAtom(1).setFlag(IChemObject.REACTIVE_CENTER, true);
 
         IAtomContainerSet setOfReactants = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainerSet.class);
         setOfReactants.addAtomContainer(molecule);
 
         IReactionProcess type = new ElectronImpactNBEReaction();
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.TRUE);
         paramList.add(param);
@@ -226,7 +224,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         /* initiate */
         IReactionSet setOfReactions = type.initiate(setOfReactants, null);
 
-        Assert.assertEquals(1, setOfReactions.getReactionCount());
+        Assertions.assertEquals(1, setOfReactions.getReactionCount());
 
         // expected products
 
@@ -252,7 +250,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
 
         IAtomContainer product1 = setOfReactions.getReaction(0).getProducts().getAtomContainer(0);
         QueryAtomContainer queryAtom = QueryAtomContainerCreator.createSymbolAndChargeQueryContainer(expected1);
-        Assert.assertTrue(new UniversalIsomorphismTester().isIsomorph(product1, queryAtom));
+        Assertions.assertTrue(new UniversalIsomorphismTester().isIsomorph(product1, queryAtom));
 
     }
 
@@ -262,10 +260,10 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
      *
      * @cdk.inchi  InChI=1/CH3N/c1-2/h2H,1H2
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testNsp2SingleB() throws Exception {
+    void testNsp2SingleB() throws Exception {
         //Smiles("C=N")
         IAtomContainer molecule = builder.newInstance(IAtomContainer.class);
         molecule.addAtom(builder.newInstance(IAtom.class, "N"));
@@ -280,14 +278,14 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(molecule);
         lpcheck.saturate(molecule);
 
-        molecule.getAtom(0).setFlag(CDKConstants.REACTIVE_CENTER, true);
+        molecule.getAtom(0).setFlag(IChemObject.REACTIVE_CENTER, true);
 
         IAtomContainerSet setOfReactants = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainerSet.class);
         setOfReactants.addAtomContainer(molecule);
 
         IReactionProcess type = new ElectronImpactNBEReaction();
 
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.TRUE);
         paramList.add(param);
@@ -296,7 +294,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         /* initiate */
         IReactionSet setOfReactions = type.initiate(setOfReactants, null);
 
-        Assert.assertEquals(1, setOfReactions.getReactionCount());
+        Assertions.assertEquals(1, setOfReactions.getReactionCount());
 
         // expected products
 
@@ -318,7 +316,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
 
         IAtomContainer product1 = setOfReactions.getReaction(0).getProducts().getAtomContainer(0);
         QueryAtomContainer queryAtom = QueryAtomContainerCreator.createSymbolAndChargeQueryContainer(expected1);
-        Assert.assertTrue(new UniversalIsomorphismTester().isIsomorph(product1, queryAtom));
+        Assertions.assertTrue(new UniversalIsomorphismTester().isIsomorph(product1, queryAtom));
 
     }
 
@@ -329,10 +327,10 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
      * @cdk.inchi InChI=1/CH3F/c1-2/h1H3
      *
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testFspSingleB() throws Exception {
+    void testFspSingleB() throws Exception {
         //Smiles("FC")
         IAtomContainer molecule = builder.newInstance(IAtomContainer.class);
         molecule.addAtom(builder.newInstance(IAtom.class, "F"));
@@ -347,14 +345,14 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(molecule);
         lpcheck.saturate(molecule);
 
-        molecule.getAtom(0).setFlag(CDKConstants.REACTIVE_CENTER, true);
+        molecule.getAtom(0).setFlag(IChemObject.REACTIVE_CENTER, true);
 
         IAtomContainerSet setOfReactants = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainerSet.class);
         setOfReactants.addAtomContainer(molecule);
 
         IReactionProcess type = new ElectronImpactNBEReaction();
 
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.TRUE);
         paramList.add(param);
@@ -363,7 +361,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         /* initiate */
         IReactionSet setOfReactions = type.initiate(setOfReactants, null);
 
-        Assert.assertEquals(1, setOfReactions.getReactionCount());
+        Assertions.assertEquals(1, setOfReactions.getReactionCount());
 
         // expected products
 
@@ -385,7 +383,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
 
         IAtomContainer product1 = setOfReactions.getReaction(0).getProducts().getAtomContainer(0);
         QueryAtomContainer queryAtom = QueryAtomContainerCreator.createSymbolAndChargeQueryContainer(expected1);
-        Assert.assertTrue(new UniversalIsomorphismTester().isIsomorph(product1, queryAtom));
+        Assertions.assertTrue(new UniversalIsomorphismTester().isIsomorph(product1, queryAtom));
 
     }
 
@@ -395,18 +393,18 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
      *
      * @cdk.inchi InChI=1/CH2O/c1-2/h1H2
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testCDKConstants_REACTIVE_CENTER() throws Exception {
+    void testCDKConstants_REACTIVE_CENTER() throws Exception {
         IReactionProcess type = new ElectronImpactNBEReaction();
 
         IAtomContainerSet setOfReactants = getExampleReactants();
         IAtomContainer molecule = setOfReactants.getAtomContainer(0);
         /* manually put the reactive center */
-        molecule.getAtom(1).setFlag(CDKConstants.REACTIVE_CENTER, true);
+        molecule.getAtom(1).setFlag(IChemObject.REACTIVE_CENTER, true);
 
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.TRUE);
         paramList.add(param);
@@ -415,12 +413,12 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         /* initiate */
         IReactionSet setOfReactions = type.initiate(setOfReactants, null);
 
-        Assert.assertEquals(1, setOfReactions.getReactionCount());
-        Assert.assertEquals(1, setOfReactions.getReaction(0).getProductCount());
+        Assertions.assertEquals(1, setOfReactions.getReactionCount());
+        Assertions.assertEquals(1, setOfReactions.getReaction(0).getProductCount());
 
         IAtomContainer reactant = setOfReactions.getReaction(0).getReactants().getAtomContainer(0);
-        Assert.assertTrue(molecule.getAtom(1).getFlag(CDKConstants.REACTIVE_CENTER));
-        Assert.assertTrue(reactant.getAtom(1).getFlag(CDKConstants.REACTIVE_CENTER));
+        Assertions.assertTrue(molecule.getAtom(1).getFlag(IChemObject.REACTIVE_CENTER));
+        Assertions.assertTrue(reactant.getAtom(1).getFlag(IChemObject.REACTIVE_CENTER));
     }
 
     /**
@@ -429,16 +427,16 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
      *
      * @cdk.inchi InChI=1/CH2O/c1-2/h1H2
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testMapping() throws Exception {
+    void testMapping() throws Exception {
         IReactionProcess type = new ElectronImpactNBEReaction();
         IAtomContainerSet setOfReactants = getExampleReactants();
         IAtomContainer molecule = setOfReactants.getAtomContainer(0);
 
         /* automatic search of the center active */
-        List<IParameterReact> paramList = new ArrayList<IParameterReact>();
+        List<IParameterReact> paramList = new ArrayList<>();
         IParameterReact param = new SetReactionCenter();
         param.setParameter(Boolean.FALSE);
         paramList.add(param);
@@ -448,10 +446,10 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
 
         IAtomContainer product = setOfReactions.getReaction(0).getProducts().getAtomContainer(0);
 
-        Assert.assertEquals(4, setOfReactions.getReaction(0).getMappingCount());
+        Assertions.assertEquals(4, setOfReactions.getReaction(0).getMappingCount());
         IAtom mappedProductA1 = (IAtom) ReactionManipulator.getMappedChemObject(setOfReactions.getReaction(0),
                 molecule.getAtom(1));
-        Assert.assertEquals(mappedProductA1, product.getAtom(1));
+        Assertions.assertEquals(mappedProductA1, product.getAtom(1));
     }
 
     /**
@@ -466,7 +464,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
         CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(molecule.getBuilder());
         while (atoms.hasNext()) {
             IAtom nextAtom = atoms.next();
-            Assert.assertNotNull("Missing atom type for: " + nextAtom, matcher.findMatchingAtomType(molecule, nextAtom));
+            Assertions.assertNotNull(matcher.findMatchingAtomType(molecule, nextAtom), "Missing atom type for: " + nextAtom);
         }
     }
 
@@ -491,7 +489,8 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
             lpcheck.saturate(molecule);
             makeSureAtomTypesAreRecognized(molecule);
         } catch (CDKException e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(getClass())
+                              .error("Unexpected Error:", e);
         }
 
         setOfReactants.addAtomContainer(molecule);
@@ -504,7 +503,7 @@ public class ElectronImpactNBEReactionTest extends ReactionProcessTest {
      *
      * @return The IAtomContainerSet
      */
-    private IAtomContainerSet getExpectedProducts() {
+    IAtomContainerSet getExpectedProducts() {
         IAtomContainerSet setOfProducts = builder.newInstance(IAtomContainerSet.class);
 
         setOfProducts.addAtomContainer(null);

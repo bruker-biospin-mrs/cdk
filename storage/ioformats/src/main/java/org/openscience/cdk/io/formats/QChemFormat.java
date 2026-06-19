@@ -23,8 +23,6 @@ import org.openscience.cdk.tools.DataFeatures;
 /**
  * See <a href="http://www.q-chem.com/">here</a>.
  *
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class QChemFormat extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 
@@ -76,7 +74,7 @@ public class QChemFormat extends SimpleChemFormatMatcher implements IChemFormatM
     /** {@inheritDoc} */
     @Override
     public boolean matches(int lineNumber, String line) {
-        if (line.indexOf("Welcome to Q-Chem") != -1) {
+        if (line.contains("Welcome to Q-Chem")) {
             return true;
         }
         return false;

@@ -18,35 +18,34 @@
  */
 package org.openscience.cdk.graph.matrix;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
- * @cdk.module test-core
  */
-public class AdjacencyMatrixTest extends CDKTestCase {
+class AdjacencyMatrixTest extends CDKTestCase {
 
     private static SmilesParser sp;
 
-    @BeforeClass
-    public static void getSmilesParser() {
+    @BeforeAll
+    static void getSmilesParser() {
         sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
     }
 
     @Test
-    public void testGetMatrix_IAtomContainer() throws Exception {
+    void testGetMatrix_IAtomContainer() throws Exception {
         IAtomContainer container = sp.parseSmiles("C1CC1");
         int[][] matrix = AdjacencyMatrix.getMatrix(container);
-        Assert.assertEquals(3, matrix.length);
-        Assert.assertEquals(3, matrix[0].length);
-        Assert.assertEquals(0, matrix[0][0]);
-        Assert.assertEquals(1, matrix[0][2]);
-        Assert.assertEquals(1, matrix[0][1]);
+        Assertions.assertEquals(3, matrix.length);
+        Assertions.assertEquals(3, matrix[0].length);
+        Assertions.assertEquals(0, matrix[0][0]);
+        Assertions.assertEquals(1, matrix[0][2]);
+        Assertions.assertEquals(1, matrix[0][1]);
     }
 
 }

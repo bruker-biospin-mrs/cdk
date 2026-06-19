@@ -41,8 +41,6 @@ import org.openscience.cdk.renderer.generators.BasicSceneGenerator.Scale;
  * Generate the symbols for radicals.
  *
  * @author maclean
- * @cdk.module renderextra
- * @cdk.githash
  */
 public class RadicalGenerator implements IGenerator<IAtomContainer> {
 
@@ -58,12 +56,12 @@ public class RadicalGenerator implements IGenerator<IAtomContainer> {
         final Color RADICAL_COLOR = Color.BLACK;
 
         // XXX : is this the best option?
-        final double ATOM_RADIUS = ((AtomRadius) model.getParameter(AtomRadius.class)).getValue()
+        final double ATOM_RADIUS = model.getParameter(AtomRadius.class).getValue()
                 / model.getParameter(Scale.class).getValue();
 
         double modelRadius = SCREEN_RADIUS / model.getParameter(Scale.class).getValue();
         double modelSpacing = modelRadius * 2.5;
-        Map<IAtom, Integer> singleElectronsPerAtom = new HashMap<IAtom, Integer>();
+        Map<IAtom, Integer> singleElectronsPerAtom = new HashMap<>();
         for (ISingleElectron electron : container.singleElectrons()) {
             IAtom atom = electron.getAtom();
             if (singleElectronsPerAtom.get(atom) == null) singleElectronsPerAtom.put(atom, 0);

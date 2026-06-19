@@ -19,12 +19,11 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.HINReader;
 import org.openscience.cdk.io.ISimpleChemObjectReader;
@@ -37,22 +36,21 @@ import java.util.List;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class EccentricConnectivityIndexDescriptorTest extends MolecularDescriptorTest {
+class EccentricConnectivityIndexDescriptorTest extends MolecularDescriptorTest {
 
-    public EccentricConnectivityIndexDescriptorTest() {}
+    EccentricConnectivityIndexDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(EccentricConnectivityIndexDescriptor.class);
     }
 
     @Test
-    public void testEccentricConnectivityIndex() throws ClassNotFoundException, CDKException, java.lang.Exception {
-        String filename = "data/hin/gravindex.hin";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+    void testEccentricConnectivityIndex() throws java.lang.Exception {
+        String filename = "gravindex.hin";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new HINReader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
@@ -63,6 +61,6 @@ public class EccentricConnectivityIndexDescriptorTest extends MolecularDescripto
         IntegerResult retval = (IntegerResult) descriptor.calculate(ac).getValue();
         //logger.debug(retval.intValue());
 
-        Assert.assertEquals(254, retval.intValue(), 0);
+        Assertions.assertEquals(254, retval.intValue(), 0);
     }
 }

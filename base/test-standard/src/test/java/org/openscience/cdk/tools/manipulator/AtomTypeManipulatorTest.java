@@ -18,13 +18,13 @@
  */
 package org.openscience.cdk.tools.manipulator;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKConstants;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomType;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.silent.Atom;
 import org.openscience.cdk.silent.AtomType;
 
@@ -32,52 +32,52 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @cdk.module test-standard
  */
-public class AtomTypeManipulatorTest extends CDKTestCase {
+class AtomTypeManipulatorTest extends CDKTestCase {
 
-    public AtomTypeManipulatorTest() {
+    AtomTypeManipulatorTest() {
         super();
     }
 
     @Test
-    public void testConfigure_IAtom_IAtomType() {
+    void testConfigure_IAtom_IAtomType() {
         IAtom atom = new Atom(Elements.CARBON);
         IAtomType atomType = new AtomType(Elements.CARBON);
-        atomType.setFlag(CDKConstants.IS_HYDROGENBOND_ACCEPTOR, true);
+        atomType.setFlag(IChemObject.HYDROGEN_BOND_ACCEPTOR, true);
         AtomTypeManipulator.configure(atom, atomType);
-        Assert.assertEquals(atomType.getFlag(CDKConstants.IS_HYDROGENBOND_ACCEPTOR),
-                atom.getFlag(CDKConstants.IS_HYDROGENBOND_ACCEPTOR));
+        Assertions.assertEquals(atomType.getFlag(IChemObject.HYDROGEN_BOND_ACCEPTOR), atom.getFlag(IChemObject.HYDROGEN_BOND_ACCEPTOR));
     }
 
     @Test
-    public void testConfigureUnsetProperties_DontOverwriterSetProperties() {
+    void testConfigureUnsetProperties_DontOverwriterSetProperties() {
         IAtom atom = new Atom(Elements.CARBON);
         atom.setExactMass(13.0);
         IAtomType atomType = new AtomType(Elements.CARBON);
         atomType.setExactMass(12.0);
         AtomTypeManipulator.configureUnsetProperties(atom, atomType);
-        Assert.assertEquals(13.0, atom.getExactMass(), 0.1);
+        Assertions.assertEquals(13.0, atom.getExactMass(), 0.1);
     }
 
     @Test
-    public void testConfigureUnsetProperties() {
+    void testConfigureUnsetProperties() {
         IAtom atom = new Atom(Elements.CARBON);
         IAtomType atomType = new AtomType(Elements.CARBON);
         atomType.setExactMass(12.0);
         AtomTypeManipulator.configureUnsetProperties(atom, atomType);
-        Assert.assertEquals(12.0, atom.getExactMass(), 0.1);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testConfigure_IAtom_Null() {
-        IAtom atom = new Atom(Elements.CARBON);
-        IAtomType atomType = null;
-        AtomTypeManipulator.configure(atom, atomType);
+        Assertions.assertEquals(12.0, atom.getExactMass(), 0.1);
     }
 
     @Test
-    public void unknownAtomTypeDoesNotModifyProperties() {
+    void testConfigure_IAtom_Null() {
+        IAtom atom = new Atom(Elements.CARBON);
+        IAtomType atomType = null;
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            AtomTypeManipulator.configure(atom, atomType);
+        });
+    }
+
+    @Test
+    void unknownAtomTypeDoesNotModifyProperties() {
         IAtom atom = new Atom(Elements.CARBON);
         IAtomType atomType = new AtomType(Elements.Unknown.toIElement());
         atomType.setAtomTypeName("X");
@@ -90,27 +90,27 @@ public class AtomTypeManipulatorTest extends CDKTestCase {
      * @cdk.bug 1322
      */
     @Test
-    public void aromaticityIsNotOverwritten() {
+    void aromaticityIsNotOverwritten() {
         IAtom atom = new Atom(Elements.CARBON);
-        atom.setFlag(CDKConstants.ISAROMATIC, true);
+        atom.setFlag(IChemObject.AROMATIC, true);
         IAtomType atomType = new AtomType(Elements.Unknown.toIElement());
-        atomType.setFlag(CDKConstants.ISAROMATIC, false);
+        atomType.setFlag(IChemObject.AROMATIC, false);
         atomType.setAtomTypeName("C.sp3");
         AtomTypeManipulator.configure(atom, atomType);
-        assertThat(atom.getFlag(CDKConstants.ISAROMATIC), is(true));
+        assertThat(atom.getFlag(IChemObject.AROMATIC), is(true));
     }
 
     /**
      * @cdk.bug 1322
      */
     @Test
-    public void aromaticitySetIfForType() {
+    void aromaticitySetIfForType() {
         IAtom atom = new Atom(Elements.CARBON);
-        atom.setFlag(CDKConstants.ISAROMATIC, false);
+        atom.setFlag(IChemObject.AROMATIC, false);
         IAtomType atomType = new AtomType(Elements.Unknown.toIElement());
-        atomType.setFlag(CDKConstants.ISAROMATIC, true);
+        atomType.setFlag(IChemObject.AROMATIC, true);
         atomType.setAtomTypeName("C.am");
         AtomTypeManipulator.configure(atom, atomType);
-        assertThat(atom.getFlag(CDKConstants.ISAROMATIC), is(true));
+        assertThat(atom.getFlag(IChemObject.AROMATIC), is(true));
     }
 }

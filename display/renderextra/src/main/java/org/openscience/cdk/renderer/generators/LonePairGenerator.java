@@ -39,8 +39,6 @@ import org.openscience.cdk.renderer.generators.BasicSceneGenerator.Scale;
  * Generate the symbols for lone pairs.
  *
  * @author maclean
- * @cdk.module renderextra
- * @cdk.githash
  */
 public class LonePairGenerator implements IGenerator<IAtomContainer> {
 
@@ -58,7 +56,7 @@ public class LonePairGenerator implements IGenerator<IAtomContainer> {
         final Color RADICAL_COLOR = Color.BLACK;
 
         // XXX : is this the best option?
-        final double ATOM_RADIUS = ((AtomRadius) model.getParameter(AtomRadius.class)).getValue();
+        final double ATOM_RADIUS = model.getParameter(AtomRadius.class).getValue();
 
         double scale = model.getParameter(Scale.class).getValue();
         double modelAtomRadius = ATOM_RADIUS / scale;

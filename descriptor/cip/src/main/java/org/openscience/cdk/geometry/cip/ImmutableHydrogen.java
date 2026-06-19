@@ -27,7 +27,6 @@ import java.util.Map;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -42,8 +41,6 @@ import org.openscience.cdk.interfaces.IBond.Order;
  * implemented.
  *
  * @author egonw
- * @cdk.module cip
- * @cdk.githash
  */
 class ImmutableHydrogen implements IAtom {
 
@@ -338,7 +335,7 @@ class ImmutableHydrogen implements IAtom {
      */
     @Override
     public Integer getMassNumber() {
-        return Integer.valueOf(1);
+        return 1;
     }
 
     /**
@@ -385,7 +382,7 @@ class ImmutableHydrogen implements IAtom {
      */
     @Override
     public Integer getAtomicNumber() {
-        return Integer.valueOf(1);
+        return 1;
     }
 
     /**
@@ -445,6 +442,26 @@ class ImmutableHydrogen implements IAtom {
     @Override
     public Number getFlagValue() {
         return null;
+    }
+
+    @Override
+    public void set(int flags) {
+        
+    }
+
+    @Override
+    public void clear(int flags) {
+
+    }
+
+    @Override
+    public boolean is(int flags) {
+        return false;
+    }
+
+    @Override
+    public int flags() {
+        return 0;
     }
 
     /** {@inheritDoc} */
@@ -627,5 +644,15 @@ class ImmutableHydrogen implements IAtom {
     @Override
     public IBond getBond(IAtom atom) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getMapIdx() {
+      return 0;
+    }
+
+    @Override
+    public void setMapIdx(int mapidx) {
+
     }
 }

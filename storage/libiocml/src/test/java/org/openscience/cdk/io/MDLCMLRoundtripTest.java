@@ -26,21 +26,20 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.AtomContainer;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemFile;
 
 /**
  * Combined TestCase for the reading/writing of mdl and cml files.
  *
- * @cdk.module test-libiocml
  */
 
-public class MDLCMLRoundtripTest {
+class MDLCMLRoundtripTest {
 
-    public MDLCMLRoundtripTest() {
+    MDLCMLRoundtripTest() {
         super();
     }
 
@@ -48,12 +47,12 @@ public class MDLCMLRoundtripTest {
      * @cdk.bug 1649526
      */
     @Test
-    public void testBug1649526() throws Exception {
+    void testBug1649526() throws Exception {
         //Read the original
-        String filename = "data/mdl/bug-1649526.mol";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        String filename = "bug-1649526.mol";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         MDLReader reader = new MDLReader(ins);
-        IAtomContainer mol = reader.read(new AtomContainer());
+        IAtomContainer mol = reader.read(DefaultChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
         //Write it as cml
         StringWriter writer = new StringWriter();
@@ -62,7 +61,7 @@ public class MDLCMLRoundtripTest {
         cmlWriter.close();
         //Read this again
         CMLReader cmlreader = new CMLReader(new ByteArrayInputStream(writer.toString().getBytes()));
-        IChemFile file = (IChemFile) cmlreader.read(new org.openscience.cdk.ChemFile());
+        IChemFile file = cmlreader.read(new org.openscience.cdk.ChemFile());
         cmlreader.close();
         //And finally write as mol
         StringWriter writermdl = new StringWriter();
@@ -71,10 +70,10 @@ public class MDLCMLRoundtripTest {
         mdlWriter.close();
         String output = writermdl.toString();
         //if there would be 3 instances (as in the bug), the only instance wouldnt't be right at the end
-        Assert.assertEquals(2994, output.indexOf("M  END"));
+        Assertions.assertEquals(2961, output.indexOf("M  END"));
         //there would need some $$$$ to be in
-        Assert.assertEquals(-1, output.indexOf("$$$$"));
+        Assertions.assertEquals(-1, output.indexOf("$$$$"));
         //check atom/bond count
-        Assert.assertEquals(25, output.indexOf(" 31 33  0  0  0  0"));
+        Assertions.assertEquals(25, output.indexOf(" 31 33  0  0  0  0"));
     }
 }

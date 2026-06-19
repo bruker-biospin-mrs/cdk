@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.structgen;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.layout.StructureDiagramGenerator;
@@ -30,26 +30,25 @@ import javax.vecmath.Vector2d;
 import java.util.Vector;
 
 /**
- * @cdk.module test-structgen
  */
-public class RandomStructureGeneratorTest extends CDKTestCase {
+class RandomStructureGeneratorTest extends CDKTestCase {
 
-    public boolean debug      = false;
-    boolean        standAlone = false;
+    private final boolean debug      = false;
+    private boolean        standAlone = false;
 
-    public void setStandAlone(boolean standAlone) {
+    void setStandAlone(boolean standAlone) {
         this.standAlone = standAlone;
     }
 
     @Test
-    public void testTwentyRandomStructures() {
+    void testTwentyRandomStructures() {
         IAtomContainer molecule = TestMoleculeFactory.makeAlphaPinene();
         RandomGenerator rg = new RandomGenerator(molecule);
-        IAtomContainer result = null;
+        IAtomContainer result;
         for (int f = 0; f < 50; f++) {
             result = rg.proposeStructure();
-            Assert.assertEquals(molecule.getAtomCount(), result.getAtomCount());
-            Assert.assertEquals(1, ConnectivityChecker.partitionIntoMolecules(result).getAtomContainerCount());
+            Assertions.assertEquals(molecule.getAtomCount(), result.getAtomCount());
+            Assertions.assertEquals(1, ConnectivityChecker.partitionIntoMolecules(result).getAtomContainerCount());
         }
     }
 
@@ -57,7 +56,7 @@ public class RandomStructureGeneratorTest extends CDKTestCase {
      * @param structures
      * @return
      */
-    private boolean everythingOk(Vector structures) throws Exception {
+    boolean everythingOk(Vector structures) throws Exception {
         StructureDiagramGenerator sdg;
         IAtomContainer mol;
         if (debug) System.out.println("number of structures in vector: " + structures.size());

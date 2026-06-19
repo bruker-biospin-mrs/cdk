@@ -23,28 +23,13 @@
 
 package org.openscience.cdk.smarts;
 
-import org.junit.Test;
-import org.openscience.cdk.aromaticity.Aromaticity;
-import org.openscience.cdk.aromaticity.ElectronDonation;
-import org.openscience.cdk.exception.InvalidSmilesException;
-import org.openscience.cdk.graph.Cycles;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.isomorphism.DfPattern;
 import org.openscience.cdk.isomorphism.Pattern;
-import org.openscience.cdk.isomorphism.VentoFoggia;
-import org.openscience.cdk.silent.SilentChemObjectBuilder;
-import org.openscience.cdk.smiles.SmilesParser;
-import uk.ac.ebi.beam.Graph;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-public class DfSubstructureTest extends SubstructureTest {
+class DfSubstructureTest extends SubstructureTest {
 
     @Override
     Pattern create(IAtomContainer container) {
@@ -52,13 +37,13 @@ public class DfSubstructureTest extends SubstructureTest {
     }
 
     @Test
-    public void matchRoot() throws Exception {
+    void matchRoot() throws Exception {
         IAtomContainer mol  = smi("OC(=O)C(=O)O");
         IAtomContainer qry  = sma("O=*");
         DfPattern      ptrn = DfPattern.findSubstructure(qry);
-        assertFalse(ptrn.matchesRoot(mol.getAtom(0)));
-        assertTrue(ptrn.matchesRoot(mol.getAtom(2)));
-        assertTrue(ptrn.matchesRoot(mol.getAtom(4)));
-        assertFalse(ptrn.matchesRoot(mol.getAtom(5)));
+        Assertions.assertFalse(ptrn.matchesRoot(mol.getAtom(0)));
+        Assertions.assertTrue(ptrn.matchesRoot(mol.getAtom(2)));
+        Assertions.assertTrue(ptrn.matchesRoot(mol.getAtom(4)));
+        Assertions.assertFalse(ptrn.matchesRoot(mol.getAtom(5)));
     }
 }

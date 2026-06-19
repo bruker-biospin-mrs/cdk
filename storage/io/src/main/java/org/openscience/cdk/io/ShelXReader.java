@@ -59,8 +59,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * <a href="http://www.msg.ucsf.edu/local/programs/shelxl/ch_07.html">
  * http://www.msg.ucsf.edu/local/programs/shelxl/ch_07.html</a>.
  *
- * @cdk.module io
- * @cdk.githash
  * @cdk.iooptions
  *
  * @cdk.keyword file format, ShelXL
@@ -69,7 +67,7 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 public class ShelXReader extends DefaultChemObjectReader {
 
     private BufferedReader      input;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(ShelXReader.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(ShelXReader.class);
 
     /**
      * Create an ShelX file reader.
@@ -112,9 +110,9 @@ public class ShelXReader extends DefaultChemObjectReader {
         if (IChemFile.class.equals(classObject)) return true;
         if (ICrystal.class.equals(classObject)) return true;
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (ICrystal.class.equals(interfaces[i])) return true;
-            if (IChemFile.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (ICrystal.class.equals(anInterface)) return true;
+            if (IChemFile.class.equals(anInterface)) return true;
         }
         Class superClass = classObject.getSuperclass();
         if (superClass != null) return this.accepts(superClass);
@@ -163,6 +161,18 @@ public class ShelXReader extends DefaultChemObjectReader {
         return file;
     }
 
+    /**
+     * Checks if a given character is an ASCII digit. Do NOT replace
+     * with Character.isDigit() which check the entire Unicode table/code
+     * spaces.
+     *
+     * @param ch the character to check
+     * @return true if the character is a digit, false otherwise
+     */
+    private boolean isDigit(char ch) {
+        return ch >= '0' && ch <= '9';
+    }
+
     private ICrystal readCrystal(ICrystal crystal) throws IOException {
         String line = input.readLine();
         boolean end_found = false;
@@ -176,7 +186,7 @@ public class ShelXReader extends DefaultChemObjectReader {
             /* determine ShelX command */
             String command;
             try {
-                command = new String(line.substring(0, 4));
+                command = line.substring(0, 4);
             } catch (StringIndexOutOfBoundsException sioobe) {
                 // disregard this line
                 break;
@@ -256,7 +266,6 @@ public class ShelXReader extends DefaultChemObjectReader {
             } else if (command.equalsIgnoreCase("FRAG")) {
             } else if (command.equalsIgnoreCase("FEND")) {
             } else if (command.equalsIgnoreCase("EXYZ")) {
-            } else if (command.equalsIgnoreCase("EXTI")) {
             } else if (command.equalsIgnoreCase("EADP")) {
             } else if (command.equalsIgnoreCase("EQIV")) {
 
@@ -333,11 +342,11 @@ public class ShelXReader extends DefaultChemObjectReader {
                 String sc = st.nextToken();
                 // skip the rest
 
-                if (Character.isDigit(atype.charAt(1))) {
+                if (isDigit(atype.charAt(1))) {
                     // atom type has a one letter code
                     atype = atype.substring(0, 1);
                 } else {
-                    StringBuffer sb2 = new StringBuffer();
+                    StringBuilder sb2 = new StringBuilder();
                     sb2.append(atype.charAt(1));
                     atype = atype.substring(0, 1) + sb2.toString().toLowerCase();
                 }

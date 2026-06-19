@@ -18,12 +18,12 @@
  */
 package org.openscience.cdk.atomtype;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
@@ -31,13 +31,12 @@ import org.openscience.cdk.interfaces.IBond;
 import java.util.List;
 
 /**
- * @cdk.module test-structgen
  */
-public class StructGenAtomTypeGuesserTest extends CDKTestCase {
+class StructGenAtomTypeGuesserTest extends CDKTestCase {
 
     @Test
-    public void testPossibleAtomTypes_IAtomContainer_IAtom() throws java.lang.Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testPossibleAtomTypes_IAtomContainer_IAtom() throws java.lang.Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         Atom atom = new Atom("C");
         atom.setImplicitHydrogenCount(3);
         Atom atom2 = new Atom("N");
@@ -48,16 +47,16 @@ public class StructGenAtomTypeGuesserTest extends CDKTestCase {
 
         StructGenAtomTypeGuesser atm = new StructGenAtomTypeGuesser();
         List<IAtomType> matched = atm.possibleAtomTypes(mol, atom);
-        Assert.assertNotNull(matched);
-        Assert.assertTrue(matched.size() > 0);
-        Assert.assertTrue(matched.get(0) instanceof IAtomType);
+        Assertions.assertNotNull(matched);
+        Assertions.assertTrue(matched.size() > 0);
+        Assertions.assertTrue(matched.get(0) instanceof IAtomType);
 
-        Assert.assertEquals("C", ((IAtomType) matched.get(0)).getSymbol());
+        Assertions.assertEquals("C", matched.get(0).getSymbol());
     }
 
     @Test
-    public void testStructGenAtomTypeGuesser() throws Exception {
+    void testStructGenAtomTypeGuesser() throws Exception {
         StructGenAtomTypeGuesser matcher = new StructGenAtomTypeGuesser();
-        Assert.assertNotNull(matcher);
+        Assertions.assertNotNull(matcher);
     }
 }

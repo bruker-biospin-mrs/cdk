@@ -24,26 +24,21 @@
 
 package org.openscience.cdk.graph.invariant;
 
-import com.google.common.primitives.Longs;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author John May
- * @cdk.module test-standard
  */
-public class InvariantRankerTest {
+class InvariantRankerTest {
 
     @Test
-    public void rank() {
+    void rank() {
 
         InvariantRanker ranker = new InvariantRanker(6);
         long[] prev = new long[]{1, 1, 1, 1, 1, 1};
@@ -65,7 +60,7 @@ public class InvariantRankerTest {
     }
 
     @Test
-    public void rank_all_equiv() {
+    void rank_all_equiv() {
 
         InvariantRanker ranker = new InvariantRanker(6);
         long[] prev = new long[]{1, 1, 1, 1, 1, 1};
@@ -87,7 +82,7 @@ public class InvariantRankerTest {
     }
 
     @Test
-    public void rank_all_unique() {
+    void rank_all_unique() {
 
         InvariantRanker ranker = new InvariantRanker(7);
         long[] prev = new long[]{1, 1, 1, 1, 1, 1, 1};
@@ -109,17 +104,15 @@ public class InvariantRankerTest {
     }
 
     @Test
-    public void mergeSort() {
+    void mergeSort() {
 
         int n = 100;
 
         // random (unique) values in random order
         Random rnd = new Random();
-        Set<Long> values = new HashSet<Long>();
-        while (values.size() < n)
-            values.add(rnd.nextLong());
-
-        long[] prev = Longs.toArray(values);
+        long[] prev = new long[n];
+        for (int i=0; i<n; i++)
+            prev[i] = rnd.nextLong();
 
         // ident array
         int[] vs = new int[n];
@@ -131,21 +124,19 @@ public class InvariantRankerTest {
 
         // check they are sorted
         for (int i = 1; i < n; i++)
-            assertTrue(prev[vs[i]] > prev[vs[i - 1]]);
+            Assertions.assertTrue(prev[vs[i]] > prev[vs[i - 1]]);
     }
 
     @Test
-    public void mergeSort_range() {
+    void mergeSort_range() {
 
         int n = 100;
 
         // random (unique) values in random order
         Random rnd = new Random();
-        Set<Long> values = new HashSet<Long>();
-        while (values.size() < n)
-            values.add(rnd.nextLong());
-
-        long[] prev = Longs.toArray(values);
+        long[] prev = new long[n];
+        for (int i=0; i<n; i++)
+            prev[i] = rnd.nextLong();
 
         // ident array
         int[] vs = new int[n];
@@ -157,7 +148,7 @@ public class InvariantRankerTest {
 
         // check they are sorted
         for (int i = 11; i < (n - 20); i++)
-            assertTrue(prev[vs[i]] > prev[vs[i - 1]]);
+            Assertions.assertTrue(prev[vs[i]] > prev[vs[i - 1]]);
 
         // other values weren't touched
         for (int i = 0; i < 10; i++)
@@ -167,7 +158,7 @@ public class InvariantRankerTest {
     }
 
     @Test
-    public void insertionSort() {
+    void insertionSort() {
         long[] prev = new long[]{11, 10, 9, 8, 7};
         long[] curr = new long[]{11, 10, 9, 8, 7};
         int[] vs = new int[]{0, 1, 2, 3, 4};
@@ -176,7 +167,7 @@ public class InvariantRankerTest {
     }
 
     @Test
-    public void insertionSort_duplicate() {
+    void insertionSort_duplicate() {
         long[] prev = new long[]{11, 10, 10, 9, 8, 7};
         long[] curr = new long[]{11, 10, 10, 9, 8, 7};
         int[] vs = new int[]{0, 1, 2, 3, 4, 5};
@@ -185,7 +176,7 @@ public class InvariantRankerTest {
     }
 
     @Test
-    public void insertionSort_range() {
+    void insertionSort_range() {
         long[] prev = new long[]{12, 11, 10, 9, 8, 7};
         long[] curr = new long[]{12, 11, 10, 9, 8, 7};
         int[] vs = new int[]{0, 1, 2, 3, 4, 5};
@@ -194,28 +185,28 @@ public class InvariantRankerTest {
     }
 
     @Test
-    public void less() throws Exception {
+    void less() throws Exception {
         long[] prev = new long[]{1, 1, 2, 2};
         long[] curr = new long[]{1, 1, 2, 2};
-        assertFalse(InvariantRanker.less(0, 1, curr, prev));
-        assertFalse(InvariantRanker.less(2, 3, curr, prev));
-        assertTrue(InvariantRanker.less(0, 2, curr, prev));
-        assertTrue(InvariantRanker.less(0, 3, curr, prev));
-        assertTrue(InvariantRanker.less(1, 2, curr, prev));
-        assertTrue(InvariantRanker.less(1, 3, curr, prev));
+        Assertions.assertFalse(InvariantRanker.less(0, 1, curr, prev));
+        Assertions.assertFalse(InvariantRanker.less(2, 3, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(0, 2, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(0, 3, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(1, 2, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(1, 3, curr, prev));
     }
 
     @Test
-    public void lessUsingPrev() throws Exception {
+    void lessUsingPrev() throws Exception {
         long[] prev = new long[]{1, 1, 2, 2};
         long[] curr = new long[]{1, 2, 1, 2};
         // 0,1 and 2,3 are only less is we inspect the 'curr' invariants
-        assertTrue(InvariantRanker.less(0, 1, curr, prev));
-        assertTrue(InvariantRanker.less(2, 3, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(0, 1, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(2, 3, curr, prev));
         // these values are only less inspecting the first invariants
-        assertTrue(InvariantRanker.less(0, 2, curr, prev));
-        assertTrue(InvariantRanker.less(0, 3, curr, prev));
-        assertTrue(InvariantRanker.less(1, 2, curr, prev));
-        assertTrue(InvariantRanker.less(1, 3, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(0, 2, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(0, 3, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(1, 2, curr, prev));
+        Assertions.assertTrue(InvariantRanker.less(1, 3, curr, prev));
     }
 }

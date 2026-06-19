@@ -33,8 +33,6 @@ import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IElectronContainer;
 
 /**
- * @cdk.module standard
- * @cdk.githash
  *
  * @see ChemModelManipulator
  */
@@ -93,7 +91,7 @@ public class MoleculeSetManipulator {
     }
 
     public static List<String> getAllIDs(IAtomContainerSet set) {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         // the ID is set in AtomContainerSetManipulator.getAllIDs()
         list.addAll(AtomContainerSetManipulator.getAllIDs(set));
         return list;

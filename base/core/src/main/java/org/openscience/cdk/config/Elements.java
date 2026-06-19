@@ -24,6 +24,7 @@
  */
 package org.openscience.cdk.config;
 
+import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IElement;
 
 import java.util.HashMap;
@@ -37,8 +38,6 @@ import java.util.Map;
  *
  * @author egonw
  * @author john may
- * @cdk.module core
- * @cdk.githash
  */
 public enum Elements {
     Unknown(0, "", 0, 0, null, 0.00, null),
@@ -154,20 +153,21 @@ public enum Elements {
     Darmstadtium(110, "Ds", 7, 10, null, null, null),
     Roentgenium(111, "Rg", 7, 11, null, null, null),
     Copernicium(112, "Cn", 7, 12, null, null, null),
-    @Deprecated
-    Ununtrium(113, "Uut", 7, 13, null, null, null),
     Nihonium(113, "Nh", 7, 13, null, null, null),
     Flerovium(114, "Fl", 7, 14, null, null, null),
-    @Deprecated
-    Ununpentium(115, "Uup", 7, 15, null, null, null),
     Moscovium(115, "Mc", 7, 15, null, null, null),
     Livermorium(116, "Lv", 7, 16, null, null, null),
+    Tennessine(117, "Ts", 7, 17, null, null, null),
+    Oganesson(118, "Og", 7, 18, null, null, null),
+    @Deprecated
+    Ununtrium(113, "Uut", 7, 13, null, null, null),
+    @Deprecated
+    Ununpentium(115, "Uup", 7, 15, null, null, null),
     @Deprecated
     Ununseptium(117, "Uus", 7, 17, null, null, null),
-    Tennessine(117, "Ts", 7, 17, null, null, null),
     @Deprecated
-    Ununoctium(118, "Uuo", 7, 18, null, null, null),
-    Oganesson(118, "Og", 7, 18, null, null, null);
+    Ununoctium(118, "Uuo", 7, 18, null, null, null);
+
 
     /**
      * Atomic number, periodic table period and group.
@@ -198,12 +198,14 @@ public enum Elements {
     /**
      * Lookup elements by symbol / name.
      */
-    static final Map<String, Elements> SYMBOL_MAP = new HashMap<String, Elements>(400);
+    static final Map<String, Elements> SYMBOL_MAP = new HashMap<>(400);
 
     static {
         // index elements
         for (final Elements e : values()) {
-            NUMER_MAP[e.number] = e;
+            // first defined takes priority
+            if (NUMER_MAP[e.number] == null)
+                NUMER_MAP[e.number] = e;
             SYMBOL_MAP.put(e.symbol.toLowerCase(Locale.ENGLISH), e);
             SYMBOL_MAP.put(e.name().toLowerCase(Locale.ENGLISH), e);
         }
@@ -242,7 +244,7 @@ public enum Elements {
      * @param rW                van der Waals radius
      * @param electronegativity pauling electronegativity
      */
-    private Elements(int number, String symbol, int period, int group, Double rCov, Double rW, Double electronegativity) {
+    Elements(int number, String symbol, int period, int group, Double rCov, Double rW, Double electronegativity) {
         this.number = number;
         this.period = period;
         this.group = group;
@@ -506,4 +508,86 @@ public enum Elements {
     // Incorrect spelling
     @Deprecated
     public final static IElement PLUTOMNIUM    = PLUTONIUM;
+
+    /**
+     * Utility method to determine if an atomic number is a metal.
+     * @param atno atomic number
+     * @return the atomic number is a metal (or not)
+     */
+    public static boolean isMetal(int atno) {
+        switch (atno) {
+            case 0:  // *
+            case 1:  // H
+            case 2:  // He
+            case 6:  // C
+            case 7:  // N
+            case 8:  // O
+            case 9:  // F
+            case 10: // Ne
+            case 15: // P
+            case 16: // S
+            case 17: // Cl
+            case 18: // Ar
+            case 34: // Se
+            case 35: // Br
+            case 36: // Kr
+            case 53: // I
+            case 54: // Xe
+            case 86: // Rn
+                return false;
+            case 5:   // B
+            case 14:  // Si
+            case 32:  // Ge
+            case 33:  // As
+            case 51:  // Sb
+            case 52:  // Te
+            case 85:  // At
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * Utility method to determine if an atom is a metal.
+     *
+     * @param atom atom
+     * @return the atom is a metal (or not)
+     */
+    public static boolean isMetal(IAtom atom) {
+        return atom.getAtomicNumber() != null &&
+               isMetal(atom.getAtomicNumber());
+    }
+
+    /**
+     * Utility method to determine if an atomic number represents a metalloid element (B, Si, Ge, As, Sb, Te, or At).
+     * All other atomic numbers (integers), including those smaller or equal to 0, will return false.
+     *
+     * @param atno atomic number
+     * @return the atomic number is a metalloid (or not)
+     */
+    public static boolean isMetalloid(int atno) {
+        switch (atno) {
+            case 5:   // B
+            case 14:  // Si
+            case 32:  // Ge
+            case 33:  // As
+            case 51:  // Sb
+            case 52:  // Te
+            case 85:  // At
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Utility method to determine if an atom is a metalloid (B, Si, Ge, As, Sb, Te, or At).
+     * Also returns false should the atomic number of the given atom be null, zero, or negative.
+     *
+     * @param atom atom
+     * @return the atom is a metalloid (or not)
+     */
+    public static boolean isMetalloid(IAtom atom) {
+        return atom.getAtomicNumber() != null &&
+                isMetalloid(atom.getAtomicNumber());
+    }
 }

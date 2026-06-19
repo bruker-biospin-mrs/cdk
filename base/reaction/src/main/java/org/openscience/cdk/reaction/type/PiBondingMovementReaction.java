@@ -18,11 +18,11 @@
  */
 package org.openscience.cdk.reaction.type;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.interfaces.IRing;
@@ -68,13 +68,11 @@ import java.util.Iterator;
  * @author         Miguel Rojas
  *
  * @cdk.created    2007-02-02
- * @cdk.module     reaction
- * @cdk.githash
  *
  **/
 public class PiBondingMovementReaction extends ReactionEngine implements IReactionProcess {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(PiBondingMovementReaction.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(PiBondingMovementReaction.class);
 
     /**
      * Constructor of the PiBondingMovementReaction object
@@ -149,7 +147,7 @@ public class PiBondingMovementReaction extends ReactionEngine implements IReacti
                     Iterator<IBond> bondfs = ring.bonds().iterator();
                     boolean ringCompletActive = false;
                     while (bondfs.hasNext()) {
-                        if (bondfs.next().getFlag(CDKConstants.REACTIVE_CENTER))
+                        if (bondfs.next().getFlag(IChemObject.REACTIVE_CENTER))
                             ringCompletActive = true;
                         else {
                             ringCompletActive = false;
@@ -211,7 +209,7 @@ public class PiBondingMovementReaction extends ReactionEngine implements IReacti
                 //if exactly half (nrAtoms/2==nrSingleBonds)
                 if (nrSingleBonds != 0 && nrAtoms / 2 == nrSingleBonds) {
                     for (IBond iBond : ring.bonds())
-                        iBond.setFlag(CDKConstants.REACTIVE_CENTER, true);
+                        iBond.setFlag(IChemObject.REACTIVE_CENTER, true);
 
                 }
             }

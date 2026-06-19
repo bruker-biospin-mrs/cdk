@@ -18,11 +18,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.atomic;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.IAtomicDescriptor;
 import org.openscience.cdk.qsar.result.BooleanResult;
@@ -31,26 +30,25 @@ import org.openscience.cdk.smiles.SmilesParser;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsaratomic
  */
-public class IsProtonInConjugatedPiSystemDescriptorTest extends AtomicDescriptorTest {
+class IsProtonInConjugatedPiSystemDescriptorTest extends AtomicDescriptorTest {
 
-    public IsProtonInConjugatedPiSystemDescriptorTest() {}
+    IsProtonInConjugatedPiSystemDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(IsProtonInConjugatedPiSystemDescriptor.class);
     }
 
     @Test
-    public void testIsProtonInConjugatedPiSystemDescriptor() throws ClassNotFoundException, CDKException,
+    void testIsProtonInConjugatedPiSystemDescriptor() throws
             java.lang.Exception {
         IAtomicDescriptor descriptor = new IsProtonInConjugatedPiSystemDescriptor();
-        Object[] params = {new Boolean(true)};
+        Object[] params = {Boolean.TRUE};
         descriptor.setParameters(params);
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("CNC=CC=C");
         addExplicitHydrogens(mol);
-        Assert.assertTrue(((BooleanResult) descriptor.calculate(mol.getAtom(13), mol).getValue()).booleanValue());
+        Assertions.assertTrue(((BooleanResult) descriptor.calculate(mol.getAtom(13), mol).getValue()).booleanValue());
     }
 }

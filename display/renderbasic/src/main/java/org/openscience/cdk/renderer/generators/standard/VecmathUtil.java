@@ -102,7 +102,7 @@ final class VecmathUtil {
      * @return unit vectors
      */
     static List<Vector2d> newUnitVectors(final IAtom fromAtom, final List<IAtom> toAtoms) {
-        final List<Vector2d> unitVectors = new ArrayList<Vector2d>(toAtoms.size());
+        final List<Vector2d> unitVectors = new ArrayList<>(toAtoms.size());
         for (final IAtom toAtom : toAtoms) {
             unitVectors.add(newUnitVector(fromAtom.getPoint2d(), toAtom.getPoint2d()));
         }
@@ -277,7 +277,7 @@ final class VecmathUtil {
      */
     static Vector2d getNearestVector(Vector2d reference, IAtom fromAtom, List<IBond> bonds) {
 
-        final List<IAtom> toAtoms = new ArrayList<IAtom>();
+        final List<IAtom> toAtoms = new ArrayList<>();
         for (IBond bond : bonds) {
             toAtoms.add(bond.getOther(fromAtom));
         }
@@ -338,7 +338,15 @@ final class VecmathUtil {
         for (int i = 0; i < vectors.size(); i++) {
             double extent = extents[(i + 1) % vectors.size()] - extents[i];
             if (extent < 0) extent += TAU;
-            if (extent > max) {
+            double delta = extent - max;
+            // is significantly better?
+            if (delta > 0.01) {
+                max = extent;
+                index = i;
+            }
+            // not significantly better -> put is left/right aligned
+            else if ((extents[i] < TAU && extents[i]+extent > TAU) ||
+                       (extents[i] < Math.PI && extents[i]+extent > Math.PI)) {
                 max = extent;
                 index = i;
             }

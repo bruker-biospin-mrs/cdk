@@ -58,8 +58,6 @@ import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conforma
  * The {@link org.openscience.cdk.interfaces.IBond.Stereo} value can be
  * reconstructed from 3D coordinates with the {@link StereoTool}.
  *
- * @cdk.module cip
- * @cdk.githash
  */
 public class CIPTool {
 
@@ -68,7 +66,7 @@ public class CIPTool {
      */
     public static final int      HYDROGEN = -1;
 
-    private static CIPLigandRule cipRule  = new CIPLigandRule();
+    private static final CIPLigandRule cipRule  = new CIPLigandRule();
 
     /**
      * Enumeration with the two tetrahedral chiralities defined by the CIP schema.
@@ -343,7 +341,7 @@ public class CIPTool {
         VisitedAtoms visitedAtoms = ligand.getVisitedAtoms();
         List<IBond> bonds = container.getConnectedBondsList(ligandAtom);
         // duplicate ligands according to bond order, following the CIP rules
-        List<ILigand> ligands = new ArrayList<ILigand>();
+        List<ILigand> ligands = new ArrayList<>();
         for (IBond bond : bonds) {
             if (bond.contains(centralAtom)) {
                 if (Order.SINGLE == bond.getOrder()) continue;

@@ -26,8 +26,6 @@ package org.openscience.cdk.interfaces;
  * A AminoAcid is Monomer which stores additional amino acid specific
  * informations, like the N-terminus atom.
  *
- * @cdk.module  interfaces
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;e.willighagen@science.ru.nl&gt;
  * @cdk.created 2005-12-05
@@ -42,7 +40,7 @@ public interface IAminoAcid extends IMonomer {
      *
      * @see    #addNTerminus(IAtom)
      */
-    public IAtom getNTerminus();
+    IAtom getNTerminus();
 
     /**
      * Add an Atom and makes it the N-terminus atom.
@@ -51,7 +49,7 @@ public interface IAminoAcid extends IMonomer {
      *
      * @see    #getNTerminus
      */
-    public void addNTerminus(IAtom atom);
+    void addNTerminus(IAtom atom);
 
     /**
      * Retrieves the C-terminus atom.
@@ -60,7 +58,7 @@ public interface IAminoAcid extends IMonomer {
      *
      * @see    #addCTerminus(IAtom)
      */
-    public IAtom getCTerminus();
+    IAtom getCTerminus();
 
     /**
      * Add an Atom and makes it the C-terminus atom.
@@ -69,11 +67,11 @@ public interface IAminoAcid extends IMonomer {
      *
      * @see    #getCTerminus
      */
-    public void addCTerminus(IAtom atom);
+    void addCTerminus(IAtom atom);
 
     /**
      *{@inheritDoc}
      */
     @Override
-    public IAminoAcid clone() throws CloneNotSupportedException;
+    IAminoAcid clone() throws CloneNotSupportedException;
 }

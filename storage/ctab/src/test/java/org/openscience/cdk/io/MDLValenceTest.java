@@ -24,25 +24,24 @@
 
 package org.openscience.cdk.io;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author John May
- * @cdk.module test-io
  */
-public class MDLValenceTest {
+class MDLValenceTest {
 
     @Test
-    public void sodium_metal() {
-        IAtomContainer container = new AtomContainer();
+    void sodium_metal() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("Na");
         atom.setValency(0);
         container.addAtom(atom);
@@ -52,8 +51,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void sodium_hydride() {
-        IAtomContainer container = new AtomContainer();
+    void sodium_hydride() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("Na");
         atom.setValency(1);
         container.addAtom(atom);
@@ -63,8 +62,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void sodium_implicit() {
-        IAtomContainer container = new AtomContainer();
+    void sodium_implicit() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("Na");
         container.addAtom(atom);
         MDLValence.apply(container);
@@ -73,8 +72,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void bismuth() {
-        IAtomContainer container = new AtomContainer();
+    void bismuth() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom bi1 = new Atom("Bi");
         IAtom h2 = new Atom("H");
         bi1.setFormalCharge(+2);
@@ -89,8 +88,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void tin_ii() {
-        IAtomContainer container = new AtomContainer();
+    void tin_ii() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("Sn");
         atom.setValency(2);
         container.addAtom(atom);
@@ -100,8 +99,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void tin_iv() {
-        IAtomContainer container = new AtomContainer();
+    void tin_iv() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("Sn");
         atom.setValency(4);
         IAtom hydrogen = new Atom("H");
@@ -114,8 +113,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void carbon_neutral() {
-        IAtomContainer container = new AtomContainer();
+    void carbon_neutral() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         container.addAtom(atom);
         MDLValence.apply(container);
@@ -124,8 +123,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void carbon_cation() {
-        IAtomContainer container = new AtomContainer();
+    void carbon_cation() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         atom.setFormalCharge(-1);
         container.addAtom(atom);
@@ -135,8 +134,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void carbon_cation_doubleBonded() {
-        IAtomContainer container = new AtomContainer();
+    void carbon_cation_doubleBonded() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom c1 = new Atom("C");
         IAtom c2 = new Atom("C");
         c1.setFormalCharge(-1);
@@ -151,8 +150,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void carbon_anion() {
-        IAtomContainer container = new AtomContainer();
+    void carbon_anion() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         atom.setFormalCharge(+1);
         container.addAtom(atom);
@@ -162,8 +161,8 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void bismuth_isImplicit() {
-        IAtomContainer container = new AtomContainer();
+    void bismuth_isImplicit() {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom bi1 = new Atom("Bi");
         IAtom h2 = new Atom("H");
         bi1.setFormalCharge(+2);
@@ -178,7 +177,7 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void nitrogen_neutral() {
+    void nitrogen_neutral() {
         assertThat(MDLValence.implicitValence(7, 0, 0), is(3));
         assertThat(MDLValence.implicitValence(7, 0, 1), is(3));
         assertThat(MDLValence.implicitValence(7, 0, 2), is(3));
@@ -189,7 +188,7 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void nitrogen_cation() {
+    void nitrogen_cation() {
         assertThat(MDLValence.implicitValence(7, +1, 0), is(4));
         assertThat(MDLValence.implicitValence(7, +1, 1), is(4));
         assertThat(MDLValence.implicitValence(7, +1, 2), is(4));
@@ -200,7 +199,7 @@ public class MDLValenceTest {
     }
 
     @Test
-    public void nitrogen_anion() {
+    void nitrogen_anion() {
         assertThat(MDLValence.implicitValence(7, -1, 0), is(2));
         assertThat(MDLValence.implicitValence(7, -1, 1), is(2));
         assertThat(MDLValence.implicitValence(7, -1, 2), is(2));

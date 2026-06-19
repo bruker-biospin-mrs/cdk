@@ -29,8 +29,6 @@ import java.util.List;
  * Classes that implement this interface are Reactions types.
  *
  * @author      Miguel Rojas
- * @cdk.module  reaction
- * @cdk.githash
  */
 public interface IReactionProcess {
 
@@ -49,7 +47,7 @@ public interface IReactionProcess {
      *
      * @return An object containing the reaction specification
      */
-    public ReactionSpecification getSpecification();
+    ReactionSpecification getSpecification();
 
     /**
      * Sets the parameters for this reaction.
@@ -63,7 +61,7 @@ public interface IReactionProcess {
      *
      * @see #getParameterList
      */
-    public void setParameterList(List<IParameterReact> params) throws CDKException;
+    void setParameterList(List<IParameterReact> params) throws CDKException;
 
     /**
      * Returns the current parameter values.
@@ -71,7 +69,7 @@ public interface IReactionProcess {
      * @return A List of Object containing the name and the type of the parameter
      * @see #setParameterList
      * */
-    public List<IParameterReact> getParameterList();
+    List<IParameterReact> getParameterList();
 
     /**
      * Initiates the process for the given Reaction.
@@ -84,7 +82,7 @@ public interface IReactionProcess {
      * @return the set of reactions.
      * @throws CDKException if an error occurs during the reaction process. See documentation for individual reaction processes
      */
-    public IReactionSet initiate(IAtomContainerSet reactants, IAtomContainerSet agents) throws CDKException;
+    IReactionSet initiate(IAtomContainerSet reactants, IAtomContainerSet agents) throws CDKException;
 
     /**
      * Return the IParameterReact if it exists given the class.
@@ -92,6 +90,6 @@ public interface IReactionProcess {
      * @param paramClass The class
      * @return           The IParameterReact
      */
-    public IParameterReact getParameterClass(Class<?> paramClass);
+    IParameterReact getParameterClass(Class<?> paramClass);
 
 }

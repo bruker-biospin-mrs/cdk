@@ -30,6 +30,8 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemModel;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.sgroup.Sgroup;
@@ -37,6 +39,7 @@ import org.openscience.cdk.sgroup.SgroupBracket;
 import org.openscience.cdk.sgroup.SgroupKey;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemModelManipulator;
 import org.openscience.cdk.tools.manipulator.ReactionManipulator;
 
@@ -45,8 +48,12 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector2d;
 import javax.vecmath.Vector3d;
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -66,11 +73,10 @@ import java.util.TreeMap;
  * @author Christian Hoppe
  * @author Niels Out
  * @author John May
- * @cdk.githash
  */
 public final class GeometryUtil {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(GeometryUtil.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(GeometryUtil.class);
 
     /**
      * Provides the coverage of coordinates for this molecule.
@@ -78,7 +84,7 @@ public final class GeometryUtil {
      * @see GeometryUtil#get2DCoordinateCoverage(org.openscience.cdk.interfaces.IAtomContainer)
      * @see GeometryUtil#get3DCoordinateCoverage(org.openscience.cdk.interfaces.IAtomContainer)
      */
-    public static enum CoordinateCoverage {
+    public enum CoordinateCoverage {
 
         /**
          * All atoms have coordinates.
@@ -150,8 +156,8 @@ public final class GeometryUtil {
      */
     public static void scaleMolecule(IAtomContainer atomCon, double[] areaDim, double fillFactor) {
         double[] molDim = get2DDimension(atomCon);
-        double widthFactor = (double) areaDim[0] / (double) molDim[0];
-        double heightFactor = (double) areaDim[1] / (double) molDim[1];
+        double widthFactor = areaDim[0] / molDim[0];
+        double heightFactor = areaDim[1] / molDim[1];
         double scaleFactor = Math.min(widthFactor, heightFactor) * fillFactor;
         scaleMolecule(atomCon, scaleFactor);
     }
@@ -255,6 +261,81 @@ public final class GeometryUtil {
     }
 
     /**
+     * Reflect a collection of atoms in the line formed by the two specified points (beg,end).
+     *
+     * @param atoms the atoms
+     * @param beg the begin point of a line
+     * @param end the end point of a line
+     */
+    public static void reflect(Collection<IAtom> atoms, Point2d beg, Point2d end) {
+        double dx = end.x - beg.x;
+        double dy = end.y - beg.y;
+
+        double a = (dx * dx - dy * dy) / (dx * dx + dy * dy);
+        double b = 2 * dx * dy / (dx * dx + dy * dy);
+        for (IAtom atom : atoms) {
+            Point2d p = atom.getPoint2d();
+            double x = a * (p.x - beg.x) + b * (p.y - beg.y) + beg.x;
+            double y = b * (p.x - beg.x) - a * (p.y - beg.y) + beg.y;
+            p.x = x;
+            p.y = y;
+
+            // flip any bond displays that have end points in the set
+            for (IBond bond : atom.bonds()) {
+
+                // only flip once
+                if (!bond.getAtom(0).equals(atom))
+                    continue;
+
+                IBond.Display flipped = null;
+                switch (bond.getDisplay()) {
+                    case WedgeBegin:
+                    case HollowWedgeBegin:
+                        flipped = IBond.Display.WedgedHashBegin;
+                        break;
+                    case WedgeEnd:
+                    case HollowWedgeEnd:
+                        flipped = IBond.Display.WedgedHashEnd;
+                        break;
+                    case WedgedHashBegin:
+                        flipped = IBond.Display.WedgeBegin;
+                        break;
+                    case WedgedHashEnd:
+                        flipped = IBond.Display.WedgeEnd;
+                        break;
+                    case Bold:
+                        flipped = IBond.Display.Hash;
+                        break;
+                    case Hash:
+                        flipped = IBond.Display.Bold;
+                        break;
+                }
+
+                if (flipped == null)
+                    continue;
+
+                IAtom nbor = bond.getOther(atom);
+                // lookup depends on provided collection... but we
+                // only do that if there was a bond display to flip
+                if (atoms.contains(nbor)) {
+                    bond.setDisplay(flipped);
+                }
+            }
+        }
+    }
+
+    /**
+     * Reflect a collection of atoms in the line formed by the specified bond.
+     *
+     * @param atoms the atoms
+     * @param bond the bond at which to reflect
+     */
+    public static void reflect(Collection<IAtom> atoms, IBond bond) {
+        reflect(atoms, bond.getBegin().getPoint2d(), bond.getEnd().getPoint2d());
+    }
+
+
+    /**
      * Rotates a 3D point about a specified line segment by a specified angle.
      *
      * The code is based on code available <a href="http://astronomy.swin.edu.au/~pbourke/geometry/rotate/source.c">here</a>.
@@ -333,26 +414,23 @@ public final class GeometryUtil {
     }
 
     /**
-     * Returns the minimum and maximum X and Y coordinates of the atoms in the
-     * AtomContainer. The output is returned as: <pre>
+     * Returns the minimum and maximum X and Y coordinates of the atoms.
+     * The output is returned as: <pre>
      *   minmax[0] = minX;
      *   minmax[1] = minY;
      *   minmax[2] = maxX;
      *   minmax[3] = maxY;
      * </pre>
-     * See comment for center(IAtomContainer atomCon, Dimension areaDim, HashMap
-     * renderingCoordinates) for details on coordinate sets
      *
-     * @param container Description of the Parameter
+     * @param atoms the atoms.
      * @return An four int array as defined above.
      */
-    public static double[] getMinMax(IAtomContainer container) {
+    public static double[] getMinMax(Iterable<IAtom> atoms) {
         double maxX = -Double.MAX_VALUE;
         double maxY = -Double.MAX_VALUE;
         double minX = Double.MAX_VALUE;
         double minY = Double.MAX_VALUE;
-        for (int i = 0; i < container.getAtomCount(); i++) {
-            IAtom atom = container.getAtom(i);
+        for (IAtom atom : atoms) {
             if (atom.getPoint2d() != null) {
                 if (atom.getPoint2d().x > maxX) {
                     maxX = atom.getPoint2d().x;
@@ -377,6 +455,24 @@ public final class GeometryUtil {
     }
 
     /**
+     * Returns the minimum and maximum X and Y coordinates of the atoms in the
+     * AtomContainer. The output is returned as: <pre>
+     *   minmax[0] = minX;
+     *   minmax[1] = minY;
+     *   minmax[2] = maxX;
+     *   minmax[3] = maxY;
+     * </pre>
+     * See comment for center(IAtomContainer atomCon, Dimension areaDim, HashMap
+     * renderingCoordinates) for details on coordinate sets
+     *
+     * @param container Description of the Parameter
+     * @return An four int array as defined above.
+     */
+    public static double[] getMinMax(IAtomContainer container) {
+        return getMinMax(container.atoms());
+    }
+
+    /**
      * Translates a molecule from the origin to a new point denoted by a vector. See comment for
      * center(IAtomContainer atomCon, Dimension areaDim, HashMap renderingCoordinates) for details
      * on coordinate sets
@@ -386,6 +482,8 @@ public final class GeometryUtil {
      */
     public static void translate2DCentreOfMassTo(IAtomContainer atomCon, Point2d p) {
         Point2d com = get2DCentreOfMass(atomCon);
+        if (com == null)
+            throw new IllegalArgumentException("Null centre of mass, due to unset exact mass?");
         Vector2d translation = new Vector2d(p.x - com.x, p.y - com.y);
         for (IAtom atom : atomCon.atoms()) {
             if (atom.getPoint2d() != null) {
@@ -413,6 +511,8 @@ public final class GeometryUtil {
                 length++;
             }
         }
+        if (length == 0)
+            return new Point2d(0,0);
         return new Point2d(xsum / (double) length, ysum / (double) length);
     }
 
@@ -437,6 +537,8 @@ public final class GeometryUtil {
             }
             ++length;
         }
+        if (length == 0)
+            return new Point2d(0,0);
         return new Point2d(xsum / (double) length, ysum / (double) length);
     }
 
@@ -483,7 +585,8 @@ public final class GeometryUtil {
             xsum += mass * a.getPoint2d().x;
             ysum += mass * a.getPoint2d().y;
         }
-
+        if (totalmass == 0)
+            return new Point2d(0,0);
         return new Point2d(xsum / totalmass, ysum / totalmass);
     }
 
@@ -506,6 +609,8 @@ public final class GeometryUtil {
                 counter++;
             }
         }
+        if (counter == 0)
+            return new Point2d(0,0);
         return new Point2d(centerX / (counter), centerY / (counter));
     }
 
@@ -562,7 +667,8 @@ public final class GeometryUtil {
             ysum += mass * a.getPoint3d().y;
             zsum += mass * a.getPoint3d().z;
         }
-
+        if (totalmass == 0)
+            return new Point3d(0,0,0);
         return new Point3d(xsum / totalmass, ysum / totalmass, zsum / totalmass);
     }
 
@@ -587,6 +693,8 @@ public final class GeometryUtil {
                 counter++;
             }
         }
+        if (counter == 0)
+            return new Point3d(0,0,0);
         return new Point3d(centerX / (counter), centerY / (counter), centerZ / (counter));
     }
 
@@ -922,6 +1030,8 @@ public final class GeometryUtil {
                 bondLengthSum += getLength2D(bond);
             }
         }
+        if (bondCounter == 0)
+            return 0;
         return bondLengthSum / bondCounter;
     }
 
@@ -1177,6 +1287,8 @@ public final class GeometryUtil {
                         + Math.pow(atom1.getPoint2d().y - atom2.getPoint2d().y, 2));
             }
         }
+        if (counter == 0)
+            return 1;
         bondlength = bondlength / counter;
         ratio = desiredBondLength / bondlength;
         return ratio;
@@ -1248,7 +1360,7 @@ public final class GeometryUtil {
         if (originalPoint == null) {
             throw new CDKException("No point3d, but findClosestInSpace is working on point3ds");
         }
-        Map<Double, IAtom> atomsByDistance = new TreeMap<Double, IAtom>();
+        Map<Double, IAtom> atomsByDistance = new TreeMap<>();
         for (IAtom atom : container.atoms()) {
             if (!atom.equals(startAtom)) {
                 if (atom.getPoint3d() == null) {
@@ -1261,7 +1373,7 @@ public final class GeometryUtil {
         // FIXME: should there not be some sort here??
         Set<Double> keySet = atomsByDistance.keySet();
         Iterator<Double> keyIter = keySet.iterator();
-        List<IAtom> returnValue = new ArrayList<IAtom>();
+        List<IAtom> returnValue = new ArrayList<>();
         int i = 0;
         while (keyIter.hasNext() && i < max) {
             returnValue.add(atomsByDistance.get(keyIter.next()));
@@ -1321,8 +1433,8 @@ public final class GeometryUtil {
                 firstAC = secondAC.clone();
                 secondAC = tmp.clone();
             } catch (CloneNotSupportedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LoggingToolFactory.createLoggingTool(GeometryUtil.class)
+                                  .warn("Unexpected Error:", e);
             }
         }
     }
@@ -1332,7 +1444,7 @@ public final class GeometryUtil {
         IAtom firstAtom = firstAC.getAtom(posFirstAtom);
         IAtom secondAtom = secondAC.getAtom(posSecondAtom);
         // XXX: floating point comparision!
-        return firstAtom.getSymbol().equals(secondAtom.getSymbol())
+        return firstAtom.getAtomicNumber().equals(secondAtom.getAtomicNumber())
                 && firstAC.getConnectedAtomsList(firstAtom).size() == secondAC.getConnectedAtomsList(secondAtom).size()
                 && firstAtom.getBondOrderSum().equals(secondAtom.getBondOrderSum())
                 && firstAtom.getMaxBondOrder() == secondAtom.getMaxBondOrder();
@@ -1340,7 +1452,7 @@ public final class GeometryUtil {
 
     private static IAtomContainer setVisitedFlagsToFalse(IAtomContainer atomContainer) {
         for (int i = 0; i < atomContainer.getAtomCount(); i++) {
-            atomContainer.getAtom(i).setFlag(CDKConstants.VISITED, false);
+            atomContainer.getAtom(i).setFlag(IChemObject.VISITED, false);
         }
         return atomContainer;
     }
@@ -1364,25 +1476,24 @@ public final class GeometryUtil {
         List<IAtom> connectedAtoms;
         double sum = 0;
         double n = 0;
-        double distance1 = 0;
-        double distance2 = 0;
+        double distance1;
+        double distance2;
         setVisitedFlagsToFalse(firstAtomContainer);
         setVisitedFlagsToFalse(secondAtomContainer);
         while (firstAtoms.hasNext()) {
             centerAtomFirstMolecule = firstAtomContainer.getAtom(firstAtoms.next());
-            centerAtomFirstMolecule.setFlag(CDKConstants.VISITED, true);
+            centerAtomFirstMolecule.setFlag(IChemObject.VISITED, true);
             centerAtomSecondMolecule = secondAtomContainer.getAtom(mappedAtoms.get(firstAtomContainer
                     .indexOf(centerAtomFirstMolecule)));
             connectedAtoms = firstAtomContainer.getConnectedAtomsList(centerAtomFirstMolecule);
-            for (int i = 0; i < connectedAtoms.size(); i++) {
-                IAtom conAtom = connectedAtoms.get(i);
+            for (IAtom conAtom : connectedAtoms) {
                 //this step is built to know if the program has already calculate a bond length (so as not to have duplicate values)
-                if (!conAtom.getFlag(CDKConstants.VISITED)) {
+                if (!conAtom.getFlag(IChemObject.VISITED)) {
                     if (Coords3d) {
                         distance1 = centerAtomFirstMolecule.getPoint3d().distance(conAtom.getPoint3d());
                         distance2 = centerAtomSecondMolecule.getPoint3d().distance(
                                 secondAtomContainer.getAtom(mappedAtoms.get(firstAtomContainer.indexOf(conAtom)))
-                                        .getPoint3d());
+                                                   .getPoint3d());
                         sum = sum + Math.pow((distance1 - distance2), 2);
                         n++;
                     } else {
@@ -1398,6 +1509,8 @@ public final class GeometryUtil {
         }
         setVisitedFlagsToFalse(firstAtomContainer);
         setVisitedFlagsToFalse(secondAtomContainer);
+        if (n == 0)
+            return 0;
         return Math.sqrt(sum / n);
     }
 
@@ -1447,6 +1560,8 @@ public final class GeometryUtil {
                 }
             }//if
         }
+        if (n == 0)
+            return 0;
         return Math.sqrt(sum / n);
     }
 
@@ -1489,7 +1604,7 @@ public final class GeometryUtil {
             Map<Integer, Integer> mappedAtoms, boolean Coords3d) throws CDKException {
         //logger.debug("**** GT getAllAtomRMSD ****");
         double sum = 0;
-        double RMSD;
+        double rmsd;
         Iterator<Integer> firstAtoms = mappedAtoms.keySet().iterator();
         int firstAtomNumber;
         int secondAtomNumber;
@@ -1516,8 +1631,11 @@ public final class GeometryUtil {
                 throw new CDKException(ex.getMessage(), ex);
             }
         }
-        RMSD = Math.sqrt(sum / n);
-        return RMSD;
+        if (n == 0)
+            rmsd = 0;
+        else
+            rmsd = Math.sqrt(sum / n);
+        return rmsd;
     }
 
     /**
@@ -1535,7 +1653,7 @@ public final class GeometryUtil {
             Map<Integer, Integer> mappedAtoms, boolean hetAtomOnly, boolean Coords3d) {
         //logger.debug("**** GT getAllAtomRMSD ****");
         double sum = 0;
-        double RMSD;
+        double rmsd;
         Iterator<Integer> firstAtoms = mappedAtoms.keySet().iterator();
         int firstAtomNumber;
         int secondAtomNumber;
@@ -1545,7 +1663,7 @@ public final class GeometryUtil {
             secondAtomNumber = mappedAtoms.get(firstAtomNumber);
             IAtom firstAtom = firstAtomContainer.getAtom(firstAtomNumber);
             if (hetAtomOnly) {
-                if (!firstAtom.getSymbol().equals("H") && !firstAtom.getSymbol().equals("C")) {
+                if (firstAtom.getAtomicNumber() != IElement.H && firstAtom.getAtomicNumber() != IElement.C) {
                     if (Coords3d) {
                         sum = sum
                                 + Math.pow(
@@ -1561,7 +1679,7 @@ public final class GeometryUtil {
                     }
                 }
             } else {
-                if (!firstAtom.getSymbol().equals("H")) {
+                if (firstAtom.getAtomicNumber() != IElement.H) {
                     if (Coords3d) {
                         sum = sum
                                 + Math.pow(
@@ -1579,8 +1697,8 @@ public final class GeometryUtil {
             }
 
         }
-        RMSD = Math.sqrt(sum / n);
-        return RMSD;
+        rmsd = n == 0 ? 0 : Math.sqrt(sum / n);
+        return rmsd;
     }
 
     /**
@@ -1601,6 +1719,8 @@ public final class GeometryUtil {
                 bondLengthSum += atom1.getPoint3d().distance(atom2.getPoint3d());
             }
         }
+        if (bondCounter == 0)
+            return bondLengthSum;
         return bondLengthSum / bondCounter;
     }
 
@@ -1657,33 +1777,101 @@ public final class GeometryUtil {
             containercount++;
             bondlenghtsum += getBondLengthAverage(container);
         }
+        if (containercount == 0)
+            return 0;
         return bondlenghtsum / containercount;
     }
 
     /**
-     * Calculate the median bond length of an atom container.
+     * Calculate the median bond length of an atom container or returns the
+     * default if there are no bonds.
      *
      * @param container structure representation
      * @return median bond length
-     * @throws java.lang.IllegalArgumentException unset coordinates or no bonds
+     */
+    public static double getBondLengthMedian(final IAtomContainer container,
+                                             double defaultBondLength) {
+        return getBondLengthMedian(container.bonds(), container.getBondCount(),
+                                   defaultBondLength);
+    }
+
+    /**
+     * Calculate the median bond length of an atom container, fails if there
+     * are no bonds or coordinates.
+     *
+     * @param container structure representation
+     * @return median bond length
      */
     public static double getBondLengthMedian(final IAtomContainer container) {
-        if (container.getBondCount() == 0) throw new IllegalArgumentException("Container has no bonds.");
-        int nBonds = 0;
-        double[] lengths = new double[container.getBondCount()];
-        for (int i = 0; i < container.getBondCount(); i++) {
-            final IBond bond = container.getBond(i);
+        return getBondLengthMedian(container.bonds(), container.getBondCount());
+    }
+
+    /**
+     * Calculate the median bond length, if there are no bonds the default is
+     * returned. Bonds with no coordinates are skipped.
+     *
+     * @param bonds the bonds
+     * @param cap expected number of bonds (optional)
+     * @param defaultBondLength the default bond length if there is no median
+     * @return median bond length
+     * @throws java.lang.IllegalArgumentException unset coordinates or no bonds
+     */
+    public static double getBondLengthMedian(final Iterable<IBond> bonds,
+                                             int cap,
+                                             double defaultBondLength) {
+        Iterator<IBond> iter = bonds.iterator();
+        if (!iter.hasNext())
+            return defaultBondLength;
+        int count = 0;
+        double[] lengths = new double[cap];
+        while (iter.hasNext()) {
+            final IBond bond  = iter.next();
+            final IAtom atom1 = bond.getBegin();
+            final IAtom atom2 = bond.getEnd();
+            Point2d p1 = atom1.getPoint2d();
+            Point2d p2 = atom2.getPoint2d();
+            if (p1 == null || p2 == null)
+                continue;
+            if (p1.x != p2.x || p1.y != p2.y) {
+                if (count == lengths.length)
+                    lengths = Arrays.copyOf(lengths, count);
+                lengths[count++] = p1.distance(p2);
+            }
+        }
+        if (count == 0)
+            return defaultBondLength;
+        Arrays.sort(lengths, 0, count);
+        return lengths[count / 2];
+    }
+
+    /**
+     * Calculate the median bond length of some bonds (strict)
+     *
+     * @param bonds the bonds
+     * @return median bond length
+     * @throws java.lang.IllegalArgumentException unset coordinates or no bonds
+     */
+    public static double getBondLengthMedian(final Iterable<IBond> bonds, int cap) {
+        Iterator<IBond> iter = bonds.iterator();
+        if (!iter.hasNext()) throw new IllegalArgumentException("No bonds");
+        int count = 0;
+        double[] lengths = new double[cap];
+        while (iter.hasNext()) {
+            final IBond bond  = iter.next();
             final IAtom atom1 = bond.getBegin();
             final IAtom atom2 = bond.getEnd();
             Point2d p1 = atom1.getPoint2d();
             Point2d p2 = atom2.getPoint2d();
             if (p1 == null || p2 == null)
                 throw new IllegalArgumentException("An atom has no 2D coordinates.");
-            if (p1.x != p2.x || p1.y != p2.y)
-                lengths[nBonds++] = p1.distance(p2);
+            if (p1.x != p2.x || p1.y != p2.y) {
+                if (count == lengths.length)
+                    lengths = Arrays.copyOf(lengths, count);
+                lengths[count++] = p1.distance(p2);
+            }
         }
-        Arrays.sort(lengths, 0, nBonds);
-        return lengths[nBonds / 2];
+        Arrays.sort(lengths, 0, count);
+        return lengths[count / 2];
     }
 
     /**
@@ -1743,4 +1931,168 @@ public final class GeometryUtil {
         }
     }
 
+    private static class PolarAtomComparator implements Comparator<IAtom> {
+        private final Point2d center;
+
+        public PolarAtomComparator(Point2d center) {
+            this.center = center;
+            if (center == null)
+                throw new NullPointerException("Center point cannot be null!");
+        }
+
+        @Override
+        public int compare(IAtom aAtom, IAtom bAtom) {
+            Point2d a = aAtom.getPoint2d();
+            Point2d b = bAtom.getPoint2d();
+            if (a == null || b == null)
+                throw new IllegalArgumentException("Missing 2D coordinated!");
+
+            double deltaXa = a.x - center.x;
+            double deltaXb = b.x - center.x;
+
+            if (deltaXa >= 0 && deltaXb < 0) return -1;
+            if (deltaXa < 0 && deltaXb >= 0) return +1;
+
+            double deltaYa = a.y - center.y;
+            double deltaYb = b.y - center.y;
+
+            if (deltaXa == 0 && deltaXb == 0) {
+                if (deltaYa >= 0 || deltaYb >= 0)
+                    return a.y > b.y ? -1 : +1;
+                return b.y > a.y ? -1 : +1;
+            }
+
+            // compute the cross product of vectors (center -> a) x (center -> b)
+            double det = (deltaXa) * (deltaYb) - (deltaXb) * (deltaYa);
+            if (det < 0) return -1;
+            if (det > 0) return +1;
+
+            // points a and b are on the same line from the center
+            // check which point is closer to the center
+            double d1 = (deltaXa) * (deltaXa) + (deltaYa) * (deltaYa);
+            double d2 = (deltaXb) * (deltaXb) + (deltaYb) * (deltaYb);
+            return Double.compare(d1, d2);
+        }
+    }
+
+    private static final class PolarBondComparator implements Comparator<IBond> {
+
+        private final IAtom centerAtom;
+        private final PolarAtomComparator polarAtomCompare;
+
+        private PolarBondComparator(IAtom atom) {
+            this.centerAtom = atom;
+            if (centerAtom == null)
+                throw new NullPointerException("Central atom cannot be null!");
+            this.polarAtomCompare = new PolarAtomComparator(centerAtom.getPoint2d());
+        }
+
+        /**
+         * Returns the polar ordering of bonds a and b relative to some central
+         * point.
+         * @param a one bond
+         * @param b another bond
+         * @return -1 a is less than b, 0 a == b, +1 a is greater than b
+         * @see <a href="http://stackoverflow.com/a/6989383">Sort points in clockwise order, ciamej</a>
+         */
+        @Override
+        public int compare(IBond a, IBond b) {
+            IAtom aAtom = a.getOther(centerAtom);
+            IAtom bAtom = b.getOther(centerAtom);
+            if (aAtom == null || bAtom == null)
+                throw new IllegalArgumentException("Bond is not connected to central atom!");
+            return polarAtomCompare.compare(aAtom, bAtom);
+        }
+    }
+
+    /**
+     * Sort the bonds using polar/radial coords around a central atom in 2D.
+     * @param central the central atom
+     */
+    public static Comparator<IBond> polarBondComparator(final IAtom central) {
+        return new PolarBondComparator(central);
+    }
+
+    /**
+     * Sort the atoms using polar/radial coords around a central point in 2D.
+     * @param central the central atom
+     */
+    public static Comparator<IAtom> polarAtomComparator(final Point2d central) {
+        return new PolarAtomComparator(central);
+    }
+
+    /**
+     * Sort the atoms using polar/radial coords around a central atom in 2D.
+     * @param central the central atom
+     */
+    public static Comparator<IAtom> polarAtomComparator(final IAtom central) {
+        return polarAtomComparator(central.getPoint2d());
+    }
+
+
+    // Java AWT Line2D.relativeCCW() but avoid AWT dependency here
+    private static int relativeCCW(double x1, double y1,
+                                   double x2, double y2,
+                                   double px, double py)
+    {
+        x2 -= x1;
+        y2 -= y1;
+        px -= x1;
+        py -= y1;
+        double ccw = px * y2 - py * x2;
+        if (ccw == 0.0) {
+            ccw = px * x2 + py * y2;
+            if (ccw > 0.0) {
+                px -= x2;
+                py -= y2;
+                ccw = px * x2 + py * y2;
+                if (ccw < 0.0) {
+                    ccw = 0.0;
+                }
+            }
+        }
+        return Double.compare(ccw, 0.0);
+    }
+
+    // Java AWT Line2D.linesIntersect()  but avoid AWT dependency here
+    private static boolean intersect(Point2d beg1, Point2d end1,
+                                     Point2d beg2, Point2d end2) {
+        assert beg1 != null && end1 != null;
+        assert beg2 != null && end2 != null;
+        double x1 = beg1.x, y1 = beg1.y;
+        double x2 = end1.x, y2 = end1.y;
+        double x3 = beg2.x, y3 = beg2.y;
+        double x4 = end2.x, y4 = end2.y;
+        return ((relativeCCW(x1, y1, x2, y2, x3, y3) *
+                relativeCCW(x1, y1, x2, y2, x4, y4) <= 0)
+                && (relativeCCW(x3, y3, x4, y4, x1, y1) *
+                relativeCCW(x3, y3, x4, y4, x2, y2) <= 0));
+    }
+
+    public static boolean intersect(IBond b1, IBond b2) {
+        if (b1.isConnectedTo(b2))
+            return false;
+        return intersect(b1.getBegin().getPoint2d(),
+                         b1.getEnd().getPoint2d(),
+                         b2.getBegin().getPoint2d(),
+                         b2.getEnd().getPoint2d());
+    }
+
+    public static List<Map.Entry<IBond, IBond>> intersectingBonds(IAtomContainer mol)
+    {
+        if (!GeometryUtil.has2DCoordinates(mol))
+            return Collections.emptyList();
+        List<Map.Entry<IBond,IBond>> crossing = new ArrayList<>();
+
+        // Naïve O(N^2) algorithm
+        IBond[] bonds = AtomContainerManipulator.getBondArray(mol);
+        for (int i = 0; i < bonds.length; i++) {
+            for (int j = i + 1; j < bonds.length; j++) {
+                if (!intersect(bonds[i], bonds[j]))
+                    continue;
+                crossing.add(new AbstractMap.SimpleImmutableEntry<>(bonds[i], bonds[j]));
+            }
+        }
+        return crossing;
+    }
 }

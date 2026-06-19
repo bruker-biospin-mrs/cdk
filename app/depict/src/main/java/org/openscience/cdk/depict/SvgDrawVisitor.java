@@ -23,8 +23,6 @@
 
 package org.openscience.cdk.depict;
 
-import com.google.common.base.Joiner;
-import com.google.common.xml.XmlEscapers;
 import org.openscience.cdk.renderer.RendererModel;
 import org.openscience.cdk.renderer.elements.Bounds;
 import org.openscience.cdk.renderer.elements.ElementGroup;
@@ -42,6 +40,8 @@ import org.openscience.cdk.renderer.visitor.IDrawVisitor;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
@@ -73,12 +73,17 @@ final class SvgDrawVisitor implements IDrawVisitor {
     private int             indentLvl     = 0;
     private AffineTransform transform     = null;
     private RendererModel   model         = null;
-    private NumberFormat    decimalFormat = new DecimalFormat(".##", new DecimalFormatSymbols(Locale.ROOT));
+    private static final NumberFormat    decimalFormat = new DecimalFormat(".###",
+                                                                           new DecimalFormatSymbols(Locale.ROOT));
 
     private boolean defaultsWritten    = false;
     private Color   defaultStroke      = null;
     private Color   defaultFill        = null;
     private String  defaultStrokeWidth = null;
+
+    private static double round(double d) {
+        return Double.parseDouble(decimalFormat.format(d));
+    }
 
     /**
      * Create an SvgDrawVisitor with the specified width/height
@@ -196,11 +201,19 @@ final class SvgDrawVisitor implements IDrawVisitor {
         }
     }
 
-    String toStr(Color col) {
+    String getFill(Color col) {
         if (col.getAlpha() == 255) {
-            return String.format("#%06X", (0xFFFFFF & col.getRGB()));
+            return String.format(" fill='#%06X'", (0xFFFFFF & col.getRGB()));
         } else {
-            return String.format("rgba(%d,%d,%d,%.2f)", col.getRed(), col.getGreen(), col.getBlue(), col.getAlpha()/255d);
+            return String.format(" fill='#%06X' opacity='%.2f'", (0xFFFFFF & col.getRGB()), col.getAlpha()/255d);
+        }
+    }
+
+    String getStroke(Color col) {
+        if (col.getAlpha() == 255) {
+            return String.format(" stroke='#%06X'", (0xFFFFFF & col.getRGB()));
+        } else {
+            return String.format(" stroke='#%06X' stroke-opacity='%.2f'", (0xFFFFFF & col.getRGB()), col.getAlpha()/255d);
         }
     }
 
@@ -291,30 +304,30 @@ final class SvgDrawVisitor implements IDrawVisitor {
                         sb.append("l");
                         appendRelativePoints(sb, points, xCurr, yCurr, 1);
                     }
-                    xCurr = points[0];
-                    yCurr = points[1];
+                    xCurr = round(points[0]);
+                    yCurr = round(points[1]);
                     break;
                 case MoveTo:
                     // We have Move as always absolute
                     sb.append("M");
                     transform(points, 1);
                     appendPoints(sb, points, 1);
-                    xCurr = points[0];
-                    yCurr = points[1];
+                    xCurr = round(points[0]);
+                    yCurr = round(points[1]);
                     break;
                 case QuadTo:
                     sb.append("q");
                     transform(points, 2);
                     appendRelativePoints(sb, points, xCurr, yCurr, 2);
-                    xCurr = points[2];
-                    yCurr = points[3];
+                    xCurr = round(points[2]);
+                    yCurr = round(points[3]);
                     break;
                 case CubicTo:
                     sb.append("c");
                     transform(points, 3);
                     appendRelativePoints(sb, points, xCurr, yCurr, 3);
-                    xCurr = points[4];
-                    yCurr = points[5];
+                    xCurr = round(points[4]);
+                    yCurr = round(points[5]);
                     break;
             }
         }
@@ -322,10 +335,10 @@ final class SvgDrawVisitor implements IDrawVisitor {
         if (elem.fill) {
             sb.append(" stroke='none'");
             if (defaultFill == null || !defaultFill.equals(elem.color))
-                sb.append(" fill='").append(toStr(elem.color)).append("'");
+                sb.append(getFill(elem.color));
         } else {
             sb.append(" fill='none'");
-            sb.append(" stroke='").append(toStr(elem.color)).append("'");
+            sb.append(getStroke(elem.color));
             sb.append(" stroke-width='").append(toStr(scaled(elem.stroke))).append("'");
         }
         sb.append("/>\n");
@@ -347,7 +360,7 @@ final class SvgDrawVisitor implements IDrawVisitor {
           .append(" x2='").append(toStr(points[2])).append("'")
           .append(" y2='").append(toStr(points[3])).append("'");
         if (defaultStroke == null || !defaultStroke.equals(elem.color))
-            sb.append(" stroke='").append(toStr(elem.color)).append("'");
+            sb.append(getStroke(elem.color));
         if (defaultStroke == null || !defaultStrokeWidth.equals(toStr(scaled(elem.width))))
             sb.append(" stroke-width='").append(toStr(scaled(elem.width))).append("'");
         sb.append("/>\n");
@@ -356,7 +369,7 @@ final class SvgDrawVisitor implements IDrawVisitor {
     private void visit(MarkedElement elem) {
         String id = elem.getId();
         List<String> classes = elem.getClasses();
-        String cls = classes.isEmpty() ? null : Joiner.on(" ").join(classes);
+        String cls = classes.isEmpty() ? null : String.join(" ", classes);
 
         IRenderingElement marked = elem.element();
 
@@ -396,20 +409,23 @@ final class SvgDrawVisitor implements IDrawVisitor {
     }
 
     private void visit(RectangleElement elem) {
+        if (elem.color == null)
+            return;
         appendIdent();
         double[] points = new double[]{elem.xCoord, elem.yCoord};
         transform(points, 1);
+        double height = scaled(elem.height);
         sb.append("<rect");
         sb.append(" x='").append(toStr(points[0])).append("'");
-        sb.append(" y='").append(toStr(points[1]-elem.height)).append("'");
+        sb.append(" y='").append(toStr(points[1]-height)).append("'");
         sb.append(" width='").append(toStr(scaled(elem.width))).append("'");
-        sb.append(" height='").append(toStr(scaled(elem.height))).append("'");
+        sb.append(" height='").append(toStr(height)).append("'");
         if (elem.filled) {
-            sb.append(" fill='").append(toStr(elem.color)).append("'");
+            sb.append(getFill(elem.color));
             sb.append(" stroke='none'");
         } else {
             sb.append(" fill='none'");
-            sb.append(" stroke='").append(toStr(elem.color)).append("'");
+            sb.append(getStroke(elem.color));
         }
         sb.append("/>\n");
     }
@@ -424,13 +440,36 @@ final class SvgDrawVisitor implements IDrawVisitor {
         sb.append(" rx='").append(toStr(scaled(elem.radius))).append("'");
         sb.append(" ry='").append(toStr(scaled(elem.radius))).append("'");
         if (elem.fill) {
-            sb.append(" fill='").append(toStr(elem.color)).append("'");
+            sb.append(getFill(elem.color));
             sb.append(" stroke='none'");
         } else {
             sb.append(" fill='none'");
-            sb.append(" stroke='").append(toStr(elem.color)).append("'");
+            sb.append(getStroke(elem.color));
         }
         sb.append("/>\n");
+    }
+
+    private void appendEscaped(StringBuilder sb, String text)
+    {
+        for (int i=0; i<text.length(); i++) {
+            char ch = text.charAt(i);
+            switch (ch) {
+                case '\n':
+                case '\r':
+                case '\t': sb.append(ch); break;
+                case '<':  sb.append("&lt;"); break;
+                case '>':  sb.append("&gt;"); break;
+                case '&':  sb.append("&amp;"); break;
+                default:
+                    if (ch < 0x1f)
+                        sb.append("\uFFFD"); // control chars
+                    else if (ch > 0xFFFD)
+                        sb.append("\uFFFD");
+                    else
+                        sb.append(ch);
+                    break;
+            }
+        }
     }
 
     private void visit(TextElement elem) {
@@ -440,11 +479,11 @@ final class SvgDrawVisitor implements IDrawVisitor {
         sb.append("<text ");
         sb.append(" x='").append(toStr(points[0])).append("'");
         sb.append(" y='").append(toStr(points[1])).append("'");
-        sb.append(" fill='").append(toStr(elem.color)).append("'");
+        sb.append(getFill(elem.color));
         sb.append(" text-anchor='middle'");
         // todo need font manager for scaling...
         sb.append(">");
-        sb.append(XmlEscapers.xmlContentEscaper().escape(elem.text));
+        appendEscaped(sb, elem.text);
         sb.append("</text>\n");
     }
 
@@ -457,11 +496,11 @@ final class SvgDrawVisitor implements IDrawVisitor {
               .append(" stroke-linecap='round'")
               .append(" stroke-linejoin='round'");
             if (defaultStroke != null)
-                sb.append(" stroke='").append(toStr(defaultStroke)).append("'");
+                sb.append(getStroke(defaultStroke));
             if (defaultStrokeWidth != null)
                 sb.append(" stroke-width='").append(defaultStrokeWidth).append("'");
             if (defaultFill != null)
-                sb.append(" fill='").append(toStr(defaultFill)).append("'");
+                sb.append(getFill(defaultFill));
             sb.append(">\n");
             indentLvl += 2;
             defaultsWritten = true;
@@ -507,8 +546,8 @@ final class SvgDrawVisitor implements IDrawVisitor {
     @Override
     public String toString() {
         if (defaultsWritten)
-            return sb.toString() + "  </g>\n</svg>\n";
-        return sb.toString() + "</svg>\n";
+            return sb + "  </g>\n</svg>\n";
+        return sb + "</svg>\n";
     }
 
     private static final class Counter {
@@ -516,7 +555,7 @@ final class SvgDrawVisitor implements IDrawVisitor {
     }
 
     private static final class FreqMap<T> {
-        Map<T, Counter> map = new HashMap<>();
+        final Map<T, Counter> map = new HashMap<>();
 
         public FreqMap() {
         }

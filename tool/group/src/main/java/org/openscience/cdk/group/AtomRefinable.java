@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -40,7 +39,6 @@ import org.openscience.cdk.interfaces.IBond;
  * Wraps an atom container to provide information on the atom connectivity.
  * 
  * @author maclean
- * @cdk.module group
  *
  */
 class AtomRefinable implements Refinable {
@@ -60,13 +58,13 @@ class AtomRefinable implements Refinable {
     /**
      * Ignore the elements when creating the initial partition.
      */
-    private boolean ignoreElements;
+    private final boolean ignoreElements;
     
     /**
      * Specialised option to allow generating automorphisms
      * that ignore the bond order.
      */
-    private boolean ignoreBondOrders;
+    private final boolean ignoreBondOrders;
     
     private int maxBondOrder;
     
@@ -180,7 +178,7 @@ class AtomRefinable implements Refinable {
             return Partition.unit(n);
         }
 
-        Map<String, SortedSet<Integer>> cellMap = new HashMap<String, SortedSet<Integer>>();
+        Map<String, SortedSet<Integer>> cellMap = new HashMap<>();
         int numberOfAtoms = atomContainer.getAtomCount();
         for (int atomIndex = 0; atomIndex < numberOfAtoms; atomIndex++) {
             String symbol = atomContainer.getAtom(atomIndex).getSymbol();
@@ -188,13 +186,13 @@ class AtomRefinable implements Refinable {
             if (cellMap.containsKey(symbol)) {
                 cell = cellMap.get(symbol);
             } else {
-                cell = new TreeSet<Integer>();
+                cell = new TreeSet<>();
                 cellMap.put(symbol, cell);
             }
             cell.add(atomIndex);
         }
 
-        List<String> atomSymbols = new ArrayList<String>(cellMap.keySet());
+        List<String> atomSymbols = new ArrayList<>(cellMap.keySet());
         Collections.sort(atomSymbols);
 
         Partition elementPartition = new Partition();
@@ -232,7 +230,7 @@ class AtomRefinable implements Refinable {
                 connectionTable[atomIndex][i] = index;
                 if (!ignoreBondOrders) {
                     IBond bond = atomContainer.getBond(atom, connected);
-                    boolean isArom = bond.getFlag(CDKConstants.ISAROMATIC);
+                    boolean isArom = bond.isAromatic();
                     int orderNumber = (isArom) ? 5 : bond.getOrder().numeric();
                     bondOrders[atomIndex][i] = orderNumber;
                     

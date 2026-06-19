@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.tools.manipulator;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.formula.MolecularFormula;
 import org.openscience.cdk.formula.MolecularFormulaRange;
 import org.openscience.cdk.formula.MolecularFormulaSet;
@@ -33,9 +33,8 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 /**
  * Checks the functionality of the MolecularFormulaSetManipulator.
  *
- * @cdk.module test-formula
  */
-public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
+class MolecularFormulaSetManipulatorTest extends CDKTestCase {
 
     private final static IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
 
@@ -43,7 +42,7 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
      *  Constructor for the MolecularFormulaSetManipulatorTest object.
      *
      */
-    public MolecularFormulaSetManipulatorTest() {
+    MolecularFormulaSetManipulatorTest() {
 
         super();
     }
@@ -51,10 +50,10 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testGetMaxOccurrenceElements_IMolecularFormulaSet() {
+    void testGetMaxOccurrenceElements_IMolecularFormulaSet() {
         IMolecularFormula mf1 = new MolecularFormula(); /* C4H12NO4 */
         mf1.addIsotope(builder.newInstance(IIsotope.class, "C"), 4);
         mf1.addIsotope(builder.newInstance(IIsotope.class, "H"), 12);
@@ -81,22 +80,22 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
 
         /* Result: C9H20N4O7 */
 
-        Assert.assertEquals(40, MolecularFormulaManipulator.getAtomCount(molecularFormula));
-        Assert.assertEquals(4, molecularFormula.getIsotopeCount());
-        Assert.assertEquals(9, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "C")));
-        Assert.assertEquals(20, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "H")));
-        Assert.assertEquals(4, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "N")));
-        Assert.assertEquals(7, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "O")));
+        Assertions.assertEquals(40, MolecularFormulaManipulator.getAtomCount(molecularFormula));
+        Assertions.assertEquals(4, molecularFormula.getIsotopeCount());
+        Assertions.assertEquals(9, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "C")));
+        Assertions.assertEquals(20, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "H")));
+        Assertions.assertEquals(4, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "N")));
+        Assertions.assertEquals(7, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "O")));
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testGetMinOccurrenceElements_IMolecularFormulaSet() {
+    void testGetMinOccurrenceElements_IMolecularFormulaSet() {
         IMolecularFormula mf1 = new MolecularFormula(); /* C4H12NO4 */
         mf1.addIsotope(builder.newInstance(IIsotope.class, "C"), 4);
         mf1.addIsotope(builder.newInstance(IIsotope.class, "H"), 12);
@@ -123,22 +122,22 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
 
         /* Result: C4H5NO2 */
 
-        Assert.assertEquals(12, MolecularFormulaManipulator.getAtomCount(molecularFormula));
-        Assert.assertEquals(4, molecularFormula.getIsotopeCount());
-        Assert.assertEquals(4, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "C")));
-        Assert.assertEquals(5, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "H")));
-        Assert.assertEquals(1, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "N")));
-        Assert.assertEquals(2, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "O")));
+        Assertions.assertEquals(12, MolecularFormulaManipulator.getAtomCount(molecularFormula));
+        Assertions.assertEquals(4, molecularFormula.getIsotopeCount());
+        Assertions.assertEquals(4, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "C")));
+        Assertions.assertEquals(5, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "H")));
+        Assertions.assertEquals(1, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "N")));
+        Assertions.assertEquals(2, molecularFormula.getIsotopeCount(builder.newInstance(IIsotope.class, "O")));
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testRemove_IMolecularFormulaSet_IMolecularFormula_IMolecularFormula() {
+    void testRemove_IMolecularFormulaSet_IMolecularFormula_IMolecularFormula() {
 
         IMolecularFormula formulaMin = new MolecularFormula();
         formulaMin.addIsotope(builder.newInstance(IIsotope.class, "C"), 1);
@@ -160,17 +159,17 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
 
         IMolecularFormulaSet newMFSet = MolecularFormulaSetManipulator.remove(formulaSet, formulaMin, formulaMax);
 
-        Assert.assertNull(newMFSet);
+        Assertions.assertNull(newMFSet);
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testRemove_1() {
+    void testRemove_1() {
 
         IMolecularFormula formulaMin = new MolecularFormula();
         formulaMin.addIsotope(builder.newInstance(IIsotope.class, "C"), 1);
@@ -211,23 +210,20 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
         IMolecularFormulaSet newMFSet = MolecularFormulaSetManipulator.remove(formulaSet, formulaMin, formulaMax);
         /* the mf4 is excluded from the limits */
 
-        Assert.assertEquals(3, newMFSet.size());
-        Assert.assertEquals(MolecularFormulaManipulator.getString(mf1),
-                MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(0)));
-        Assert.assertEquals(MolecularFormulaManipulator.getString(mf2),
-                MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(1)));
-        Assert.assertEquals(MolecularFormulaManipulator.getString(mf3),
-                MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(2)));
+        Assertions.assertEquals(3, newMFSet.size());
+        Assertions.assertEquals(MolecularFormulaManipulator.getString(mf1), MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(0)));
+        Assertions.assertEquals(MolecularFormulaManipulator.getString(mf2), MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(1)));
+        Assertions.assertEquals(MolecularFormulaManipulator.getString(mf3), MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(2)));
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testRemove_2() {
+    void testRemove_2() {
 
         IMolecularFormula formulaMin = new MolecularFormula();
         formulaMin.addIsotope(builder.newInstance(IIsotope.class, "C"), 1);
@@ -255,19 +251,18 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
         IMolecularFormulaSet newMFSet = MolecularFormulaSetManipulator.remove(formulaSet, formulaMin, formulaMax);
         /* the mf2 is excluded from the limits. It doesn't contain N */
 
-        Assert.assertEquals(1, newMFSet.size());
-        Assert.assertEquals(MolecularFormulaManipulator.getString(mf1),
-                MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(0)));
+        Assertions.assertEquals(1, newMFSet.size());
+        Assertions.assertEquals(MolecularFormulaManipulator.getString(mf1), MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(0)));
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testRemove_3() {
+    void testRemove_3() {
 
         IMolecularFormula formulaMin = new MolecularFormula();
         formulaMin.addIsotope(builder.newInstance(IIsotope.class, "C"), 1);
@@ -296,19 +291,18 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
         IMolecularFormulaSet newMFSet = MolecularFormulaSetManipulator.remove(formulaSet, formulaMin, formulaMax);
         /* the mf2 is excluded from the limits. It doesn't contain N */
 
-        Assert.assertEquals(1, newMFSet.size());
-        Assert.assertEquals(MolecularFormulaManipulator.getString(mf1),
-                MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(0)));
+        Assertions.assertEquals(1, newMFSet.size());
+        Assertions.assertEquals(MolecularFormulaManipulator.getString(mf1), MolecularFormulaManipulator.getString(newMFSet.getMolecularFormula(0)));
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testRemove_IMolecularFormulaSet_MolecularFormulaRange() {
+    void testRemove_IMolecularFormulaSet_MolecularFormulaRange() {
 
         MolecularFormulaRange formulaRange = new MolecularFormulaRange();
         formulaRange.addIsotope(builder.newInstance(IIsotope.class, "C"), 0, 4);
@@ -331,17 +325,17 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
         IMolecularFormulaSet newMFSet = MolecularFormulaSetManipulator.remove(formulaSet, formulaRange);
         /* the mf2 is excluded from the limits. It doesn't contain N */
 
-        Assert.assertEquals(2, newMFSet.size());
+        Assertions.assertEquals(2, newMFSet.size());
 
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testContains_IMolecularFormulaSet_IMolecularFormula() {
+    void testContains_IMolecularFormulaSet_IMolecularFormula() {
         IMolecularFormula mf1 = new MolecularFormula();
         mf1.addIsotope(builder.newInstance(IIsotope.class, "C"), 4);
         mf1.addIsotope(builder.newInstance(IIsotope.class, "H"), 12);
@@ -371,8 +365,8 @@ public class MolecularFormulaSetManipulatorTest extends CDKTestCase {
         mf4.addIsotope(builder.newInstance(IIsotope.class, "N"), 1);
         mf4.addIsotope(builder.newInstance(IIsotope.class, "O"), 4);
 
-        Assert.assertTrue(MolecularFormulaSetManipulator.contains(formulaSet, mf2));
-        Assert.assertFalse(MolecularFormulaSetManipulator.contains(formulaSet, mf4));
+        Assertions.assertTrue(MolecularFormulaSetManipulator.contains(formulaSet, mf2));
+        Assertions.assertFalse(MolecularFormulaSetManipulator.contains(formulaSet, mf4));
 
     }
 

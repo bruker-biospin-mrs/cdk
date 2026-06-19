@@ -37,19 +37,17 @@ import java.util.List;
  *
  * @author         egonw
  * @cdk.created    2007-03-08
- * @cdk.module     extra
- * @cdk.githash
  */
 public class HOSECodeAnalyser {
 
     public static List<String> getElements(String code) {
-        List<String> elementList = new ArrayList<String>();
+        List<String> elementList = new ArrayList<>();
 
         if (code.length() == 0) {
             return elementList;
         }
 
-        String currentSymbol = null;
+        String currentSymbol;
         for (int f = 0; f < code.length(); f++) {
             char currentChar = code.charAt(f);
             if (currentChar >= 'A' && currentChar <= 'Z') {

@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.config;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.exception.NoSuchAtomTypeException;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
@@ -28,21 +28,20 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 /**
  * Checks the functionality of the {@link ImmutableAtomType}.
  *
- * @cdk.module test-core
  */
-public class ImmutableAtomTypeTest extends CDKTestCase {
+class ImmutableAtomTypeTest extends CDKTestCase {
 
 	@Test
-	public void testToString() throws NoSuchAtomTypeException {
+    void testToString() throws NoSuchAtomTypeException {
 		AtomTypeFactory factory = AtomTypeFactory.getInstance(
 			"org/openscience/cdk/dict/data/cdk-atom-types.owl",
 			SilentChemObjectBuilder.getInstance()
 		);
 		IAtomType type = factory.getAtomType("C.sp3");
-		Assert.assertTrue(type instanceof ImmutableAtomType);
+		Assertions.assertTrue(type instanceof ImmutableAtomType);
 		String output = type.toString();
-		Assert.assertTrue(output.contains("ImmutableAtomType("));
-		Assert.assertTrue(output.contains("MBO:"));
+		Assertions.assertTrue(output.contains("ImmutableAtomType("));
+		Assertions.assertTrue(output.contains("MBO:"));
 	}
 
 }

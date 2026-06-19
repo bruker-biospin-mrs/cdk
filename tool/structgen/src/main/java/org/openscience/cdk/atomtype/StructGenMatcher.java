@@ -38,13 +38,11 @@ import org.openscience.cdk.tools.manipulator.BondManipulator;
  *
  * @author         egonw
  * @cdk.created    2006-09-22
- * @cdk.module     structgen
- * @cdk.githash
  */
 public class StructGenMatcher implements IAtomTypeMatcher {
 
     private static AtomTypeFactory factory = null;
-    private static ILoggingTool    logger  = LoggingToolFactory.createLoggingTool(StructGenMatcher.class);
+    private static final ILoggingTool    logger  = LoggingToolFactory.createLoggingTool(StructGenMatcher.class);
 
     /**
      * Constructor for the StructGenMatcher object.

@@ -24,50 +24,50 @@ package org.openscience.cdk.io;
 
 import java.io.InputStream;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.Crystal;
 import org.openscience.cdk.geometry.CrystalGeometryTools;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
 /**
- * @cdk.module test-io
  */
-public class ShelXReaderTest extends SimpleChemObjectReaderTest {
+class ShelXReaderTest extends SimpleChemObjectReaderTest {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(ShelXReaderTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(ShelXReaderTest.class);
 
-    @BeforeClass
-    public static void setup() throws Exception {
-        setSimpleChemObjectReader(new ShelXReader(), "data/shelx/frame_1.res");
+    @BeforeAll
+    static void setup() throws Exception {
+        setSimpleChemObjectReader(new ShelXReader(), "frame_1.res");
     }
 
     @Test
-    public void testAccepts() {
+    void testAccepts() {
         ShelXReader reader = new ShelXReader();
-        Assert.assertTrue(reader.accepts(ChemFile.class));
-        Assert.assertTrue(reader.accepts(Crystal.class));
+        Assertions.assertTrue(reader.accepts(ChemFile.class));
+        Assertions.assertTrue(reader.accepts(Crystal.class));
     }
 
     @Test
-    public void testReading() throws Exception {
-        String filename = "data/shelx/frame_1.res";
+    void testReading() throws Exception {
+        String filename = "frame_1.res";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ShelXReader reader = new ShelXReader(ins);
-        Crystal crystal = (Crystal) reader.read(new Crystal());
+        Crystal crystal = reader.read(new Crystal());
         reader.close();
-        Assert.assertNotNull(crystal);
-        Assert.assertEquals(42, crystal.getAtomCount());
-        double notional[] = CrystalGeometryTools.cartesianToNotional(crystal.getA(), crystal.getB(), crystal.getC());
-        Assert.assertEquals(7.97103, notional[0], 0.001);
-        Assert.assertEquals(18.77220, notional[1], 0.001);
-        Assert.assertEquals(10.26222, notional[2], 0.001);
-        Assert.assertEquals(90.0000, notional[3], 0.001);
-        Assert.assertEquals(90.0000, notional[4], 0.001);
-        Assert.assertEquals(90.0000, notional[5], 0.001);
+        Assertions.assertNotNull(crystal);
+        Assertions.assertEquals(42, crystal.getAtomCount());
+        double[] notional = CrystalGeometryTools.cartesianToNotional(crystal.getA(), crystal.getB(), crystal.getC());
+        Assertions.assertEquals(7.97103, notional[0], 0.001);
+        Assertions.assertEquals(18.77220, notional[1], 0.001);
+        Assertions.assertEquals(10.26222, notional[2], 0.001);
+        Assertions.assertEquals(90.0000, notional[3], 0.001);
+        Assertions.assertEquals(90.0000, notional[4], 0.001);
+        Assertions.assertEquals(90.0000, notional[5], 0.001);
     }
 }

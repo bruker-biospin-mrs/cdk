@@ -70,13 +70,11 @@ import java.util.TreeMap;
  * </pre></blockquote>
  *
  * @author John May
- * @cdk.module hash
  * @see org.openscience.cdk.hash.PerturbedAtomHashGenerator
  * @see MinimumEquivalentCyclicSet
  * @see AllEquivalentCyclicSet
  * @deprecated provided for to demonstrate a relatively robust but ultimately
  *             incomplete approach
- * @cdk.githash
  */
 @Deprecated
 final class MinimumEquivalentCyclicSetUnion extends EquivalentSetFinder {
@@ -93,7 +91,7 @@ final class MinimumEquivalentCyclicSetUnion extends EquivalentSetFinder {
         RingSearch ringSearch = new RingSearch(container, graph);
 
         // ordered map of the set of vertices for each value
-        Map<Long, Set<Integer>> equivalent = new TreeMap<Long, Set<Integer>>();
+        Map<Long, Set<Integer>> equivalent = new TreeMap<>();
 
         // divide the invariants into equivalent indexed and ordered sets
         for (int i = 0; i < invariants.length; i++) {
@@ -103,7 +101,7 @@ final class MinimumEquivalentCyclicSetUnion extends EquivalentSetFinder {
 
             if (set == null) {
                 if (ringSearch.cyclic(i)) {
-                    set = new HashSet<Integer>(n / 2);
+                    set = new HashSet<>(n / 2);
                     set.add(i);
                     equivalent.put(invariant, set);
                 }
@@ -114,7 +112,7 @@ final class MinimumEquivalentCyclicSetUnion extends EquivalentSetFinder {
 
         // find the smallest set of equivalent cyclic vertices
         int minSize = Integer.MAX_VALUE;
-        Set<Integer> min = Collections.emptySet();
+        Set<Integer> min = new HashSet<>();
         for (Map.Entry<Long, Set<Integer>> e : equivalent.entrySet()) {
             Set<Integer> vertices = e.getValue();
             if (vertices.size() < minSize && vertices.size() > 1) {

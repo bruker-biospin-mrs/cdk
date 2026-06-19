@@ -26,11 +26,9 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  * on atom nuclei.
  *
  * @author      egonw
- * @cdk.module  charges
- * @cdk.githash
  */
 public interface IElectronicPropertyCalculator {
 
-    public void calculateCharges(IAtomContainer container) throws CDKException;
+    void calculateCharges(IAtomContainer container) throws CDKException;
 
 }

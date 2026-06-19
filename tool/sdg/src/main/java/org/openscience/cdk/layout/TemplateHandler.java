@@ -26,8 +26,6 @@
  */
 package org.openscience.cdk.layout;
 
-import com.google.common.collect.FluentIterable;
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtom;
@@ -55,6 +53,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,8 +69,6 @@ import java.util.Set;
  * @cdk.keyword 2D-coordinates
  * @cdk.keyword structure diagram generation
  * @cdk.require java1.4+
- * @cdk.module sdg
- * @cdk.githash
  */
 public final class TemplateHandler {
 
@@ -119,7 +116,7 @@ public final class TemplateHandler {
      * template filename to org/openscience/cdk/layout/templates/template.list
      */
     public void loadTemplates(IChemObjectBuilder builder) {
-        String line = null;
+        String line;
         try {
             InputStream ins = this.getClass().getClassLoader()
                                   .getResourceAsStream("org/openscience/cdk/layout/templates/templates.list");
@@ -131,10 +128,9 @@ public final class TemplateHandler {
                 try {
                     CMLReader structureReader = new CMLReader(this.getClass().getClassLoader()
                                                                   .getResourceAsStream(line));
-                    IChemFile file = (IChemFile) structureReader.read(builder.newInstance(IChemFile.class));
+                    IChemFile file = structureReader.read(builder.newInstance(IChemFile.class));
                     List<IAtomContainer> files = ChemFileManipulator.getAllAtomContainers(file);
-                    for (int i = 0; i < files.size(); i++)
-                        addMolecule(files.get(i));
+                    for (IAtomContainer container : files) addMolecule(container);
                     LOGGER.debug("Successfully read template ", line);
                 } catch (CDKException | IllegalArgumentException e) {
                     LOGGER.warn("Could not read template ", line, ", reason: ", e.getMessage());
@@ -198,7 +194,7 @@ public final class TemplateHandler {
             for (Map<IAtom, IAtom> atoms : mappings.toAtomMap()) {
                 for (Map.Entry<IAtom, IAtom> e : atoms.entrySet()) {
                     e.getValue().setPoint2d(new Point2d(e.getKey().getPoint2d()));
-                    e.getValue().setFlag(CDKConstants.ISPLACED, true);
+                    e.getValue().setFlag(IChemObject.PLACED, true);
                 }
                 if (!atoms.isEmpty())
                     return true;
@@ -221,7 +217,7 @@ public final class TemplateHandler {
             for (Map<IAtom, IAtom> atoms : anonPattern.matchAll(molecule).toAtomMap()) {
                 for (Map.Entry<IAtom, IAtom> e : atoms.entrySet()) {
                     e.getValue().setPoint2d(new Point2d(e.getKey().getPoint2d()));
-                    e.getValue().setFlag(CDKConstants.ISPLACED, true);
+                    e.getValue().setFlag(IChemObject.PLACED, true);
                 }
                 if (!atoms.isEmpty())
                     return true;
@@ -232,7 +228,7 @@ public final class TemplateHandler {
             for (Map<IAtom, IAtom> atoms : anonPattern.matchAll(molecule).toAtomMap()) {
                 for (Map.Entry<IAtom, IAtom> e : atoms.entrySet()) {
                     e.getValue().setPoint2d(new Point2d(e.getKey().getPoint2d()));
-                    e.getValue().setFlag(CDKConstants.ISPLACED, true);
+                    e.getValue().setFlag(IChemObject.PLACED, true);
                 }
                 if (!atoms.isEmpty())
                     return true;
@@ -293,8 +289,8 @@ public final class TemplateHandler {
 
                 // only add if the atoms/bonds of this match don't overlap existing
                 if (!overlaps) {
-                    matchedChemObjs.addAll(FluentIterable.from(matched.atoms()).toList());
-                    matchedChemObjs.addAll(FluentIterable.from(matched.bonds()).toList());
+                    matched.atoms().forEach(matchedChemObjs::add);
+                    matched.bonds().forEach(matchedChemObjs::add);
                     matchedSubstructures.addAtomContainer(matched);
                 }
             }
@@ -332,8 +328,9 @@ public final class TemplateHandler {
      */
     public static TemplateHandler createFromSubstructure(Pattern ptrn, Iterable<IAtomContainer> mols) {
         for (IAtomContainer mol : mols) {
-            for (IAtomContainer template : ptrn.matchAll(mol).toSubstructures())
-                return createSingleton(template);
+            Iterator<IAtomContainer> matched = ptrn.matchAll(mol).toSubstructures().iterator();
+            if (matched.hasNext())
+                return createSingleton(matched.next());
         }
         throw new IllegalArgumentException("Pattern does not match any provided molecules");
     }
@@ -347,8 +344,9 @@ public final class TemplateHandler {
      * @return new template handler
      */
     public static TemplateHandler createFromSubstructure(Pattern ptrn, IAtomContainer mol) {
-        for (IAtomContainer template : ptrn.matchAll(mol).toSubstructures())
-            return createSingleton(template);
+        Iterator<IAtomContainer> matched = ptrn.matchAll(mol).toSubstructures().iterator();
+        if (matched.hasNext())
+            return createSingleton(matched.next());
         throw new IllegalArgumentException("Pattern does not match any provided molecules");
     }
 

@@ -24,45 +24,44 @@ package org.openscience.cdk.io.program;
 
 import java.io.StringWriter;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.io.ChemObjectIOTest;
+import org.openscience.cdk.test.io.ChemObjectIOTest;
 import org.openscience.cdk.templates.TestMoleculeFactory;
 
 /**
  * TestCase for the reading MDL mol files using one test file.
  * A test case for SDF files is available as separate Class.
  *
- * @cdk.module test-io
  *
  * @see org.openscience.cdk.io.GaussianInputWriter
  */
-public class GaussianInputWriterTest extends ChemObjectIOTest {
+class GaussianInputWriterTest extends ChemObjectIOTest {
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         setChemObjectIO(new GaussianInputWriter());
     }
 
     @Test
-    public void testAccepts() {
+    void testAccepts() {
         GaussianInputWriter reader = new GaussianInputWriter();
-        Assert.assertTrue(reader.accepts(IAtomContainer.class));
+        Assertions.assertTrue(reader.accepts(IAtomContainer.class));
     }
 
     /**
      * @cdk.bug 2501715
      */
     @Test
-    public void testWrite() throws Exception {
+    void testWrite() throws Exception {
         IAtomContainer molecule = TestMoleculeFactory.makeAlphaPinene();
         StringWriter writer = new StringWriter();
         GaussianInputWriter gaussianWriter = new GaussianInputWriter(writer);
         gaussianWriter.write(molecule);
         gaussianWriter.close();
         String output = writer.toString();
-        Assert.assertNotSame(0, output.length());
+        Assertions.assertNotSame(0, output.length());
     }
 }

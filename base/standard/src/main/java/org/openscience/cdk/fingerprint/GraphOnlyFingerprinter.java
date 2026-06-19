@@ -26,7 +26,6 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
 import java.util.BitSet;
-import java.util.Random;
 
 /**
  * Specialized version of the {@link Fingerprinter} which does not take bond orders
@@ -36,8 +35,6 @@ import java.util.Random;
  * @cdk.created    2007-01-11
  * @cdk.keyword    fingerprint
  * @cdk.keyword    similarity
- * @cdk.module     standard
- * @cdk.githash
  *
  * @see            org.openscience.cdk.fingerprint.Fingerprinter
  */

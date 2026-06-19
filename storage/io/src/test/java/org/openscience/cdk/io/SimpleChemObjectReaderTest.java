@@ -22,43 +22,45 @@
  */
 package org.openscience.cdk.io;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.test.io.ChemObjectReaderTest;
 
 import java.io.InputStream;
 
 /**
  * TestCase for CDK IO classes.
  *
- * @cdk.module test-io
  */
-public abstract class SimpleChemObjectReaderTest extends ChemObjectReaderTest {
+abstract class SimpleChemObjectReaderTest extends org.openscience.cdk.test.io.ChemObjectReaderTest {
 
-    protected static ISimpleChemObjectReader chemObjectIO;
+    private static ISimpleChemObjectReader chemObjectIO;
 
-    public static void setSimpleChemObjectReader(ISimpleChemObjectReader aSimpelChemObjectReader, String testFile) {
+    static void setSimpleChemObjectReader(ISimpleChemObjectReader aSimpelChemObjectReader, String testFile) {
         ChemObjectReaderTest.setChemObjectReader(aSimpelChemObjectReader, testFile);
         SimpleChemObjectReaderTest.chemObjectIO = aSimpelChemObjectReader;
     }
 
     @Test
-    public void testRead_IChemObject() throws Exception {
-        Assert.assertNotNull("No test file has been set!", testFile);
+    void testRead_IChemObject() throws Exception {
+        Assertions.assertNotNull(testFile, "No test file has been set!");
 
         boolean read = false;
         for (IChemObject object : acceptableChemObjects()) {
             if (chemObjectIO.accepts(object.getClass())) {
-                InputStream ins = SimpleChemObjectReaderTest.class.getClassLoader().getResourceAsStream(testFile);
+                InputStream ins = org.openscience.cdk.test.io.SimpleChemObjectReaderTest.class.getClassLoader().getResourceAsStream(testFile);
+                if (ins == null)
+                    ins = chemObjectIO.getClass().getResourceAsStream(testFile);
                 chemObjectIO.setReader(ins);
                 IChemObject readObject = chemObjectIO.read(object);
                 chemObjectIO.close();
-                Assert.assertNotNull("Failed attempt to read the file as " + object.getClass().getName(), readObject);
+                Assertions.assertNotNull(readObject, "Failed attempt to read the file as " + object.getClass().getName());
                 read = true;
             }
         }
         if (!read) {
-            Assert.fail("Reading an IChemObject from the Reader did not work properly.");
+            Assertions.fail("Reading an IChemObject from the Reader did not work properly.");
         }
     }
 

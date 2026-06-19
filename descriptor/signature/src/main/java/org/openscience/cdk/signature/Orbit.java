@@ -32,26 +32,24 @@ import java.util.List;
 /**
  * A list of atom indices, and the label of the orbit.
  *
- * @cdk.module signature
  * @author maclean
- * @cdk.githash
  */
 public class Orbit implements Iterable<Integer>, Cloneable {
 
     /**
      * The atom indices in this orbit
      */
-    private List<Integer> atomIndices;
+    private final List<Integer> atomIndices;
 
     /**
      * The label that all the atoms in the orbit share
      */
-    private String        label;
+    private final String        label;
 
     /**
      * The maximum height of the signature string
      */
-    private int           height;
+    private final int           height;
 
     /**
      * @param label
@@ -59,7 +57,7 @@ public class Orbit implements Iterable<Integer>, Cloneable {
      */
     public Orbit(String label, int height) {
         this.label = label;
-        this.atomIndices = new ArrayList<Integer>();
+        this.atomIndices = new ArrayList<>();
         this.height = height;
     }
 
@@ -73,9 +71,7 @@ public class Orbit implements Iterable<Integer>, Cloneable {
     @Override
     public Object clone() {
         Orbit orbit = new Orbit(this.label, this.height);
-        for (Integer i : this.atomIndices) {
-            orbit.atomIndices.add(Integer.valueOf(i));
-        }
+        orbit.atomIndices.addAll(this.atomIndices);
         return orbit;
     }
 

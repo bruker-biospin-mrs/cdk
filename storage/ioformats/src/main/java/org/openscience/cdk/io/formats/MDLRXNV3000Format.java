@@ -20,13 +20,9 @@ package org.openscience.cdk.io.formats;
 
 import org.openscience.cdk.tools.DataFeatures;
 
-import java.util.List;
-
 /**
  * See <a href="http://www.mdl.com/downloads/public/ctfile/ctfile.jsp">here</a>.
  *
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class MDLRXNV3000Format extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 

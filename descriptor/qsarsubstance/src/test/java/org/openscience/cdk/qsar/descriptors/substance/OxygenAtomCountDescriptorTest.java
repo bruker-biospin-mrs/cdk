@@ -16,9 +16,9 @@
  */
 package org.openscience.cdk.qsar.descriptors.substance;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.Substance;
 import org.openscience.cdk.interfaces.ISubstance;
@@ -27,15 +27,15 @@ import org.openscience.cdk.qsar.result.IDescriptorResult;
 import org.openscience.cdk.qsar.result.IntegerResult;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
-public class OxygenAtomCountDescriptorTest extends SubstanceDescriptorTest {
+class OxygenAtomCountDescriptorTest extends SubstanceDescriptorTest {
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(OxygenAtomCountDescriptor.class);
     }
 
     @Test
-    public void testCalculate_ZnO() throws Exception {
+    void testCalculate_ZnO() throws Exception {
         ISubstance material = new Substance();
         material.addAtomContainer(
             MolecularFormulaManipulator.getAtomContainer(
@@ -43,14 +43,14 @@ public class OxygenAtomCountDescriptorTest extends SubstanceDescriptorTest {
             )
         );
         DescriptorValue value = descriptor.calculate(material);
-        Assert.assertNotNull(value);
+        Assertions.assertNotNull(value);
         IDescriptorResult result = value.getValue();
-        Assert.assertNotNull(result);
-        Assert.assertEquals(1, ((IntegerResult)result).intValue());
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, ((IntegerResult)result).intValue());
     }
 
     @Test
-    public void testCalculate_IronOxide() throws Exception {
+    void testCalculate_IronOxide() throws Exception {
         ISubstance material = new Substance();
         material.addAtomContainer(
             MolecularFormulaManipulator.getAtomContainer(
@@ -58,10 +58,10 @@ public class OxygenAtomCountDescriptorTest extends SubstanceDescriptorTest {
             )
         );
         DescriptorValue value = descriptor.calculate(material);
-        Assert.assertNotNull(value);
+        Assertions.assertNotNull(value);
         IDescriptorResult result = value.getValue();
-        Assert.assertNotNull(result);
-        Assert.assertEquals(4, ((IntegerResult)result).intValue());
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(4, ((IntegerResult)result).intValue());
     }
 
 }

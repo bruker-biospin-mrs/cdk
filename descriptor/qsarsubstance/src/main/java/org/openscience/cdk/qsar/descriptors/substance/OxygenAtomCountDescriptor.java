@@ -20,6 +20,7 @@ import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.ISubstance;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -32,7 +33,6 @@ import org.openscience.cdk.qsar.result.IntegerResultType;
  * formula. Originally aimed at metal oxide nanoparticles {@cdk.cite Liu2011}.
  *
  * @author      egonw
- * @cdk.githash
  */
 public class OxygenAtomCountDescriptor implements ISubstanceDescriptor {
 
@@ -76,7 +76,7 @@ public class OxygenAtomCountDescriptor implements ISubstanceDescriptor {
         if (substance != null) {
             for (IAtomContainer container : substance.atomContainers()) {
                 for (IAtom atom : container.atoms()) {
-                    if ("O".equals(atom.getSymbol()) || 8 == atom.getAtomicNumber())
+                    if (atom.getAtomicNumber() == IElement.O || 8 == atom.getAtomicNumber())
                         count++;
                 }
             }

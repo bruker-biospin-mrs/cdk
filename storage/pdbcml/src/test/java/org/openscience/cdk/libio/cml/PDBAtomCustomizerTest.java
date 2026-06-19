@@ -1,8 +1,8 @@
 package org.openscience.cdk.libio.cml;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.AtomContainer;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IPDBAtom;
 import org.openscience.cdk.io.CMLWriter;
@@ -14,16 +14,15 @@ import java.io.StringWriter;
 
 /**
  * @author John May
- * @cdk.module test-pdbcml
  */
-public class PDBAtomCustomizerTest {
+class PDBAtomCustomizerTest {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(PDBAtomCustomizerTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(PDBAtomCustomizerTest.class);
 
     @Test
-    public void testPDBAtomCustomization() throws Exception {
+    void testPDBAtomCustomization() throws Exception {
         StringWriter writer = new StringWriter();
-        IAtomContainer molecule = new AtomContainer();
+        IAtomContainer molecule = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IPDBAtom atom = new PDBAtom("C");
         atom.setName("CA");
         atom.setResName("PHE");
@@ -37,6 +36,6 @@ public class PDBAtomCustomizerTest {
         logger.debug("****************************** testPDBAtomCustomization()");
         logger.debug(cmlContent);
         logger.debug("******************************");
-        Assert.assertTrue(cmlContent.indexOf("<scalar dictRef=\"pdb:resName") != -1);
+        Assertions.assertTrue(cmlContent.contains("<scalar dictRef=\"pdb:resName"));
     }
 }

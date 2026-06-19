@@ -24,7 +24,6 @@ import org.openscience.cdk.qsar.result.IDescriptorResult;
 /**
  * Classes that implement this interface are QSAR substance calculators.
  *
- * @cdk.githash
  */
 public interface ISubstanceDescriptor extends IDescriptor {
 
@@ -36,7 +35,7 @@ public interface ISubstanceDescriptor extends IDescriptor {
      * @return An object of {@link DescriptorValue} that contain the
      *         calculated value as well as specification details
      */
-    public DescriptorValue calculate(ISubstance substance);
+    DescriptorValue calculate(ISubstance substance);
 
     /**
      * Returns the specific type of the DescriptorResult object.
@@ -53,6 +52,6 @@ public interface ISubstanceDescriptor extends IDescriptor {
      * @return an object that implements the {@link IDescriptorResult} interface indicating
      *         the actual type of values returned by the descriptor in the {@link DescriptorValue} object
      */
-    public IDescriptorResult getDescriptorResultType();
+    IDescriptorResult getDescriptorResultType();
 
 }

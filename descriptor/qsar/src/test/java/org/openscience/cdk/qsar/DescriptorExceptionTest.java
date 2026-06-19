@@ -18,26 +18,25 @@
  */
 package org.openscience.cdk.qsar;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * TestSuite that runs all tests for the DescriptorEngine.
  *
- * @cdk.module test-qsar
  */
-public class DescriptorExceptionTest extends CDKTestCase {
+class DescriptorExceptionTest extends CDKTestCase {
 
     @Test
-    public void testConstructor() {
+    void testConstructor() {
         DescriptorException exception = new DescriptorException("Message");
-        Assert.assertNotNull(exception);
-        Assert.assertEquals("Message", exception.getMessage());
+        Assertions.assertNotNull(exception);
+        Assertions.assertEquals("Message", exception.getMessage());
 
         exception = new DescriptorException("Name", "Message");
-        Assert.assertNotNull(exception);
-        Assert.assertEquals("Name: Message", exception.getMessage());
+        Assertions.assertNotNull(exception);
+        Assertions.assertEquals("Name: Message", exception.getMessage());
     }
 
 }

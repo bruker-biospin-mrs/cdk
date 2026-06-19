@@ -18,64 +18,62 @@
  */
 package org.openscience.cdk.templates;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.AminoAcid;
 import org.openscience.cdk.interfaces.IAminoAcid;
-import org.openscience.cdk.templates.AminoAcids;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 
 import java.util.Map;
 
 /**
- * @cdk.module test-pdb
  */
-public class AminoAcidsTest extends CDKTestCase {
+class AminoAcidsTest extends CDKTestCase {
 
     @Test
-    public void testCreateBondMatrix() {
+    void testCreateBondMatrix() {
         int[][] bonds = AminoAcids.aaBondInfo();
-        Assert.assertNotNull(bonds);
+        Assertions.assertNotNull(bonds);
     }
 
     @Test
-    public void testCreateAAs() {
+    void testCreateAAs() {
         IAminoAcid[] aas = AminoAcids.createAAs();
-        Assert.assertNotNull(aas);
-        Assert.assertEquals(20, aas.length);
+        Assertions.assertNotNull(aas);
+        Assertions.assertEquals(20, aas.length);
         for (int i = 0; i < 20; i++) {
-            Assert.assertNotNull(aas[i]);
-            Assert.assertFalse(0 == aas[i].getAtomCount());
-            Assert.assertFalse(0 == aas[i].getBondCount());
-            Assert.assertNotNull(aas[i].getMonomerName());
-            Assert.assertNotNull(aas[i].getProperty(AminoAcids.RESIDUE_NAME_SHORT));
-            Assert.assertNotNull(aas[i].getProperty(AminoAcids.RESIDUE_NAME));
+            Assertions.assertNotNull(aas[i]);
+            Assertions.assertFalse(0 == aas[i].getAtomCount());
+            Assertions.assertFalse(0 == aas[i].getBondCount());
+            Assertions.assertNotNull(aas[i].getMonomerName());
+            Assertions.assertNotNull(aas[i].getProperty(AminoAcids.RESIDUE_NAME_SHORT));
+            Assertions.assertNotNull(aas[i].getProperty(AminoAcids.RESIDUE_NAME));
         }
     }
 
     @Test
-    public void testGetHashMapBySingleCharCode() {
+    void testGetHashMapBySingleCharCode() {
         Map<String, IAminoAcid> map = AminoAcids.getHashMapBySingleCharCode();
-        Assert.assertNotNull(map);
-        Assert.assertEquals(20, map.size());
+        Assertions.assertNotNull(map);
+        Assertions.assertEquals(20, map.size());
 
         String[] aas = {"G", "A", "V", "L"};
         for (String aa1 : aas) {
             AminoAcid aa = (AminoAcid) map.get(aa1);
-            Assert.assertNotNull("Did not find AA for: " + aa1, aa);
+            Assertions.assertNotNull(aa, "Did not find AA for: " + aa1);
         }
     }
 
     @Test
-    public void testGetHashMapByThreeLetterCode() {
+    void testGetHashMapByThreeLetterCode() {
         Map<String, IAminoAcid> map = AminoAcids.getHashMapByThreeLetterCode();
-        Assert.assertNotNull(map);
-        Assert.assertEquals(20, map.size());
+        Assertions.assertNotNull(map);
+        Assertions.assertEquals(20, map.size());
 
         String[] aas = {"GLY", "ALA"};
         for (String aa1 : aas) {
             AminoAcid aa = (AminoAcid) map.get(aa1);
-            Assert.assertNotNull("Did not find AA for: " + aa1, aa);
+            Assertions.assertNotNull(aa, "Did not find AA for: " + aa1);
         }
     }
 

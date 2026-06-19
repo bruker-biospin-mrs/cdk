@@ -22,53 +22,51 @@
  */
 package org.openscience.cdk.smsd.tools;
 
-import static org.junit.Assert.assertEquals;
-
-import org.openscience.cdk.CDKConstants;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.smiles.SmilesParser;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-smsd
  * @author Asad
  */
-public class MoleculeSanityCheckTest {
+class MoleculeSanityCheckTest {
 
     public MoleculeSanityCheckTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     /**
      * Test of checkAndCleanMolecule method, of class MoleculeSanityCheck.
      * @throws InvalidSmilesException
      */
     @Test
-    public void testCheckAndCleanMolecule() throws InvalidSmilesException {
+    void testCheckAndCleanMolecule() throws InvalidSmilesException {
         String fragmentMolSmiles = "C1=CC=CC=C1.C1=CC2=C(C=C1)C=CC=C2";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer molecule = sp.parseSmiles(fragmentMolSmiles);
         IAtomContainer expResult = sp.parseSmiles("C1=CC2=C(C=C1)C=CC=C2");
         IAtomContainer result = MoleculeSanityCheck.checkAndCleanMolecule(molecule);
-        assertEquals(expResult.getBondCount(), result.getBondCount());
+        Assertions.assertEquals(expResult.getBondCount(), result.getBondCount());
     }
 
     /**
@@ -76,17 +74,17 @@ public class MoleculeSanityCheckTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testFixAromaticity() throws InvalidSmilesException {
+    void testFixAromaticity() throws InvalidSmilesException {
         String rawMolSmiles = "C1=CC2=C(C=C1)C=CC=C2";
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles(rawMolSmiles);
         MoleculeSanityCheck.checkAndCleanMolecule(mol);
         int count = 0;
         for (IBond b : mol.bonds()) {
-            if (b.getFlag(CDKConstants.ISAROMATIC) && b.getOrder().equals(IBond.Order.DOUBLE)) {
+            if (b.getFlag(IChemObject.AROMATIC) && b.getOrder().equals(IBond.Order.DOUBLE)) {
                 count++;
             }
         }
-        assertEquals(5, count);
+        Assertions.assertEquals(5, count);
     }
 }

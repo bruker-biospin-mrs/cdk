@@ -23,15 +23,12 @@ package org.openscience.cdk.renderer.elements;
 
 import java.awt.Color;
 
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
-/**
- * @cdk.module test-renderbasic
- */
-public class ArrowElementTest extends AbstractElementTest {
+class ArrowElementTest extends AbstractElementTest {
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         IRenderingElement element = new ArrowElement(0, 0, 1, 1, 1.0, true, Color.orange);
         setRenderingElement(element);
     }

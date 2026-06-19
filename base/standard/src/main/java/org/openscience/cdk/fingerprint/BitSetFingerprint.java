@@ -27,8 +27,6 @@ import java.util.BitSet;
 
 /**
  * @author jonalv
- * @cdk.module     standard
- * @cdk.githash
  */
 public class BitSetFingerprint implements IBitFingerprint {
 
@@ -36,7 +34,7 @@ public class BitSetFingerprint implements IBitFingerprint {
      *
      */
     private static final long serialVersionUID = 9034774011095165227L;
-    private BitSet            bitset;
+    private final BitSet            bitset;
 
     public BitSetFingerprint(BitSet bitset) {
         this.bitset = bitset;

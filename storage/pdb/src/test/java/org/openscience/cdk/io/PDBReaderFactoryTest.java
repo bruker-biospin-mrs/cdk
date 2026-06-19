@@ -22,20 +22,54 @@
  *  */
 package org.openscience.cdk.io;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.ChemFile;
+import org.openscience.cdk.ChemModel;
+import org.openscience.cdk.DefaultChemObjectBuilder;
+import org.openscience.cdk.Reaction;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.io.formats.IChemFormat;
+import org.openscience.cdk.io.formats.IChemFormatMatcher;
+import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.io.formats.PDBFormat;
+
+import java.io.InputStream;
 
 /**
  * TestCase for the instantiation and functionality of the {@link org.openscience.cdk.io.ReaderFactory}.
  *
- * @cdk.module test-pdb
  */
-public class PDBReaderFactoryTest extends AbstractReaderFactoryTest {
+class PDBReaderFactoryTest {
 
-    private ReaderFactory factory = new ReaderFactory();
+    private final ReaderFactory factory = new ReaderFactory();
+
+    void expectReader(String filename,
+                      IResourceFormat expectedFormat)
+            throws Exception {
+        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        Assertions.assertNotNull(ins, "Cannot find file: " + filename);
+        if (expectedFormat instanceof IChemFormatMatcher) {
+            factory.registerFormat((IChemFormatMatcher) expectedFormat);
+        }
+        ISimpleChemObjectReader reader = factory.createReader(ins);
+        Assertions.assertNotNull(reader);
+        Assertions.assertEquals(((IChemFormat) expectedFormat).getReaderClassName(), reader.getClass().getName());
+        // now try reading something from it
+        IChemObject[] objects = {new ChemFile(), new ChemModel(), DefaultChemObjectBuilder.getInstance().newAtomContainer(), new Reaction()};
+        boolean read = false;
+        for (int i = 0; (i < objects.length && !read); i++) {
+            if (reader.accepts(objects[i].getClass())) {
+                IChemObject chemObject = reader.read(objects[i]);
+                Assertions.assertNotNull(chemObject, "Reader accepted a " + objects[i].getClass().getName() + " but failed to read it");
+                read = true;
+            }
+        }
+        Assertions.assertTrue(read, "Reading an IChemObject from the Reader did not work properly.");
+    }
 
     @Test
-    public void testPDB() throws Exception {
-        expectReader("data/pdb/coffeine.pdb", PDBFormat.getInstance(), -1, -1);
+    void testPDB() throws Exception {
+        expectReader("org/openscience/cdk/io/coffeine.pdb", PDBFormat.getInstance());
     }
 }

@@ -24,27 +24,26 @@
 
 package org.openscience.cdk.hash;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class MinimumEquivalentCyclicSetTest {
+class MinimumEquivalentCyclicSetTest {
 
     /**
      * @cdk.inchi InChI=1S/C8H16/c1-7-3-5-8(2)6-4-7/h7-8H,3-6H2,1-2H3
      */
     @Test
-    public void testFind_OneChoice() throws Exception {
+    void testFind_OneChoice() throws Exception {
 
         IAtomContainer dummy = mock(IAtomContainer.class);
         int[][] g = new int[][]{{1, 5, 6}, {0, 2}, {1, 3}, {2, 4, 7}, {3, 5}, {0, 4}, {0}, {3}};
@@ -56,8 +55,8 @@ public class MinimumEquivalentCyclicSetTest {
         Set<Integer> set = finder.find(values, dummy, g);
 
         assertThat(set.size(), is(2));
-        assertTrue(set.contains(0));
-        assertTrue(set.contains(3));
+        Assertions.assertTrue(set.contains(0));
+        Assertions.assertTrue(set.contains(3));
 
     }
 
@@ -65,7 +64,7 @@ public class MinimumEquivalentCyclicSetTest {
      * @cdk.inchi InChI=1S/C24H36/c1-2-13(1)19-20(14-3-4-14)22(16-7-8-16)24(18-11-12-18)23(17-9-10-17)21(19)15-5-6-15/h13-24H,1-12H2
      */
     @Test
-    public void testFind_TwoChoices() throws Exception {
+    void testFind_TwoChoices() throws Exception {
 
         IAtomContainer dummy = mock(IAtomContainer.class);
         int[][] g = new int[][]{{1, 5, 6}, {0, 2, 8}, {1, 3, 9}, {2, 4, 7}, {3, 5, 10}, {0, 4, 11}, {0, 14, 15},
@@ -79,12 +78,12 @@ public class MinimumEquivalentCyclicSetTest {
         Set<Integer> set = finder.find(values, dummy, g);
 
         assertThat(set.size(), is(6));
-        assertTrue(set.contains(0));
-        assertTrue(set.contains(1));
-        assertTrue(set.contains(2));
-        assertTrue(set.contains(3));
-        assertTrue(set.contains(4));
-        assertTrue(set.contains(5));
+        Assertions.assertTrue(set.contains(0));
+        Assertions.assertTrue(set.contains(1));
+        Assertions.assertTrue(set.contains(2));
+        Assertions.assertTrue(set.contains(3));
+        Assertions.assertTrue(set.contains(4));
+        Assertions.assertTrue(set.contains(5));
 
         // invert values, we should now get the other set
         values = new long[]{1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
@@ -92,19 +91,19 @@ public class MinimumEquivalentCyclicSetTest {
         set = finder.find(values, dummy, g);
 
         assertThat(set.size(), is(6));
-        assertTrue(set.contains(6));
-        assertTrue(set.contains(7));
-        assertTrue(set.contains(8));
-        assertTrue(set.contains(9));
-        assertTrue(set.contains(10));
-        assertTrue(set.contains(11));
+        Assertions.assertTrue(set.contains(6));
+        Assertions.assertTrue(set.contains(7));
+        Assertions.assertTrue(set.contains(8));
+        Assertions.assertTrue(set.contains(9));
+        Assertions.assertTrue(set.contains(10));
+        Assertions.assertTrue(set.contains(11));
     }
 
     /**
      * @cdk.inchi InChI=1S/C10H22/c1-7(2)10(8(3)4)9(5)6/h7-10H,1-6H3
      */
     @Test
-    public void testFind_NoChoice() throws Exception {
+    void testFind_NoChoice() throws Exception {
 
         IAtomContainer dummy = mock(IAtomContainer.class);
         int[][] g = new int[][]{{1, 2, 3}, {0, 4, 9}, {0, 5, 6}, {0, 7, 8}, {1}, {2}, {2}, {3}, {3}, {1}};

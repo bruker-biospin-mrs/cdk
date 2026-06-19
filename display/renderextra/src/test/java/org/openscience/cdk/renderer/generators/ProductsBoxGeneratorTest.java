@@ -24,28 +24,26 @@ package org.openscience.cdk.renderer.generators;
 import java.awt.Rectangle;
 import java.util.List;
 
-import org.junit.Assert;
-
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.renderer.elements.IRenderingElement;
 
 /**
- * @cdk.module test-renderextra
  */
 public class ProductsBoxGeneratorTest extends AbstractGeneratorTest {
 
     private ProductsBoxGenerator generator;
 
     @Override
-    public Rectangle getCustomCanvas() {
+    protected Rectangle getCustomCanvas() {
         return null;
     }
 
-    @Before
+    @BeforeEach
     @Override
-    public void setup() {
+    void setup() {
         super.setup();
         model.registerParameters(new ReactionSceneGenerator());
         model.registerParameters(new BasicBondGenerator());
@@ -55,13 +53,13 @@ public class ProductsBoxGeneratorTest extends AbstractGeneratorTest {
     }
 
     @Test
-    public void testEmptyReaction() {
+    void testEmptyReaction() {
         IReaction singleReaction = super.builder.newInstance(IReaction.class);
 
         // nothing should be made
         IRenderingElement root = generator.generate(singleReaction, model);
         List<IRenderingElement> elements = elementUtil.getAllSimpleElements(root);
-        Assert.assertEquals(0, elements.size());
+        Assertions.assertEquals(0, elements.size());
     }
 
 }

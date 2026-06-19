@@ -31,7 +31,6 @@ import java.util.List;
  * optimised using primitive {@literal long} values to represent vertex sets.
  *
  * @author John May
- * @cdk.module core
  */
 class RegularCyclicVertexSearch implements CyclicVertexSearch {
 
@@ -42,10 +41,10 @@ class RegularCyclicVertexSearch implements CyclicVertexSearch {
     private long           cyclic;
 
     /* cycle systems as they are discovered */
-    private List<Long>     cycles = new ArrayList<Long>(1);
+    private final List<Long>     cycles = new ArrayList<>(1);
 
     /* indicates if the 'cycle' at 'i' in 'cycles' is fused */
-    private List<Boolean>  fused  = new ArrayList<Boolean>(1);
+    private final List<Boolean>  fused  = new ArrayList<>(1);
 
     /* set of visited vertices */
     private long           visited;
@@ -54,7 +53,7 @@ class RegularCyclicVertexSearch implements CyclicVertexSearch {
     private long[]         state;
 
     /** Vertex colors - which component does each vertex belong. */
-    private volatile int[] colors;
+    private int[] colors;
 
     private int numCycles = 0;
 
@@ -227,9 +226,6 @@ class RegularCyclicVertexSearch implements CyclicVertexSearch {
         return -1;
     }
 
-    /** Synchronisation lock. */
-    private final Object lock = new Object();
-
     /**
      * Lazily build an indexed lookup of vertex color. The vertex color
      * indicates which cycle a given vertex belongs. If a vertex belongs to more
@@ -326,7 +322,7 @@ class RegularCyclicVertexSearch implements CyclicVertexSearch {
      */
     @Override
     public int[][] isolated() {
-        List<int[]> isolated = new ArrayList<int[]>(cycles.size());
+        List<int[]> isolated = new ArrayList<>(cycles.size());
         for (int i = 0; i < cycles.size(); i++) {
             if (!fused.get(i)) isolated.add(toArray(cycles.get(i)));
         }
@@ -338,7 +334,7 @@ class RegularCyclicVertexSearch implements CyclicVertexSearch {
      */
     @Override
     public int[][] fused() {
-        List<int[]> fused = new ArrayList<int[]>(cycles.size());
+        List<int[]> fused = new ArrayList<>(cycles.size());
         for (int i = 0; i < cycles.size(); i++) {
             if (this.fused.get(i)) fused.add(toArray(cycles.get(i)));
         }

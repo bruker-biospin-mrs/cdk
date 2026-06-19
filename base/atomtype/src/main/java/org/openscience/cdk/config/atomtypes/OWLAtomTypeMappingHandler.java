@@ -27,8 +27,6 @@ import java.util.Map;
 /**
  * SAX Handler for the {@link OWLAtomTypeMappingReader}.
  *
- * @cdk.module  atomtype
- * @cdk.githash
  */
 public class OWLAtomTypeMappingHandler extends DefaultHandler {
 
@@ -60,7 +58,7 @@ public class OWLAtomTypeMappingHandler extends DefaultHandler {
     /** {@inheritDoc} */
     @Override
     public void startDocument() {
-        atomTypeMappings = new Hashtable<String, String>();
+        atomTypeMappings = new Hashtable<>();
     }
 
     /** {@inheritDoc} */
@@ -104,6 +102,6 @@ public class OWLAtomTypeMappingHandler extends DefaultHandler {
 
     /** {@inheritDoc} */
     @Override
-    public void characters(char chars[], int start, int length) {}
+    public void characters(char[] chars, int start, int length) {}
 
 }

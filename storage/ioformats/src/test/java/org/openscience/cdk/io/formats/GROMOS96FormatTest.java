@@ -23,11 +23,10 @@
 package org.openscience.cdk.io.formats;
 
 /**
- * @cdk.module test-ioformats
  */
-public class GROMOS96FormatTest extends ChemFormatTest {
+class GROMOS96FormatTest extends ChemFormatTest {
 
-    public GROMOS96FormatTest() {
+    GROMOS96FormatTest() {
         super.setChemFormat((IChemFormat) GROMOS96Format.getInstance());
     }
 

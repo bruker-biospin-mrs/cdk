@@ -22,8 +22,8 @@
  */
 package org.openscience.cdk.fingerprint;
 
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.fingerprint.CircularFingerprinter.FP;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
@@ -41,53 +41,52 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIn.isIn;
 
 /**
- * @cdk.module test-standard
  */
-public class CircularFingerprintSmartsTest extends CDKTestCase {
+class CircularFingerprintSmartsTest extends CDKTestCase {
 
-	private static ILoggingTool logger = LoggingToolFactory
+	private static final ILoggingTool logger = LoggingToolFactory
 			.createLoggingTool(CircularFingerprintSmartsTest.class);
 
-	public static SmilesParser parser = new SmilesParser(
+	private static final SmilesParser parser = new SmilesParser(
 			SilentChemObjectBuilder.getInstance());
 
 	@Test
-	public void testMol1() throws Exception {
+    void testMol1() throws Exception {
 		String molSmiles = "CC";
-		String expectedFPSmarts[][] = { { "C*" }, { "CC" } };
+		String[][] expectedFPSmarts = { { "C*" }, { "CC" } };
 		checkFPSmartsForMolecule(molSmiles, expectedFPSmarts);
 	}
 
 	@Test
-	public void testMol2() throws Exception {
+    void testMol2() throws Exception {
 		String molSmiles = "CCC";
-		String expectedFPSmarts[][] = { { "C*" }, { "C(*)*" },
+		String[][] expectedFPSmarts = { { "C*" }, { "C(*)*" },
 				{ "CC*", "C(*)C" }, { "CCC" }, };
 		checkFPSmartsForMolecule(molSmiles, expectedFPSmarts);
 	}
 
 	@Test
-	public void testMol3() throws Exception {
+    void testMol3() throws Exception {
 		String molSmiles = "CCN";
-		String expectedFPSmarts[][] = { { "C*" }, { "C(*)*" }, { "N*" },
+		String[][] expectedFPSmarts = { { "C*" }, { "C(*)*" }, { "N*" },
 				{ "CC*", "C(*)C" }, { "C(*)N", "NC*" },
 				{ "CCN", "NCC", "C(C)N", "C(N)C" }, };
 		checkFPSmartsForMolecule(molSmiles, expectedFPSmarts);
 	}
 
 	@Test
-	public void testMol4() throws Exception {
+    void testMol4() throws Exception {
 		String molSmiles = "C1CC1";
-		String expectedFPSmarts[][] = {
+		String[][] expectedFPSmarts = {
 
 		{ "C(*)*" }, { "C1CC1", "C(C1)C1" } };
 		checkFPSmartsForMolecule(molSmiles, expectedFPSmarts);
 	}
 
 	@Test
-	public void testMol5() throws Exception {
+    void testMol5() throws Exception {
 		String molSmiles = "C1CCC1";
-		String expectedFPSmarts[][] = {
+		String[][] expectedFPSmarts = {
 
 		{ "C(*)*" }, { "C(C*)C*", "C(CC*)*", "C(*)CC*" },
 				{ "C1CCC1", "C(CC1)C1", "C(C1)CC1" } };
@@ -95,9 +94,9 @@ public class CircularFingerprintSmartsTest extends CDKTestCase {
 	}
 
 	@Test
-	public void testMol6() throws Exception {
+    void testMol6() throws Exception {
 		String molSmiles = "CC[C-]";
-		String expectedFPSmarts[][] = {
+		String[][] expectedFPSmarts = {
 
 		{ "C*" }, { "C(*)*" }, { "[C-]*" }, { "CC*", "C(*)C" },
 				{ "[C-]C*", "C(*)[C-]" },
@@ -106,9 +105,9 @@ public class CircularFingerprintSmartsTest extends CDKTestCase {
 	}
 
 	@Test
-	public void testMol7() throws Exception {
+    void testMol7() throws Exception {
 		String molSmiles = "c1ccccc1";
-		String expectedFPSmarts[][] = {
+		String[][] expectedFPSmarts = {
 
 				{ "c(a)a" },
 				{ "c(a)cca", "c(ca)ca", "c(cca)a" },
@@ -120,7 +119,7 @@ public class CircularFingerprintSmartsTest extends CDKTestCase {
 	}
 
 	private void checkFPSmartsForMolecule(String moleculeSmiles,
-			String expectedFPSmarts[][]) throws Exception {
+                                          String[][] expectedFPSmarts) throws Exception {
 
         Set<String> expected = new HashSet<>();
         for (String[] strs : expectedFPSmarts)

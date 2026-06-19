@@ -29,11 +29,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.vecmath.Point3d;
 
@@ -72,8 +75,6 @@ import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
  * <p>A description can be found at <a href="http://www.rcsb.org/pdb/static.do?p=file_formats/pdb/index.html">
  * http://www.rcsb.org/pdb/static.do?p=file_formats/pdb/index.html</a>.
  *
- * @cdk.module  pdb
- * @cdk.githash
  * @cdk.iooptions
  *
  * @author      Edgar Luttmann
@@ -88,7 +89,7 @@ import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
  */
 public class PDBReader extends DefaultChemObjectReader {
 
-    private static ILoggingTool    logger            = LoggingToolFactory.createLoggingTool(PDBReader.class);
+    private static final ILoggingTool    logger            = LoggingToolFactory.createLoggingTool(PDBReader.class);
     private BufferedReader         _oInput;                                                                  // The internal used BufferedReader
     private BooleanIOSetting       useRebondTool;
     private BooleanIOSetting       readConnect;
@@ -108,10 +109,12 @@ public class PDBReader extends DefaultChemObjectReader {
      * names; for example "RFB.N13" maps to "N.planar3".
      */
     private Map<String, String>    hetDictionary;
+    private Set<String>            hetResidues;
 
     private AtomTypeFactory        cdkAtomTypeFactory;
 
     private static final String    hetDictionaryPath = "type_map.txt";
+    private static final String    resDictionaryPath = "type_res.txt";
 
     /**
      *
@@ -150,7 +153,7 @@ public class PDBReader extends DefaultChemObjectReader {
     }
 
     @Override
-    public void setReader(Reader input) throws CDKException {
+    public void setReader(Reader input) {
         if (input instanceof BufferedReader) {
             this._oInput = (BufferedReader) input;
         } else {
@@ -159,15 +162,15 @@ public class PDBReader extends DefaultChemObjectReader {
     }
 
     @Override
-    public void setReader(InputStream input) throws CDKException {
+    public void setReader(InputStream input) {
         setReader(new InputStreamReader(input));
     }
 
     @Override
     public boolean accepts(Class<? extends IChemObject> classObject) {
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (IChemFile.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (IChemFile.class.equals(anInterface)) return true;
         }
         if (IChemFile.class.equals(classObject)) return true;
         Class superClass = classObject.getSuperclass();
@@ -219,19 +222,19 @@ public class PDBReader extends DefaultChemObjectReader {
         PDBAtom oAtom;
         PDBPolymer oBP = new PDBPolymer();
         IAtomContainer molecularStructure = oFile.getBuilder().newInstance(IAtomContainer.class);
-        StringBuffer cResidue;
+        StringBuilder cResidue;
         String oObj;
         IMonomer oMonomer;
         String cRead = "";
         char chain = 'A'; // To ensure stringent name giving of monomers
         IStrand oStrand;
-        int lineLength = 0;
+        int lineLength;
 
         boolean isProteinStructure = false;
 
-        atomNumberMap = new Hashtable<Integer, IAtom>();
+        atomNumberMap = new Hashtable<>();
         if (readConnect.isSet()) {
-            bondsFromConnectRecords = new ArrayList<IBond>();
+            bondsFromConnectRecords = new ArrayList<>();
         }
 
         // do the reading of the Input
@@ -256,7 +259,7 @@ public class PDBReader extends DefaultChemObjectReader {
 
                         if (isProteinStructure) {
                             // construct a string describing the residue
-                            cResidue = new StringBuffer(8);
+                            cResidue = new StringBuilder(8);
                             oObj = oAtom.getResName();
                             if (oObj != null) {
                                 cResidue = cResidue.append(oObj.trim());
@@ -264,7 +267,7 @@ public class PDBReader extends DefaultChemObjectReader {
                             oObj = oAtom.getChainID();
                             if (oObj != null) {
                                 // cResidue = cResidue.append(((String)oObj).trim());
-                                cResidue = cResidue.append(String.valueOf(chain));
+                                cResidue = cResidue.append(chain);
                             }
                             oObj = oAtom.getResSeq();
                             if (oObj != null) {
@@ -273,7 +276,7 @@ public class PDBReader extends DefaultChemObjectReader {
 
                             // search for an existing strand or create a new one.
                             String strandName = oAtom.getChainID();
-                            if (strandName == null || strandName.length() == 0) {
+                            if (strandName == null || strandName.isEmpty()) {
                                 strandName = String.valueOf(chain);
                             }
                             oStrand = oBP.getStrand(strandName);
@@ -306,8 +309,7 @@ public class PDBReader extends DefaultChemObjectReader {
                         }
                         logger.debug("Added ATOM: ", oAtom);
 
-                        /** As HETATMs cannot be considered to either belong to a certain monomer or strand,
-                         * they are dealt with seperately.*/
+                        /* As HETATMs cannot be considered to either belong to a certain monomer or strand, they are dealt with seperately. */
                     } else if ("HETATM".equalsIgnoreCase(cCol)) {
                         // read an atom record
                         oAtom = readAtom(cRead, lineLength);
@@ -382,15 +384,18 @@ public class PDBReader extends DefaultChemObjectReader {
                             comment = "";
                         }
                         if (lineLength > 12) {
-                            comment = comment.toString() + cRead.substring(11).trim()
+                            comment = comment + cRead.substring(11).trim()
                                     + "\n";
                             oFile.setProperty(CDKConstants.COMMENT, comment);
                         } else {
                             logger.warn("REMARK line found without any comment!");
                         }
                     } else if ("COMPND".equalsIgnoreCase(cCol)) {
-                        String title = cRead.substring(10).trim();
-                        oFile.setProperty(CDKConstants.TITLE, title);
+                        if (cRead.length() > 10) {
+                            String title = cRead.substring(10).trim();
+                            if (!title.isEmpty())
+                                oFile.setProperty(CDKConstants.TITLE, title);
+                        }
                     }
 
                     /* ***********************************************************
@@ -399,13 +404,13 @@ public class PDBReader extends DefaultChemObjectReader {
                      * should be dealt with in the same way..?
                      */
                     else if (readConnect.isSet() && "CONECT".equalsIgnoreCase(cCol)) {
-                        cRead.trim();
+                        cRead = cRead.trim();
                         if (cRead.length() < 16) {
                             logger.debug("Skipping unexpected empty CONECT line! : ", cRead);
                         } else {
                             int lineIndex = 6;
                             int atomFromNumber = -1;
-                            int atomToNumber = -1;
+                            int atomToNumber;
                             IAtomContainer molecule = (isProteinStructure) ? oBP : molecularStructure;
                             while (lineIndex + 5 <= cRead.length()) {
                                 String part = cRead.substring(lineIndex, lineIndex + 5).trim();
@@ -420,7 +425,7 @@ public class PDBReader extends DefaultChemObjectReader {
                                     } catch (NumberFormatException nfe) {
                                         atomToNumber = -1;
                                     }
-                                    if (atomFromNumber != -1 && atomToNumber != -1) {
+                                    if (atomToNumber != -1) {
                                         addBond(molecule, atomFromNumber, atomToNumber);
                                         logger.debug("Bonded " + atomFromNumber + " with " + atomToNumber);
                                     }
@@ -474,7 +479,6 @@ public class PDBReader extends DefaultChemObjectReader {
             logger.error("          1         2         3         4         5         6         7         ");
             logger.error("  error: " + e.getMessage());
             logger.debug(e);
-            e.printStackTrace();
         }
 
         // try to close the Input
@@ -497,22 +501,21 @@ public class PDBReader extends DefaultChemObjectReader {
         IAtom secondAtom = atomNumberMap.get(bondedAtomNo);
         if (firstAtom == null) {
             logger.error("Could not find bond start atom in map with serial id: ", bondAtomNo);
-        }
-        if (secondAtom == null) {
+        } else if (secondAtom == null) {
             logger.error("Could not find bond target atom in map with serial id: ", bondAtomNo);
-        }
-        IBond bond = firstAtom.getBuilder().newInstance(IBond.class, firstAtom, secondAtom, IBond.Order.SINGLE);
-        for (int i = 0; i < bondsFromConnectRecords.size(); i++) {
-            IBond existingBond = (IBond) bondsFromConnectRecords.get(i);
-            IAtom a = existingBond.getBegin();
-            IAtom b = existingBond.getEnd();
-            if ((a.equals(firstAtom) && b.equals(secondAtom)) || (b.equals(firstAtom) && a.equals(secondAtom))) {
-                // already stored
-                return;
+        } else {
+            IBond bond = firstAtom.getBuilder().newInstance(IBond.class, firstAtom, secondAtom, IBond.Order.SINGLE);
+            for (IBond bondsFromConnectRecord : bondsFromConnectRecords) {
+                IAtom a = bondsFromConnectRecord.getBegin();
+                IAtom b = bondsFromConnectRecord.getEnd();
+                if ((a.equals(firstAtom) && b.equals(secondAtom)) || (b.equals(firstAtom) && a.equals(secondAtom))) {
+                    // already stored
+                    return;
+                }
             }
+            bondsFromConnectRecords.add(bond);
+            molecule.addBond(bond);
         }
-        bondsFromConnectRecords.add(bond);
-        molecule.addBond(bond);
     }
 
     private boolean createBondsWithRebondTool(IAtomContainer molecule) {
@@ -630,7 +633,7 @@ public class PDBReader extends DefaultChemObjectReader {
             throw new RuntimeException("PDBReader error during readAtom(): line too short");
         }
 
-        boolean isHetatm = cLine.substring(0, 6).equals("HETATM");
+        boolean isHetatm = cLine.startsWith("HETATM");
         String  atomName = cLine.substring(12, 16).trim();
         String  resName  = cLine.substring(17, 20).trim();
         String  symbol   = parseAtomSymbol(cLine);
@@ -667,13 +670,13 @@ public class PDBReader extends DefaultChemObjectReader {
         }
         if (lineLength >= 59) {
             String frag = cLine.substring(54, Math.min(lineLength, 60)).trim();
-            if (frag.length() > 0) {
+            if (!frag.isEmpty()) {
                 oAtom.setOccupancy(Double.parseDouble(frag));
             }
         }
         if (lineLength >= 65) {
             String frag = cLine.substring(60, Math.min(lineLength, 66)).trim();
-            if (frag.length() > 0) {
+            if (!frag.isEmpty()) {
                 oAtom.setTempFactor(Double.parseDouble(frag));
             }
         }
@@ -707,11 +710,7 @@ public class PDBReader extends DefaultChemObjectReader {
          */
         String oxt = cLine.substring(13, 16).trim();
 
-        if (oxt.equals("OXT")) {
-            oAtom.setOxt(true);
-        } else {
-            oAtom.setOxt(false);
-        }
+        oAtom.setOxt(oxt.equals("OXT"));
         /* ********************************************************************************** */
 
         return oAtom;
@@ -723,22 +722,32 @@ public class PDBReader extends DefaultChemObjectReader {
             cdkAtomTypeFactory = AtomTypeFactory.getInstance("org/openscience/cdk/dict/data/cdk-atom-types.owl",
                     DefaultChemObjectBuilder.getInstance());
         }
+
+        // lookup the atom type using the residue and name, if the atom is a hydrogen
+        // or carbon and is a known residue we default to the common H and C.sp2 cases
         String key = resName + "." + atomName;
-        if (hetDictionary.containsKey(key)) {
-            return hetDictionary.get(key);
-        }
+        String type = hetDictionary.get(key);
+        if (type != null)
+            return type;
+        else if (atomName.startsWith("H"))
+            return hetResidues.contains(resName) ? "H" : null;
+        else if (hetResidues.contains(resName) && atomName.startsWith("C"))
+            return hetResidues.contains(resName) ? "C.sp2" : null;
+
         return null;
     }
 
     private void readHetDictionary() {
-        try {
-            InputStream ins = getClass().getResourceAsStream(hetDictionaryPath);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(ins));
-            hetDictionary = new HashMap<String, String>();
+        hetDictionary = new HashMap<>();
+        hetResidues = new HashSet<>();
+        try (InputStream ins = getClass().getResourceAsStream(hetDictionaryPath);
+             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(ins, StandardCharsets.UTF_8))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 int colonIndex = line.indexOf(':');
                 if (colonIndex == -1) continue;
+                if (line.startsWith("#"))
+                    continue; // comment
                 String typeKey = line.substring(0, colonIndex);
                 String typeValue = line.substring(colonIndex + 1);
                 if (typeValue.equals("null")) {
@@ -746,8 +755,17 @@ public class PDBReader extends DefaultChemObjectReader {
                 } else {
                     hetDictionary.put(typeKey, typeValue);
                 }
+                hetResidues.add(typeKey.split("\\.")[0]);
             }
-            bufferedReader.close();
+        } catch (IOException ioe) {
+            logger.error(ioe.getMessage());
+        }
+
+        // additional residue names where all atom types are C.sp2/H
+        try (InputStream ins = getClass().getResourceAsStream(resDictionaryPath);
+             BufferedReader brdr = new BufferedReader(new InputStreamReader(ins, StandardCharsets.UTF_8))) {
+            brdr.lines().filter(l -> !l.startsWith("#"))
+                .forEach(hetResidues::add);
         } catch (IOException ioe) {
             logger.error(ioe.getMessage());
         }

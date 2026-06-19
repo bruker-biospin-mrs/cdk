@@ -35,6 +35,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType.Hybridization;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.tools.CDKHydrogenAdder;
@@ -64,8 +65,6 @@ import org.openscience.cdk.tools.CDKHydrogenAdder;
  *
  * @author Kevin Lawson
  * @author Lucy Entwistle
- * @cdk.module smiles
- * @cdk.githash
  * @deprecated use {@link org.openscience.cdk.aromaticity.Kekulization}
  */
 @Deprecated
@@ -75,9 +74,9 @@ public class FixBondOrdersTool {
 
     private static class Matrix {
 
-        private int[] mArray;
-        private int   rowCount;
-        private int   columnCount;
+        private final int[] mArray;
+        private final int   rowCount;
+        private final int   columnCount;
 
         public Matrix(Integer rows, Integer cols) {
 
@@ -144,9 +143,9 @@ public class FixBondOrdersTool {
      * @throws CDKException
      */
     public IAtomContainer kekuliseAromaticRings(IAtomContainer molecule) throws CDKException {
-        IAtomContainer mNew = null;
+        IAtomContainer mNew;
         try {
-            mNew = (IAtomContainer) molecule.clone();
+            mNew = molecule.clone();
         } catch (Exception e) {
             throw new CDKException("Failed to clone source molecule");
         }
@@ -166,8 +165,8 @@ public class FixBondOrdersTool {
         }
 
         //We need to establish which rings share bonds and set up sets of such interdependant rings
-        List<Integer[]> rBondsArray = null;
-        List<List<Integer>> ringGroups = null;
+        List<Integer[]> rBondsArray;
+        List<List<Integer>> ringGroups;
 
         //Start by getting a list (same dimensions and ordering as ringset) of all the ring bond numbers in the reduced ring set
         rBondsArray = getRingSystem(mNew, ringSet);
@@ -176,20 +175,20 @@ public class FixBondOrdersTool {
 
         //Loop through each group of rings checking all choices of double bond combis and seeing if you can get a
         //proper molecule.
-        for (int i = 0; i < ringGroups.size(); i++) {
+        for (List<Integer> ringGroup : ringGroups) {
 
             //Set all ring bonds with single order to allow Matrix solving to work
-            setAllRingBondsSingleOrder(ringGroups.get(i), ringSet);
+            setAllRingBondsSingleOrder(ringGroup, ringSet);
 
             //Set up  lists of atoms, bonds and atom pairs for this ringGroup
-            List<Integer> atomNos = null;
-            atomNos = getAtomNosForRingGroup(mNew, ringGroups.get(i), ringSet);
+            List<Integer> atomNos;
+            atomNos = getAtomNosForRingGroup(mNew, ringGroup, ringSet);
 
-            List<Integer> bondNos = null;
-            bondNos = getBondNosForRingGroup(mNew, ringGroups.get(i), ringSet);
+            List<Integer> bondNos;
+            bondNos = getBondNosForRingGroup(mNew, ringGroup, ringSet);
 
             //Array of same dimensions as bondNos (cols in Matrix)
-            List<Integer[]> atomNoPairs = null;
+            List<Integer[]> atomNoPairs;
             atomNoPairs = getAtomNoPairsForRingGroup(mNew, bondNos);
 
             //Set up ajacency Matrix
@@ -209,11 +208,11 @@ public class FixBondOrdersTool {
             }
 
             //Array of same dimensions as atomNos (rows in Matrix)
-            List<Integer> freeValencies = null;
+            List<Integer> freeValencies;
             freeValencies = getFreeValenciesForRingGroup(mNew, atomNos, M, ringSet);
 
             //Array of "answers"
-            List<Integer> bondOrders = new ArrayList<Integer>();
+            List<Integer> bondOrders = new ArrayList<>();
             for (int j = 0; j < bondNos.size(); j++) {
                 bondOrders.add(0);
             }
@@ -270,7 +269,7 @@ public class FixBondOrdersTool {
 
     private List<Integer[]> getRingSystem(IAtomContainer mol, IRingSet ringSet) {
         List<Integer[]> bondsArray;
-        bondsArray = new ArrayList<Integer[]>();
+        bondsArray = new ArrayList<>();
         for (int r = 0; r < ringSet.getAtomContainerCount(); ++r) {
             IRing ring = (IRing) ringSet.getAtomContainer(r);
             Integer[] bondNumbers = new Integer[ring.getBondCount()];
@@ -290,7 +289,7 @@ public class FixBondOrdersTool {
      */
     private List<List<Integer>> assignRingGroups(List<Integer[]> rBondsArray) {
         List<List<Integer>> ringGroups;
-        ringGroups = new ArrayList<List<Integer>>();
+        ringGroups = new ArrayList<>();
         for (int i = 0; i < rBondsArray.size() - 1; i++) { //for each ring except the last in rBondsArray
             for (int j = 0; j < rBondsArray.get(i).length; j++) { //for each bond in each ring
 
@@ -301,7 +300,7 @@ public class FixBondOrdersTool {
                         //Is there a bond in common? Then add both rings
                         if (Objects.equals(rBondsArray.get(i)[j], rBondsArray.get(k)[l])) {
                             if (i != k) {
-                                ringGroups.add(new ArrayList<Integer>());
+                                ringGroups.add(new ArrayList<>());
                                 ringGroups.get(ringGroups.size() - 1).add(i);
                                 ringGroups.get(ringGroups.size() - 1).add(k);
                             }
@@ -315,14 +314,14 @@ public class FixBondOrdersTool {
         //Anything not added yet is a singleton
         for (int i = 0; i < rBondsArray.size(); i++) {
             boolean found = false;
-            for (int j = 0; j < ringGroups.size(); j++) {
-                if (ringGroups.get(j).contains(i)) {
+            for (List<Integer> ringGroup : ringGroups) {
+                if (ringGroup.contains(i)) {
                     found = true;
                     break;
                 }
             }
             if (!found) {
-                ringGroups.add(new ArrayList<Integer>());
+                ringGroups.add(new ArrayList<>());
                 ringGroups.get(ringGroups.size() - 1).add(i);
             }
         }
@@ -376,7 +375,7 @@ public class FixBondOrdersTool {
      * @return List of atom numbers for each set
      */
     private List<Integer> getAtomNosForRingGroup(IAtomContainer molecule, List<Integer> ringGroup, IRingSet ringSet) {
-        List<Integer> atc = new ArrayList<Integer>();
+        List<Integer> atc = new ArrayList<>();
         for (Integer i : ringGroup) {
             for (IAtom atom : ringSet.getAtomContainer(i).atoms()) {
                 if (atc.size() > 0) {
@@ -400,7 +399,7 @@ public class FixBondOrdersTool {
      * @return List of bond numbers for each set
      */
     private List<Integer> getBondNosForRingGroup(IAtomContainer molecule, List<Integer> ringGroup, IRingSet ringSet) {
-        List<Integer> btc = new ArrayList<Integer>();
+        List<Integer> btc = new ArrayList<>();
         for (Integer i : ringGroup) {
             for (IBond bond : ringSet.getAtomContainer(i).bonds()) {
                 if (btc.size() > 0) {
@@ -423,7 +422,7 @@ public class FixBondOrdersTool {
      * @return List of atom pairs
      */
     private List<Integer[]> getAtomNoPairsForRingGroup(IAtomContainer molecule, List<Integer> bondsToCheck) {
-        List<Integer[]> aptc = new ArrayList<Integer[]>();
+        List<Integer[]> aptc = new ArrayList<>();
         for (Integer i : bondsToCheck) {
             Integer[] aps = new Integer[2];
             aps[0] = molecule.indexOf(molecule.getBond(i).getBegin());
@@ -443,12 +442,12 @@ public class FixBondOrdersTool {
      */
     private List<Integer> getFreeValenciesForRingGroup(IAtomContainer molecule, List<Integer> atomsToCheck, Matrix M,
             IRingSet rs) {
-        List<Integer> fvtc = new ArrayList<Integer>();
+        List<Integer> fvtc = new ArrayList<>();
         for (int i = 0; i < atomsToCheck.size(); i++) {
             int j = atomsToCheck.get(i);
 
             //Put in an implicit hydrogen atom for Planar3 C- atoms in 5-membered rings (it doesn't get put in by the Smiles parser)
-            if (("C".equals(molecule.getAtom(j).getSymbol()))
+            if ((molecule.getAtom(j).getAtomicNumber() == IElement.C)
                     && (molecule.getAtom(j).getHybridization() == Hybridization.PLANAR3)) {
 
                 //Check that ring containing the atom is five-membered
@@ -509,8 +508,8 @@ public class FixBondOrdersTool {
             List<Integer[]> atomNoPairs, List<Integer> bondOrder) {
 
         // Look for bonds that need to be a certain order
-        List<Integer> solved = new ArrayList<Integer>();
-        List<Integer> solvedRow = new ArrayList<Integer>();
+        List<Integer> solved = new ArrayList<>();
+        List<Integer> solvedRow = new ArrayList<>();
         for (int j = 0; j < atomNos.size(); j++) {
 
             // Count no.of bonds for this atom

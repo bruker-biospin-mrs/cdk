@@ -51,14 +51,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * @author         Miguel Rojas
  * @cdk.created    2006-05-17
- * @cdk.module     qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:covalentradius
  */
 public class CovalentRadiusDescriptor extends AbstractAtomicDescriptor implements IAtomicDescriptor {
 
     private AtomTypeFactory     factory = null;
-    private static ILoggingTool logger  = LoggingToolFactory.createLoggingTool(CovalentRadiusDescriptor.class);
+    private static final ILoggingTool logger  = LoggingToolFactory.createLoggingTool(CovalentRadiusDescriptor.class);
 
     /**
      *  Constructor for the CovalentRadiusDescriptor object.

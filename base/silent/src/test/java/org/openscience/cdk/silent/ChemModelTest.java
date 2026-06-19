@@ -19,43 +19,34 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractChemModelTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractChemModelTest;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IChemModel;
-import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.ICrystal;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link ChemModel}.
  *
- * @cdk.module test-silent
  */
-public class ChemModelTest extends AbstractChemModelTest {
+class ChemModelTest extends AbstractChemModelTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new ChemModel();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(ChemModel::new);
     }
 
     @Test
-    public void testChemModel() {
+    void testChemModel() {
         IChemModel chemModel = new ChemModel();
-        Assert.assertNotNull(chemModel);
+        Assertions.assertNotNull(chemModel);
     }
 
     // Overwrite default methods: no notifications are expected!
@@ -117,13 +108,13 @@ public class ChemModelTest extends AbstractChemModelTest {
 
         ICrystal crystal = chemObject.getBuilder().newInstance(ICrystal.class);
         chemObject.setCrystal(crystal);
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // reset the listener
         listener.reset();
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // changing the set should trigger a change event in the IChemModel
         crystal.add(chemObject.getBuilder().newInstance(IAtomContainer.class));
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
     }
 
     @Override
@@ -135,13 +126,13 @@ public class ChemModelTest extends AbstractChemModelTest {
 
         IAtomContainerSet molSet = chemObject.getBuilder().newInstance(IAtomContainerSet.class);
         chemObject.setMoleculeSet(molSet);
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // reset the listener
         listener.reset();
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // changing the set should trigger a change event in the IChemModel
         molSet.addAtomContainer(chemObject.getBuilder().newInstance(IAtomContainer.class));
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
     }
 
     @Test
@@ -153,13 +144,13 @@ public class ChemModelTest extends AbstractChemModelTest {
 
         IReactionSet reactionSet = chemObject.getBuilder().newInstance(IReactionSet.class);
         chemObject.setReactionSet(reactionSet);
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // reset the listener
         listener.reset();
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // changing the set should trigger a change event in the IChemModel
         reactionSet.addReaction(chemObject.getBuilder().newInstance(IReaction.class));
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
     }
 
     @Test
@@ -171,13 +162,13 @@ public class ChemModelTest extends AbstractChemModelTest {
 
         IRingSet ringSet = chemObject.getBuilder().newInstance(IRingSet.class);
         chemObject.setRingSet(ringSet);
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // reset the listener
         listener.reset();
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // changing the set should trigger a change event in the IChemModel
         ringSet.addAtomContainer(chemObject.getBuilder().newInstance(IRing.class));
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
     }
 
     @Test
@@ -189,15 +180,15 @@ public class ChemModelTest extends AbstractChemModelTest {
 
         ICrystal crystal = chemObject.getBuilder().newInstance(ICrystal.class);
         chemObject.setCrystal(crystal);
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // remove the set from the IChemModel
         chemObject.setCrystal(null);
         // reset the listener
         listener.reset();
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // changing the set must *not* trigger a change event in the IChemModel
         crystal.add(chemObject.getBuilder().newInstance(IAtomContainer.class));
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
     }
 
     @Override
@@ -209,15 +200,15 @@ public class ChemModelTest extends AbstractChemModelTest {
 
         IAtomContainerSet molSet = chemObject.getBuilder().newInstance(IAtomContainerSet.class);
         chemObject.setMoleculeSet(molSet);
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // remove the set from the IChemModel
         chemObject.setMoleculeSet(null);
         // reset the listener
         listener.reset();
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // changing the set must *not* trigger a change event in the IChemModel
         molSet.addAtomContainer(chemObject.getBuilder().newInstance(IAtomContainer.class));
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
     }
 
     @Test
@@ -229,15 +220,15 @@ public class ChemModelTest extends AbstractChemModelTest {
 
         IReactionSet reactionSet = chemObject.getBuilder().newInstance(IReactionSet.class);
         chemObject.setReactionSet(reactionSet);
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // remove the set from the IChemModel
         chemObject.setReactionSet(null);
         // reset the listener
         listener.reset();
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // changing the set must *not* trigger a change event in the IChemModel
         reactionSet.addReaction(chemObject.getBuilder().newInstance(IReaction.class));
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
     }
 
     @Test
@@ -249,15 +240,15 @@ public class ChemModelTest extends AbstractChemModelTest {
 
         IRingSet ringSet = chemObject.getBuilder().newInstance(IRingSet.class);
         chemObject.setRingSet(ringSet);
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // remove the set from the IChemModel
         chemObject.setRingSet(null);
         // reset the listener
         listener.reset();
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
         // changing the set must *not* trigger a change event in the IChemModel
         ringSet.addAtomContainer(chemObject.getBuilder().newInstance(IRing.class));
-        Assert.assertFalse(listener.getChanged());
+        Assertions.assertFalse(listener.getChanged());
     }
 
     @Test

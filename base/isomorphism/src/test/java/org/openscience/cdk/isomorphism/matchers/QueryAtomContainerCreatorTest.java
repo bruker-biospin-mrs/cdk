@@ -18,10 +18,10 @@
  */
 package org.openscience.cdk.isomorphism.matchers;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -32,18 +32,17 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 /**
  * Checks the functionality of the <code>QueryAtomContainerCreator</code>.
  *
- * @cdk.module test-isomorphism
  */
-public class QueryAtomContainerCreatorTest extends CDKTestCase {
+class QueryAtomContainerCreatorTest extends CDKTestCase {
 
-    @BeforeClass
-    public static void setUp() {}
+    @BeforeAll
+    static void setUp() {}
 
     /**
      * @cdk.inchi InChI=1/C8H10/c1-7-5-3-4-6-8(7)2/h3-6H,1-2H3
      */
     @Test
-    public void test12DimethylBenzene() throws Exception {
+    void test12DimethylBenzene() throws Exception {
         IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
         IAtomContainer molecule = builder.newInstance(IAtomContainer.class);
         molecule.addAtom(builder.newInstance(IAtom.class, "C"));
@@ -77,7 +76,7 @@ public class QueryAtomContainerCreatorTest extends CDKTestCase {
         query1.addBond(0, 4, IBond.Order.SINGLE);
         query1.addBond(1, 5, IBond.Order.SINGLE);
         QueryAtomContainer queryContainer1 = QueryAtomContainerCreator.createSymbolAndBondOrderQueryContainer(query1);
-        Assert.assertTrue(new UniversalIsomorphismTester().isSubgraph(molecule, queryContainer1));
+        Assertions.assertTrue(new UniversalIsomorphismTester().isSubgraph(molecule, queryContainer1));
 
         // 2,3-dimethyl-2-butene does not match
         IAtomContainer query2 = builder.newInstance(IAtomContainer.class);
@@ -93,7 +92,7 @@ public class QueryAtomContainerCreatorTest extends CDKTestCase {
         query2.addBond(0, 4, IBond.Order.SINGLE);
         query2.addBond(1, 5, IBond.Order.SINGLE);
         QueryAtomContainer queryContainer2 = QueryAtomContainerCreator.createSymbolAndBondOrderQueryContainer(query2);
-        Assert.assertFalse(new UniversalIsomorphismTester().isSubgraph(molecule, queryContainer2));
+        Assertions.assertFalse(new UniversalIsomorphismTester().isSubgraph(molecule, queryContainer2));
     }
 
 }

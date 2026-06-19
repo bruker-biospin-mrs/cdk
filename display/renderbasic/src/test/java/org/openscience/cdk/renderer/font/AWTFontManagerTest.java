@@ -21,24 +21,21 @@
  */
 package org.openscience.cdk.renderer.font;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-/**
- * @cdk.module test-renderbasic
- */
-public class AWTFontManagerTest extends AbstractFontManagerTest {
+class AWTFontManagerTest extends AbstractFontManagerTest {
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         setFontManager(new AWTFontManager());
     }
 
     @Test
-    public void testConstructor() {
+    void testConstructor() {
         IFontManager fontManager = new AWTFontManager();
-        Assert.assertNotNull(fontManager);
+        Assertions.assertNotNull(fontManager);
     }
 
 }

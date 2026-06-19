@@ -18,26 +18,25 @@
  */
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomType;
-import org.openscience.cdk.interfaces.AbstractAtomTypeTest;
+import org.openscience.cdk.test.interfaces.AbstractAtomTypeTest;
 import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IElement;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the AtomType class.
  *
- * @cdk.module test-data
  *
  * @see org.openscience.cdk.AtomType
  */
-public class AtomTypeTest extends AbstractAtomTypeTest {
+class AtomTypeTest extends AbstractAtomTypeTest {
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         setTestObjectBuilder(new ITestObjectBuilder() {
 
             @Override
@@ -48,33 +47,33 @@ public class AtomTypeTest extends AbstractAtomTypeTest {
     }
 
     @Test
-    public void testAtomType_String() {
+    void testAtomType_String() {
         IAtomType at = new AtomType("C");
-        Assert.assertEquals("C", at.getSymbol());
+        Assertions.assertEquals("C", at.getSymbol());
     }
 
     @Test
-    public void testAtomType_IElement() {
+    void testAtomType_IElement() {
         IElement element = newChemObject().getBuilder().newInstance(IElement.class, "C");
         IAtomType at = new AtomType(element);
-        Assert.assertEquals("C", at.getSymbol());
+        Assertions.assertEquals("C", at.getSymbol());
     }
 
     @Test
-    public void testAtomType_String_String() {
+    void testAtomType_String_String() {
         IAtomType at = new AtomType("C4", "C");
-        Assert.assertEquals("C", at.getSymbol());
-        Assert.assertEquals("C4", at.getAtomTypeName());
+        Assertions.assertEquals("C", at.getSymbol());
+        Assertions.assertEquals("C4", at.getAtomTypeName());
     }
 
     @Test
-    public void testCompare() {
+    void testCompare() {
         IAtomType at = new AtomType("C4", "C");
         if (at instanceof org.openscience.cdk.AtomType) {
             org.openscience.cdk.AtomType at1 = (org.openscience.cdk.AtomType) at;
             IAtomType at2 = at.getBuilder().newInstance(IAtomType.class, "C3", "C");
-            Assert.assertFalse(at1.compare("C4"));
-            Assert.assertFalse(at1.compare(at2));
+            Assertions.assertFalse(at1.compare("C4"));
+            Assertions.assertFalse(at1.compare(at2));
         }
     }
 
@@ -84,46 +83,46 @@ public class AtomTypeTest extends AbstractAtomTypeTest {
         IAtomType someAt = new AtomType("C");
         if (someAt instanceof org.openscience.cdk.AtomType) {
             org.openscience.cdk.AtomType at = (org.openscience.cdk.AtomType) someAt;
-            Assert.assertTrue(at.compare(at));
+            Assertions.assertTrue(at.compare(at));
             IAtomType hydrogen = someAt.getBuilder().newInstance(IAtomType.class, "H");
-            Assert.assertFalse(at.compare(hydrogen));
-            Assert.assertFalse(at.compare("Li"));
+            Assertions.assertFalse(at.compare(hydrogen));
+            Assertions.assertFalse(at.compare("Li"));
         }
     }
 
     @Test
-    public void testCompare_AtomTypeName() {
+    void testCompare_AtomTypeName() {
         AtomType at1 = new AtomType("C");
         AtomType at2 = new AtomType("C");
-        at1.setAtomTypeName(new String("C4"));
-        at2.setAtomTypeName(new String("C4"));
-        Assert.assertTrue(at1.compare(at2));
+        at1.setAtomTypeName("C4");
+        at2.setAtomTypeName("C4");
+        Assertions.assertTrue(at1.compare(at2));
     }
 
     @Test
-    public void testCompare_DiffAtomTypeName() {
+    void testCompare_DiffAtomTypeName() {
         AtomType at1 = new AtomType("C");
         AtomType at2 = new AtomType("C");
-        at1.setAtomTypeName(new String("C4"));
-        at2.setAtomTypeName(new String("C3"));
-        Assert.assertFalse(at1.compare(at2));
+        at1.setAtomTypeName("C4");
+        at2.setAtomTypeName("C3");
+        Assertions.assertFalse(at1.compare(at2));
     }
 
     @Test
-    public void testCompare_BondOrderSum() {
+    void testCompare_BondOrderSum() {
         AtomType at1 = new AtomType("C");
         AtomType at2 = new AtomType("C");
         at1.setBondOrderSum(1.5);
         at2.setBondOrderSum(1.5);
-        Assert.assertTrue(at1.compare(at2));
+        Assertions.assertTrue(at1.compare(at2));
     }
 
     @Test
-    public void testCompare_DiffBondOrderSum() {
+    void testCompare_DiffBondOrderSum() {
         AtomType at1 = new AtomType("C");
         AtomType at2 = new AtomType("C");
         at1.setBondOrderSum(1.5);
         at2.setBondOrderSum(2.0);
-        Assert.assertFalse(at1.compare(at2));
+        Assertions.assertFalse(at1.compare(at2));
     }
 }

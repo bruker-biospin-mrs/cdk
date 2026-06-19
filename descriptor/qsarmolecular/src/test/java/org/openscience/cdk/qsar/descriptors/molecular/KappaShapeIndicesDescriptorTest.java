@@ -18,11 +18,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.result.DoubleArrayResult;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -31,20 +30,19 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class KappaShapeIndicesDescriptorTest extends MolecularDescriptorTest {
+class KappaShapeIndicesDescriptorTest extends MolecularDescriptorTest {
 
-    public KappaShapeIndicesDescriptorTest() {}
+    KappaShapeIndicesDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(KappaShapeIndicesDescriptor.class);
     }
 
     @Test
-    public void testKappaShapeIndicesDescriptor() throws ClassNotFoundException, CDKException, java.lang.Exception {
+    void testKappaShapeIndicesDescriptor() throws java.lang.Exception {
         double[] testResult = {5, 2.25, 4};
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("O=C(O)CC");
@@ -54,6 +52,6 @@ public class KappaShapeIndicesDescriptorTest extends MolecularDescriptorTest {
         // positions 1 = kier2
         // THIS IS OK: Assert.assertEquals(testResult[1], ((Double)retval.get(1)).doubleValue(), 0.0001);
         // THIS IS OK: Assert.assertEquals(testResult[0], ((Double)retval.get(0)).doubleValue(), 0.0001);
-        Assert.assertEquals(testResult[2], retval.get(2), 0.0001);
+        Assertions.assertEquals(testResult[2], retval.get(2), 0.0001);
     }
 }

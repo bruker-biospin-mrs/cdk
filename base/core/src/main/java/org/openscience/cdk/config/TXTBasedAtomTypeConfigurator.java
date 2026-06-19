@@ -35,8 +35,6 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
  * Jmol to CDK. The AtomType's themselves seems have a computational
  * background, but this is not clear.
  *
- * @cdk.module core
- * @cdk.githash
  *
  * @author Bradley A. Smith &lt;bradley@baysmith.com&gt;
  *
@@ -44,7 +42,7 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
  */
 public class TXTBasedAtomTypeConfigurator implements IAtomTypeConfigurator {
 
-    private String      configFile = "org/openscience/cdk/config/data/jmol_atomtypes.txt";
+    private final String      configFile = "org/openscience/cdk/config/data/jmol_atomtypes.txt";
     private InputStream ins        = null;
 
     public TXTBasedAtomTypeConfigurator() {}
@@ -64,7 +62,7 @@ public class TXTBasedAtomTypeConfigurator implements IAtomTypeConfigurator {
      */
     @Override
     public List<IAtomType> readAtomTypes(IChemObjectBuilder builder) throws IOException {
-        List<IAtomType> atomTypes = new ArrayList<IAtomType>();
+        List<IAtomType> atomTypes = new ArrayList<>();
 
         if (ins == null) {
             // trying the default
@@ -104,8 +102,8 @@ public class TXTBasedAtomTypeConfigurator implements IAtomTypeConfigurator {
                     String sColorB = tokenizer.nextToken();
 
                     try {
-                        mass = new Double(sam);
-                        covalent = new Double(scovalent);
+                        mass = Double.parseDouble(sam);
+                        covalent = Double.parseDouble(scovalent);
                         atomicNumber = Integer.parseInt(san);
                         colorR = Integer.parseInt(sColorR);
                         colorG = Integer.parseInt(sColorG);

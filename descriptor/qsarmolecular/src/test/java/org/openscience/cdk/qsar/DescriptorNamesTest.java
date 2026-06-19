@@ -25,7 +25,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.IImplementationSpecification;
@@ -36,29 +38,25 @@ import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 /**
  * TestSuite that runs all tests for the DescriptorEngine.
  *
- * @cdk.module test-qsarmolecular
  */
-public class DescriptorNamesTest extends CDKTestCase {
+class DescriptorNamesTest extends CDKTestCase {
 
-    public DescriptorNamesTest() {}
+    DescriptorNamesTest() {}
 
     @Test
-    public void checkUniqueMolecularDescriptorNames() throws Exception {
+    void checkUniqueMolecularDescriptorNames() throws Exception {
         DescriptorEngine engine = new DescriptorEngine(IMolecularDescriptor.class,
                 DefaultChemObjectBuilder.getInstance());
         List<IImplementationSpecification> specs = engine.getDescriptorSpecifications();
 
         // we work with a simple molecule with 3D coordinates
-        String filename = "data/mdl/lobtest2.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        String filename = "descriptors/molecular/lobtest2.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new MDLV2000Reader(ins);
-        ChemFile content = (ChemFile) reader.read(new ChemFile());
+        ChemFile content = reader.read(new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
         IAtomContainer ac = (IAtomContainer) cList.get(0);
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(ac);
@@ -66,22 +64,22 @@ public class DescriptorNamesTest extends CDKTestCase {
         engine.process(ac);
 
         int ncalc = 0;
-        List<String> descNames = new ArrayList<String>();
+        List<String> descNames = new ArrayList<>();
         for (IImplementationSpecification spec : specs) {
-            DescriptorValue value = (DescriptorValue) ac.getProperty(spec);
-            if (value == null) Assert.fail(spec.getImplementationTitle() + " was not calculated.");
+            DescriptorValue value = ac.getProperty(spec);
+            if (value == null) Assertions.fail(spec.getImplementationTitle() + " was not calculated.");
             ncalc++;
             String[] names = value.getNames();
             descNames.addAll(Arrays.asList(names));
         }
 
-        List<String> dups = new ArrayList<String>();
-        Set<String> uniqueNames = new HashSet<String>();
+        List<String> dups = new ArrayList<>();
+        Set<String> uniqueNames = new HashSet<>();
         for (String name : descNames) {
             if (!uniqueNames.add(name)) dups.add(name);
         }
-        Assert.assertEquals(specs.size(), ncalc);
-        Assert.assertEquals(descNames.size(), uniqueNames.size());
+        Assertions.assertEquals(specs.size(), ncalc);
+        Assertions.assertEquals(descNames.size(), uniqueNames.size());
         if (dups.size() != 0) {
             System.out.println("Following names were duplicated");
             for (String dup : dups) {

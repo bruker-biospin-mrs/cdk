@@ -26,12 +26,11 @@ package org.openscience.cdk.smsd.algorithm.mcsplus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class handles MCS between two identical molecules.
  * Hence they generate am MCS where all atoms are mapped.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated SMSD has been deprecated from the CDK with a newer, more recent
  *             version of SMSD is available at <a href="http://github.com/asad/smsd">http://github.com/asad/smsd</a>.
@@ -47,14 +46,14 @@ public class ExactMapping {
      */
     private static List<Integer> extractCliqueMapping(List<Integer> compGraphNodes, List<Integer> cliqueListOrg) {
 
-        List<Integer> cliqueMapping = new ArrayList<Integer>();
-        List<Integer> cliqueList = new ArrayList<Integer>(cliqueListOrg);
+        List<Integer> cliqueMapping = new ArrayList<>();
+        List<Integer> cliqueList = new ArrayList<>(cliqueListOrg);
         int cliqueSize = cliqueList.size();
         int vecSize = compGraphNodes.size();
         //        System.out.println("VEC  SIZE " + vec_size);
-        for (int a = 0; a < cliqueSize; a++) {
+        for (Integer integer : cliqueList) {
             for (int b = 0; b < vecSize; b += 3) {
-                if (cliqueList.get(a) == compGraphNodes.get(b + 2)) {
+                if (Objects.equals(integer, compGraphNodes.get(b + 2))) {
                     cliqueMapping.add(compGraphNodes.get(b));
                     cliqueMapping.add(compGraphNodes.get(b + 1));
                 }
@@ -79,7 +78,6 @@ public class ExactMapping {
             mappings.add(cliqueList);
         } catch (Exception e) {
             System.err.println("Error in FinalMapping List: " + e.getCause());
-            e.printStackTrace();
             System.exit(1);
         }
         return mappings;

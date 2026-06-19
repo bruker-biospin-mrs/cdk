@@ -19,38 +19,29 @@
  */
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IRingSet;
-import org.openscience.cdk.interfaces.AbstractRingSetTest;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractRingSetTest;
 
 /**
  * Checks the functionality of the RingSet class.
  *
- * @cdk.module test-data
  *
  * @see org.openscience.cdk.RingSet
  */
-public class RingSetTest extends AbstractRingSetTest {
+class RingSetTest extends AbstractRingSetTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new RingSet();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(RingSet::new);
     }
 
     @Test
-    public void testRingSet() {
+    void testRingSet() {
         IRingSet rs = new RingSet();
-        Assert.assertNotNull(rs);
+        Assertions.assertNotNull(rs);
     }
 
 }

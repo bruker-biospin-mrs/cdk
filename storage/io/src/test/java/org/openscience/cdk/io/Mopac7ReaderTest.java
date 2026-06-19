@@ -22,27 +22,27 @@
  *  */
 package org.openscience.cdk.io;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.io.IChemObjectReader.Mode;
 import org.openscience.cdk.silent.AtomContainer;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 
 /**
- * @cdk.module test-io
  */
-public class Mopac7ReaderTest extends SimpleChemObjectReaderTest {
+class Mopac7ReaderTest extends SimpleChemObjectReaderTest {
 
-    @BeforeClass
-    public static void setup() {
-        setSimpleChemObjectReader(new Mopac7Reader(), "data/mopac/ethylene.dat.out");
+    @BeforeAll
+    static void setup() {
+        setSimpleChemObjectReader(new Mopac7Reader(), "ethylene.dat.out");
     }
 
     @Test
-    public void testAccepts() {
+    void testAccepts() {
         Mopac7Reader reader = new Mopac7Reader();
         reader.setReaderMode(Mode.STRICT);
-        Assert.assertTrue(reader.accepts(AtomContainer.class));
+        Assertions.assertTrue(reader.accepts(AtomContainer.class));
     }
 
 }

@@ -21,19 +21,16 @@
  */
 package org.openscience.cdk.smsd.algorithm.vflib;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.AtomContainer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
@@ -48,27 +45,26 @@ import org.openscience.cdk.smsd.tools.MolHandler;
  * Unit testing for the {@link VFlibMCSHandler} class.
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
 public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
 
     public VFlibMCSHandlerTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
-    @BeforeClass
-    public static void setMCSAlgorithm() {
+    @BeforeAll
+    static void setMCSAlgorithm() {
         AbstractMCSAlgorithmTest.setMCSAlgorithm(new VFlibMCSHandler());
     }
 
@@ -97,7 +93,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
         MolHandler mol2 = new MolHandler(target, true, true);
         smsd1.set(mol1, mol2);
         smsd1.searchMCS(true);
-        assertNotNull(smsd1.getFirstMapping());
+        Assertions.assertNotNull(smsd1.getFirstMapping());
     }
 
     /**
@@ -105,7 +101,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
      * @throws Exception
      */
     @Test
-    public void testSet_IAtomContainer_IAtomContainer() throws Exception {
+    void testSet_IAtomContainer_IAtomContainer() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer target = sp.parseSmiles("C\\C=C/Nc1cccc(c1)N(O)\\C=C\\C\\C=C\\C=C/C");
         IAtomContainer queryac = sp.parseSmiles("Nc1ccccc1");
@@ -115,7 +111,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
         MolHandler mol2 = new MolHandler(target, true, true);
         smsd1.set(mol1, mol2);
         smsd1.searchMCS(true);
-        assertNotNull(smsd1.getFirstMapping());
+        Assertions.assertNotNull(smsd1.getFirstMapping());
     }
 
     /**
@@ -123,11 +119,11 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
      * @throws CDKException
      */
     @Test
-    public void testSet_String_String() throws CDKException {
-        String molfile = "data/mdl/decalin.mol";
-        String queryfile = "data/mdl/decalin.mol";
-        IAtomContainer query = new AtomContainer();
-        IAtomContainer target = new AtomContainer();
+    void testSet_String_String() throws CDKException {
+        String molfile = "org/openscience/cdk/smsd/algorithm/decalin.mol";
+        String queryfile = "org/openscience/cdk/smsd/algorithm/decalin.mol";
+        IAtomContainer query = DefaultChemObjectBuilder.getInstance().newAtomContainer();
+        IAtomContainer target = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         InputStream ins = this.getClass().getClassLoader().getResourceAsStream(molfile);
         MDLV2000Reader reader = new MDLV2000Reader(ins, Mode.STRICT);
@@ -142,7 +138,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
         smsd1.set(mol1, mol2);
         smsd1.searchMCS(true);
 
-        assertNotNull(smsd1.getFirstMapping());
+        Assertions.assertNotNull(smsd1.getFirstMapping());
     }
 
     /**
@@ -150,7 +146,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testSet_MolHandler_MolHandler() throws InvalidSmilesException {
+    void testSet_MolHandler_MolHandler() throws InvalidSmilesException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
 
         IAtomContainer target1 = sp.parseSmiles("C\\C=C/Nc1cccc(c1)N(O)\\C=C\\C\\C=C\\C=C/C");
@@ -160,7 +156,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
         VFlibMCSHandler instance = new VFlibMCSHandler();
         instance.set(source, target);
         instance.searchMCS(true);
-        assertNotNull(instance.getFirstMapping());
+        Assertions.assertNotNull(instance.getFirstMapping());
     }
 
     /**
@@ -168,7 +164,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testGetAllAtomMapping() throws InvalidSmilesException {
+    void testGetAllAtomMapping() throws InvalidSmilesException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer target = sp.parseSmiles("C\\C=C/Nc1cccc(c1)N(O)\\C=C\\C\\C=C\\C=C/C");
         IAtomContainer queryac = sp.parseSmiles("Nc1ccccc1");
@@ -178,9 +174,9 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
         MolHandler mol2 = new MolHandler(target, true, true);
         smsd1.set(mol1, mol2);
         smsd1.searchMCS(true);
-        assertNotNull(smsd1.getFirstMapping());
+        Assertions.assertNotNull(smsd1.getFirstMapping());
 
-        assertEquals(4, smsd1.getAllAtomMapping().size());
+        Assertions.assertEquals(4, smsd1.getAllAtomMapping().size());
     }
 
     /**
@@ -188,7 +184,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testGetAllMapping() throws InvalidSmilesException {
+    void testGetAllMapping() throws InvalidSmilesException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer target = sp.parseSmiles("C\\C=C/Nc1cccc(c1)N(O)\\C=C\\C\\C=C\\C=C/C");
         IAtomContainer queryac = sp.parseSmiles("Nc1ccccc1");
@@ -198,9 +194,9 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
         MolHandler mol2 = new MolHandler(target, true, true);
         smsd1.set(mol1, mol2);
         smsd1.searchMCS(true);
-        assertNotNull(smsd1.getFirstMapping());
+        Assertions.assertNotNull(smsd1.getFirstMapping());
 
-        assertEquals(4, smsd1.getAllMapping().size());
+        Assertions.assertEquals(4, smsd1.getAllMapping().size());
     }
 
     /**
@@ -208,7 +204,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testGetFirstAtomMapping() throws InvalidSmilesException {
+    void testGetFirstAtomMapping() throws InvalidSmilesException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer target = sp.parseSmiles("C\\C=C/Nc1cccc(c1)N(O)\\C=C\\C\\C=C\\C=C/C");
         IAtomContainer queryac = sp.parseSmiles("Nc1ccccc1");
@@ -218,9 +214,9 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
         MolHandler mol2 = new MolHandler(target, true, true);
         smsd1.set(mol1, mol2);
         smsd1.searchMCS(true);
-        assertNotNull(smsd1.getFirstMapping());
+        Assertions.assertNotNull(smsd1.getFirstMapping());
 
-        assertEquals(7, smsd1.getFirstAtomMapping().size());
+        Assertions.assertEquals(7, smsd1.getFirstAtomMapping().size());
     }
 
     /**
@@ -228,7 +224,7 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
      * @throws InvalidSmilesException
      */
     @Test
-    public void testGetFirstMapping() throws InvalidSmilesException {
+    void testGetFirstMapping() throws InvalidSmilesException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer target = sp.parseSmiles("C\\C=C/Nc1cccc(c1)N(O)\\C=C\\C\\C=C\\C=C/C");
         IAtomContainer queryac = sp.parseSmiles("Nc1ccccc1");
@@ -238,8 +234,8 @@ public class VFlibMCSHandlerTest extends AbstractMCSAlgorithmTest {
         MolHandler mol2 = new MolHandler(target, true, true);
         smsd1.set(mol1, mol2);
         smsd1.searchMCS(true);
-        assertNotNull(smsd1.getFirstMapping());
+        Assertions.assertNotNull(smsd1.getFirstMapping());
 
-        assertEquals(7, smsd1.getFirstMapping().size());
+        Assertions.assertEquals(7, smsd1.getFirstMapping().size());
     }
 }

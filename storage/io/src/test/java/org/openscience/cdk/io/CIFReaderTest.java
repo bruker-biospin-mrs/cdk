@@ -22,13 +22,14 @@
  */
 package org.openscience.cdk.io;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IChemFile;
 import org.openscience.cdk.interfaces.ICrystal;
 import org.openscience.cdk.silent.ChemFile;
+import org.openscience.cdk.test.io.ChemObjectIOTest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,12 +41,11 @@ import static org.hamcrest.CoreMatchers.is;
 /**
  * TestCase for the reading CIF files using a test file with the {@link CIFReader}.
  *
- * @cdk.module test-io
  */
-public class CIFReaderTest extends ChemObjectIOTest {
+class CIFReaderTest extends ChemObjectIOTest {
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         setChemObjectIO(new CIFReader());
     }
 
@@ -54,43 +54,43 @@ public class CIFReaderTest extends ChemObjectIOTest {
      * Example input <a href="http://www.crystallography.net/1100784.cif">1100784</a>.
      */
     @Test
-    public void cod1100784() throws IOException, CDKException {
+    void cod1100784() throws IOException, CDKException {
         InputStream in = getClass().getResourceAsStream("1100784.cif");
         CIFReader cifReader = new CIFReader(in);
         //        try {
         IChemFile chemFile = cifReader.read(new ChemFile());
-        Assert.assertThat(chemFile.getChemSequenceCount(), is(1));
-        Assert.assertThat(chemFile.getChemSequence(0).getChemModelCount(), is(1));
-        Assert.assertNotNull(chemFile.getChemSequence(0).getChemModel(0).getCrystal());
+        org.hamcrest.MatcherAssert.assertThat(chemFile.getChemSequenceCount(), is(1));
+        org.hamcrest.MatcherAssert.assertThat(chemFile.getChemSequence(0).getChemModelCount(), is(1));
+        Assertions.assertNotNull(chemFile.getChemSequence(0).getChemModel(0).getCrystal());
         //        } finally {
         cifReader.close();
         //        }
     }
 
     @Test
-    public void cod1100784AtomCount() throws IOException, CDKException {
+    void cod1100784AtomCount() throws IOException, CDKException {
         InputStream in = getClass().getResourceAsStream("1100784.cif");
         CIFReader cifReader = new CIFReader(in);
         IChemFile chemFile = cifReader.read(new ChemFile());
         ICrystal crystal = chemFile.getChemSequence(0).getChemModel(0).getCrystal();
-        Assert.assertEquals(72, crystal.getAtomCount());
+        Assertions.assertEquals(72, crystal.getAtomCount());
         cifReader.close();
     }
 
     @Test()
-    public void cod1100784CellLengths() throws IOException, CDKException {
+    void cod1100784CellLengths() throws IOException, CDKException {
         InputStream in = getClass().getResourceAsStream("1100784.cif");
         CIFReader cifReader = new CIFReader(in);
         IChemFile chemFile = cifReader.read(new ChemFile());
         ICrystal crystal = chemFile.getChemSequence(0).getChemModel(0).getCrystal();
-        Assert.assertTrue( java.lang.Math.abs(crystal.getA().length() - 10.9754) < 1E-5 );
-        Assert.assertTrue( java.lang.Math.abs(crystal.getB().length() - 11.4045) < 1E-5 );
-        Assert.assertTrue( java.lang.Math.abs(crystal.getC().length() - 12.9314) < 1E-5 );
+        Assertions.assertTrue(Math.abs(crystal.getA().length() - 10.9754) < 1E-5);
+        Assertions.assertTrue(Math.abs(crystal.getB().length() - 11.4045) < 1E-5);
+        Assertions.assertTrue(Math.abs(crystal.getC().length() - 12.9314) < 1E-5);
         cifReader.close();
     }
 
     @Test()
-    public void cod1100784CellAngles() throws IOException, CDKException {
+    void cod1100784CellAngles() throws IOException, CDKException {
         InputStream in = getClass().getResourceAsStream("1100784.cif");
         CIFReader cifReader = new CIFReader(in);
         IChemFile chemFile = cifReader.read(new ChemFile());
@@ -101,9 +101,9 @@ public class CIFReaderTest extends ChemObjectIOTest {
         double alpha = java.lang.Math.acos(b.dot(c)/(b.length()*c.length()))*180/java.lang.Math.PI;
         double beta  = java.lang.Math.acos(c.dot(a)/(c.length()*a.length()))*180/java.lang.Math.PI;
         double gamma = java.lang.Math.acos(a.dot(b)/(a.length()*b.length()))*180/java.lang.Math.PI;
-        Assert.assertTrue( java.lang.Math.abs(alpha - 109.1080) < 1E-5 );
-        Assert.assertTrue( java.lang.Math.abs(beta  -  98.4090) < 1E-5 );
-        Assert.assertTrue( java.lang.Math.abs(gamma - 102.7470) < 1E-5 );
+        Assertions.assertTrue(Math.abs(alpha - 109.1080) < 1E-5);
+        Assertions.assertTrue(Math.abs(beta  -  98.4090) < 1E-5);
+        Assertions.assertTrue(Math.abs(gamma - 102.7470) < 1E-5);
         cifReader.close();
     }
 

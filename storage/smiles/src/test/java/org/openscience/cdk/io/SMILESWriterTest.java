@@ -23,53 +23,60 @@
 package org.openscience.cdk.io;
 
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.AtomContainerSet;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.listener.PropertiesListener;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.smiles.SmiFlavor;
+import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.templates.TestMoleculeFactory;
+import org.openscience.cdk.test.io.ChemObjectIOTest;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * TestCase for the writer for SMILES files.
  *
- * @cdk.module test-smiles
- *
  * @see org.openscience.cdk.io.SMILESWriter
  */
-public class SMILESWriterTest extends ChemObjectIOTest {
+class SMILESWriterTest extends ChemObjectIOTest {
 
-    @BeforeClass
-    public static void setup() {
+    @BeforeAll
+    static void setup() {
         setChemObjectIO(new SMILESWriter());
     }
 
     @Test
-    public void testAccepts() throws Exception {
+    void testAccepts() throws Exception {
         SMILESWriter reader = new SMILESWriter();
-        Assert.assertTrue(reader.accepts(AtomContainer.class));
-        Assert.assertTrue(reader.accepts(AtomContainerSet.class));
+        Assertions.assertTrue(reader.accepts(IAtomContainer.class));
+        Assertions.assertTrue(reader.accepts(AtomContainerSet.class));
     }
 
     @Test
-    public void testWriteSMILESFile() throws Exception {
+    void testWriteSMILESFile() throws Exception {
         StringWriter stringWriter = new StringWriter();
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
         addImplicitHydrogens(benzene);
         SMILESWriter smilesWriter = new SMILESWriter(stringWriter);
         smilesWriter.write(benzene);
         smilesWriter.close();
-        Assert.assertTrue(stringWriter.toString().contains("C=C"));
+        Assertions.assertTrue(stringWriter.toString().contains("C=C"));
     }
 
     @Test
-    public void testWriteAromatic() throws Exception {
+    void testWriteAromatic() throws Exception {
         StringWriter stringWriter = new StringWriter();
         IAtomContainer benzene = TestMoleculeFactory.makeBenzene();
         addImplicitHydrogens(benzene);
@@ -83,7 +90,83 @@ public class SMILESWriterTest extends ChemObjectIOTest {
         smilesWriter.customizeJob();
         smilesWriter.write(benzene);
         smilesWriter.close();
-        Assert.assertFalse(stringWriter.toString().contains("C=C"));
-        Assert.assertTrue(stringWriter.toString().contains("ccc"));
+        Assertions.assertFalse(stringWriter.toString().contains("C=C"));
+        Assertions.assertTrue(stringWriter.toString().contains("ccc"));
+    }
+
+    @Test
+    void testWriteNonCanon() throws Exception {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol1 = smipar.parseSmiles("CCO");
+        IAtomContainer mol2 = smipar.parseSmiles("OCC");
+        StringWriter wtr = new StringWriter();
+        try (SMILESWriter smigen = new SMILESWriter(wtr)) {
+            smigen.write(mol1);
+            smigen.write(mol2);
+        }
+        String[] lines = wtr.toString().split("\n");
+        assertThat(lines.length, is(2));
+        assertThat(new HashSet<>(Arrays.asList(lines)).size(), is(2));
+    }
+
+    @Test
+    void testWriteCanon() throws Exception {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol1 = smipar.parseSmiles("CCO");
+        IAtomContainer mol2 = smipar.parseSmiles("OCC");
+        StringWriter wtr = new StringWriter();
+        try (SMILESWriter smigen = new SMILESWriter(wtr)) {
+            smigen.setFlavor(SmiFlavor.Canonical);
+            smigen.write(mol1);
+            smigen.write(mol2);
+        }
+        String[] lines = wtr.toString().split("\n");
+        assertThat(lines.length, is(2));
+        assertThat(new HashSet<>(Arrays.asList(lines)).size(), is(1));
+    }
+
+    @Test
+    void testWriteWithTitle() throws Exception {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol1 = smipar.parseSmiles("CCO mol 1");
+        IAtomContainer mol2 = smipar.parseSmiles("OCC mol 2");
+        StringWriter wtr = new StringWriter();
+        try (SMILESWriter smigen = new SMILESWriter(wtr)) {
+            smigen.setFlavor(SmiFlavor.Canonical);
+            smigen.setWriteTitle(true);
+            smigen.write(mol1);
+            smigen.write(mol2);
+        }
+        assertThat(wtr.toString(), containsString("mol 1"));
+        assertThat(wtr.toString(), containsString("mol 2"));
+    }
+
+    @Test
+    void testWriteWithoutTitle() throws Exception {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol1 = smipar.parseSmiles("CCO mol 1");
+        IAtomContainer mol2 = smipar.parseSmiles("OCC mol 2");
+        StringWriter wtr = new StringWriter();
+        try (SMILESWriter smigen = new SMILESWriter(wtr)) {
+            smigen.setFlavor(SmiFlavor.Canonical);
+            smigen.setWriteTitle(false);
+            smigen.write(mol1);
+            smigen.write(mol2);
+        }
+        assertThat(wtr.toString(), not(containsString("mol 1")));
+        assertThat(wtr.toString(), not(containsString("mol 2")));
+    }
+    
+    @Test
+    void testWriteSmiFlavor() throws Exception {
+        SmilesParser smipar = new SmilesParser(SilentChemObjectBuilder.getInstance());
+        IAtomContainer mol1 = smipar.parseSmiles("c1ccccc1");
+        StringWriter wtr = new StringWriter();
+        try (SMILESWriter smigen = new SMILESWriter(wtr)) {
+        	smigen.setFlavor(SmiFlavor.InChILabelling);  
+        	smigen.write(mol1);
+        }
+        String[] lines = wtr.toString().split("\n");
+        assertThat(wtr.toString(), containsString("C=1C=CC=CC1"));
     }
 }

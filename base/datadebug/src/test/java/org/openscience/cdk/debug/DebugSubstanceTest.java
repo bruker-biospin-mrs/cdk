@@ -18,26 +18,17 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.BeforeClass;
-import org.openscience.cdk.interfaces.AbstractSubstanceTest;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.junit.jupiter.api.BeforeAll;
+import org.openscience.cdk.test.interfaces.AbstractSubstanceTest;
 
 /**
  * Checks the functionality of the {@link DebugSubstance}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugSubstanceTest extends AbstractSubstanceTest {
+class DebugSubstanceTest extends AbstractSubstanceTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugSubstance();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugSubstance::new);
     }
 }

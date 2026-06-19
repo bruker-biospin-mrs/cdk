@@ -19,20 +19,27 @@
  */
 package org.openscience.cdk.graph;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.IDoubleBondStereochemistry;
+import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.ILonePair;
 import org.openscience.cdk.interfaces.ISingleElectron;
 import org.openscience.cdk.interfaces.IStereoElement;
-import org.openscience.cdk.interfaces.ITetrahedralChirality;
-import org.openscience.cdk.stereo.ExtendedTetrahedral;
+import org.openscience.cdk.sgroup.Sgroup;
+import org.openscience.cdk.sgroup.SgroupType;
+import org.openscience.cdk.tools.manipulator.SgroupManipulator;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Tool class for checking whether the (sub)structure in an
@@ -46,12 +53,10 @@ import org.openscience.cdk.stereo.ExtendedTetrahedral;
  * <p>A disconnected AtomContainer can be fragmented into connected
  * fragments by using code like:
  * <pre>
- *   MoleculeSet fragments = ConnectivityChecker.partitionIntoMolecules(disconnectedContainer);
+ *   IAtomContainerSet fragments = ConnectivityChecker.partitionIntoMolecules(disconnectedContainer);
  *   int fragmentCount = fragments.getAtomContainerCount();
  * </pre>
  *
- * @cdk.module standard
- * @cdk.githash
  *
  * @cdk.keyword connectivity
  */
@@ -73,27 +78,205 @@ public class ConnectivityChecker {
     }
 
     /**
-     * Partitions the atoms in an AtomContainer into covalently connected components.
+     * Partitions the atoms in an AtomContainer into covalently connected
+     * components. This function ignores and variable/multi attachment bonds
+     * and any explicit component grouping giving you strictly
+     * connected components in a graph-theoretic sense.
      *
-     * @param   container  The AtomContainer to be partitioned into connected components, i.e. molecules
-     * @return                 A MoleculeSet.
+     * @param   container  The AtomContainer to be partitioned into connected
+     *                     components, i.e. molecules
+     * @return             The set of molecules
      *
      * @cdk.dictref   blue-obelisk:graphPartitioning
      */
     public static IAtomContainerSet partitionIntoMolecules(IAtomContainer container) {
-        ConnectedComponents cc = new ConnectedComponents(GraphUtil.toAdjList(container));
-        return partitionIntoMolecules(container, cc.components());
+        return partitionIntoMolecules(container, true, true);
     }
 
+    private static void relabel(int[] components, int from, int to) {
+        if (from == to) return;
+        for (int i=0; i<components.length; i++) {
+            if (components[i] == from)
+                components[i] = to;
+        }
+    }
+
+    /**
+     * Partitions the atoms in an AtomContainer into covalently connected
+     * components. This function lets you specify if you should ignore
+     * variable/multi attachment bonds and any explicit component grouping.
+     * <p/>
+     * When both of these properties are ignored the splitting is considered
+     * <b>strict</b>. The table below summarises what the outputs are when
+     * using CXSMILES to specify variable attachment and component grouping.
+     * <p/>
+     * <table>
+     *     <tr><th>No. Strict Components</th><th>No. Loose Components</th><th>SMILES</th></tr>
+     *     <tr><td>2</td><td>2</td><td><pre>c1ccccc1.Cl</pre></td></tr>
+     *     <tr><td>2</td><td>1</td><td><pre>c1ccccc1.*Cl |m:6:0.1.2.3.4.5|</pre></td></tr>
+     *     <tr><td>4</td><td>2</td><td><pre>c1ccccc1.*Cl.n1ccccc1.*Br |m:6:0.1.2.3.4.5,14:8.9.10.11.12.13|</pre></td></tr>
+     *     <tr><td>2</td><td>1</td><td><pre>c1ccccc1[O-].[Na+]>> |f:0.1|</pre></td></tr>
+     *     <tr><td>5</td><td>2</td><td><pre>c1ccccc1[O-].[Na+]>[K+].[K+].[O-]C(=O)[O-]> |f:0.1,2.3.4|</pre></td></tr>
+     * </table>
+     *
+     * @param container  The AtomContainer to be partitioned into connected
+     *                   components, i.e. molecules
+     * @param ignoreMulticenterBonds ignore any positional/multi-attach bonds
+     *                               specified as Sgroups
+     * @param ignoreComponentGrouping ignore any explicit grouping specified by
+     *                                the group id stored in {@link CDKConstants#REACTION_GROUP}
+     *                                on atoms
+     * @return The set of molecules
+     *
+     * @cdk.dictref   blue-obelisk:graphPartitioning
+     */
+    public static IAtomContainerSet partitionIntoMolecules(IAtomContainer container,
+                                                           boolean ignoreMulticenterBonds,
+                                                           boolean ignoreComponentGrouping) {
+        ConnectedComponents cc = new ConnectedComponents(GraphUtil.toAdjList(container));
+        if (cc.nComponents() == 1) {
+            return singleton(container);
+        }
+
+        int[] parts = cc.components();
+        if (!ignoreMulticenterBonds) {
+            List<Sgroup> sgroups = container.getProperty(CDKConstants.CTAB_SGROUPS);
+            if (sgroups != null) {
+                for (Sgroup sgroup : sgroups) {
+                    if (sgroup.getType() == SgroupType.ExtMulticenter) {
+                        if (sgroup.getBonds().isEmpty())
+                            continue;
+                        IBond bond = sgroup.getBonds().iterator().next();
+                        IAtom attach = null;
+                        if (sgroup.getAtoms().contains(bond.getBegin())) {
+                            attach = bond.getBegin();
+                        } else if (sgroup.getAtoms().contains(bond.getEnd())) {
+                            attach = bond.getEnd();
+                        }
+                        if (attach != null) {
+                            for (IAtom a : sgroup.getAtoms()) {
+                                relabel(parts,
+                                        parts[container.indexOf(attach)],
+                                        parts[container.indexOf(a)]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!ignoreComponentGrouping) {
+
+            int[] canonicalGroup = new int[cc.nComponents()+2];
+            for (IAtom atom : container.atoms()) {
+                Integer compId = atom.getProperty(CDKConstants.REACTION_GROUP);
+                if (compId == null)
+                    continue;
+                if (compId >= canonicalGroup.length)
+                    canonicalGroup = Arrays.copyOf(canonicalGroup, compId+1);
+                if (canonicalGroup[compId] == 0)
+                    canonicalGroup[compId] = parts[atom.getIndex()];
+                else
+                    relabel(parts, parts[atom.getIndex()], canonicalGroup[compId]);
+            }
+        }
+
+        return partitionIntoMolecules(container, parts);
+    }
+
+    private static IAtomContainerSet singleton(IAtomContainer container) {
+        IChemObjectBuilder bldr = container.getBuilder();
+        IAtomContainerSet acSet = bldr.newInstance(IAtomContainerSet.class);
+        acSet.addAtomContainer(container);
+        return acSet;
+    }
+
+    private static IAtomContainerSet empty(IAtomContainer container) {
+        IChemObjectBuilder bldr = container.getBuilder();
+        return bldr.newInstance(IAtomContainerSet.class);
+    }
+
+    private static IAtomContainer getComponent(Map<IAtom, IAtomContainer> cmap,
+                                               IChemObject cobj) {
+        if (cobj instanceof IAtom)
+            return cmap.get(cobj);
+        else if (cobj instanceof IBond) {
+            IAtomContainer begMol = cmap.get(((IBond) cobj).getBegin());
+            IAtomContainer endMol = cmap.get(((IBond) cobj).getEnd());
+            return begMol == endMol ? begMol : null;
+        }
+        return null;
+    }
+
+    /**
+     * Given a component mapping atom -> molecule, provide the atom container
+     * to add the stereochemistry to. If the stereo is split across two
+     * molecules (components) null is returned.
+     *
+     * @param cmap component map
+     * @param se stereo element
+     * @return the molecule (or null if inconsistent)
+     */
+    private static IAtomContainer getComponent(Map<IAtom, IAtomContainer> cmap,
+                                               IStereoElement<?, ?> se) {
+        IAtomContainer mol = getComponent(cmap, se.getFocus());
+        for (IChemObject cobj : se.getCarriers()) {
+            IAtomContainer tmp = getComponent(cmap, cobj);
+            if (tmp != mol)
+                return null; // inconsistent
+        }
+        return mol;
+    }
+
+    private static IAtomContainer getComponent(Map<IAtom, IAtomContainer> cmap,
+                                               Sgroup sgroup) {
+        IAtomContainer mol = null;
+        for (IAtom atom : sgroup.getAtoms()) {
+            IAtomContainer tmp = cmap.get(atom);
+            if (mol == null)
+                mol = tmp;
+            else if (mol != tmp)
+                return null;
+        }
+        return mol;
+    }
+
+    private static void addSgroup(IAtomContainer component, Sgroup sgroup) {
+        List<Sgroup> sgroups = component.getProperty(CDKConstants.CTAB_SGROUPS);
+        if (sgroups == null) {
+            sgroups = new ArrayList<>();
+            component.setProperty(CDKConstants.CTAB_SGROUPS, sgroups);
+        }
+        sgroups.add(sgroup);
+    }
+
+    /**
+     * Split a molecule based on the provided component array. Note this function
+     * can also be used to split a single molecule, breaking bonds and distributing
+     * stereochemistry as needed.
+     *
+     * @param container the container
+     * @param components the components
+     * @return the partitioned set
+     */
     public static IAtomContainerSet partitionIntoMolecules(IAtomContainer container, int[] components) {
 
+        int minComponentIndex = Integer.MAX_VALUE;
         int maxComponentIndex = 0;
-        for (int component : components)
-            if (component > maxComponentIndex)
-                maxComponentIndex = component;
+        for (int component : components) {
+            minComponentIndex = Math.min(component, minComponentIndex);
+            maxComponentIndex = Math.max(component, maxComponentIndex);
+        }
+
+        if (minComponentIndex == maxComponentIndex) {
+            if (maxComponentIndex == 0)
+                return empty(container);
+            else
+                return singleton(container);
+        }
 
         IAtomContainer[] containers = new IAtomContainer[maxComponentIndex + 1];
-        Map<IAtom, IAtomContainer> componentsMap = new HashMap<IAtom, IAtomContainer>(2 * container.getAtomCount());
+        Map<IAtom, IAtomContainer> componentsMap = new HashMap<>(2 * container.getAtomCount());
 
         for (int i = 1; i < containers.length; i++)
             containers[i] = container.getBuilder().newInstance(IAtomContainer.class);
@@ -101,15 +284,18 @@ public class ConnectivityChecker {
         IAtomContainerSet containerSet = container.getBuilder().newInstance(IAtomContainerSet.class);
 
         for (int i = 0; i < container.getAtomCount(); i++) {
-            componentsMap.put(container.getAtom(i), containers[components[i]]);
-            containers[components[i]].addAtom(container.getAtom(i));
+            IAtom origAtom = container.getAtom(i);
+            IAtomContainer newContainer = containers[components[i]];
+            componentsMap.put(origAtom, newContainer);
+            newContainer.addAtom(origAtom);
         }
 
         for (IBond bond : container.bonds()) {
             IAtomContainer begComp = componentsMap.get(bond.getBegin());
             IAtomContainer endComp = componentsMap.get(bond.getEnd());
-            if (begComp == endComp)
+            if (begComp == endComp) {
                 begComp.addBond(bond);
+            }
         }
 
         for (ISingleElectron electron : container.singleElectrons())
@@ -118,22 +304,42 @@ public class ConnectivityChecker {
         for (ILonePair lonePair : container.lonePairs())
             componentsMap.get(lonePair.getAtom()).addLonePair(lonePair);
 
-        for (IStereoElement stereo : container.stereoElements()) {
-            IChemObject focus = stereo.getFocus();
-            if (focus instanceof IAtom) {
-                if (componentsMap.containsKey(focus))
-                    componentsMap.get(focus).addStereoElement(stereo);
-            } else if (focus instanceof IBond) {
-                if (componentsMap.containsKey(((IBond) focus).getBegin()))
-                    componentsMap.get(((IBond) focus).getBegin()).addStereoElement(stereo);
-            } else {
-                throw new IllegalStateException("New stereo element not using an atom/bond for focus?");
+        // split stereo chemistry, only keep if all atoms/bond in the stereo
+        // element are consistent and in the same container
+        for (IStereoElement<?,?>stereo : container.stereoElements()) {
+            IAtomContainer component = getComponent(componentsMap, stereo);
+            if (component != null)
+                component.addStereoElement(stereo);
+        }
+
+        // split Sgroups, only keep if all atoms/bond in the sgroup
+        // are consistent and in the same container
+        List<Sgroup> sgroups = SgroupManipulator.copy(container.getProperty(CDKConstants.CTAB_SGROUPS),
+                                                      new HashMap<>());
+        if (sgroups != null) {
+            Map<Sgroup,IAtomContainer> sgroupMap = new HashMap<>();
+            for (Sgroup sgroup : sgroups) {
+                IAtomContainer component = getComponent(componentsMap, sgroup);
+                if (component != null) {
+                    addSgroup(component, sgroup);
+                }
+            }
+            // remove any parents that were split
+            for (Sgroup sgroup : sgroups) {
+                Set<Sgroup> toremove = new HashSet<>();
+                for (Sgroup parent : sgroup.getParents()) {
+                    if (sgroupMap.get(parent) == null)
+                        toremove.add(parent);
+                }
+                sgroup.removeParents(toremove);
             }
         }
 
-        for (int i = 1; i < containers.length; i++)
-            containerSet.addAtomContainer(containers[i]);
-
+        // create our AtomContainerSet
+        for (int i = 1; i < containers.length; i++) {
+            if (!containers[i].isEmpty())
+                containerSet.addAtomContainer(containers[i]);
+        }
         return containerSet;
     }
 }

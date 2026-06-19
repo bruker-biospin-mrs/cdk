@@ -29,6 +29,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IPseudoAtom;
 import org.openscience.cdk.tools.AtomTypeTools;
 import org.openscience.cdk.tools.ILoggingTool;
@@ -41,21 +42,19 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * @author         cho
  * @cdk.created    2005-18-07
- * @cdk.module     extra
- * @cdk.githash
  * @deprecated use the newer Mmff.assignAtomTypes()
  * @see org.openscience.cdk.forcefield.mmff.Mmff
  */
 @Deprecated
 public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
 
-    private static ILoggingTool logger        = LoggingToolFactory.createLoggingTool(MMFF94AtomTypeMatcher.class);
+    private static final ILoggingTool logger        = LoggingToolFactory.createLoggingTool(MMFF94AtomTypeMatcher.class);
 
     IBond.Order                 maxBondOrder  = IBond.Order.SINGLE;
     private AtomTypeFactory     factory       = null;
-    AtomTypeTools               atomTypeTools = null;
+    AtomTypeTools               atomTypeTools;
 
-    String[]                    atomTypeIds   = {"C", "Csp2", "C=", "Csp", "CO2M", "CNN+", "C%", "CIM+", "CR4R",
+    final String[]                    atomTypeIds   = {"C", "Csp2", "C=", "Csp", "CO2M", "CNN+", "C%", "CIM+", "CR4R",
             "CR3R", "CE4R", "Car", "C5A", "C5B", "C5", "HC", "HO", "HN", "HOCO", "HN=C", "HN2", "HOCC", "HOH", "HOS",
             "HN+", "HO+", "HO=+", "HP", "O", "O=", "OX", "OM", "O+", "O=+", "OH2", "Oar", "N", "N=C", "NC=C", "NSP",
             "=N=", "NAZT", "N+", "N2OX", "N3OX", "NC#N", "NO3", "N=O", "NC=O", "NSO", "N+=", "NCN+", "NGD+", "NR%",
@@ -71,7 +70,7 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
     }
 
     private String getSphericalMatcher(IAtomType type) throws CDKException {//NOPMD
-        return (String) type.getProperty(CDKConstants.SPHERICAL_MATCHER);
+        return type.getProperty(CDKConstants.SPHERICAL_MATCHER);
     }
 
     private String getSphericalMatcher(String type) throws CDKException {//NOPMD
@@ -122,21 +121,21 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
         if (atom instanceof IPseudoAtom) {
             return factory.getAtomTypes("DU")[0];
         }
-        Pattern p1 = null;
-        Pattern p2 = null;
+        Pattern p1;
+        Pattern p2;
         String ID = "";
         boolean atomTypeFlag = false;
-        Matcher mat1 = null;
-        Matcher mat2 = null;
+        Matcher mat1;
+        Matcher mat2;
         IBond.Order tmpMaxBondOrder;
         maxBondOrder = atomContainer.getMaximumBondOrder(atom);
         for (int j = 0; j < atomTypeIds.length; j++) {
             tmpMaxBondOrder = factory.getAtomType(atomTypeIds[j]).getMaxBondOrder();
-            String atomSphericalMatcher = (String) factory.getAtomType(atomTypeIds[j]).getProperty(
+            String atomSphericalMatcher = factory.getAtomType(atomTypeIds[j]).getProperty(
                     CDKConstants.SPHERICAL_MATCHER);
             logger.debug(j + " ATOM TYPE " + tmpMaxBondOrder + " " + atomSphericalMatcher);
             p1 = Pattern.compile(atomSphericalMatcher);
-            mat1 = p1.matcher((String) atom.getProperty(CDKConstants.SPHERICAL_MATCHER));
+            mat1 = p1.matcher(atom.getProperty(CDKConstants.SPHERICAL_MATCHER));
             if (mat1.matches()) {
                 ID = atomTypeIds[j];
                 Object property = atom.getProperty(CDKConstants.CHEMICAL_GROUP_CONSTANT);
@@ -162,15 +161,15 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
                             p2 = Pattern.compile(type12Matcher);//C5A
                             mat2 = p2.matcher(atomSphericalMatcher);
                             if (mat1.matches() && atomChemGroupConstant % 2 == 0
-                                    && atom.getFlag(CDKConstants.ISAROMATIC) && atomRingSize == 5) {
+                                    && atom.getFlag(IChemObject.AROMATIC) && atomRingSize == 5) {
                                 ID = atomTypeIds[13];
                             } else if (mat2.matches() && atomChemGroupConstant % 2 == 0
-                                    && atom.getFlag(CDKConstants.ISAROMATIC) && atomRingSize == 5) {
+                                    && atom.getFlag(IChemObject.AROMATIC) && atomRingSize == 5) {
                                 ID = atomTypeIds[12];
-                            } else if (atomChemGroupConstant % 2 == 0 && atom.getFlag(CDKConstants.ISAROMATIC)
+                            } else if (atomChemGroupConstant % 2 == 0 && atom.getFlag(IChemObject.AROMATIC)
                                     && atomRingSize == 5) {
                                 ID = atomTypeIds[14];//C5 in het 5 ring
-                            } else if (atom.getFlag(CDKConstants.ISAROMATIC)) {
+                            } else if (atom.getFlag(IChemObject.AROMATIC)) {
                                 ID = atomTypeIds[11];//Car in benzene, pyroll
                             }
                         }
@@ -184,12 +183,12 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
                     }
 
                 } else if (atomTypeIds[j].equals("Csp2")) {
-                    if (atomChemGroupConstant % 2 == 0 & atomRingSize == 4 & !atom.getFlag(CDKConstants.ISAROMATIC)) {
+                    if (atomChemGroupConstant % 2 == 0 & atomRingSize == 4 & !atom.getFlag(IChemObject.AROMATIC)) {
                         ID = atomTypeIds[10];//CE4R
                     }
 
                 } else if (atomTypeIds[j].equals("C=")) {
-                    if (atomChemGroupConstant % 2 == 0 && atom.getFlag(CDKConstants.ISAROMATIC)) {
+                    if (atomChemGroupConstant % 2 == 0 && atom.getFlag(IChemObject.AROMATIC)) {
                         ID = atomTypeIds[12];//C5A
                     }
 
@@ -215,7 +214,7 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
                     } else if (atomChemGroupConstant == 4) {
                         ID = atomTypeIds[57];
                     } else if (atomChemGroupConstant % 2 == 0 & atomRingSize == 5
-                            & atom.getFlag(CDKConstants.ISAROMATIC)) {
+                            & atom.getFlag(IChemObject.AROMATIC)) {
                         ID = atomTypeIds[64];
                     }
                     //Nsp2-Oxides
@@ -225,7 +224,7 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
                     if (mat1.matches() && maxBondOrder == tmpMaxBondOrder) {
                         ID = atomTypeIds[43];
                     }
-                    if (atom.getFlag(CDKConstants.ISAROMATIC)) {
+                    if (atom.getFlag(IChemObject.AROMATIC)) {
                         if (mat1.matches() && atomChemGroupConstant == 12) {
                             ID = atomTypeIds[61];
                         } else if (mat1.matches() && atomRingSize == 5) {
@@ -244,7 +243,7 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
                     p1 = Pattern.compile(getSphericalMatcher(atomTypeIds[59]));
                     mat1 = p1.matcher(getSphericalMatcher(atom));
                     if (atomChemGroupConstant != -1) {
-                        if (mat1.matches() && atomChemGroupConstant % 2 == 0 && atom.getFlag(CDKConstants.ISAROMATIC)
+                        if (mat1.matches() && atomChemGroupConstant % 2 == 0 && atom.getFlag(IChemObject.AROMATIC)
                                 && atomRingSize == 5) {
                             ID = atomTypeIds[59];//N5A
                         } else if (atomChemGroupConstant == 10) {//NPYD
@@ -259,7 +258,7 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
                     if (mat1.matches()) {
                         if (atomChemGroupConstant == 10) {
                             ID = atomTypeIds[61];//npox
-                        } else if (atom.getFlag(CDKConstants.ISAROMATIC) && atomRingSize == 5) {
+                        } else if (atom.getFlag(IChemObject.AROMATIC) && atomRingSize == 5) {
                             ID = atomTypeIds[62];//n5ox
                         } else {
                             ID = atomTypeIds[43];//n2ox
@@ -275,18 +274,18 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
                     }
                     if (atomChemGroupConstant == 12) {
                         ID = atomTypeIds[61];//NPOX
-                    } else if (atomChemGroupConstant != -1 && atom.getFlag(CDKConstants.ISAROMATIC)
+                    } else if (atomChemGroupConstant != -1 && atom.getFlag(IChemObject.AROMATIC)
                             && atomRingSize == 5) {
                         ID = atomTypeIds[62];//N5OX
                     }
 
                 } else if (atomTypeIds[j].equals("=N=") || atomTypeIds[j].equals("NAZT")) {
-                    if (atomChemGroupConstant != -1 && atom.getFlag(CDKConstants.ISAROMATIC) && atomRingSize == 5) {
+                    if (atomChemGroupConstant != -1 && atom.getFlag(IChemObject.AROMATIC) && atomRingSize == 5) {
                         ID = atomTypeIds[59];//aromatic N5A
                     }
 
                 } else if (atomTypeIds[j].equals("N+=")) {
-                    if (atomChemGroupConstant != -1 && atom.getFlag(CDKConstants.ISAROMATIC) && atomRingSize == 5) {
+                    if (atomChemGroupConstant != -1 && atom.getFlag(IChemObject.AROMATIC) && atomRingSize == 5) {
                         ID = atomTypeIds[63];//n5+
                     } else if (atomChemGroupConstant == 12) {
                         ID = atomTypeIds[58];//npd+
@@ -316,12 +315,12 @@ public class MMFF94AtomTypeMatcher implements IAtomTypeMatcher {
                         ID = atomTypeIds[75];//-P=C
                     }
                 } else if (atomTypeIds[j].equals("S")) {
-                    if (atomRingSize == 5 && atom.getFlag(CDKConstants.ISAROMATIC)) {
+                    if (atomRingSize == 5 && atom.getFlag(IChemObject.AROMATIC)) {
                         ID = atomTypeIds[72];//Sthiophen
                     }
                 } else if (atomTypeIds[j].equals("HC")) {
                     p1 = Pattern.compile(getSphericalMatcher("HP"));
-                    mat1 = p1.matcher((String) atom.getProperty(CDKConstants.SPHERICAL_MATCHER));
+                    mat1 = p1.matcher(atom.getProperty(CDKConstants.SPHERICAL_MATCHER));
                     if (mat1.matches()) {
                         ID = "HP";
                     }

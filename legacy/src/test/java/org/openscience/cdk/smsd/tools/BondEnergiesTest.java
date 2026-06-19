@@ -22,37 +22,36 @@
  */
 package org.openscience.cdk.smsd.tools;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IBond.Order;
 
 /**
  * @author Asad
- * @cdk.module test-smsd
  */
-public class BondEnergiesTest extends CDKTestCase {
+class BondEnergiesTest extends CDKTestCase {
 
     @Test
-    public void testGetInstance() throws Exception {
+    void testGetInstance() throws Exception {
         BondEnergies energies = BondEnergies.getInstance();
-        Assert.assertNotNull(energies);
+        Assertions.assertNotNull(energies);
     }
 
     /**
      * Test of getEnergies method, of class BondEnergies.
      */
     @Test
-    public void testGetEnergies() {
+    void testGetEnergies() {
         IAtom sourceAtom = new Atom("C");
         IAtom targetAtom = new Atom("C");
         Order bondOrder = Order.SINGLE;
         BondEnergies instance = new BondEnergies();
         Integer expResult = 346;
         Integer result = instance.getEnergies(sourceAtom, targetAtom, bondOrder);
-        Assert.assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
 }

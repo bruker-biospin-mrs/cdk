@@ -24,8 +24,6 @@
 
 package org.openscience.cdk.isomorphism;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Maps;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -34,7 +32,9 @@ import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation;
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation.TOGETHER;
@@ -53,7 +53,6 @@ import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo.CLOCKW
  * }</pre></blockquote>
  *
  * @author John May
- * @cdk.module isomorphism
  */
 final class StereoMatch implements Predicate<int[]> {
 
@@ -71,6 +70,14 @@ final class StereoMatch implements Predicate<int[]> {
 
     /** Indices of focus atoms of stereo elements. */
     private final int[]               queryStereoIndices, targetStereoIndices;
+
+    /**
+     * Indicates the stereo group config for a given atom idx, 0=unsed, 1=stored, -1=inverted.
+     * Initially all entries start as 0, if we hit a stereo-element in a group &1, &2, or1, or2
+     * then we check if we have already "set" the group, if not then we "set" the group to make
+     * the first element match, this means we may choose to flip the group to be the enantiomer.
+     */
+    private int[] groupConfigAdjust;
 
     /**
      * Create a predicate for checking mappings between a provided
@@ -101,10 +108,14 @@ final class StereoMatch implements Predicate<int[]> {
      * @return the stereo chemistry is value
      */
     @Override
-    public boolean apply(final int[] mapping) {
+    public boolean test(final int[] mapping) {
 
         // n.b. not true for unspecified queries e.g. [C@?H](*)(*)*
         if (queryStereoIndices.length > targetStereoIndices.length) return false;
+
+        // reset augment group config if it was initialised
+        if (groupConfigAdjust != null)
+            Arrays.fill(groupConfigAdjust, 0);
 
         for (final int u : queryStereoIndices) {
             switch (queryTypes[u]) {
@@ -117,6 +128,16 @@ final class StereoMatch implements Predicate<int[]> {
             }
         }
         return true;
+    }
+
+    /**
+     * Backwards compatible method from when we used GUAVA predicates.
+     * @param ints atom index bijection
+     * @return true/false
+     * @see #test(int[])
+     */
+    public boolean apply(int[] ints) {
+        return test(ints);
     }
 
     /**
@@ -143,6 +164,24 @@ final class StereoMatch implements Predicate<int[]> {
 
         int p = permutationParity(us) * parity(queryElement.getStereo());
         int q = permutationParity(vs) * parity(targetElement.getStereo());
+
+        int groupInfo = targetElement.getGroupInfo();
+        if (groupInfo != 0) {
+            if (groupConfigAdjust == null)
+                groupConfigAdjust = new int[target.getAtomCount()];
+
+            // 'set' the group either to be 'as stored' or 'flipped'
+            if (groupConfigAdjust[v] == 0) {
+                int adjust = p == q ? +1 : -1;
+                for (int idx : targetStereoIndices) {
+                    if (targetElements[idx].getGroupInfo() == groupInfo)
+                        groupConfigAdjust[idx] = adjust;
+                }
+            }
+
+            // make the adjustment
+            q *= groupConfigAdjust[v];
+        }
 
         return p == q;
     }
@@ -302,7 +341,7 @@ final class StereoMatch implements Predicate<int[]> {
      * @return the index/lookup of atoms to the index they appear
      */
     private static Map<IAtom, Integer> indexAtoms(IAtomContainer container) {
-        Map<IAtom, Integer> map = Maps.newHashMapWithExpectedSize(container.getAtomCount());
+        Map<IAtom, Integer> map = new HashMap<>(2*container.getAtomCount());
         for (int i = 0; i < container.getAtomCount(); i++)
             map.put(container.getAtom(i), i);
         return map;
@@ -363,7 +402,7 @@ final class StereoMatch implements Predicate<int[]> {
     }
 
     // could be moved into the IStereoElement to allow faster introspection
-    private static enum Type {
+    private enum Type {
         Tetrahedral, Geometric
     }
 }

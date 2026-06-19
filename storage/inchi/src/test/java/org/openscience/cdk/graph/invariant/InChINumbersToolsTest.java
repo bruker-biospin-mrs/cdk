@@ -18,13 +18,12 @@
  */
 package org.openscience.cdk.graph.invariant;
 
-import net.sf.jniinchi.INCHI_OPTION;
-import org.junit.Assert;
-import org.junit.Test;
+import io.github.dan2097.jnainchi.InchiFlag;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -37,24 +36,23 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 
-/** @cdk.module test-inchi */
-public class InChINumbersToolsTest extends CDKTestCase {
+class InChINumbersToolsTest extends CDKTestCase {
 
     @Test
-    public void testSimpleNumbering() throws CDKException {
-        IAtomContainer container = new AtomContainer();
+    void testSimpleNumbering() throws CDKException {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(new Atom("O"));
         container.addAtom(new Atom("C"));
         container.addBond(0, 1, IBond.Order.SINGLE);
         long[] numbers = InChINumbersTools.getNumbers(container);
-        Assert.assertEquals(2, numbers.length);
-        Assert.assertEquals(2, numbers[0]);
-        Assert.assertEquals(1, numbers[1]);
+        Assertions.assertEquals(2, numbers.length);
+        Assertions.assertEquals(2, numbers[0]);
+        Assertions.assertEquals(1, numbers[1]);
     }
 
     @Test
-    public void testHydrogens() throws CDKException {
-        IAtomContainer container = new AtomContainer();
+    void testHydrogens() throws CDKException {
+        IAtomContainer container = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(new Atom("H"));
         container.addAtom(new Atom("C"));
         container.addBond(0, 1, IBond.Order.SINGLE);
@@ -65,58 +63,58 @@ public class InChINumbersToolsTest extends CDKTestCase {
         container.addAtom(new Atom("H"));
         container.addBond(1, 4, IBond.Order.SINGLE);
         long[] numbers = InChINumbersTools.getNumbers(container);
-        Assert.assertEquals(5, numbers.length);
-        Assert.assertEquals(0, numbers[0]);
-        Assert.assertEquals(1, numbers[1]);
-        Assert.assertEquals(0, numbers[2]);
-        Assert.assertEquals(0, numbers[3]);
-        Assert.assertEquals(0, numbers[4]);
+        Assertions.assertEquals(5, numbers.length);
+        Assertions.assertEquals(0, numbers[0]);
+        Assertions.assertEquals(1, numbers[1]);
+        Assertions.assertEquals(0, numbers[2]);
+        Assertions.assertEquals(0, numbers[3]);
+        Assertions.assertEquals(0, numbers[4]);
     }
 
     @Test
-    public void testGlycine() throws Exception {
+    void testGlycine() throws Exception {
         SmilesParser parser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer atomContainer = parser.parseSmiles("C(C(=O)O)N");
         long[] numbers = InChINumbersTools.getNumbers(atomContainer);
-        Assert.assertEquals(5, numbers.length);
-        Assert.assertEquals(1, numbers[0]);
-        Assert.assertEquals(2, numbers[1]);
-        Assert.assertEquals(4, numbers[2]);
-        Assert.assertEquals(5, numbers[3]);
-        Assert.assertEquals(3, numbers[4]);
+        Assertions.assertEquals(5, numbers.length);
+        Assertions.assertEquals(1, numbers[0]);
+        Assertions.assertEquals(2, numbers[1]);
+        Assertions.assertEquals(4, numbers[2]);
+        Assertions.assertEquals(5, numbers[3]);
+        Assertions.assertEquals(3, numbers[4]);
     }
 
     @Test
-    public void testGlycine_uSmiles() throws Exception {
+    void testGlycine_uSmiles() throws Exception {
         SmilesParser parser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer atomContainer = parser.parseSmiles("C(C(=O)O)N");
         long[] numbers = InChINumbersTools.getNumbers(atomContainer);
-        Assert.assertEquals(5, numbers.length);
-        Assert.assertEquals(1, numbers[0]);
-        Assert.assertEquals(2, numbers[1]);
-        Assert.assertEquals(4, numbers[2]);
-        Assert.assertEquals(5, numbers[3]);
-        Assert.assertEquals(3, numbers[4]);
+        Assertions.assertEquals(5, numbers.length);
+        Assertions.assertEquals(1, numbers[0]);
+        Assertions.assertEquals(2, numbers[1]);
+        Assertions.assertEquals(4, numbers[2]);
+        Assertions.assertEquals(5, numbers[3]);
+        Assertions.assertEquals(3, numbers[4]);
     }
 
     @Test
-    public void fixedH() throws Exception {
+    void fixedH() throws Exception {
         SmilesParser parser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer atomContainer = parser.parseSmiles("N1C=NC2=CC=CC=C12");
-        String auxInfo = InChINumbersTools.auxInfo(atomContainer, INCHI_OPTION.FixedH);
+        String auxInfo = InChINumbersTools.auxInfo(atomContainer, InchiFlag.FixedH);
         String expected = "AuxInfo=1/1/" + "N:6,7,5,8,2,4,9,3,1/" + "E:(1,2)(3,4)(6,7)(8,9)/" + "F:7,6,8,5,2,9,4,1,3/"
-                + "rA:9NCNCCCCCC/" + "rB:s1;d2;s3;d4;s5;d6;s7;s1s4d8;/" + "rC:;;;;;;;;;";
+                + "rA:9nNCNCCCCCC/" + "rB:s1;d2;s3;d4;s5;d6;s7;s1s4d8;/" + "rC:;;;;;;;;;";
         assertThat(auxInfo, is(expected));
     }
 
     @Test
-    public void parseStandard() throws Exception {
+    void parseStandard() {
         assertThat(InChINumbersTools.parseUSmilesNumbers("AuxInfo=1/0/N:3,2,1/rA:3OCC/rB:s1;s2;/rC:;;;", mock(3)),
                 is(new long[]{3, 2, 1}));
     }
 
     @Test
-    public void parseRecMet() throws Exception {
+    void parseRecMet() {
 
         // C(=O)O[Pt](N)(N)Cl
         assertThat(
@@ -126,7 +124,7 @@ public class InChINumbersToolsTest extends CDKTestCase {
     }
 
     @Test
-    public void parseFixedH() throws Exception {
+    void parseFixedH() {
         // N1C=NC=C1
         assertThat(InChINumbersTools.parseUSmilesNumbers(
                 "AuxInfo=1/1/N:4,5,2,3,1/E:(1,2)(4,5)/F:5,4,2,1,3/rA:5NCNCC/rB:s1;d2;s3;s1d4;/rC:;;;;;", mock(5)),
@@ -134,7 +132,7 @@ public class InChINumbersToolsTest extends CDKTestCase {
     }
 
     @Test
-    public void parseDisconnected() throws Exception {
+    void parseDisconnected() {
         // O.N1C=NC=C1
         assertThat(InChINumbersTools.parseUSmilesNumbers(
                 "AuxInfo=1/1/N:5,6,3,4,2;1/E:(1,2)(4,5);/F:6,5,3,2,4;m/rA:6ONCNCC/rB:;s2;d3;s4;s2d5;/rC:;;;;;;",
@@ -142,7 +140,7 @@ public class InChINumbersToolsTest extends CDKTestCase {
     }
 
     @Test
-    public void parseMultipleDisconnected() throws Exception {
+    void parseMultipleDisconnected() {
         // O.N1C=NC=C1.O.O=O
         assertThat(
                 InChINumbersTools.parseUSmilesNumbers(
@@ -152,30 +150,36 @@ public class InChINumbersToolsTest extends CDKTestCase {
 
     // if '[O-]' is first start at '=O' instead
     @Test
-    public void favorCarbonyl() throws Exception {
+    void favorCarbonyl() throws Exception {
         IAtomContainer container = new SmilesParser(SilentChemObjectBuilder.getInstance()).parseSmiles("P([O-])=O");
         assertThat(InChINumbersTools.getUSmilesNumbers(container), is(new long[]{3, 2, 1}));
     }
 
     @Test
-    public void unlabelledHydrogens() throws Exception {
+    void unlabelledHydrogens() throws Exception {
         IAtomContainer container = new SmilesParser(SilentChemObjectBuilder.getInstance())
                 .parseSmiles("[H]C([H])([H])[H]");
         assertThat(InChINumbersTools.getUSmilesNumbers(container), is(new long[]{2, 1, 3, 4, 5}));
     }
 
     @Test
-    public void bug1370() throws Exception {
+    void bug1370() throws Exception {
         IAtomContainer container = new SmilesParser(SilentChemObjectBuilder.getInstance())
                 .parseSmiles("O=[Bi]Cl");
         assertThat(InChINumbersTools.getUSmilesNumbers(container), is(new long[]{3, 1, 2}));
     }
 
     @Test
-    public void protons() throws Exception {
+    void protons() throws Exception {
         IAtomContainer container = new SmilesParser(SilentChemObjectBuilder.getInstance())
             .parseSmiles("[H+].[H+].F[Si-2](F)(F)(F)(F)F");
         assertThat(InChINumbersTools.getUSmilesNumbers(container), is(new long[]{8, 9, 1, 7, 2, 3, 4, 5, 6}));
+    }
+
+    @Test
+    void emptyAtomContainer_test() throws Exception {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
+        assertThat(InChINumbersTools.getUSmilesNumbers(container), is(new long[0]));
     }
 
     static IAtomContainer mock(int nAtoms) {

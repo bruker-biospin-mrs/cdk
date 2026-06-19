@@ -42,12 +42,10 @@ import java.util.Map;
  * is done by a complementary class <code>NucleicAcidBuilderTool</code> (to be
  * written).
  *
- * @cdk.module pdb
- * @cdk.githash
  */
 public class ProteinBuilderTool {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(ProteinBuilderTool.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(ProteinBuilderTool.class);
 
     /**
      * Builds a protein by connecting a new amino acid at the N-terminus of the
@@ -136,12 +134,12 @@ public class ProteinBuilderTool {
             if (aminoAcidCode.equals(" ")) {
                 // fine, just skip spaces
             } else {
-                IAminoAcid aminoAcid = (IAminoAcid) templates.get(aminoAcidCode);
+                IAminoAcid aminoAcid = templates.get(aminoAcidCode);
                 if (aminoAcid == null) {
                     throw new CDKException("Cannot build sequence! Unknown amino acid: " + aminoAcidCode);
                 }
                 try {
-                    aminoAcid = (IAminoAcid) aminoAcid.clone();
+                    aminoAcid = aminoAcid.clone();
                 } catch (CloneNotSupportedException e) {
                     throw new CDKException("Cannot build sequence! Clone exception: " + e.getMessage(), e);
                 }
@@ -152,15 +150,17 @@ public class ProteinBuilderTool {
                 previousAA = aminoAcid;
             }
         }
-        // add the last oxygen of the protein
-        IAtom oxygen = builder.newInstance(IAtom.class, "O");
-        // ... to amino acid
-        previousAA.addAtom(oxygen);
-        IBond bond = builder.newInstance(IBond.class, oxygen, previousAA.getCTerminus(), IBond.Order.SINGLE);
-        previousAA.addBond(bond);
-        // ... and to protein
-        protein.addAtom(oxygen, previousAA, strand);
-        protein.addBond(bond);
+        if (previousAA != null) {
+            // add the last oxygen of the protein
+            IAtom oxygen = builder.newInstance(IAtom.class, "O");
+            // ... to amino acid
+            previousAA.addAtom(oxygen);
+            IBond bond = builder.newInstance(IBond.class, oxygen, previousAA.getCTerminus(), IBond.Order.SINGLE);
+            previousAA.addBond(bond);
+            // ... and to protein
+            protein.addAtom(oxygen, previousAA, strand);
+            protein.addBond(bond);
+        }
         return protein;
     }
 

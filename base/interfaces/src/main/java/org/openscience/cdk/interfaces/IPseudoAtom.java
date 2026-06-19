@@ -29,8 +29,6 @@ package org.openscience.cdk.interfaces;
  *
  * <p>This should be replaced by the mechanism explained in RFC #8.
  *
- * @cdk.module interfaces
- * @cdk.githash
  *
  * @see  IAtom
  */
@@ -42,7 +40,7 @@ public interface IPseudoAtom extends IAtom {
      * @return The label for this PseudoAtom
      * @see    #setLabel
      */
-    public String getLabel();
+    String getLabel();
 
     /**
      * Sets the label of this PseudoAtom.
@@ -50,7 +48,7 @@ public interface IPseudoAtom extends IAtom {
      * @param label The new label for this PseudoAtom
      * @see   #getLabel
      */
-    public void setLabel(String label);
+    void setLabel(String label);
 
     /**
      * Access the attachment point number. The default, 0, indicates this atom
@@ -71,6 +69,6 @@ public interface IPseudoAtom extends IAtom {
      *{@inheritDoc}
      */
     @Override
-    public IPseudoAtom clone() throws CloneNotSupportedException;
+    IPseudoAtom clone() throws CloneNotSupportedException;
 
 }

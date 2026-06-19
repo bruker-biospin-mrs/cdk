@@ -21,6 +21,7 @@ package org.openscience.cdk.interfaces;
 import org.openscience.cdk.exception.NoSuchAtomException;
 import org.openscience.cdk.interfaces.IBond.Order;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -40,8 +41,6 @@ import java.util.List;
  * }</pre>
  *
  * @author steinbeck
- * @cdk.module interfaces
- * @cdk.githash
  * @cdk.created 2000-10-02
  */
 public interface IAtomContainer extends IChemObject, IChemObjectListener {
@@ -478,6 +477,83 @@ public interface IAtomContainer extends IChemObject, IChemObjectListener {
     void add(IAtomContainer atomContainer);
 
     /**
+     * Create a new carbon atom in this container, it will have the implicit
+     * hydrogen count initialized to 0.
+     *
+     * @return thew new atom
+     */
+    default IAtom newAtom() {
+        return newAtom(IAtom.C);
+    }
+
+    /**
+     * Create a new atom in this container of the specified element, it will
+     * have the implicit hydrogen count initialized to 0.
+     *
+     * @param element the atomic number
+     *
+     * @return thew new atom
+     */
+    default IAtom newAtom(int element) {
+        return newAtom(element, 0);
+    }
+
+    /**
+     * Create a new atom in this container of the specified element and implicit
+     * hydrogen count.
+     *
+     * @param element the atomic number
+     * @param numImplH the number of implicit hydrogens
+     *
+     * @return thew new atom
+     */
+    default IAtom newAtom(int element, int numImplH) {
+        IAtom atm = getBuilder().newAtom();
+        atm.setAtomicNumber(element);
+        atm.setImplicitHydrogenCount(numImplH);
+        addAtom(atm);
+        return getAtom(getAtomCount()-1);
+    }
+
+    /**
+     * Create a new atom in the container based on properties of the provided
+     * atom. The new atom will have the same properties as the original but is
+     * distinct.
+     *
+     * @param atom the original atom
+     * @return the new atom
+     */
+    default IAtom newAtom(IAtom atom) {
+        IAtom cpy = getBuilder().newInstance(IAtom.class, atom);
+        addAtom(cpy);
+        return getAtom(getAtomCount()-1);
+    }
+
+    /**
+     * Create a new single bond between two atoms.
+     *
+     * @param beg the begin atom
+     * @param end the end atom
+     * @return the new bond
+     */
+    default IBond newBond(IAtom beg, IAtom end) {
+        return newBond(beg, end, Order.SINGLE);
+    }
+
+    /**
+     * Create a new bond between two atoms.
+     *
+     * @param beg the begin atom
+     * @param end the end atom
+     * @param order the bond order
+     * @return the new bond
+     */
+    default IBond newBond(IAtom beg, IAtom end, IBond.Order order) {
+        addBond(indexOf(beg), indexOf(end), order);
+        return getBond(getBondCount()-1);
+    }
+
+    /**
      * Adds an atom to this container.
      *
      * @param atom The atom to be added to this container
@@ -683,11 +759,23 @@ public interface IAtomContainer extends IChemObject, IChemObjectListener {
     /**
      * Adds a bond to this container.
      *
+     * @param atom1  idx of the first atom of the Bond in [0,..]
+     * @param atom2  idx of the second atom of the Bond in [0,..]
+     * @param order  the bond order
+     * @param display the display type of the bond
+     */
+    void addBond(int atom1, int atom2, IBond.Order order, IBond.Display display);
+
+    /**
+     * Adds a bond to this container.
+     *
      * @param atom1 Id of the first atom of the Bond in [0,..]
      * @param atom2 Id of the second atom of the Bond in [0,..]
      * @param order Bondorder
      */
-    void addBond(int atom1, int atom2, IBond.Order order);
+    default void addBond(int atom1, int atom2, IBond.Order order) {
+        addBond(atom1, atom2, order, IBond.Display.Solid);
+    }
 
     /**
      * Adds a LonePair to this Atom.

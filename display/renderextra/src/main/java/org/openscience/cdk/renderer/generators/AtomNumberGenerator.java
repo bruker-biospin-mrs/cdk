@@ -45,8 +45,6 @@ import org.openscience.cdk.renderer.generators.parameter.AbstractGeneratorParame
  * for the atoms.
  *
  * @author      maclean
- * @cdk.module  renderextra
- * @cdk.githash
  */
 public class AtomNumberGenerator implements IGenerator<IAtomContainer> {
 
@@ -60,7 +58,7 @@ public class AtomNumberGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Color> textColor = new AtomNumberTextColor();
+    private final IGeneratorParameter<Color> textColor = new AtomNumberTextColor();
 
     /** Boolean parameter indicating if atom numbers should be drawn, allowing
      * this feature to be disabled temporarily. */
@@ -73,7 +71,7 @@ public class AtomNumberGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private WillDrawAtomNumbers willDrawAtomNumbers = new WillDrawAtomNumbers();
+    private final WillDrawAtomNumbers willDrawAtomNumbers = new WillDrawAtomNumbers();
 
     /** The color scheme by which to color the atom numbers, if
      * the {@link ColorByType} boolean is true. */
@@ -86,7 +84,7 @@ public class AtomNumberGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<IAtomColorer> atomColorer = new AtomColorer();
+    private final IGeneratorParameter<IAtomColorer> atomColorer = new AtomColorer();
 
     /** Boolean to indicate of the {@link AtomColorer} scheme will be used. */
     public static class ColorByType extends AbstractGeneratorParameter<Boolean> {
@@ -98,7 +96,7 @@ public class AtomNumberGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private IGeneratorParameter<Boolean> colorByType = new ColorByType();
+    private final IGeneratorParameter<Boolean> colorByType = new ColorByType();
 
     /**
      * Offset vector in screen space coordinates where the atom number label
@@ -113,7 +111,7 @@ public class AtomNumberGenerator implements IGenerator<IAtomContainer> {
         }
     }
 
-    private Offset offset = new Offset();
+    private final Offset offset = new Offset();
 
     /** {@inheritDoc} */
     @Override

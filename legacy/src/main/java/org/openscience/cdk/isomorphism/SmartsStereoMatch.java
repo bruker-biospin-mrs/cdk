@@ -24,8 +24,6 @@
 
 package org.openscience.cdk.isomorphism;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Maps;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -38,7 +36,9 @@ import org.openscience.cdk.isomorphism.matchers.smarts.SMARTSAtom;
 import org.openscience.cdk.isomorphism.matchers.smarts.StereoBond;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation;
 import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conformation.TOGETHER;
@@ -52,8 +52,7 @@ import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo.CLOCKW
  * Note: This class is internal and will be private in future.
  *
  * @author John May
- * @cdk.module smarts
- * @cdk.githash
+ * @deprecated use QueryStereoFilter
  */
 @Deprecated
 public final class SmartsStereoMatch implements Predicate<int[]> {
@@ -107,7 +106,7 @@ public final class SmartsStereoMatch implements Predicate<int[]> {
      * @return the stereo chemistry is value
      */
     @Override
-    public boolean apply(final int[] mapping) {
+    public boolean test(final int[] mapping) {
         for (final int u : queryStereoIndices) {
             switch (queryTypes[u]) {
                 case Tetrahedral:
@@ -119,6 +118,16 @@ public final class SmartsStereoMatch implements Predicate<int[]> {
             }
         }
         return true;
+    }
+
+    /**
+     * Backwards compatible method from when we used GUAVA predicates.
+     * @param ints atom index bijection
+     * @return true/false
+     * @see #test(int[])
+     */
+    public boolean apply(int[] ints) {
+        return test(ints);
     }
 
     /**
@@ -310,7 +319,7 @@ public final class SmartsStereoMatch implements Predicate<int[]> {
      * @return the index/lookup of atoms to the index they appear
      */
     private static Map<IAtom, Integer> indexAtoms(IAtomContainer container) {
-        Map<IAtom, Integer> map = Maps.newHashMapWithExpectedSize(container.getAtomCount());
+        Map<IAtom, Integer> map = new HashMap<>(2*container.getAtomCount());
         for (int i = 0; i < container.getAtomCount(); i++)
             map.put(container.getAtom(i), i);
         return map;
@@ -371,7 +380,7 @@ public final class SmartsStereoMatch implements Predicate<int[]> {
     }
 
     // could be moved into the IStereoElement to allow faster introspection
-    private static enum Type {
+    private enum Type {
         Tetrahedral, Geometric
     }
 }

@@ -31,19 +31,18 @@ import org.openscience.cdk.templates.TestMoleculeFactory;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
 /**
- * @cdk.module test-structgen
  */
-public class SingleStructureRandomGeneratorTest {
+class SingleStructureRandomGeneratorTest {
 
-    String                         mf;
-    SingleStructureRandomGenerator ssrg;
+    private String                         mf;
+    private SingleStructureRandomGenerator ssrg;
 
     public SingleStructureRandomGeneratorTest() throws Exception {
         System.out.println("Instantiating MoleculeListViewer");
         System.out.println("Instantiating SingleStructureRandomGenerator");
         ssrg = new SingleStructureRandomGenerator();
         System.out.println("Assining unbonded set of atoms");
-        AtomContainer ac = getBunchOfUnbondedAtoms();
+        IAtomContainer ac = getBunchOfUnbondedAtoms();
         mf = MolecularFormulaManipulator.getString(MolecularFormulaManipulator.getMolecularFormula(ac));
         System.out.println("Molecular Formula is: " + mf);
         ssrg.setAtomContainer(ac);
@@ -51,16 +50,16 @@ public class SingleStructureRandomGeneratorTest {
 
     private boolean showIt(IAtomContainer molecule, String name) throws Exception {
         StructureDiagramGenerator sdg = new StructureDiagramGenerator();
-        sdg.setMolecule((IAtomContainer) molecule.clone());
+        sdg.setMolecule(molecule.clone());
         sdg.generateCoordinates(new Vector2d(0, 1));
         return true;
     }
 
-    private AtomContainer getBunchOfUnbondedAtoms() {
+    private IAtomContainer getBunchOfUnbondedAtoms() {
         IAtomContainer molecule = TestMoleculeFactory.makeAlphaPinene();
         fixCarbonHCount(molecule);
         molecule.removeAllElectronContainers();
-        return (AtomContainer) molecule;
+        return molecule;
     }
 
     private void fixCarbonHCount(IAtomContainer mol) {
@@ -69,7 +68,7 @@ public class SingleStructureRandomGeneratorTest {
          * carbon-only molecule until we have a proper hydrogen count
          * configurator
          */
-        double bondCount = 0;
+        double bondCount;
         org.openscience.cdk.interfaces.IAtom atom;
         for (int f = 0; f < mol.getAtomCount(); f++) {
             atom = mol.getAtom(f);
@@ -80,7 +79,7 @@ public class SingleStructureRandomGeneratorTest {
         }
     }
 
-    class MoreAction extends AbstractAction {
+    private class MoreAction extends AbstractAction {
 
         private static final long serialVersionUID = -7405706755621468840L;
 

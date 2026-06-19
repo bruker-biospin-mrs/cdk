@@ -24,11 +24,11 @@
 
 package org.openscience.cdk.hash;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.hash.stereo.StereoEncoderFactory;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -36,17 +36,16 @@ import org.openscience.cdk.interfaces.IBond;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.openscience.cdk.interfaces.IBond.Order.SINGLE;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class PerturbedAtomHashGeneratorTest {
+class PerturbedAtomHashGeneratorTest {
 
     @Test
-    public void testGenerate() throws Exception {
+    void testGenerate() throws Exception {
 
         IAtomContainer m1 = cyclopentylcyclopentane();
         IAtomContainer m2 = decahydronaphthalene();
@@ -68,7 +67,7 @@ public class PerturbedAtomHashGeneratorTest {
     }
 
     @Test
-    public void testCombine() throws Exception {
+    void testCombine() throws Exception {
         Xorshift prng = new Xorshift();
         PerturbedAtomHashGenerator generator = new PerturbedAtomHashGenerator(new SeedGenerator(
                 BasicAtomEncoder.ATOMIC_NUMBER), new BasicAtomHashGenerator(new SeedGenerator(
@@ -82,10 +81,10 @@ public class PerturbedAtomHashGeneratorTest {
         long _3 = 2 ^ prng.next(2) ^ prng.next(prng.next(2)) ^ prng.next(prng.next(prng.next(2)));
 
         long[] values = generator.combine(perturbed);
-        Assert.assertArrayEquals(values, new long[]{_0, _1, _2, _3});
+        Assertions.assertArrayEquals(values, new long[]{_0, _1, _2, _3});
     }
 
-    public IAtomContainer cyclopentylcyclopentane() {
+    IAtomContainer cyclopentylcyclopentane() {
         IAtom[] atoms = new IAtom[]{new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"),
                 new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"),};
         IBond[] bonds = new IBond[]{new Bond(atoms[0], atoms[1], SINGLE), new Bond(atoms[0], atoms[4], SINGLE),
@@ -94,7 +93,7 @@ public class PerturbedAtomHashGeneratorTest {
                 new Bond(atoms[5], atoms[9], SINGLE), new Bond(atoms[6], atoms[7], SINGLE),
                 new Bond(atoms[7], atoms[8], SINGLE), new Bond(atoms[8], atoms[9], SINGLE),
                 new Bond(atoms[8], atoms[0], SINGLE),};
-        IAtomContainer mol = new AtomContainer(0, 0, 0, 0);
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.setAtoms(atoms);
         mol.setBonds(bonds);
         return mol;
@@ -103,7 +102,7 @@ public class PerturbedAtomHashGeneratorTest {
     /**
      * @cdk.inchi InChI=1S/C10H18/c1-2-6-10-8-4-3-7-9(10)5-1/h9-10H,1-8H2
      */
-    public IAtomContainer decahydronaphthalene() {
+    IAtomContainer decahydronaphthalene() {
         IAtom[] atoms = new IAtom[]{new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"),
                 new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"),};
         IBond[] bonds = new IBond[]{new Bond(atoms[0], atoms[1], SINGLE), new Bond(atoms[0], atoms[5], SINGLE),
@@ -112,7 +111,7 @@ public class PerturbedAtomHashGeneratorTest {
                 new Bond(atoms[5], atoms[4], SINGLE), new Bond(atoms[4], atoms[7], SINGLE),
                 new Bond(atoms[6], atoms[9], SINGLE), new Bond(atoms[7], atoms[8], SINGLE),
                 new Bond(atoms[8], atoms[9], SINGLE),};
-        IAtomContainer mol = new AtomContainer(0, 0, 0, 0);
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.setAtoms(atoms);
         mol.setBonds(bonds);
         return mol;

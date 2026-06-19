@@ -56,8 +56,6 @@ import org.xml.sax.XMLReader;
  *
  * @author      Egon L. Willighagen
  * @cdk.created 2001-02-01
- * @cdk.module  io
- * @cdk.githash
  * @cdk.keyword file format, CML
  * @cdk.bug     1544406
  * @cdk.iooptions
@@ -68,9 +66,9 @@ public class CMLReader extends DefaultChemObjectReader {
     private InputStream             input;
     private String                  url;
 
-    private Map<String, ICMLModule> userConventions = new HashMap<String, ICMLModule>();
+    private final Map<String, ICMLModule> userConventions = new HashMap<>();
 
-    private static ILoggingTool     logger          = LoggingToolFactory.createLoggingTool(CMLReader.class);
+    private static final ILoggingTool     logger          = LoggingToolFactory.createLoggingTool(CMLReader.class);
 
     /**
      * Reads CML from an java.io.InputStream, for example the FileInputStream.
@@ -170,8 +168,8 @@ public class CMLReader extends DefaultChemObjectReader {
     @Override
     public boolean accepts(Class<? extends IChemObject> classObject) {
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (IChemFile.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (IChemFile.class.equals(anInterface)) return true;
         }
 
         if (IChemFile.class.equals(classObject)) return true;
@@ -227,7 +225,7 @@ public class CMLReader extends DefaultChemObjectReader {
             logger.debug(e);
             throw new CDKException(error, e);
         } catch (SAXParseException saxe) {
-            SAXParseException spe = (SAXParseException) saxe;
+            SAXParseException spe = saxe;
             String error = "Found well-formedness error in line " + spe.getLineNumber();
             logger.error(error);
             logger.debug(saxe);

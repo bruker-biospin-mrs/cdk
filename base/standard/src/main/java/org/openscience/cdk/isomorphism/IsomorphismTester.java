@@ -35,8 +35,6 @@ import java.util.Objects;
  *
  * <p>Alternatively, you can use the UniversalIsomorphismTester.
  *
- * @cdk.module standard
- * @cdk.githash
  *
  * @author     steinbeck
  * @cdk.created    2001-09-10
@@ -90,8 +88,8 @@ public class IsomorphismTester implements java.io.Serializable {
      */
     public boolean isIsomorphic(IAtomContainer mol2) {
         boolean found;
-        IAtom atom1 = null;
-        IAtom atom2 = null;
+        IAtom atom1;
+        IAtom atom2;
         setCompareTable(mol2);
         for (int f = 0; f < sortedBaseTable.length; f++) {
             if (sortedBaseTable[f] != sortedCompareTable[f]) {
@@ -105,7 +103,7 @@ public class IsomorphismTester implements java.io.Serializable {
                 if (baseTable[f] == compareTable[g]) {
                     atom1 = base.getAtom(f);
                     atom2 = compare.getAtom(g);
-                    if (!(atom1.getSymbol().equals(atom2.getSymbol()))
+                    if (!(atom1.getAtomicNumber().equals(atom2.getAtomicNumber()))
                         && Objects.equals(atom1.getImplicitHydrogenCount(), atom2.getImplicitHydrogenCount())) {
                         return false;
                     }

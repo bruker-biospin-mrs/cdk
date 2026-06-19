@@ -34,14 +34,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author     egonw
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugReaction extends Reaction implements IReaction {
 
     private static final long serialVersionUID = -8958358842308217875L;
 
-    ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugReaction.class);
+    final ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugReaction.class);
 
     public DebugReaction() {
         super();
@@ -190,6 +188,13 @@ public class DebugReaction extends Reaction implements IReaction {
     public int getProductCount() {
         logger.debug("Getting product count: ", super.getProductCount());
         return super.getProductCount();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int getAgentCount() {
+        logger.debug("Getting agent count: ", super.getAgentCount());
+        return super.getAgentCount();
     }
 
     /** {@inheritDoc} */

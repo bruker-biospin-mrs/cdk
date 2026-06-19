@@ -37,7 +37,8 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
  * This class checks if two atoms have pi-contact (this is true when there is
  * one and the same conjugated pi-system which contains both atoms, or directly
- * linked neighbours of the atoms).
+ * linked neighbours of the atoms). Only conjugated systems with more than 2
+ * atoms are considered.
  *
  * <table border="1"><caption>Parameters for this descriptor:</caption>
  *   <tr>
@@ -64,8 +65,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  *
  * @author         mfe4
  * @cdk.created    2004-11-03
- * @cdk.module     qsarmolecular
- * @cdk.githash
  * @cdk.dictref    qsar-descriptors:piContact
  */
 public class PiContactDetectionDescriptor extends AbstractAtomPairDescriptor implements IAtomPairDescriptor {
@@ -144,12 +143,12 @@ public class PiContactDetectionDescriptor extends AbstractAtomPairDescriptor imp
     public DescriptorValue calculate(IAtom first, IAtom second, IAtomContainer atomContainer) {
         IAtomContainer ac;
         try {
-            ac = (IAtomContainer) atomContainer.clone();
+            ac = atomContainer.clone();
         } catch (CloneNotSupportedException e) {
             return getDummyDescriptorValue(e);
         }
         IAtom clonedFirst = ac.getAtom(atomContainer.indexOf(first));
-        IAtom clonedSecond = ac.getAtom(atomContainer.indexOf(first));
+        IAtom clonedSecond = ac.getAtom(atomContainer.indexOf(second));
 
         IAtomContainer mol = ac.getBuilder().newInstance(IAtomContainer.class, ac);
         if (checkAromaticity) {

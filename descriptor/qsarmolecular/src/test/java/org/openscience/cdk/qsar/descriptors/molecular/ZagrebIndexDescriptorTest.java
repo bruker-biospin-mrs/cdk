@@ -21,9 +21,9 @@ package org.openscience.cdk.qsar.descriptors.molecular;
 import java.io.InputStream;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.DefaultChemObjectBuilder;
@@ -39,27 +39,26 @@ import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class ZagrebIndexDescriptorTest extends MolecularDescriptorTest {
+class ZagrebIndexDescriptorTest extends MolecularDescriptorTest {
 
-    public ZagrebIndexDescriptorTest() {}
+    ZagrebIndexDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(ZagrebIndexDescriptor.class);
     }
 
     @Test
-    public void testZagrebIndexDescriptor() throws java.lang.Exception {
+    void testZagrebIndexDescriptor() throws java.lang.Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("O=C(O)CC");
-        Assert.assertEquals(16, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.0001);
+        Assertions.assertEquals(16, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.0001);
     }
 
     @Test
-    public void test2Dvs3D() throws Exception {
+    void test2Dvs3D() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = sp.parseSmiles("O1C2C34C(C(C1O)CCCc1cc(cc(c1)C(F)(F)F)C(F)(F)F)CCC(C3CCC(O2)(OO4)C)C");
 
@@ -69,8 +68,8 @@ public class ZagrebIndexDescriptorTest extends MolecularDescriptorTest {
 
         double value2D = ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue();
 
-        String filename = "data/mdl/cpsa-uncharged.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        String filename = "cpsa-uncharged.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new MDLV2000Reader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
@@ -80,7 +79,7 @@ public class ZagrebIndexDescriptorTest extends MolecularDescriptorTest {
 
         double value3D = ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue();
 
-        Assert.assertEquals(value2D, value3D, 0.001);
+        Assertions.assertEquals(value2D, value3D, 0.001);
 
     }
 }

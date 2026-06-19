@@ -23,11 +23,10 @@
 package org.openscience.cdk.io.formats;
 
 /**
- * @cdk.module test-ioformats
  */
-public class FingerprintFormatTest extends ChemFormatTest {
+class FingerprintFormatTest extends ChemFormatTest {
 
-    public FingerprintFormatTest() {
+    FingerprintFormatTest() {
         super.setChemFormat((IChemFormat) FingerprintFormat.getInstance());
     }
 

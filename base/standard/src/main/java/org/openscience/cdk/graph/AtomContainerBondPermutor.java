@@ -40,10 +40,8 @@ import org.openscience.cdk.interfaces.IBond;
  *
  *
  * @author         maclean
- * @cdk.githash
  * @cdk.created    2009-09-09
  * @cdk.keyword    permutation
- * @cdk.module     standard
  */
 public class AtomContainerBondPermutor extends AtomContainerPermutor {
 
@@ -66,7 +64,7 @@ public class AtomContainerBondPermutor extends AtomContainerPermutor {
     @Override
     public IAtomContainer containerFromPermutation(int[] permutation) {
         try {
-            IAtomContainer permutedContainer = (IAtomContainer) super.atomContainer.clone();
+            IAtomContainer permutedContainer = super.atomContainer.clone();
             int n = permutedContainer.getBondCount();
             IBond[] permutedBonds = new IBond[n];
             for (int i = 0; i < n; i++) {

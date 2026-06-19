@@ -24,8 +24,6 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 /**
  * Classes that implement this interface are QSAR descriptor calculators.
  *
- * @cdk.module qsar
- * @cdk.githash
  */
 public interface IAtomPairDescriptor extends IDescriptor {
 
@@ -40,6 +38,6 @@ public interface IAtomPairDescriptor extends IDescriptor {
      * @return              An object of {@link DescriptorValue} that contain the
      *                      calculated value as well as specification details
      */
-    public DescriptorValue calculate(IAtom atom, IAtom atom2, IAtomContainer container);
+    DescriptorValue calculate(IAtom atom, IAtom atom2, IAtomContainer container);
 
 }

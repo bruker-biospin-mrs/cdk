@@ -22,11 +22,12 @@
  */
 package org.openscience.cdk.io.rdf;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.io.SimpleChemObjectReaderTest;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.test.io.SimpleChemObjectReaderTest;
 import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
@@ -35,34 +36,33 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 /**
- * @cdk.module test-iordf
  */
-public class CDKOWLReaderTest extends SimpleChemObjectReaderTest {
+class CDKOWLReaderTest extends SimpleChemObjectReaderTest {
 
-    private ILoggingTool logger = LoggingToolFactory.createLoggingTool(CDKOWLReaderTest.class);
+    private final ILoggingTool logger = LoggingToolFactory.createLoggingTool(CDKOWLReaderTest.class);
 
-    @BeforeClass
-    public static void setup() {
-        setSimpleChemObjectReader(new CDKOWLReader(), "data/owl/molecule.n3");
+    @BeforeAll
+    static void setup() {
+        setSimpleChemObjectReader(new CDKOWLReader(), "org/openscience/cdk/io/rdf/molecule.n3");
     }
 
     @Test
-    public void testAccepts() {
-        Assert.assertTrue(chemObjectIO.accepts(AtomContainer.class));
+    void testAccepts() {
+        Assertions.assertTrue(chemObjectIO.accepts(AtomContainer.class));
     }
 
     @Test
-    public void testMolecule() throws Exception {
-        String filename = "data/owl/molecule.n3";
+    void testMolecule() throws Exception {
+        String filename = "molecule.n3";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CDKOWLReader reader = new CDKOWLReader(new InputStreamReader(ins));
-        IAtomContainer mol = reader.read(new AtomContainer());
+        IAtomContainer mol = reader.read(SilentChemObjectBuilder.getInstance().newAtomContainer());
         reader.close();
 
-        Assert.assertNotNull(mol);
-        Assert.assertEquals(2, mol.getAtomCount());
-        Assert.assertEquals(1, mol.getBondCount());
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(2, mol.getAtomCount());
+        Assertions.assertEquals(1, mol.getBondCount());
     }
 
 }

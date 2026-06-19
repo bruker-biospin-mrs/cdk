@@ -41,8 +41,6 @@ import org.openscience.cdk.io.setting.OptionIOSetting;
  * <p>This listener can also be used to list all the questions a ChemObjectWriter
  * has, by using a dummy StringWriter, and a <code>null</code> Reader.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
  */
@@ -51,7 +49,7 @@ public class TextGUIListener implements IReaderListener, IWriterListener {
     private BufferedReader in;
     private PrintWriter    out;
 
-    private Importance     level = Importance.HIGH;
+    private Importance     level;
 
     public TextGUIListener(Importance level) {
         this.level = level;
@@ -120,7 +118,7 @@ public class TextGUIListener implements IReaderListener, IWriterListener {
                 List<String> settings = optionSet.getOptions();
                 for (int i = 0; i < settings.size(); i++) {
                     this.out.println();
-                    String option = (String) settings.get(i);
+                    String option = settings.get(i);
                     this.out.print((i + 1) + ". " + option);
                     if (option.equals(setting.getSetting())) {
                         this.out.print(" (Default)");
@@ -166,7 +164,7 @@ public class TextGUIListener implements IReaderListener, IWriterListener {
                         this.out.println("Answer is not a number.");
                     } catch (CDKException exception) {
                         this.out.println();
-                        this.out.println(exception.toString());
+                        this.out.println(exception);
                     }
                 }
             }

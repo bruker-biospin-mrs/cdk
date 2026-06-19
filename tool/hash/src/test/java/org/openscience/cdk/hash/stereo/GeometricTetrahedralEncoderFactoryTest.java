@@ -25,7 +25,8 @@
 package org.openscience.cdk.hash.stereo;
 
 import org.hamcrest.CoreMatchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
@@ -39,21 +40,19 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.openscience.cdk.interfaces.IBond.Stereo.DOWN;
-import static org.openscience.cdk.interfaces.IBond.Stereo.NONE;
+import static org.openscience.cdk.interfaces.IBond.Display.Down;
+import static org.openscience.cdk.interfaces.IBond.Display.Solid;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class GeometricTetrahedralEncoderFactoryTest {
+class GeometricTetrahedralEncoderFactoryTest {
 
     @Test
-    public void testCreate_2D() throws Exception {
+    void testCreate_2D() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(5);
@@ -94,16 +93,16 @@ public class GeometricTetrahedralEncoderFactoryTest {
         // let's say c1 is a chiral carbon
         when(c1.getHybridization()).thenReturn(IAtomType.Hybridization.SP3);
         // with a hatch bond from c1 to n3
-        when(c1n3.getStereo()).thenReturn(DOWN);
+        when(c1n3.getDisplay()).thenReturn(Down);
         when(c1n3.getBegin()).thenReturn(c1);
         when(c1n3.getEnd()).thenReturn(n3);
-        when(c1o2.getStereo()).thenReturn(NONE);
+        when(c1o2.getDisplay()).thenReturn(Solid);
         when(c1o2.getBegin()).thenReturn(c1);
         when(c1o2.getEnd()).thenReturn(o2);
-        when(c1c4.getStereo()).thenReturn(NONE);
+        when(c1c4.getDisplay()).thenReturn(Solid);
         when(c1c4.getBegin()).thenReturn(c1);
         when(c1c4.getEnd()).thenReturn(c4);
-        when(c1h5.getStereo()).thenReturn(NONE);
+        when(c1h5.getDisplay()).thenReturn(Solid);
         when(c1h5.getBegin()).thenReturn(c1);
         when(c1h5.getEnd()).thenReturn(h5);
 
@@ -113,14 +112,14 @@ public class GeometricTetrahedralEncoderFactoryTest {
 
         GeometricParity geometricParity = getGeometricParity(extractEncoders(encoder).get(0));
 
-        assertTrue(geometricParity instanceof Tetrahedral2DParity);
+        Assertions.assertTrue(geometricParity instanceof Tetrahedral2DParity);
 
         assertThat(coords2D(geometricParity), CoreMatchers.is(new Point2d[]{p2, p3, p4, p5}));
 
     }
 
     @Test
-    public void testCreate_2D_Implicit() throws Exception {
+    void testCreate_2D_Implicit() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(4);
@@ -157,13 +156,13 @@ public class GeometricTetrahedralEncoderFactoryTest {
         // let's say c1 is a chiral carbon
         when(c1.getHybridization()).thenReturn(IAtomType.Hybridization.SP3);
         // with a hatch bond from c1 to n3
-        when(c1n3.getStereo()).thenReturn(DOWN);
+        when(c1n3.getDisplay()).thenReturn(Down);
         when(c1n3.getBegin()).thenReturn(c1);
         when(c1n3.getEnd()).thenReturn(n3);
-        when(c1o2.getStereo()).thenReturn(NONE);
+        when(c1o2.getDisplay()).thenReturn(Solid);
         when(c1o2.getBegin()).thenReturn(c1);
         when(c1o2.getEnd()).thenReturn(o2);
-        when(c1c4.getStereo()).thenReturn(NONE);
+        when(c1c4.getDisplay()).thenReturn(Solid);
         when(c1c4.getBegin()).thenReturn(c1);
         when(c1c4.getEnd()).thenReturn(c4);
 
@@ -173,7 +172,7 @@ public class GeometricTetrahedralEncoderFactoryTest {
 
         GeometricParity geometricParity = getGeometricParity(extractEncoders(encoder).get(0));
 
-        assertTrue(geometricParity instanceof Tetrahedral2DParity);
+        Assertions.assertTrue(geometricParity instanceof Tetrahedral2DParity);
 
         assertThat(coords2D(geometricParity), CoreMatchers.is(new Point2d[]{p2, p3, p4, p1 // p1 is from central atom
                 }));
@@ -181,7 +180,7 @@ public class GeometricTetrahedralEncoderFactoryTest {
     }
 
     @Test
-    public void testCreate_3D() throws Exception {
+    void testCreate_3D() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(5);
@@ -222,16 +221,16 @@ public class GeometricTetrahedralEncoderFactoryTest {
         // let's say c1 is a chiral carbon
         when(c1.getHybridization()).thenReturn(IAtomType.Hybridization.SP3);
         // with a hatch bond from c1 to n3
-        when(c1n3.getStereo()).thenReturn(NONE);
+        when(c1n3.getDisplay()).thenReturn(Solid);
         when(c1n3.getBegin()).thenReturn(c1);
         when(c1n3.getEnd()).thenReturn(n3);
-        when(c1o2.getStereo()).thenReturn(NONE);
+        when(c1o2.getDisplay()).thenReturn(Solid);
         when(c1o2.getBegin()).thenReturn(c1);
         when(c1o2.getEnd()).thenReturn(o2);
-        when(c1c4.getStereo()).thenReturn(NONE);
+        when(c1c4.getDisplay()).thenReturn(Solid);
         when(c1c4.getBegin()).thenReturn(c1);
         when(c1c4.getEnd()).thenReturn(c4);
-        when(c1h5.getStereo()).thenReturn(NONE);
+        when(c1h5.getDisplay()).thenReturn(Solid);
         when(c1h5.getBegin()).thenReturn(c1);
         when(c1h5.getEnd()).thenReturn(h5);
 
@@ -241,14 +240,14 @@ public class GeometricTetrahedralEncoderFactoryTest {
 
         GeometricParity geometricParity = getGeometricParity(extractEncoders(encoder).get(0));
 
-        assertTrue(geometricParity instanceof Tetrahedral3DParity);
+        Assertions.assertTrue(geometricParity instanceof Tetrahedral3DParity);
 
         assertThat(coords3D(geometricParity), CoreMatchers.is(new Point3d[]{p2, p3, p4, p5}));
 
     }
 
     @Test
-    public void testCreate_3D_Implicit() throws Exception {
+    void testCreate_3D_Implicit() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(4);
@@ -284,13 +283,13 @@ public class GeometricTetrahedralEncoderFactoryTest {
         // let's say c1 is a chiral carbon
         when(c1.getHybridization()).thenReturn(IAtomType.Hybridization.SP3);
         // with a hatch bond from c1 to n3
-        when(c1n3.getStereo()).thenReturn(NONE);
+        when(c1n3.getDisplay()).thenReturn(Solid);
         when(c1n3.getBegin()).thenReturn(c1);
         when(c1n3.getEnd()).thenReturn(n3);
-        when(c1o2.getStereo()).thenReturn(NONE);
+        when(c1o2.getDisplay()).thenReturn(Solid);
         when(c1o2.getBegin()).thenReturn(c1);
         when(c1o2.getEnd()).thenReturn(o2);
-        when(c1c4.getStereo()).thenReturn(NONE);
+        when(c1c4.getDisplay()).thenReturn(Solid);
         when(c1c4.getBegin()).thenReturn(c1);
         when(c1c4.getEnd()).thenReturn(c4);
 
@@ -300,7 +299,7 @@ public class GeometricTetrahedralEncoderFactoryTest {
 
         GeometricParity geometricParity = getGeometricParity(extractEncoders(encoder).get(0));
 
-        assertTrue(geometricParity instanceof Tetrahedral3DParity);
+        Assertions.assertTrue(geometricParity instanceof Tetrahedral3DParity);
 
         assertThat(coords3D(geometricParity), CoreMatchers.is(new Point3d[]{p2, p3, p4, p1 // p1 = central atom
                 }));
@@ -308,7 +307,7 @@ public class GeometricTetrahedralEncoderFactoryTest {
     }
 
     @Test
-    public void testCreate_NonSP3() throws Exception {
+    void testCreate_NonSP3() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(5);
@@ -343,16 +342,16 @@ public class GeometricTetrahedralEncoderFactoryTest {
         // ATOM is not SP3
         // when(c1.getHybridization()).thenReturn(IAtomType.Hybridization.SP3);
         // with a hatch bond from c1 to n3
-        when(c1n3.getStereo()).thenReturn(DOWN);
+        when(c1n3.getDisplay()).thenReturn(Down);
         when(c1n3.getBegin()).thenReturn(c1);
         when(c1n3.getEnd()).thenReturn(n3);
-        when(c1o2.getStereo()).thenReturn(NONE);
+        when(c1o2.getDisplay()).thenReturn(Solid);
         when(c1o2.getBegin()).thenReturn(c1);
         when(c1o2.getEnd()).thenReturn(o2);
-        when(c1c4.getStereo()).thenReturn(NONE);
+        when(c1c4.getDisplay()).thenReturn(Solid);
         when(c1c4.getBegin()).thenReturn(c1);
         when(c1c4.getEnd()).thenReturn(c4);
-        when(c1h5.getStereo()).thenReturn(NONE);
+        when(c1h5.getDisplay()).thenReturn(Solid);
         when(c1h5.getBegin()).thenReturn(c1);
         when(c1h5.getEnd()).thenReturn(h5);
 
@@ -363,7 +362,7 @@ public class GeometricTetrahedralEncoderFactoryTest {
     }
 
     @Test
-    public void testCreate_NoStereoBonds() throws Exception {
+    void testCreate_NoStereoBonds() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(5);
@@ -399,16 +398,16 @@ public class GeometricTetrahedralEncoderFactoryTest {
         when(c1.getHybridization()).thenReturn(IAtomType.Hybridization.SP3);
         // with a hatch bond from c1 to n3
         //when(c1n3.getStereo()).thenReturn(DOWN);
-        when(c1n3.getStereo()).thenReturn(NONE);
+        when(c1n3.getDisplay()).thenReturn(Solid);
         when(c1n3.getBegin()).thenReturn(c1);
         when(c1n3.getEnd()).thenReturn(n3);
-        when(c1o2.getStereo()).thenReturn(NONE);
+        when(c1o2.getDisplay()).thenReturn(Solid);
         when(c1o2.getBegin()).thenReturn(c1);
         when(c1o2.getEnd()).thenReturn(o2);
-        when(c1c4.getStereo()).thenReturn(NONE);
+        when(c1c4.getDisplay()).thenReturn(Solid);
         when(c1c4.getBegin()).thenReturn(c1);
         when(c1c4.getEnd()).thenReturn(c4);
-        when(c1h5.getStereo()).thenReturn(NONE);
+        when(c1h5.getDisplay()).thenReturn(Solid);
         when(c1h5.getBegin()).thenReturn(c1);
         when(c1h5.getEnd()).thenReturn(h5);
 
@@ -419,7 +418,7 @@ public class GeometricTetrahedralEncoderFactoryTest {
     }
 
     @Test
-    public void testCreate_WrongDegree() throws Exception {
+    void testCreate_WrongDegree() throws Exception {
 
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getAtomCount()).thenReturn(5);
@@ -455,16 +454,16 @@ public class GeometricTetrahedralEncoderFactoryTest {
         // ATOM is not SP3
         when(c1.getHybridization()).thenReturn(IAtomType.Hybridization.SP3);
         // with a hatch bond from c1 to n3
-        when(c1n3.getStereo()).thenReturn(DOWN);
+        when(c1n3.getDisplay()).thenReturn(Down);
         when(c1n3.getBegin()).thenReturn(c1);
         when(c1n3.getEnd()).thenReturn(n3);
-        when(c1o2.getStereo()).thenReturn(NONE);
+        when(c1o2.getDisplay()).thenReturn(Solid);
         when(c1o2.getBegin()).thenReturn(c1);
         when(c1o2.getEnd()).thenReturn(o2);
-        when(c1c4.getStereo()).thenReturn(NONE);
+        when(c1c4.getDisplay()).thenReturn(Solid);
         when(c1c4.getBegin()).thenReturn(c1);
         when(c1c4.getEnd()).thenReturn(c4);
-        when(c1h5.getStereo()).thenReturn(NONE);
+        when(c1h5.getDisplay()).thenReturn(Solid);
         when(c1h5.getBegin()).thenReturn(c1);
         when(c1h5.getEnd()).thenReturn(h5);
 
@@ -476,14 +475,12 @@ public class GeometricTetrahedralEncoderFactoryTest {
 
     private static Point2d[] coords2D(GeometricParity parity) {
         if (parity instanceof Tetrahedral2DParity) {
-            Field field = null;
+            Field field;
             try {
                 field = parity.getClass().getDeclaredField("coordinates");
                 field.setAccessible(true);
                 return (Point2d[]) field.get(parity);
-            } catch (NoSuchFieldException e) {
-                System.err.println(e.getMessage());
-            } catch (IllegalAccessException e) {
+            } catch (NoSuchFieldException | IllegalAccessException e) {
                 System.err.println(e.getMessage());
             }
         }
@@ -492,14 +489,12 @@ public class GeometricTetrahedralEncoderFactoryTest {
 
     private static Point3d[] coords3D(GeometricParity parity) {
         if (parity instanceof Tetrahedral3DParity) {
-            Field field = null;
+            Field field;
             try {
                 field = parity.getClass().getDeclaredField("coordinates");
                 field.setAccessible(true);
                 return (Point3d[]) field.get(parity);
-            } catch (NoSuchFieldException e) {
-                System.err.println(e.getMessage());
-            } catch (IllegalAccessException e) {
+            } catch (NoSuchFieldException | IllegalAccessException e) {
                 System.err.println(e.getMessage());
             }
         }
@@ -508,14 +503,12 @@ public class GeometricTetrahedralEncoderFactoryTest {
 
     private static GeometricParity getGeometricParity(StereoEncoder encoder) {
         if (encoder instanceof GeometryEncoder) {
-            Field field = null;
+            Field field;
             try {
                 field = encoder.getClass().getDeclaredField("geometric");
                 field.setAccessible(true);
                 return (GeometricParity) field.get(encoder);
-            } catch (NoSuchFieldException e) {
-                System.err.println(e.getMessage());
-            } catch (IllegalAccessException e) {
+            } catch (NoSuchFieldException | IllegalAccessException e) {
                 System.err.println(e.getMessage());
             }
         }
@@ -524,14 +517,12 @@ public class GeometricTetrahedralEncoderFactoryTest {
 
     private static List<StereoEncoder> extractEncoders(StereoEncoder encoder) {
         if (encoder instanceof MultiStereoEncoder) {
-            Field field = null;
+            Field field;
             try {
                 field = encoder.getClass().getDeclaredField("encoders");
                 field.setAccessible(true);
                 return (List<StereoEncoder>) field.get(encoder);
-            } catch (NoSuchFieldException e) {
-                System.err.println(e.getMessage());
-            } catch (IllegalAccessException e) {
+            } catch (NoSuchFieldException | IllegalAccessException e) {
                 System.err.println(e.getMessage());
             }
         }

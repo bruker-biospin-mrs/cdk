@@ -18,49 +18,47 @@
  */
 package org.openscience.cdk.tools.diff.tree;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-diff
  */
-public class BooleanArrayDifferenceTest extends CDKTestCase {
+class BooleanArrayDifferenceTest {
 
     @Test
-    public void testDiff() {
+    void testDiff() {
         IDifference result = BooleanArrayDifference.construct("Foo", new boolean[]{true, true}, new boolean[]{false,
                 false});
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
     @Test
-    public void testSame() {
+    void testSame() {
         IDifference result = BooleanArrayDifference.construct("Foo", new boolean[]{false, false}, new boolean[]{false,
                 false});
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
     }
 
     @Test
-    public void testTwoNull() {
+    void testTwoNull() {
         IDifference result = BooleanArrayDifference.construct("Foo", null, null);
-        Assert.assertNull(result);
+        Assertions.assertNull(result);
     }
 
     @Test
-    public void testOneNull() {
+    void testOneNull() {
         IDifference result = BooleanArrayDifference.construct("Foo", null, new boolean[]{false, false});
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
 
         result = BooleanArrayDifference.construct("Foo", new boolean[]{false, false}, null);
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         IDifference result = BooleanArrayDifference.construct("Foo", new boolean[]{true}, new boolean[]{false});
         String diffString = result.toString();
-        Assert.assertNotNull(diffString);
-        assertOneLiner(diffString);
+        Assertions.assertNotNull(diffString);
+        StringDifferenceTest.assertOneLiner(diffString);
     }
 }

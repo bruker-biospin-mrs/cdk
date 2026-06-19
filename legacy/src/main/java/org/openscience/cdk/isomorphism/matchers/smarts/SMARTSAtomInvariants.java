@@ -24,19 +24,19 @@
 
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.graph.GraphUtil;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.ringsearch.RingSearch;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.openscience.cdk.graph.GraphUtil.EdgeToBondMap;
 
 /**
@@ -56,13 +56,12 @@ import static org.openscience.cdk.graph.GraphUtil.EdgeToBondMap;
  * are set on the {@link #KEY} property of each atom.
  *
  * @author John May
- * @cdk.module smarts
  */
 @Deprecated
 final class SMARTSAtomInvariants {
 
     /** Property key to index the class by. */
-    static String                KEY = "SMARTS.INVARIANTS";
+    static final String                KEY = "SMARTS.INVARIANTS";
 
     /** the molecule which this atom belongs. */
     private final IAtomContainer target;
@@ -203,7 +202,7 @@ final class SMARTSAtomInvariants {
     /**
      * Computes {@link SMARTSAtomInvariants} and stores on the {@link #KEY} or
      * each {@link IAtom} in the {@code container}. The {@link
-     * CDKConstants#ISINRING} is also set for each bond. This configuration does
+     * org.openscience.cdk.interfaces.IChemObject#IN_RING} is also set for each bond. This configuration does
      * not include ring information and values are left as unset.
      * Ring membership is still configured but not ring size.
      *
@@ -226,7 +225,7 @@ final class SMARTSAtomInvariants {
     /**
      * Computes {@link SMARTSAtomInvariants} and stores on the {@link #KEY} or
      * each {@link IAtom} in the {@code container}. The {@link
-     * CDKConstants#ISINRING} is also set for each bond. This configuration
+     * org.openscience.cdk.interfaces.IChemObject#IN_RING} is also set for each bond. This configuration
      * includes the ring information as used by the Daylight implementation.
      * That is the Smallest Set of Smallest Rings (SSSR) is used and only the
      * smallest ring is stored for the {@link #ringSize()}.
@@ -276,13 +275,13 @@ final class SMARTSAtomInvariants {
                     int v = cycle[i];
                     if (size < ringSize[v]) ringSize[v] = size;
                     ringNumber[v]++;
-                    bondMap.get(cycle[i], cycle[i - 1]).setFlag(CDKConstants.ISINRING, true);
+                    bondMap.get(cycle[i], cycle[i - 1]).setFlag(IChemObject.IN_RING, true);
                 }
             }
         } else {
             // ring membership is super cheap
             for (IBond bond : new RingSearch(container, graph).ringFragments().bonds()) {
-                bond.setFlag(CDKConstants.ISINRING, true);
+                bond.setFlag(IChemObject.IN_RING, true);
             }
         }
 
@@ -290,7 +289,7 @@ final class SMARTSAtomInvariants {
 
             IAtom atom = container.getAtom(v);
 
-            int implHCount = checkNotNull(atom.getImplicitHydrogenCount(), "Implicit hydrogen count was not set.");
+            int implHCount = Objects.requireNonNull(atom.getImplicitHydrogenCount(), "Implicit hydrogen count was not set.");
 
             int totalHCount = implHCount;
             int valence = implHCount;
@@ -309,7 +308,7 @@ final class SMARTSAtomInvariants {
 
                 degree++;
 
-                if (bond.getFlag(CDKConstants.ISINRING)) {
+                if (bond.getFlag(IChemObject.IN_RING)) {
                     ringConnections++;
                 }
 
@@ -320,7 +319,7 @@ final class SMARTSAtomInvariants {
             }
 
             SMARTSAtomInvariants inv = new SMARTSAtomInvariants(container, valence, ringNumber[v],
-                    ringSize[v] <= nAtoms ? Collections.singleton(ringSize[v]) : Collections.<Integer> emptySet(),
+                    ringSize[v] <= nAtoms ? Collections.singleton(ringSize[v]) : Collections.emptySet(),
                     ringConnections, degree, degree + implHCount, totalHCount);
 
             // if there was no properties a default size LinkedHashMap is created

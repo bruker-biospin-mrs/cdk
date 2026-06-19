@@ -43,8 +43,6 @@ import javax.xml.stream.events.XMLEvent;
 /**
  * Iterating PubChem PCCompound ASN.1 XML reader.
  *
- * @cdk.module io
- * @cdk.githash
  * @cdk.iooptions
  *
  * @see org.openscience.cdk.io.PCCompoundASNReader
@@ -59,8 +57,8 @@ public class IteratingPCCompoundXMLReader extends DefaultIteratingChemObjectRead
 
     private Reader             primarySource;
     private XMLStreamReader    parser;
-    private PubChemXMLHelper   parserHelper;
-    private IChemObjectBuilder builder;
+    private final PubChemXMLHelper   parserHelper;
+    private final IChemObjectBuilder builder;
     private final XMLInputFactory xmlfact;
 
     private boolean            nextAvailableIsKnown;
@@ -129,7 +127,6 @@ public class IteratingPCCompoundXMLReader extends DefaultIteratingChemObjectRead
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
                 hasNext = false;
             }
 
@@ -142,7 +139,7 @@ public class IteratingPCCompoundXMLReader extends DefaultIteratingChemObjectRead
     @Override
     public IAtomContainer next() {
         if (!nextAvailableIsKnown) {
-            hasNext();
+            hasNext = hasNext();
         }
         nextAvailableIsKnown = false;
         if (!hasNext) {

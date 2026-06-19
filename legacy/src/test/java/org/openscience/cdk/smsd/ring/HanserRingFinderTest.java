@@ -22,64 +22,62 @@
  */
 package org.openscience.cdk.smsd.ring;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.smsd.algorithm.vflib.Molecules;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
-public class HanserRingFinderTest {
+class HanserRingFinderTest {
 
     /**
      * Test of findRings method, of class HanserRingFinder.
      */
     @Test
-    public void testFindRings() {
+    void testFindRings() {
         IAtomContainer molecule = null;
         HanserRingFinder instance = new HanserRingFinder();
         Collection expResult = null;
         Collection result = instance.findRings(molecule);
-        assertEquals(expResult, result);
+        Assertions.assertEquals(expResult, result);
     }
 
     private HanserRingFinder finder;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         finder = new HanserRingFinder();
     }
 
-    public void testItShoudFindOneRingInBenzene() throws CDKException {
+    void testItShoudFindOneRingInBenzene() throws CDKException {
         IAtomContainer benzene = Molecules.createBenzene();
         Collection<List<IAtom>> rings = finder.findRings(benzene);
 
-        assertEquals(1, rings.size());
+        Assertions.assertEquals(1, rings.size());
     }
 
-    public void testItShouldFindThreeRingsInNaphthalene() throws CDKException {
+    void testItShouldFindThreeRingsInNaphthalene() throws CDKException {
         IAtomContainer naphthalene = Molecules.createNaphthalene();
         Collection rings = finder.findRings(naphthalene);
 
-        assertEquals(3, rings.size());
+        Assertions.assertEquals(3, rings.size());
     }
 
-    public void testItShouldFind28RingsInCubane() throws CDKException {
+    void testItShouldFind28RingsInCubane() throws CDKException {
         IAtomContainer cubane = Molecules.createCubane();
         Collection rings = finder.findRings(cubane);
 
-        assertEquals(28, rings.size());
+        Assertions.assertEquals(28, rings.size());
     }
 }

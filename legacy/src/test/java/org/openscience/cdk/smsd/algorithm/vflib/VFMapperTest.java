@@ -50,9 +50,9 @@ package org.openscience.cdk.smsd.algorithm.vflib;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.smsd.algorithm.vflib.interfaces.IMapper;
@@ -64,10 +64,9 @@ import org.openscience.cdk.smsd.algorithm.vflib.map.VFMapper;
  * @author Richard L. Apodaca &lt;rapodaca at metamolecular.com&gt;
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  *
- * @cdk.module test-smsd
  * @cdk.require java1.6+
  */
-public class VFMapperTest {
+class VFMapperTest {
 
     private IAtomContainer hexane;
     private IAtomContainer benzene;
@@ -87,8 +86,8 @@ public class VFMapperTest {
 
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         hexane = Molecules.createHexane();
         benzene = Molecules.createBenzene();
         pyridine = Molecules.createPyridine();
@@ -105,147 +104,147 @@ public class VFMapperTest {
     }
 
     @Test
-    public void testItShouldMatchHexaneToHexane() {
+    void testItShouldMatchHexaneToHexane() {
         IMapper mapper = new VFMapper(hexane, true);
 
-        Assert.assertTrue(mapper.hasMap(hexane));
+        Assertions.assertTrue(mapper.hasMap(hexane));
     }
 
     @Test
-    public void testItShouldMatchHexaneToHexaneWhenUsingMolecule() {
+    void testItShouldMatchHexaneToHexaneWhenUsingMolecule() {
         IMapper mapper = new VFMapper(hexane, true);
 
-        Assert.assertTrue(mapper.hasMap(hexane));
+        Assertions.assertTrue(mapper.hasMap(hexane));
     }
 
     @Test
-    public void testItShouldMatchBenzeneToBenzene() {
+    void testItShouldMatchBenzeneToBenzene() {
         IMapper mapper = new VFMapper(benzene, true);
 
-        Assert.assertTrue(mapper.hasMap(benzene));
+        Assertions.assertTrue(mapper.hasMap(benzene));
     }
 
     @Test
-    public void testItShouldNotMatchHexaneToBenzene() {
+    void testItShouldNotMatchHexaneToBenzene() {
         IMapper mapper = new VFMapper(hexane, true);
 
-        Assert.assertFalse(mapper.hasMap(benzene));
+        Assertions.assertFalse(mapper.hasMap(benzene));
     }
 
     @Test
-    public void testItShouldNotMatchPyridazineToNaphthalene() {
+    void testItShouldNotMatchPyridazineToNaphthalene() {
         IMapper mapper = new VFMapper(pyridazine, true);
 
-        Assert.assertFalse(mapper.hasMap(naphthalene));
+        Assertions.assertFalse(mapper.hasMap(naphthalene));
     }
 
     @Test
-    public void testItShouldNotMatchChlorobenzeneTo4ChloroIsoquinoline() {
+    void testItShouldNotMatchChlorobenzeneTo4ChloroIsoquinoline() {
         IMapper mapper = new VFMapper(chlorobenzene, true);
 
-        Assert.assertFalse(mapper.hasMap(chloroisoquinoline4));
+        Assertions.assertFalse(mapper.hasMap(chloroisoquinoline4));
     }
 
     @Test
-    public void testItShouldNotMatchBenzeneToPyridine() {
+    void testItShouldNotMatchBenzeneToPyridine() {
         IMapper mapper = new VFMapper(benzene, true);
 
-        Assert.assertFalse(mapper.hasMap(pyridine));
+        Assertions.assertFalse(mapper.hasMap(pyridine));
 
         mapper = new VFMapper(pyridine, true);
 
-        Assert.assertFalse(mapper.hasMap(benzene));
+        Assertions.assertFalse(mapper.hasMap(benzene));
     }
 
     @Test
-    public void testItShouldNotMatchTolueneToBenzene() {
+    void testItShouldNotMatchTolueneToBenzene() {
         IMapper mapper = new VFMapper(toluene, true);
 
-        Assert.assertFalse(mapper.hasMap(benzene));
+        Assertions.assertFalse(mapper.hasMap(benzene));
     }
 
     @Test
-    public void testItShouldMatchAcetoneToAcetone() {
+    void testItShouldMatchAcetoneToAcetone() {
         IMapper mapper = new VFMapper(acetone, true);
 
-        Assert.assertTrue(mapper.hasMap(acetone));
+        Assertions.assertTrue(mapper.hasMap(acetone));
     }
 
     @Test
-    public void testItShouldMatchPropaneToCyclopropane() {
+    void testItShouldMatchPropaneToCyclopropane() {
         IMapper mapper = new VFMapper(propane, true);
 
-        Assert.assertTrue(mapper.hasMap(cyclopropane));
+        Assertions.assertTrue(mapper.hasMap(cyclopropane));
     }
 
     @Test
-    public void testItShouldFindTwoMapsFromHexaneToHexane() {
+    void testItShouldFindTwoMapsFromHexaneToHexane() {
         IMapper mapper = new VFMapper(hexane, true);
 
         List<Map<INode, IAtom>> maps = mapper.getMaps(hexane);
 
-        Assert.assertEquals(2, maps.size());
+        Assertions.assertEquals(2, maps.size());
     }
 
     @Test
-    public void testItShouldNotMatchTolueneToPhenol() {
+    void testItShouldNotMatchTolueneToPhenol() {
         IMapper mapper = new VFMapper(toluene, true);
 
-        Assert.assertFalse(mapper.hasMap(phenol));
+        Assertions.assertFalse(mapper.hasMap(phenol));
     }
 
     @Test
-    public void testItShouldMapSixAtomsOfBenzeneOntoBenzene() {
+    void testItShouldMapSixAtomsOfBenzeneOntoBenzene() {
         IMapper mapper = new VFMapper(benzene, true);
         Map<INode, IAtom> map = mapper.getFirstMap(benzene);
 
-        Assert.assertEquals(6, map.size());
+        Assertions.assertEquals(6, map.size());
     }
 
     @Test
-    public void testItShouldCountTwelveMapsForBenzeneOntoBenzene() {
+    void testItShouldCountTwelveMapsForBenzeneOntoBenzene() {
         IMapper mapper = new VFMapper(benzene, true);
 
-        Assert.assertEquals(12, mapper.countMaps(benzene));
+        Assertions.assertEquals(12, mapper.countMaps(benzene));
     }
 
     @Test
-    public void testItShouldCountTwoMapsForTolueneOntoToluene() {
+    void testItShouldCountTwoMapsForTolueneOntoToluene() {
         IMapper mapper = new VFMapper(toluene, true);
 
-        Assert.assertEquals(2, mapper.countMaps(toluene));
+        Assertions.assertEquals(2, mapper.countMaps(toluene));
     }
 
     @Test
-    public void testItShouldFindTwelveMapsForBenzeneOntoBenzene() {
+    void testItShouldFindTwelveMapsForBenzeneOntoBenzene() {
         IMapper mapper = new VFMapper(benzene, true);
         List<Map<INode, IAtom>> maps = mapper.getMaps(benzene);
 
-        Assert.assertEquals(12, maps.size());
+        Assertions.assertEquals(12, maps.size());
     }
 
     @Test
-    public void testItShouldFindTwentyFourMapsForBenzeneOntoNaphthalene() {
+    void testItShouldFindTwentyFourMapsForBenzeneOntoNaphthalene() {
         IMapper mapper = new VFMapper(benzene, true);
         List<Map<INode, IAtom>> maps = mapper.getMaps(naphthalene);
 
-        Assert.assertEquals(24, maps.size());
+        Assertions.assertEquals(24, maps.size());
     }
 
     @Test
-    public void testItShouldFindAMapForEquivalentFormsOfToluene() {
+    void testItShouldFindAMapForEquivalentFormsOfToluene() {
         IMapper mapper = new VFMapper(toluene, true);
         Map<INode, IAtom> map = mapper.getFirstMap(toluene4);
 
-        Assert.assertEquals(7, map.size());
+        Assertions.assertEquals(7, map.size());
     }
 
     @Test
-    public void testItShouldFindTwoMapsForEquivalentFormsOfToluene() {
+    void testItShouldFindTwoMapsForEquivalentFormsOfToluene() {
         IMapper mapper = new VFMapper(toluene, true);
         List<Map<INode, IAtom>> maps = mapper.getMaps(toluene4);
 
-        Assert.assertEquals(2, maps.size());
+        Assertions.assertEquals(2, maps.size());
     }
     //    @Test
     //    public void testItMapsBlockedPropaneOntoPropane() throws CDKException {

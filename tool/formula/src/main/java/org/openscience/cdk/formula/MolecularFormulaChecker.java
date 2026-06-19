@@ -37,19 +37,17 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * validation is based according different rules that you have to introduce before
  * see IRule.
  *
- * @cdk.module  formula
  * @author      miguelrojasch
  * @cdk.created 2007-11-20
  * @cdk.keyword molecule, molecular formula
- * @cdk.githash
  * @see         IRule
  */
 public class MolecularFormulaChecker {
 
-    private ILoggingTool logger = LoggingToolFactory.createLoggingTool(MolecularFormulaChecker.class);
+    private final ILoggingTool logger = LoggingToolFactory.createLoggingTool(MolecularFormulaChecker.class);
 
     /** List of IRules to be applied in the validation.*/
-    private List<IRule>  rules;
+    private final List<IRule>  rules;
 
     /**
      * Construct an instance of MolecularFormulaChecker. It must be initialized
@@ -86,9 +84,8 @@ public class MolecularFormulaChecker {
         IMolecularFormula formulaWith = isValid(formula);
         Map<Object, Object> properties = formulaWith.getProperties();
 
-        Iterator<IRule> iterRules = rules.iterator();
-        while (iterRules.hasNext()) {
-            result *= (Double) properties.get(iterRules.next().getClass());
+        for (IRule rule : rules) {
+            result *= (Double) properties.get(rule.getClass());
         }
         return result;
     }
@@ -121,7 +118,8 @@ public class MolecularFormulaChecker {
 
             }
         } catch (CDKException e) {
-            e.printStackTrace();
+            LoggingToolFactory.createLoggingTool(MolecularFormulaChecker.class)
+                              .warn("Unexpected Error:", e);
         }
 
         return formula;

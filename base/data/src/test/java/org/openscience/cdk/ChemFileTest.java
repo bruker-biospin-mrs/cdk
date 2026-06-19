@@ -20,36 +20,27 @@
 
 package org.openscience.cdk;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IChemFile;
-import org.openscience.cdk.interfaces.AbstractChemFileTest;
-import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
+import org.openscience.cdk.test.interfaces.AbstractChemFileTest;
 
 /**
  * Checks the functionality of the {@link ChemFile} class.
  *
- * @cdk.module test-data
  */
-public class ChemFileTest extends AbstractChemFileTest {
+class ChemFileTest extends AbstractChemFileTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new ChemFile();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(ChemFile::new);
     }
 
     @Test
-    public void testChemFile() {
+    void testChemFile() {
         IChemFile cs = new ChemFile();
-        Assert.assertNotNull(cs);
+        Assertions.assertNotNull(cs);
     }
 
 }

@@ -18,28 +18,26 @@
  */
 package org.openscience.cdk.event;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.event.ChemObjectChangeEvent;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * Checks the functionality of the ChemObjectChangeEvent class.
  *
- * @cdk.module test-data
  *
  * @see org.openscience.cdk.event.ChemObjectChangeEvent
  */
-public class ChemObjectChangeEventTest extends CDKTestCase {
+class ChemObjectChangeEventTest extends CDKTestCase {
 
-    @BeforeClass
-    public static void setUp() {}
+    @BeforeAll
+    static void setUp() {}
 
     @Test
-    public void testChemObjectChangeEvent_Object() {
+    void testChemObjectChangeEvent_Object() {
         ChemObjectChangeEvent event = new ChemObjectChangeEvent(new Atom());
-        Assert.assertNotNull(event);
+        Assertions.assertNotNull(event);
     }
 }

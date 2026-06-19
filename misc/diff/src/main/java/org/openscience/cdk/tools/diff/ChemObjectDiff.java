@@ -27,8 +27,6 @@ import org.openscience.cdk.tools.diff.tree.IDifference;
  * Compares two {@link IChemObject} classes.
  *
  * @author     egonw
- * @cdk.module diff
- * @cdk.githash
  */
 public class ChemObjectDiff {
 
@@ -65,8 +63,8 @@ public class ChemObjectDiff {
         if (!(first instanceof IChemObject && second instanceof IChemObject)) {
             return null;
         }
-        IChemObject firstElem = (IChemObject) first;
-        IChemObject secondElem = (IChemObject) second;
+        IChemObject firstElem = first;
+        IChemObject secondElem = second;
         ChemObjectDifference coDiff = new ChemObjectDifference("ChemObjectDiff");
         // Compare flags
         boolean[] firstFlags = firstElem.getFlags();

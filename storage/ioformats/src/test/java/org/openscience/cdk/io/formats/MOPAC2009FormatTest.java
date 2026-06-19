@@ -23,20 +23,19 @@
  */
 package org.openscience.cdk.io.formats;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-ioformats
  */
-public class MOPAC2009FormatTest extends ChemFormatMatcherTest {
+class MOPAC2009FormatTest extends ChemFormatMatcherTest {
 
-    public MOPAC2009FormatTest() {
+    MOPAC2009FormatTest() {
         super.setChemFormatMatcher((IChemFormatMatcher) MOPAC2009Format.getInstance());
     }
 
     @Test
-    public void matchesMopac2009() throws Exception {
-        Assert.assertTrue(((MOPAC2009Format) MOPAC2009Format.getInstance()).matches(0, "MOPAC2009"));
+    void matchesMopac2009() throws Exception {
+        Assertions.assertTrue(((MOPAC2009Format) MOPAC2009Format.getInstance()).matches(0, "MOPAC2009"));
     }
 }

@@ -18,49 +18,49 @@
  */
 package org.openscience.cdk.tools.diff;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.tools.diff.tree.IDifference;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * @cdk.module test-diff
  */
-public class ElementDiffTest extends CDKTestCase {
+class ElementDiffTest {
 
     @Test
-    public void testMatchAgainstItself() {
+    void testMatchAgainstItself() {
         IElement element1 = mock(IElement.class);
         String result = ElementDiff.diff(element1, element1);
-        assertZeroLength(result);
+        Assertions.assertEquals("", result);
     }
 
     @Test
-    public void testDiff() {
+    void testDiff() {
         IElement element1 = mock(IElement.class);
         IElement element2 = mock(IElement.class);
         when(element1.getSymbol()).thenReturn("H");
         when(element2.getSymbol()).thenReturn("C");
 
         String result = ElementDiff.diff(element1, element2);
-        Assert.assertNotNull(result);
-        Assert.assertNotSame(0, result.length());
-        assertContains(result, "ElementDiff");
-        assertContains(result, "H/C");
+        Assertions.assertNotNull(result);
+        Assertions.assertNotSame(0, result.length());
+        MatcherAssert.assertThat(result, containsString("ElementDiff"));
+        MatcherAssert.assertThat(result, containsString("H/C"));
     }
 
     @Test
-    public void testDifference() {
+    void testDifference() {
         IElement element1 = mock(IElement.class);
         IElement element2 = mock(IElement.class);
         when(element1.getSymbol()).thenReturn("H");
         when(element2.getSymbol()).thenReturn("C");
 
         IDifference difference = ElementDiff.difference(element1, element2);
-        Assert.assertNotNull(difference);
+        Assertions.assertNotNull(difference);
     }
 }

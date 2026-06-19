@@ -18,23 +18,21 @@
  */
 package org.openscience.cdk.smsd.algorithm.rgraph;
 
-import org.openscience.cdk.smsd.algorithm.rgraph.CDKRMap;
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
- * @cdk.module test-smsd
  * @author     Syed Asad Rahman
  * @cdk.require java1.5+
  */
-public class CDKRMapTest extends CDKTestCase {
+class CDKRMapTest extends CDKTestCase {
 
     @Test
-    public void testRMap_int_int() {
+    void testRMap_int_int() {
         CDKRMap node = new CDKRMap(1, 2);
-        Assert.assertNotNull(node);
-        Assert.assertEquals(1, node.getId1());
-        Assert.assertEquals(2, node.getId2());
+        Assertions.assertNotNull(node);
+        Assertions.assertEquals(1, node.getId1());
+        Assertions.assertEquals(2, node.getId2());
     }
 }

@@ -18,11 +18,11 @@
  */
 package org.openscience.cdk.io.inchi;
 
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.AtomContainerSet;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemModel;
 import org.openscience.cdk.ChemSequence;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.tools.ILoggingTool;
@@ -41,8 +41,6 @@ import org.xml.sax.helpers.DefaultHandler;
  * <p>The returned ChemFile contains a ChemSequence in
  * which the ChemModel represents the molecule.
  *
- * @cdk.module extra
- * @cdk.githash
  *
  * @see org.openscience.cdk.io.INChIReader
  *
@@ -51,8 +49,8 @@ import org.xml.sax.helpers.DefaultHandler;
 @Deprecated
 public class INChIHandler extends DefaultHandler {
 
-    private static ILoggingTool       logger = LoggingToolFactory.createLoggingTool(INChIHandler.class);
-    private INChIContentProcessorTool inchiTool;
+    private static final ILoggingTool       logger = LoggingToolFactory.createLoggingTool(INChIHandler.class);
+    private final INChIContentProcessorTool inchiTool;
 
     private ChemFile                  chemFile;
     private ChemSequence              chemSequence;
@@ -102,8 +100,8 @@ public class INChIHandler extends DefaultHandler {
         } else if ("formula".equals(local)) {
             if (tautomer != null) {
                 logger.info("Parsing <formula> chars: ", currentChars);
-                tautomer = new AtomContainer(inchiTool.processFormula(
-                        setOfMolecules.getBuilder().newInstance(IAtomContainer.class), currentChars));
+                tautomer = DefaultChemObjectBuilder.getInstance().newInstance(IAtomContainer.class, (inchiTool.processFormula(
+                        setOfMolecules.getBuilder().newInstance(IAtomContainer.class), currentChars)));
             } else {
                 logger.warn("Cannot set atom info for empty tautomer");
             }
@@ -141,7 +139,7 @@ public class INChIHandler extends DefaultHandler {
                 if (atts.getQName(i).equals("version")) logger.info("INChI version: ", atts.getValue(i));
             }
         } else if ("structure".equals(local)) {
-            tautomer = new AtomContainer();
+            tautomer = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         } else {
             // skip all other elements
         }
@@ -154,7 +152,7 @@ public class INChIHandler extends DefaultHandler {
      * @param ch        characters to handle
      */
     @Override
-    public void characters(char ch[], int start, int length) {
+    public void characters(char[] ch, int start, int length) {
         logger.debug("character data");
         currentChars += new String(ch, start, length);
     }

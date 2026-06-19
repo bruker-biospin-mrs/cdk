@@ -23,13 +23,14 @@
 
 package org.openscience.cdk.smiles;
 
-import org.openscience.cdk.smiles.CxSmilesState.PolymerSgroup;
+import org.openscience.cdk.interfaces.IStereoElement;
+import org.openscience.cdk.smiles.CxSmilesState.CxDataSgroup;
+import org.openscience.cdk.smiles.CxSmilesState.CxPolymerSgroup;
+import org.openscience.cdk.smiles.CxSmilesState.CxSgroup;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -126,8 +127,8 @@ public class CxSmilesGenerator {
 
             List<List<Integer>> fragGroupCpy = new ArrayList<>(state.fragGroups);
             for (List<Integer> idxs : fragGroupCpy)
-                Collections.sort(idxs, compComp);
-            Collections.sort(fragGroupCpy, new Comparator<List<Integer>>() {
+                idxs.sort(compComp);
+            fragGroupCpy.sort(new Comparator<List<Integer>>() {
                 @Override
                 public int compare(List<Integer> a, List<Integer> b) {
                     return CxSmilesGenerator.compare(compComp, a, b);
@@ -185,6 +186,67 @@ public class CxSmilesGenerator {
             sb.append('$');
         }
 
+        if (SmiFlavor.isFullySet(opts, SmiFlavor.CxEnhancedStereo)) {
+            if (state.racemic) {
+                if (sb.length() > 2)
+                    sb.append(',');
+                sb.append("r");
+            } else {
+                if (state.racemicFrags != null) {
+                    if (sb.length() > 2)
+                        sb.append(',');
+                    sb.append("r:");
+                    sb.append(state.racemicFrags.get(0));
+                    for (int i=1; i<state.racemicFrags.size(); i++) {
+                        sb.append(',').append(state.racemicFrags.get(i));
+                    }
+                }
+                if (state.stereoGrps != null) {
+                    // collect the indexes by group
+                    Map<Integer,List<Integer>> grpToIdxs = new TreeMap<>();
+                    for (Map.Entry<Integer,Integer> e : state.stereoGrps.entrySet()) {
+                        Integer idx = e.getKey();
+                        Integer grp = e.getValue();
+                        grpToIdxs.computeIfAbsent(grp, k -> new ArrayList<>())
+                                 .add(idx);
+                    }
+
+                    // make sure we have a consistent ordering
+                    List<Map.Entry<Integer, List<Integer>>> entries = new ArrayList<>(grpToIdxs.entrySet());
+                    for (Map.Entry<Integer,List<Integer>> e : entries)
+                        e.getValue().sort(invComp);
+                    entries.sort((o1, o2) -> invComp.compare(o1.getValue().get(0), o2.getValue().get(0)));
+
+                    int numRac = 0;
+                    int numRel = 0;
+
+                    // write the stereo groups
+                    for (Map.Entry<Integer,List<Integer>> e : entries) {
+                        if (sb.length() > 2)
+                            sb.append(',');
+                        int grpInfo = e.getKey();
+                        switch (grpInfo & IStereoElement.GRP_TYPE_MASK) {
+                            case IStereoElement.GRP_ABS:
+                                sb.append("a");
+                                break;
+                            case IStereoElement.GRP_RAC:
+                                sb.append("&");
+                                sb.append(++numRac);
+                                break;
+                            case IStereoElement.GRP_REL:
+                                sb.append("o");
+                                sb.append(++numRel);
+                                break;
+                            default:
+                                throw new IllegalStateException("Unexpected stereo group");
+                        }
+                        sb.append(":");
+                        appendIntegers(invorder, ',', sb, e.getValue());
+                    }
+                }
+            }
+        }
+
         // 2D/3D Coordinates
         if (SmiFlavor.isSet(opts, SmiFlavor.CxCoordinates) &&
             state.atomCoords != null && !state.atomCoords.isEmpty()) {
@@ -217,14 +279,7 @@ public class CxSmilesGenerator {
             List<Map.Entry<Integer, List<Integer>>> multicenters = new ArrayList<>(state.positionVar.entrySet());
 
             // consistent output order
-            Collections.sort(multicenters,
-                             new Comparator<Map.Entry<Integer, List<Integer>>>() {
-                                 @Override
-                                 public int compare(Map.Entry<Integer, List<Integer>> a,
-                                                    Map.Entry<Integer, List<Integer>> b) {
-                                     return comp.compare(a.getKey(), b.getKey());
-                                 }
-                             });
+            multicenters.sort((a, b) -> comp.compare(a.getKey(), b.getKey()));
 
             for (int i = 0; i < multicenters.size(); i++) {
                 if (i != 0) sb.append(',');
@@ -232,45 +287,146 @@ public class CxSmilesGenerator {
                 sb.append(ordering[e.getKey()]);
                 sb.append(':');
                 List<Integer> vals = new ArrayList<>(e.getValue());
-                Collections.sort(vals, comp);
+                vals.sort(comp);
                 appendIntegers(ordering, '.', sb, vals);
             }
 
         }
 
+        if (SmiFlavor.isSet(opts, SmiFlavor.CxLigandOrder) &&
+            state.ligandOrdering != null && !state.ligandOrdering.isEmpty()) {
+
+            if (sb.length() > 2) sb.append(',');
+            sb.append("LO");
+            sb.append(':');
+
+            List<Map.Entry<Integer, List<Integer>>> ligandorderings = new ArrayList<>(state.ligandOrdering.entrySet());
+
+            // consistent output order
+            ligandorderings.sort((a, b) -> comp.compare(a.getKey(), b.getKey()));
+
+            for (int i = 0; i < ligandorderings.size(); i++) {
+                if (i != 0) sb.append(',');
+                Map.Entry<Integer, List<Integer>> e = ligandorderings.get(i);
+                sb.append(ordering[e.getKey()]);
+                sb.append(':');
+                appendIntegers(ordering, '.', sb, e.getValue());
+            }
+
+        }
+
+
+        int numSgroups = 0;
 
         // *CCO* |$_AP1;;;;_AP2$,Sg:n:1,2,3::ht|
         if (SmiFlavor.isSet(opts, SmiFlavor.CxPolymer) &&
-            state.sgroups != null && !state.sgroups.isEmpty()) {
-            List<PolymerSgroup> sgroups = new ArrayList<>(state.sgroups);
+            state.mysgroups != null && !state.mysgroups.isEmpty()) {
+            List<CxPolymerSgroup> polysgroups = new ArrayList<>();
+            for (CxSgroup polysgroup : state.mysgroups) {
+                if (polysgroup instanceof CxPolymerSgroup) {
+                    polysgroups.add((CxPolymerSgroup) polysgroup);
+                    polysgroup.atoms.sort(comp);
+                }
+            }
 
-            for (PolymerSgroup psgroup : sgroups)
-                Collections.sort(psgroup.atomset, comp);
-
-            Collections.sort(sgroups, new Comparator<PolymerSgroup>() {
+            polysgroups.sort(new Comparator<CxPolymerSgroup>() {
                 @Override
-                public int compare(PolymerSgroup a, PolymerSgroup b) {
-                    int cmp = 0;
+                public int compare(CxPolymerSgroup a, CxPolymerSgroup b) {
+                    int cmp;
                     cmp = a.type.compareTo(b.type);
                     if (cmp != 0) return cmp;
-                    cmp = CxSmilesGenerator.compare(comp, a.atomset, b.atomset);
+                    cmp = CxSmilesGenerator.compare(comp, a.atoms, b.atoms);
                     return cmp;
                 }
             });
 
-            for (int i = 0; i < sgroups.size(); i++) {
+            for (CxPolymerSgroup cxPolymerSgroup : polysgroups) {
+                cxPolymerSgroup.id = numSgroups++;
                 if (sb.length() > 2) sb.append(',');
                 sb.append("Sg:");
-                PolymerSgroup sgroup = sgroups.get(i);
-                sb.append(sgroup.type);
+                sb.append(cxPolymerSgroup.type);
                 sb.append(':');
-                appendIntegers(ordering, ',', sb, sgroup.atomset);
+                appendIntegers(ordering, ',', sb, cxPolymerSgroup.atoms);
                 sb.append(':');
-                if (sgroup.subscript != null)
-                    sb.append(sgroup.subscript);
+                if (cxPolymerSgroup.subscript != null)
+                    sb.append(cxPolymerSgroup.subscript);
                 sb.append(':');
-                if (sgroup.supscript != null)
-                    sb.append(sgroup.supscript.toLowerCase(Locale.ROOT));
+                if (cxPolymerSgroup.supscript != null &&
+                    !cxPolymerSgroup.supscript.equals("eu"))
+                    sb.append(cxPolymerSgroup.supscript.toLowerCase(Locale.ROOT));
+            }
+        }
+
+        if (SmiFlavor.isSet(opts, SmiFlavor.CxDataSgroups) &&
+            state.mysgroups != null && !state.mysgroups.isEmpty()) {
+            List<CxDataSgroup> datasgroups = new ArrayList<>();
+            for (CxSgroup datasgroup : state.mysgroups) {
+                if (datasgroup instanceof CxDataSgroup) {
+                    datasgroups.add((CxDataSgroup)datasgroup);
+                    datasgroup.atoms.sort(comp);
+                }
+            }
+
+            datasgroups.sort((a, b) -> {
+                int cmp;
+                cmp = a.field.compareTo(b.field);
+                if (cmp != 0) return cmp;
+                cmp = a.value.compareTo(b.value);
+                if (cmp != 0) return cmp;
+                cmp = compare(comp, a.atoms, b.atoms);
+                return cmp;
+            });
+
+            for (CxDataSgroup cxDataSgroup : datasgroups) {
+                cxDataSgroup.id = numSgroups++;
+                if (sb.length() > 2) sb.append(',');
+                sb.append("SgD:");
+                appendIntegers(ordering, ',', sb, cxDataSgroup.atoms);
+                sb.append(':');
+                if (cxDataSgroup.field != null)
+                    sb.append(cxDataSgroup.field);
+                sb.append(':');
+                if (cxDataSgroup.value != null)
+                    sb.append(cxDataSgroup.value);
+                if (cxDataSgroup.operator != null || cxDataSgroup.unit != null) {
+                    sb.append(':');
+                    if (cxDataSgroup.operator != null)
+                        sb.append(cxDataSgroup.operator);
+                    if (cxDataSgroup.unit != null) {
+                        sb.append(':');
+                        sb.append(cxDataSgroup.unit);
+                    }
+                }
+                // fmt (t/f/n) + coords?
+            }
+        }
+
+        // hierarchy information
+        if (numSgroups > 0) {
+            boolean firstSgH = true;
+            if (state.mysgroups != null) {
+                state.mysgroups.sort(Comparator.comparingInt(o -> o.id));
+                for (CxSgroup sgroup : state.mysgroups) {
+                    if (sgroup.children.isEmpty())
+                        continue;
+                    if (sb.length() > 2) sb.append(',');
+                    if (firstSgH) {
+                        sb.append("SgH:");
+                        firstSgH = false;
+                    }
+                    sb.append(sgroup.id).append(':');
+                    boolean first = true;
+                    List<CxSgroup> children = new ArrayList<>(sgroup.children);
+                    children.sort(Comparator.comparingInt(o -> o.id));
+                    for (CxSgroup child : children) {
+                        if (child.id < 0)
+                            continue;
+                        if (!first)
+                            sb.append('.');
+                        first = false;
+                        sb.append(child.id);
+                    }
+                }
             }
         }
 
@@ -281,7 +437,7 @@ public class CxSmilesGenerator {
             for (Map.Entry<Integer, CxSmilesState.Radical> e : state.atomRads.entrySet()) {
                 List<Integer> idxs = radinv.get(e.getValue());
                 if (idxs == null)
-                    radinv.put(e.getValue(), idxs = new ArrayList<Integer>());
+                    radinv.put(e.getValue(), idxs = new ArrayList<>());
                 idxs.add(e.getKey());
             }
             for (Map.Entry<CxSmilesState.Radical, List<Integer>> e : radinv.entrySet()) {
@@ -289,7 +445,7 @@ public class CxSmilesGenerator {
                 sb.append('^');
                 sb.append(e.getKey().ordinal() + 1);
                 sb.append(':');
-                Collections.sort(e.getValue(), comp);
+                e.getValue().sort(comp);
                 appendIntegers(ordering, ',', sb, e.getValue());
             }
         }

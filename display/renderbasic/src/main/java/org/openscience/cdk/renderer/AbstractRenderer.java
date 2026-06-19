@@ -61,9 +61,7 @@ import org.openscience.cdk.renderer.visitor.IDrawVisitor;
  * return '10.0' for an input of '10.0', as that is the scale for that desired
  * bond length.</p>
  *
- * @cdk.module renderbasic
  * @author maclean
- * @cdk.githash
  */
 public abstract class AbstractRenderer<T extends IChemObject> {
 
@@ -427,8 +425,8 @@ public abstract class AbstractRenderer<T extends IChemObject> {
         double margin = rendererModel.getParameter(Margin.class).getValue();
         int width = (int) ((scale * zoom * modelWidth) + (2 * margin));
         int height = (int) ((scale * zoom * modelHeight) + (2 * margin));
-        int xCoord = (int) (screenCoord.x - width / 2);
-        int yCoord = (int) (screenCoord.y - height / 2);
+        int xCoord = (int) (screenCoord.x - (width / 2.0));
+        int yCoord = (int) (screenCoord.y - (height / 2.0));
 
         return new Rectangle(xCoord, yCoord, width, height);
     }

@@ -21,8 +21,6 @@ package org.openscience.cdk.io.formats;
 import org.openscience.cdk.tools.DataFeatures;
 
 /**
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class DaltonFormat extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 
@@ -74,7 +72,7 @@ public class DaltonFormat extends SimpleChemFormatMatcher implements IChemFormat
     /** {@inheritDoc} */
     @Override
     public boolean matches(int lineNumber, String line) {
-        if (line.indexOf("DALTON") >= 0) {
+        if (line.contains("DALTON")) {
             return true;
         }
         return false;

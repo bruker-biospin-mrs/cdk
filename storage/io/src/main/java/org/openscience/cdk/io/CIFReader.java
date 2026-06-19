@@ -46,8 +46,6 @@ import java.util.StringTokenizer;
  * <p>The CIF example on the IUCR website has been tested, as well as Crambin (1CRN)
  * in the PDB database.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @cdk.keyword file format, CIF
  * @cdk.keyword file format, mmCIF
@@ -59,7 +57,7 @@ import java.util.StringTokenizer;
 public class CIFReader extends DefaultChemObjectReader {
 
     private BufferedReader      input;
-    private static ILoggingTool logger  = LoggingToolFactory.createLoggingTool(CIFReader.class);
+    private static final ILoggingTool logger  = LoggingToolFactory.createLoggingTool(CIFReader.class);
 
     private ICrystal            crystal = null;
     // cell parameters
@@ -106,8 +104,8 @@ public class CIFReader extends DefaultChemObjectReader {
     public boolean accepts(Class<? extends IChemObject> testClass) {
         if (IChemFile.class.equals(testClass)) return true;
         Class<?>[] interfaces = testClass.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (IChemFile.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (IChemFile.class.equals(anInterface)) return true;
         }
         Class superClass = testClass.getSuperclass();
         if (superClass != null) return this.accepts(superClass);
@@ -160,7 +158,7 @@ public class CIFReader extends DefaultChemObjectReader {
             } else {
 
                 /* determine CIF command */
-                String command = "";
+                String command;
                 int spaceIndex = line.indexOf(' ');
                 if (spaceIndex != -1) {
                     // everything upto space is command
@@ -247,7 +245,10 @@ public class CIFReader extends DefaultChemObjectReader {
     }
 
     private String processLoopBlock() throws IOException {
-        String line = input.readLine().trim();
+        String line = input.readLine();
+        if (line == null)
+            return null;
+        line = line.trim();
         if (line.startsWith("_atom")) {
             logger.info("Found atom loop block");
             return processAtomLoopBlock(line);
@@ -431,10 +432,22 @@ public class CIFReader extends DefaultChemObjectReader {
         return returnVal;
     }
 
+    /**
+     * Checks if a given character is an ASCII digit. Do NOT replace
+     * with Character.isDigit() which check the entire Unicode table/code
+     * spaces.
+     *
+     * @param ch the character to check
+     * @return true if the character is a digit, false otherwise
+     */
+    private boolean isDigit(char ch) {
+        return ch >= '0' && ch <= '9';
+    }
+
     private String extractFirstLetters(String value) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < value.length(); i++) {
-            if (Character.isDigit(value.charAt(i))) {
+            if (isDigit(value.charAt(i))) {
                 break;
             } else {
                 result.append(value.charAt(i));

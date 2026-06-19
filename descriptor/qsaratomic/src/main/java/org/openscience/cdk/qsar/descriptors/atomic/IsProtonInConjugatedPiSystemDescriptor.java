@@ -27,6 +27,7 @@ import org.openscience.cdk.graph.invariant.ConjugatedPiSystemsDetector;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.qsar.AbstractAtomicDescriptor;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -52,8 +53,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  *
  * @author      mfe4
  * @cdk.created 2004-11-03
- * @cdk.module  qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:isProtonInConjugatedPiSystem
  */
 public class IsProtonInConjugatedPiSystemDescriptor extends AbstractAtomicDescriptor implements IAtomicDescriptor {
@@ -129,7 +128,7 @@ public class IsProtonInConjugatedPiSystemDescriptor extends AbstractAtomicDescri
     public DescriptorValue calculate(IAtom atom, IAtomContainer atomContainer) {
         IAtomContainer clonedAtomContainer;
         try {
-            clonedAtomContainer = (IAtomContainer) atomContainer.clone();
+            clonedAtomContainer = atomContainer.clone();
         } catch (CloneNotSupportedException e) {
             return new DescriptorValue(getSpecification(), getParameterNames(), getParameters(), new BooleanResult(
                     false), NAMES, e);
@@ -147,7 +146,7 @@ public class IsProtonInConjugatedPiSystemDescriptor extends AbstractAtomicDescri
                         false), NAMES, e);
             }
         }
-        if (atom.getSymbol().equals("H")) {
+        if (atom.getAtomicNumber() == IElement.H) {
             if (acold != clonedAtomContainer) {
                 acold = clonedAtomContainer;
                 acSet = ConjugatedPiSystemsDetector.detect(mol);

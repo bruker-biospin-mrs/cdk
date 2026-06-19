@@ -25,6 +25,7 @@ import org.openscience.cdk.charges.Polarizability;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.PathTools;
 import org.openscience.cdk.graph.matrix.AdjacencyMatrix;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomType;
@@ -39,16 +40,12 @@ import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 
-import java.util.Iterator;
-
 /**
  * This class calculates ATS autocorrelation descriptor, where the weight equal
  * to the charges.
  *
  * @author Federico
  * @cdk.created 2007-03-01
- * @cdk.module qsarmolecular
- * @cdk.githash
  */
 
 public class AutocorrelationDescriptorPolarizability extends AbstractMolecularDescriptor implements
@@ -66,7 +63,7 @@ public class AutocorrelationDescriptorPolarizability extends AbstractMolecularDe
             try {
                 polars[i] = polar.calculateGHEffectiveAtomPolarizability(container, atom, false, dmat);
             } catch (Exception ex1) {
-                throw new CDKException("Problems with assign Polarizability due to " + ex1.toString(), ex1);
+                throw new CDKException("Problems with assign Polarizability due to " + ex1, ex1);
             }
         }
 
@@ -80,7 +77,7 @@ public class AutocorrelationDescriptorPolarizability extends AbstractMolecularDe
     public DescriptorValue calculate(IAtomContainer container) {
         IAtomContainer molecule;
         try {
-            molecule = (IAtomContainer) container.clone();
+            molecule = container.clone();
         } catch (CloneNotSupportedException e) {
             return getDummyDescriptorValue(new CDKException("Error occurred during clone " + e));
         }
@@ -88,9 +85,7 @@ public class AutocorrelationDescriptorPolarizability extends AbstractMolecularDe
         // add H's in case they're not present
         try {
             CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(molecule.getBuilder());
-            Iterator<IAtom> atoms = molecule.atoms().iterator();
-            while (atoms.hasNext()) {
-                IAtom atom = atoms.next();
+            for (IAtom atom : molecule.atoms()) {
                 IAtomType type = matcher.findMatchingAtomType(molecule, atom);
                 AtomTypeManipulator.configure(atom, type);
             }
@@ -123,9 +118,9 @@ public class AutocorrelationDescriptorPolarizability extends AbstractMolecularDe
 
             for (int k = 0; k < 5; k++) {
                 for (int i = 0; i < natom; i++) {
-                    if (molecule.getAtom(i).getSymbol().equals("H")) continue;
+                    if (molecule.getAtom(i).getAtomicNumber() == IElement.H) continue;
                     for (int j = 0; j < natom; j++) {
-                        if (molecule.getAtom(j).getSymbol().equals("H")) continue;
+                        if (molecule.getAtom(j).getAtomicNumber() == IElement.H) continue;
                         if (distancematrix[i][j] == k) {
                             polarizabilitySum[k] += w[i] * w[j];
                         } else

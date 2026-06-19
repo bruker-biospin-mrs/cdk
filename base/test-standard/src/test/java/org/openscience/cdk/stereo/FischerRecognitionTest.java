@@ -24,8 +24,8 @@
 
 package org.openscience.cdk.stereo;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.GraphUtil;
 import org.openscience.cdk.interfaces.IAtom;
@@ -34,8 +34,8 @@ import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IStereoElement;
 import org.openscience.cdk.interfaces.ITetrahedralChirality;
 import org.openscience.cdk.silent.Atom;
-import org.openscience.cdk.silent.AtomContainer;
 import org.openscience.cdk.silent.Bond;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 import javax.vecmath.Point2d;
 
@@ -49,13 +49,14 @@ import static org.openscience.cdk.graph.GraphUtil.EdgeToBondMap;
 import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo;
 import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo.ANTI_CLOCKWISE;
 
-public class FischerRecognitionTest {
+class FischerRecognitionTest {
 
     /**
      * @cdk.inchi InChI=1/C3H6O3/c4-1-3(6)2-5/h1,3,5-6H,2H2/t3-/s2
      */
-    @Test public void recogniseRightHandedGlyceraldehyde() throws Exception {
-        IAtomContainer m = new AtomContainer(8, 7, 0, 0);
+    @Test
+    void recogniseRightHandedGlyceraldehyde() throws Exception {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, 0.80d, 1.24d));
         m.addAtom(atom("C", 0, 0.80d, 0.42d));
         m.addAtom(atom("O", 1, 0.09d, 1.66d));
@@ -66,7 +67,7 @@ public class FischerRecognitionTest {
         m.addAtom(atom("O", 1, 1.52d, -0.82d));
         m.addBond(0, 1, IBond.Order.SINGLE);
         m.addBond(0, 2, IBond.Order.SINGLE);
-        m.addBond(0, 3, IBond.Order.DOUBLE, IBond.Stereo.E_Z_BY_COORDINATES);
+        m.addBond(0, 3, IBond.Order.DOUBLE);
         m.addBond(1, 4, IBond.Order.SINGLE);
         m.addBond(1, 5, IBond.Order.SINGLE);
         m.addBond(1, 6, IBond.Order.SINGLE);
@@ -79,7 +80,7 @@ public class FischerRecognitionTest {
                                                                bondMap,
                                                                Stereocenters.of(m));
         List<IStereoElement> elements = recogniser.recognise(Collections.singleton(Projection.Fischer));
-        Assert.assertThat(elements.size(), is(1));
+        org.hamcrest.MatcherAssert.assertThat(elements.size(), is(1));
         assertTetrahedralCenter(elements.get(0),
                                 m.getAtom(1),
                                 ANTI_CLOCKWISE,
@@ -89,8 +90,9 @@ public class FischerRecognitionTest {
     /**
      * @cdk.inchi InChI=1S/C3H6O3/c4-1-3(6)2-5/h1,3,5-6H,2H2/t3-/m1/s1
      */
-    @Test public void recogniseLeftHandedGlyceraldehyde() throws Exception {
-        IAtomContainer m = new AtomContainer(8, 7, 0, 0);
+    @Test
+    void recogniseLeftHandedGlyceraldehyde() throws Exception {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, 0.80d, 1.24d));
         m.addAtom(atom("C", 0, 0.80d, 0.42d));
         m.addAtom(atom("O", 1, 0.09d, 1.66d));
@@ -101,7 +103,7 @@ public class FischerRecognitionTest {
         m.addAtom(atom("O", 1, 1.52d, -0.82d));
         m.addBond(0, 1, IBond.Order.SINGLE);
         m.addBond(0, 2, IBond.Order.SINGLE);
-        m.addBond(0, 3, IBond.Order.DOUBLE, IBond.Stereo.E_Z_BY_COORDINATES);
+        m.addBond(0, 3, IBond.Order.DOUBLE);
         m.addBond(1, 4, IBond.Order.SINGLE);
         m.addBond(1, 5, IBond.Order.SINGLE);
         m.addBond(1, 6, IBond.Order.SINGLE);
@@ -114,7 +116,7 @@ public class FischerRecognitionTest {
                                                                bondMap,
                                                                Stereocenters.of(m));
         List<IStereoElement> elements = recogniser.recognise(Collections.singleton(Projection.Fischer));
-        Assert.assertThat(elements.size(), is(1));
+        org.hamcrest.MatcherAssert.assertThat(elements.size(), is(1));
         assertTetrahedralCenter(elements.get(0),
                                 m.getAtom(1),
                                 ANTI_CLOCKWISE,
@@ -124,8 +126,9 @@ public class FischerRecognitionTest {
     /**
      * @cdk.inchi InChI=1/C3H6O3/c4-1-3(6)2-5/h1,3,5-6H,2H2/t3-/s2
      */
-    @Test public void recogniseRightHandedGlyceraldehydeWithImplicitHydrogen() throws Exception {
-        IAtomContainer m = new AtomContainer(8, 7, 0, 0);
+    @Test
+    void recogniseRightHandedGlyceraldehydeWithImplicitHydrogen() throws Exception {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, 0.80d, 1.24d));
         m.addAtom(atom("C", 1, 0.80d, 0.42d));
         m.addAtom(atom("O", 1, 0.09d, 1.66d));
@@ -135,7 +138,7 @@ public class FischerRecognitionTest {
         m.addAtom(atom("O", 1, 1.52d, -0.82d));
         m.addBond(0, 1, IBond.Order.SINGLE);
         m.addBond(0, 2, IBond.Order.SINGLE);
-        m.addBond(0, 3, IBond.Order.DOUBLE, IBond.Stereo.E_Z_BY_COORDINATES);
+        m.addBond(0, 3, IBond.Order.DOUBLE);
         m.addBond(1, 4, IBond.Order.SINGLE);
         m.addBond(1, 5, IBond.Order.SINGLE);
         m.addBond(5, 6, IBond.Order.SINGLE);
@@ -147,7 +150,7 @@ public class FischerRecognitionTest {
                                                                bondMap,
                                                                Stereocenters.of(m));
         List<IStereoElement> elements = recogniser.recognise(Collections.singleton(Projection.Fischer));
-        Assert.assertThat(elements.size(), is(1));
+        org.hamcrest.MatcherAssert.assertThat(elements.size(), is(1));
         assertTetrahedralCenter(elements.get(0),
                                 m.getAtom(1),
                                 ANTI_CLOCKWISE,
@@ -157,8 +160,9 @@ public class FischerRecognitionTest {
     /**
      * @cdk.inchi InChI=1S/C6H14O6/c7-1-3(9)5(11)6(12)4(10)2-8/h3-12H,1-2H2/t3-,4-,5-,6-/m1/s1
      */
-    @Test public void mannitol() throws CDKException {
-        IAtomContainer m = new AtomContainer(12, 11, 0, 0);
+    @Test
+    void mannitol() throws CDKException {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 2, -0.53d, 6.25d));
         m.addAtom(atom("C", 1, -0.53d, 5.42d));
         m.addAtom(atom("O", 1, 0.18d, 6.66d));
@@ -191,7 +195,7 @@ public class FischerRecognitionTest {
                                                                Stereocenters.of(m));
         List<IStereoElement> elements = recogniser.recognise(Collections.singleton(Projection.Fischer));
 
-        Assert.assertThat(elements.size(), is(4));
+        org.hamcrest.MatcherAssert.assertThat(elements.size(), is(4));
         assertTetrahedralCenter(elements.get(0),
                                 m.getAtom(1),
                                 ANTI_CLOCKWISE,
@@ -212,7 +216,8 @@ public class FischerRecognitionTest {
         m.setStereoElements(elements);
     }
 
-    @Test public void obtainCardinalBonds() {
+    @Test
+    void obtainCardinalBonds() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -234,14 +239,15 @@ public class FischerRecognitionTest {
                                                                       expected[3],
                                                                       expected[0]}
                                                          );
-        Assert.assertThat(expected, is(actual));
+        org.hamcrest.MatcherAssert.assertThat(expected, is(actual));
     }
 
     /**
      * In reality, bonds may not be perfectly orthogonal. Here the N, E, S, and
      * W atoms are all slightly offset from the focus.
      */
-    @Test public void obtainNonPerfectCardinalBonds() {
+    @Test
+    void obtainNonPerfectCardinalBonds() {
 
         IAtom focus = atom("C", 0, -0.40d, 3.37d);
 
@@ -263,10 +269,11 @@ public class FischerRecognitionTest {
                                                                       expected[3],
                                                                       expected[0]}
                                                          );
-        Assert.assertThat(expected, is(actual));
+        org.hamcrest.MatcherAssert.assertThat(expected, is(actual));
     }
 
-    @Test public void createCenterWithFourNeighbors() {
+    @Test
+    void createCenterWithFourNeighbors() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -284,15 +291,16 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertThat(element.getChiralAtom(), is(sameInstance(focus)));
-        Assert.assertThat(element.getStereo(), is(ANTI_CLOCKWISE));
-        Assert.assertThat(element.getLigands()[0], is(sameInstance(north)));
-        Assert.assertThat(element.getLigands()[1], is(sameInstance(east)));
-        Assert.assertThat(element.getLigands()[2], is(sameInstance(south)));
-        Assert.assertThat(element.getLigands()[3], is(sameInstance(west)));
+        org.hamcrest.MatcherAssert.assertThat(element.getChiralAtom(), is(sameInstance(focus)));
+        org.hamcrest.MatcherAssert.assertThat(element.getStereo(), is(ANTI_CLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[0], is(sameInstance(north)));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[1], is(sameInstance(east)));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[2], is(sameInstance(south)));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[3], is(sameInstance(west)));
     }
 
-    @Test public void createCenterWithThreeNeighbors_right() {
+    @Test
+    void createCenterWithThreeNeighbors_right() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -308,15 +316,16 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertThat(element.getChiralAtom(), is(sameInstance(focus)));
-        Assert.assertThat(element.getStereo(), is(ANTI_CLOCKWISE));
-        Assert.assertThat(element.getLigands()[0], is(sameInstance(north)));
-        Assert.assertThat(element.getLigands()[1], is(sameInstance(east)));
-        Assert.assertThat(element.getLigands()[2], is(sameInstance(south)));
-        Assert.assertThat(element.getLigands()[3], is(sameInstance(focus)));
+        org.hamcrest.MatcherAssert.assertThat(element.getChiralAtom(), is(sameInstance(focus)));
+        org.hamcrest.MatcherAssert.assertThat(element.getStereo(), is(ANTI_CLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[0], is(sameInstance(north)));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[1], is(sameInstance(east)));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[2], is(sameInstance(south)));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[3], is(sameInstance(focus)));
     }
 
-    @Test public void createCenterWithThreeNeighbors_left() {
+    @Test
+    void createCenterWithThreeNeighbors_left() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -332,15 +341,16 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertThat(element.getChiralAtom(), is(sameInstance(focus)));
-        Assert.assertThat(element.getStereo(), is(ANTI_CLOCKWISE));
-        Assert.assertThat(element.getLigands()[0], is(sameInstance(north)));
-        Assert.assertThat(element.getLigands()[1], is(sameInstance(focus)));
-        Assert.assertThat(element.getLigands()[2], is(sameInstance(south)));
-        Assert.assertThat(element.getLigands()[3], is(sameInstance(west)));
+        org.hamcrest.MatcherAssert.assertThat(element.getChiralAtom(), is(sameInstance(focus)));
+        org.hamcrest.MatcherAssert.assertThat(element.getStereo(), is(ANTI_CLOCKWISE));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[0], is(sameInstance(north)));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[1], is(sameInstance(focus)));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[2], is(sameInstance(south)));
+        org.hamcrest.MatcherAssert.assertThat(element.getLigands()[3], is(sameInstance(west)));
     }
 
-    @Test public void doNotCreateCenterWhenNorthIsMissing() {
+    @Test
+    void doNotCreateCenterWhenNorthIsMissing() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -356,10 +366,11 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertNull(element);
+        Assertions.assertNull(element);
     }
 
-    @Test public void doNotCreateCenterWhenSouthIsMissing() {
+    @Test
+    void doNotCreateCenterWhenSouthIsMissing() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -375,10 +386,11 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertNull(element);
+        Assertions.assertNull(element);
     }
 
-    @Test public void doNotCreateCenterWhenNorthIsOffCenter() {
+    @Test
+    void doNotCreateCenterWhenNorthIsOffCenter() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -396,10 +408,11 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertNull(element);
+        Assertions.assertNull(element);
     }
 
-    @Test public void doNotCreateCenterWhenSouthIsOffCenter() {
+    @Test
+    void doNotCreateCenterWhenSouthIsOffCenter() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -417,10 +430,11 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertNull(element);
+        Assertions.assertNull(element);
     }
 
-    @Test public void doNotCreateCenterWhenEastIsOffCenter() {
+    @Test
+    void doNotCreateCenterWhenEastIsOffCenter() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -438,11 +452,12 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertNull(element);
+        Assertions.assertNull(element);
     }
 
 
-    @Test public void doNotCreateCenterWhenWestIsOffCenter() {
+    @Test
+    void doNotCreateCenterWhenWestIsOffCenter() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -460,10 +475,11 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertNull(element);
+        Assertions.assertNull(element);
     }
 
-    @Test public void doNotCreateCenterWhenEastAndWestAreMissing() {
+    @Test
+    void doNotCreateCenterWhenEastAndWestAreMissing() {
 
         IAtom focus = atom("C", 0, 0.80d, 0.42d);
 
@@ -477,11 +493,12 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertNull(element);
+        Assertions.assertNull(element);
     }
 
     // rotate
-    @Test public void doNotCreateCenterWhenRotated() {
+    @Test
+    void doNotCreateCenterWhenRotated() {
 
         IAtom focus = atom("C", 0, 0.44d, 3.30d);
         
@@ -500,15 +517,16 @@ public class FischerRecognitionTest {
 
         ITetrahedralChirality element = FischerRecognition.newTetrahedralCenter(focus,
                                                                                 bonds);
-        Assert.assertNull(element);
+        Assertions.assertNull(element);
     }
 
     /**
      * asperaculin A (CHEBI:68202)
      * @cdk.inchi InChI=1S/C15H20O5/c1-12(2)6-13(3)7-19-10(16)9-15(13)8(12)4-5-14(15,18)11(17)20-9/h8-9,18H,4-7H2,1-3H3/t8-,9+,13+,14+,15?/m0/s1 
      */
-    @Test public void ignoreCyclicStereocenters() {
-        IAtomContainer m = new AtomContainer(22, 25, 0, 0);
+    @Test
+    void ignoreCyclicStereocenters() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, 6.87d, -5.59d));
         m.addAtom(atom("C", 0, 6.87d, -6.61d));
         m.addAtom(atom("C", 0, 7.82d, -5.62d));
@@ -544,14 +562,14 @@ public class FischerRecognitionTest {
         m.addBond(11, 1, IBond.Order.SINGLE);
         m.addBond(12, 6, IBond.Order.SINGLE);
         m.addBond(13, 3, IBond.Order.SINGLE);
-        m.addBond(14, 5, IBond.Order.DOUBLE, IBond.Stereo.E_Z_BY_COORDINATES);
-        m.addBond(15, 7, IBond.Order.DOUBLE, IBond.Stereo.E_Z_BY_COORDINATES);
-        m.addBond(1, 16, IBond.Order.SINGLE, IBond.Stereo.UP);
-        m.addBond(3, 17, IBond.Order.SINGLE, IBond.Stereo.UP);
+        m.addBond(14, 5, IBond.Order.DOUBLE);
+        m.addBond(15, 7, IBond.Order.DOUBLE);
+        m.addBond(1, 16, IBond.Order.SINGLE, IBond.Display.Up);
+        m.addBond(3, 17, IBond.Order.SINGLE, IBond.Display.Up);
         m.addBond(18, 8, IBond.Order.SINGLE);
         m.addBond(19, 8, IBond.Order.SINGLE);
-        m.addBond(2, 20, IBond.Order.SINGLE, IBond.Stereo.DOWN);
-        m.addBond(6, 21, IBond.Order.SINGLE, IBond.Stereo.DOWN);
+        m.addBond(2, 20, IBond.Order.SINGLE, IBond.Display.Down);
+        m.addBond(6, 21, IBond.Order.SINGLE, IBond.Display.Down);
         m.addBond(5, 4, IBond.Order.SINGLE);
         m.addBond(11, 12, IBond.Order.SINGLE);
         m.addBond(10, 13, IBond.Order.SINGLE);
@@ -563,15 +581,16 @@ public class FischerRecognitionTest {
                                                                graph,
                                                                bondMap,
                                                                Stereocenters.of(m));
-        Assert.assertTrue(recogniser.recognise(Collections.singleton(Projection.Fischer)).isEmpty());
+        Assertions.assertTrue(recogniser.recognise(Collections.singleton(Projection.Fischer)).isEmpty());
     }
 
     /**
      * atrolactic acid (CHEBI:50392)
      * @cdk.inchi InChI=1S/C9H10O3/c1-9(12,8(10)11)7-5-3-2-4-6-7/h2-6,12H,1H3,(H,10,11)
      */
-    @Test public void horizontalBondsMustBeTerminal() {
-        IAtomContainer m = new AtomContainer(12, 12, 0, 0);
+    @Test
+    void horizontalBondsMustBeTerminal() {
+        IAtomContainer m = SilentChemObjectBuilder.getInstance().newAtomContainer();
         m.addAtom(atom("C", 0, 12.71d, -16.51d));
         m.addAtom(atom("C", 1, 12.30d, -17.22d));
         m.addAtom(atom("C", 1, 11.47d, -17.22d));
@@ -585,15 +604,15 @@ public class FischerRecognitionTest {
         m.addAtom(atom("O", 0, 14.77d, -15.79d));
         m.addAtom(atom("C", 3, 13.54d, -15.68d));
         m.addBond(0, 1, IBond.Order.SINGLE);
-        m.addBond(0, 5, IBond.Order.DOUBLE, IBond.Stereo.E_Z_BY_COORDINATES);
-        m.addBond(1, 2, IBond.Order.DOUBLE, IBond.Stereo.E_Z_BY_COORDINATES);
+        m.addBond(0, 5, IBond.Order.DOUBLE);
+        m.addBond(1, 2, IBond.Order.DOUBLE);
         m.addBond(2, 3, IBond.Order.SINGLE);
-        m.addBond(3, 4, IBond.Order.DOUBLE, IBond.Stereo.E_Z_BY_COORDINATES);
+        m.addBond(3, 4, IBond.Order.DOUBLE);
         m.addBond(4, 5, IBond.Order.SINGLE);
         m.addBond(7, 6, IBond.Order.SINGLE);
         m.addBond(7, 8, IBond.Order.SINGLE);
         m.addBond(8, 9, IBond.Order.SINGLE);
-        m.addBond(8, 10, IBond.Order.DOUBLE, IBond.Stereo.E_Z_BY_COORDINATES);
+        m.addBond(8, 10, IBond.Order.DOUBLE);
         m.addBond(0, 7, IBond.Order.SINGLE);
         m.addBond(11, 7, IBond.Order.SINGLE);
         
@@ -603,18 +622,18 @@ public class FischerRecognitionTest {
                                                                graph,
                                                                bondMap,
                                                                Stereocenters.of(m));
-        Assert.assertTrue(recogniser.recognise(Collections.singleton(Projection.Fischer)).isEmpty());
+        Assertions.assertTrue(recogniser.recognise(Collections.singleton(Projection.Fischer)).isEmpty());
     }
 
     static void assertTetrahedralCenter(IStereoElement element,
                                         IAtom focus,
                                         Stereo winding,
                                         IAtom ... neighbors) {
-        Assert.assertThat(element, is(instanceOf(ITetrahedralChirality.class)));
+        org.hamcrest.MatcherAssert.assertThat(element, is(instanceOf(ITetrahedralChirality.class)));
         ITetrahedralChirality actual = (ITetrahedralChirality) element;
-        Assert.assertThat(actual.getChiralAtom(), is(sameInstance(focus)));
-        Assert.assertThat(actual.getStereo(), is(winding));
-        Assert.assertThat(actual.getLigands(), is(neighbors));
+        org.hamcrest.MatcherAssert.assertThat(actual.getChiralAtom(), is(sameInstance(focus)));
+        org.hamcrest.MatcherAssert.assertThat(actual.getStereo(), is(winding));
+        org.hamcrest.MatcherAssert.assertThat(actual.getLigands(), is(neighbors));
     }
 
     static IAtom atom(String symbol, int h, double x, double y) {

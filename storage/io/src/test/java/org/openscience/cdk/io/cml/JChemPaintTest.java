@@ -24,9 +24,9 @@ package org.openscience.cdk.io.cml;
 
 import java.io.InputStream;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.geometry.GeometryUtil;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
@@ -42,71 +42,70 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * in data/cmltest as found in the JChemPaint distribution
  * (http://jchempaint.sf.org/).
  *
- * @cdk.module test-io
  */
-public class JChemPaintTest extends CDKTestCase {
+class JChemPaintTest extends CDKTestCase {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(JChemPaintTest.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(JChemPaintTest.class);
 
     /**
      * This one tests a CML2 file.
      */
     @Test
-    public void testSalt() throws Exception {
-        String filename = "data/cml/COONa.cml";
+    void testSalt() throws Exception {
+        String filename = "COONa.cml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CMLReader reader = new CMLReader(ins);
-        IChemFile chemFile = (IChemFile) reader.read(new org.openscience.cdk.ChemFile());
+        IChemFile chemFile = reader.read(new org.openscience.cdk.ChemFile());
         reader.close();
 
         // test the resulting ChemFile content
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         //logger.debug("NO sequences: " + chemFile.getChemSequenceCount());
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(1, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(1, seq.getChemModelCount());
         //logger.debug("NO models: " + seq.getChemModelCount());
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
-        Assert.assertEquals(1, model.getMoleculeSet().getAtomContainerCount());
+        Assertions.assertNotNull(model);
+        Assertions.assertEquals(1, model.getMoleculeSet().getAtomContainerCount());
 
         // test the molecule
         IAtomContainer mol = model.getMoleculeSet().getAtomContainer(0);
-        Assert.assertNotNull(mol);
-        Assert.assertEquals(4, mol.getAtomCount());
-        Assert.assertTrue(GeometryUtil.has3DCoordinates(mol));
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(4, mol.getAtomCount());
+        Assertions.assertTrue(GeometryUtil.has3DCoordinates(mol));
     }
 
     /**
      * This one tests reading of output from the WWMM matrix (KEGG collection).
      */
     @Test
-    public void testWWMMOutput() throws Exception {
-        String filename = "data/cml/keggtest.cml";
+    void testWWMMOutput() throws Exception {
+        String filename = "keggtest.cml";
         logger.info("Testing: " + filename);
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         CMLReader reader = new CMLReader(ins);
-        IChemFile chemFile = (IChemFile) reader.read(new org.openscience.cdk.ChemFile());
+        IChemFile chemFile = reader.read(new org.openscience.cdk.ChemFile());
         reader.close();
 
         // test the resulting ChemFile content
-        Assert.assertNotNull(chemFile);
-        Assert.assertEquals(1, chemFile.getChemSequenceCount());
+        Assertions.assertNotNull(chemFile);
+        Assertions.assertEquals(1, chemFile.getChemSequenceCount());
         IChemSequence seq = chemFile.getChemSequence(0);
-        Assert.assertNotNull(seq);
-        Assert.assertEquals(1, seq.getChemModelCount());
+        Assertions.assertNotNull(seq);
+        Assertions.assertEquals(1, seq.getChemModelCount());
         IChemModel model = seq.getChemModel(0);
-        Assert.assertNotNull(model);
+        Assertions.assertNotNull(model);
         IAtomContainerSet moleculeSet = model.getMoleculeSet();
-        Assert.assertNotNull(moleculeSet);
-        Assert.assertEquals(1, moleculeSet.getAtomContainerCount());
+        Assertions.assertNotNull(moleculeSet);
+        Assertions.assertEquals(1, moleculeSet.getAtomContainerCount());
 
         // test the molecule
         IAtomContainer mol = moleculeSet.getAtomContainer(0);
-        Assert.assertNotNull(mol);
-        Assert.assertEquals(2, mol.getAtomCount());
-        Assert.assertTrue(GeometryUtil.has3DCoordinates(mol));
+        Assertions.assertNotNull(mol);
+        Assertions.assertEquals(2, mol.getAtomCount());
+        Assertions.assertTrue(GeometryUtil.has3DCoordinates(mol));
     }
 }

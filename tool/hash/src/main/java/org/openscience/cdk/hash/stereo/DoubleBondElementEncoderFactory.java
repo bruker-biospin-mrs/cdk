@@ -43,7 +43,6 @@ import static org.openscience.cdk.interfaces.IDoubleBondStereochemistry.Conforma
  * IDoubleBondStereochemistry} stereo elements.
  *
  * @author John May
- * @cdk.module hash
  */
 public final class DoubleBondElementEncoderFactory implements StereoEncoderFactory {
 
@@ -58,7 +57,7 @@ public final class DoubleBondElementEncoderFactory implements StereoEncoderFacto
         // a lazy creation so it's only created if there was a need for it
         Map<IAtom, Integer> atomToIndex = null;
 
-        List<StereoEncoder> encoders = new ArrayList<StereoEncoder>();
+        List<StereoEncoder> encoders = new ArrayList<>();
 
         // for each double-bond element - create a new encoder
         for (IStereoElement se : container.stereoElements()) {
@@ -140,7 +139,7 @@ public final class DoubleBondElementEncoderFactory implements StereoEncoderFacto
      */
     private static Map<IAtom, Integer> indexMap(Map<IAtom, Integer> map, IAtomContainer container) {
         if (map != null) return map;
-        map = new HashMap<IAtom, Integer>();
+        map = new HashMap<>();
         for (IAtom a : container.atoms()) {
             map.put(a, map.size());
         }

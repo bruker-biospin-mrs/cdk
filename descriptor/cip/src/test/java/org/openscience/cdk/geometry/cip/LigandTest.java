@@ -22,39 +22,38 @@
  */
 package org.openscience.cdk.geometry.cip;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
- * @cdk.module test-cip
  */
-public class LigandTest extends CDKTestCase {
+class LigandTest extends CDKTestCase {
 
     @Test
-    public void testConstructorAndGetMethods() throws Exception {
+    void testConstructorAndGetMethods() throws Exception {
         SmilesParser smiles = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer molecule = smiles.parseSmiles("ClC(Br)(I)[H]");
 
         ILigand ligand = new Ligand(molecule, new VisitedAtoms(), molecule.getAtom(1), molecule.getAtom(0));
-        Assert.assertNotNull(ligand);
-        Assert.assertEquals(molecule, ligand.getAtomContainer());
-        Assert.assertEquals(molecule.getAtom(1), ligand.getCentralAtom());
-        Assert.assertEquals(molecule.getAtom(0), ligand.getLigandAtom());
+        Assertions.assertNotNull(ligand);
+        Assertions.assertEquals(molecule, ligand.getAtomContainer());
+        Assertions.assertEquals(molecule.getAtom(1), ligand.getCentralAtom());
+        Assertions.assertEquals(molecule.getAtom(0), ligand.getLigandAtom());
     }
 
     @Test
-    public void testVisitedTracking() throws Exception {
+    void testVisitedTracking() throws Exception {
         SmilesParser smiles = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer molecule = smiles.parseSmiles("ClC(Br)(I)[H]");
 
         ILigand ligand = new Ligand(molecule, new VisitedAtoms(), molecule.getAtom(1), molecule.getAtom(0));
-        Assert.assertTrue(ligand.getVisitedAtoms().isVisited(molecule.getAtom(1)));
-        Assert.assertTrue(ligand.isVisited(molecule.getAtom(1)));
-        Assert.assertFalse(ligand.getVisitedAtoms().isVisited(molecule.getAtom(0)));
-        Assert.assertFalse(ligand.isVisited(molecule.getAtom(0)));
+        Assertions.assertTrue(ligand.getVisitedAtoms().isVisited(molecule.getAtom(1)));
+        Assertions.assertTrue(ligand.isVisited(molecule.getAtom(1)));
+        Assertions.assertFalse(ligand.getVisitedAtoms().isVisited(molecule.getAtom(0)));
+        Assertions.assertFalse(ligand.isVisited(molecule.getAtom(0)));
     }
 }

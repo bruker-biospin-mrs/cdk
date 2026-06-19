@@ -26,8 +26,6 @@ package org.openscience.cdk.interfaces;
  * Event fired by CDK IChemObject classes to their registered listeners
  * in case something changed within them.
  *
- * @cdk.module interfaces
- * @cdk.githash
  */
 public interface IChemObjectChangeEvent {
 
@@ -36,6 +34,6 @@ public interface IChemObjectChangeEvent {
      *
      * @return the source of the event
      */
-    public Object getSource();
+    Object getSource();
 
 }

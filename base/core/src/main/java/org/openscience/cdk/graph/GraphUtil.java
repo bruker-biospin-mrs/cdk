@@ -23,10 +23,10 @@
  */
 package org.openscience.cdk.graph;
 
-import com.google.common.collect.Maps;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,8 +38,6 @@ import static java.util.Arrays.copyOf;
  * future with a <i>Graph</i> data type.
  *
  * @author John May
- * @cdk.module core
- * @cdk.githash
  * @see ShortestPaths
  * @see org.openscience.cdk.ringsearch.RingSearch
  */
@@ -312,7 +310,7 @@ public class GraphUtil {
          * @param n number of bonds expected
          */
         private EdgeToBondMap(int n) {
-            this.lookup = Maps.newHashMapWithExpectedSize(n);
+            this.lookup = new HashMap<>(2*n);
         }
 
         /**

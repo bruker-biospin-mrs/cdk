@@ -18,36 +18,36 @@
  */
 package org.openscience.cdk.tools.diff;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
-import org.openscience.cdk.CDKTestCase;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-diff
  */
-public class AtomContainerDiffTest extends CDKTestCase {
+class AtomContainerDiffTest {
 
     @Test
-    public void testMatchAgainstItself() {
+    void testMatchAgainstItself() {
         IAtomContainer container = mock(IAtomContainer.class);
         when(container.getElectronContainerCount()).thenReturn(1);
         when(container.getElectronContainer(0)).thenReturn(mock(IBond.class));
         String result = AtomContainerDiff.diff(container, container);
-        assertZeroLength(result);
+        Assertions.assertEquals("", result);
     }
 
     @Test
-    public void testDiff() {
+    void testDiff() {
 
         IAtom carbon = mock(IAtom.class);
         IAtom oxygen = mock(IAtom.class);
@@ -77,17 +77,17 @@ public class AtomContainerDiffTest extends CDKTestCase {
         when(container2.getElectronContainer(0)).thenReturn(b2);
 
         String result = AtomContainerDiff.diff(container1, container2);
-        Assert.assertNotNull(result);
-        Assert.assertNotSame(0, result.length());
-        assertContains(result, "AtomContainerDiff");
-        assertContains(result, "BondDiff");
-        assertContains(result, "SINGLE/DOUBLE");
-        assertContains(result, "AtomDiff");
-        assertContains(result, "C/O");
+        Assertions.assertNotNull(result);
+        Assertions.assertNotSame(0, result.length());
+        MatcherAssert.assertThat(result, containsString( "AtomContainerDiff"));
+        MatcherAssert.assertThat(result, containsString( "BondDiff"));
+        MatcherAssert.assertThat(result, containsString( "SINGLE/DOUBLE"));
+        MatcherAssert.assertThat(result, containsString( "AtomDiff"));
+        MatcherAssert.assertThat(result, containsString( "C/O"));
     }
 
     @Test
-    public void testDifference() {
+    void testDifference() {
         IAtom carbon = mock(IAtom.class);
         IAtom oxygen = mock(IAtom.class);
 
@@ -116,12 +116,12 @@ public class AtomContainerDiffTest extends CDKTestCase {
         when(container2.getElectronContainer(0)).thenReturn(b2);
 
         String result = AtomContainerDiff.diff(container1, container2);
-        Assert.assertNotNull(result);
+        Assertions.assertNotNull(result);
     }
 
-    @Ignore("unit test did not test AtomContainerDiff but rather the ability of AtomContainer"
+    @Disabled("unit test did not test AtomContainerDiff but rather the ability of AtomContainer"
             + "to be serialized. This is already tested in each respective domain module")
-    public void testDiffFromSerialized() throws IOException, ClassNotFoundException {
+    void testDiffFromSerialized() throws IOException, ClassNotFoundException {
         //        IAtomContainer atomContainer = new AtomContainer();
         //        IBond bond1 = new Bond(new Atom("C"), new Atom("C"));
         //        bond1.setOrder(IBond.Order.SINGLE);

@@ -30,10 +30,9 @@
 
 package org.openscience.cdk.fingerprint.model;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.SlowTest;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fingerprint.CircularFingerprinter;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -51,11 +50,10 @@ import java.util.Map;
 
 /**
  * Validation test for the Bayesian model building & serialisation.
- * @cdk.module test-standard
  */
-public class BayesianTest {
+class BayesianTest {
 
-    private static ILoggingTool logger          = LoggingToolFactory.createLoggingTool(BayesianTest.class);
+    private static final ILoggingTool logger          = LoggingToolFactory.createLoggingTool(BayesianTest.class);
 
     private final String        REF_MOLECULE    = "\n\n\n"
                                                         + " 18 19  0  0  0  0  0  0  0  0999 V2000\n"
@@ -156,7 +154,7 @@ public class BayesianTest {
      */
 
     @Test
-    public void testFingerprints() throws Exception {
+    void testFingerprints() throws Exception {
         logger.info("Bayesian/Fingerprints test: verifying circular fingerprints for a single molecule");
 
         checkFP(REF_MOLECULE, CircularFingerprinter.CLASS_ECFP6, 0, REF_ECFP6_0);
@@ -164,14 +162,14 @@ public class BayesianTest {
     }
 
     @Test
-    public void testAuxiliary() throws Exception {
+    void testAuxiliary() throws Exception {
         logger.info("Bayesian/Fingerprints test: making sure auxiliary fields are preserved");
 
         checkTextFields();
     }
 
     @Test
-    public void testConfusion() throws Exception {
+    void testConfusion() throws Exception {
         logger.info("Bayesian/Fingerprints test: ensuring expected truth table for canned data");
 
         confirmPredictions("Tiny.sdf", 8, 8, 0, 0);
@@ -179,7 +177,7 @@ public class BayesianTest {
     }
 
     @Test
-    public void testFolding() throws Exception {
+    void testFolding() throws Exception {
         logger.info("Bayesian/Fingerprints test: comparing folded fingerprints to reference set");
 
         compareFolding("FoldedProbes.sdf", "ECFP6/0", CircularFingerprinter.CLASS_ECFP6, 0);
@@ -189,8 +187,8 @@ public class BayesianTest {
     }
 
     @Test
-    @Category(SlowTest.class)
-    public void testExample1() throws Exception {
+    @Tag("SlowTest")
+    void testExample1() throws Exception {
         logger.info("Bayesian/Fingerprints test: using dataset of binding data to compare to reference data");
 
         runTest("Binders.sdf", "active", CircularFingerprinter.CLASS_ECFP6, 1024, 0, "Binders-ECFP6-1024-loo.bayesian", true);
@@ -200,8 +198,8 @@ public class BayesianTest {
     }
 
     @Test
-    @Category(SlowTest.class)
-    public void testExample2() throws Exception {
+    @Tag("SlowTest")
+    void testExample2() throws Exception {
         logger.info("Bayesian/Fingerprints test: using dataset of molecular probes to compare to reference data");
 
         runTest("MLProbes.sdf", "Lipinski score", CircularFingerprinter.CLASS_ECFP6, 1024, 0,
@@ -252,7 +250,7 @@ public class BayesianTest {
         model1.setNoteOrigin(dummyOrigin);
         model1.setNoteComments(dummyComments);
 
-        Bayesian model2 = null;
+        Bayesian model2;
         try {
             model2 = Bayesian.deserialise(model1.serialise());
         } catch (IOException ex) {
@@ -275,8 +273,8 @@ public class BayesianTest {
             throws CDKException {
         writeln("[" + sdfile + "] comparing confusion matrix");
 
-        ArrayList<IAtomContainer> molecules = new ArrayList<IAtomContainer>();
-        ArrayList<Boolean> activities = new ArrayList<Boolean>();
+        ArrayList<IAtomContainer> molecules = new ArrayList<>();
+        ArrayList<Boolean> activities = new ArrayList<>();
         Bayesian model = new Bayesian(CircularFingerprinter.CLASS_ECFP6, 1024);
 
         try {
@@ -286,7 +284,7 @@ public class BayesianTest {
             int row = 0, numActives = 0;
             while (rdr.hasNext()) {
                 IAtomContainer mol = rdr.next();
-                boolean actv = "true".equals((String) mol.getProperties().get("Active"));
+                boolean actv = "true".equals(mol.getProperties().get("Active"));
                 molecules.add(mol);
                 activities.add(actv);
                 model.addMolecule(mol, actv);
@@ -392,7 +390,7 @@ public class BayesianTest {
                 row++;
 
                 String stractv = (String) mol.getProperties().get(actvField);
-                int active = stractv.equals("true") ? 1 : stractv.equals("false") ? 0 : Integer.valueOf(stractv);
+                int active = stractv.equals("true") ? 1 : stractv.equals("false") ? 0 : Integer.parseInt(stractv);
                 if (active != 0 && active != 1) throw new CDKException("Activity field not found or invalid");
 
                 model.addMolecule(mol, active == 1);

@@ -19,11 +19,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.bond;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.result.DoubleResult;
 import org.openscience.cdk.smiles.SmilesParser;
@@ -31,16 +30,15 @@ import org.openscience.cdk.smiles.SmilesParser;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarbond
  */
-public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
+class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
 
-    public BondPartialSigmaChargeDescriptorTest() {
+    BondPartialSigmaChargeDescriptorTest() {
         descriptor = new BondPartialSigmaChargeDescriptor();
     }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(BondPartialSigmaChargeDescriptor.class);
     }
 
@@ -48,7 +46,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
      *  A unit test for JUnit
      */
     @Test
-    public void testBondSigmaElectronegativityDescriptor() throws ClassNotFoundException, CDKException,
+    void testBondSigmaElectronegativityDescriptor() throws
             java.lang.Exception {
         double[] testResult = {0.3323, 0.0218};/*
                                                 * from Petra online:
@@ -64,7 +62,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
 
         for (int i = 0; i < 2; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.01);
+            Assertions.assertEquals(testResult[i], result, 0.01);
         }
 
     }
@@ -73,7 +71,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
      *  A unit test for JUnit with Methyl chloride
      */
     @Test
-    public void testBondSigmaElectronegativityDescriptor_Methyl_chloride() throws ClassNotFoundException, CDKException,
+    void testBondSigmaElectronegativityDescriptor_Methyl_chloride() throws
             java.lang.Exception {
         double[] testResult = {0.2137, 0.0075};/*
                                                 * from Petra online:
@@ -88,7 +86,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
         addExplicitHydrogens(mol);
         for (int i = 0; i < 2; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.05);
+            Assertions.assertEquals(testResult[i], result, 0.05);
         }
     }
 
@@ -96,7 +94,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
      *  A unit test for JUnit with Allyl bromide
      */
     @Test
-    public void testBondSigmaElectronegativityDescriptor_Allyl_bromide() throws ClassNotFoundException, CDKException,
+    void testBondSigmaElectronegativityDescriptor_Allyl_bromide() throws
             java.lang.Exception {
         double[] testResult = {0.0265, 0.1268, 0.1872, 0.1564, 0.1564, 0.1347, 0.0013, 0.0013}; /*
                                                                                                  * from
@@ -132,7 +130,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
 
         for (int i = 0; i < 8; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.03);
+            Assertions.assertEquals(testResult[i], result, 0.03);
         }
     }
 
@@ -140,8 +138,8 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
      *  A unit test for JUnit with Isopentyl iodide
      */
     @Test
-    public void testBondSigmaElectronegativityDescriptor_Isopentyl_iodide() throws ClassNotFoundException,
-            CDKException, java.lang.Exception {
+    void testBondSigmaElectronegativityDescriptor_Isopentyl_iodide() throws
+            java.lang.Exception {
         double testResult = 0.0165; /*
                                      * from Petra online:
                                      * http://www2.chemie.uni-
@@ -153,14 +151,14 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
         addExplicitHydrogens(mol);
 
         double result = ((DoubleResult) descriptor.calculate(mol.getBond(0), mol).getValue()).doubleValue();
-        Assert.assertEquals(testResult, result, 0.001);
+        Assertions.assertEquals(testResult, result, 0.001);
     }
 
     /**
      *  A unit test for JUnit with Ethoxy ethane
      */
     @Test
-    public void testBondSigmaElectronegativityDescriptor_Ethoxy_ethane() throws ClassNotFoundException, CDKException,
+    void testBondSigmaElectronegativityDescriptor_Ethoxy_ethane() throws
             java.lang.Exception {
         double[] testResult = {0.0864, 0.4262, 0.4262, 0.0864, 0.0662, 0.0662, 0.0662, 0.0104, 0.0104}; /*
                                                                                                          * from
@@ -196,7 +194,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
 
         for (int i = 0; i < 8; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.002);
+            Assertions.assertEquals(testResult[i], result, 0.002);
         }
     }
 
@@ -204,7 +202,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
      *  A unit test for JUnit with Ethanolamine
      */
     @Test
-    public void testBondSigmaElectronegativityDescriptor_Ethanolamine() throws ClassNotFoundException, CDKException,
+    void testBondSigmaElectronegativityDescriptor_Ethanolamine() throws
             java.lang.Exception {
         double[] testResult = {0.3463, 0.0274, 0.448, 0.448, 0.448}; /*
                                                                       * from
@@ -228,7 +226,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
 
         for (int i = 0; i < 5; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.06);
+            Assertions.assertEquals(testResult[i], result, 0.06);
         }
     }
 
@@ -236,7 +234,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
      *  A unit test for JUnit with Allyl mercaptan
      */
     @Test
-    public void testBondSigmaElectronegativityDescriptor_Allyl_mercaptan() throws ClassNotFoundException, CDKException,
+    void testBondSigmaElectronegativityDescriptor_Allyl_mercaptan() throws
             java.lang.Exception {
         double[] testResult = {0.0203, 0.0921, 0.1835, 0.1569, 0.3593, 8.5917}; /*
                                                                                  * from
@@ -272,7 +270,7 @@ public class BondPartialSigmaChargeDescriptorTest extends BondDescriptorTest {
 
         for (int i = 0; i < 4; i++) {
             double result = ((DoubleResult) descriptor.calculate(mol.getBond(i), mol).getValue()).doubleValue();
-            Assert.assertEquals(testResult[i], result, 0.005);
+            Assertions.assertEquals(testResult[i], result, 0.005);
         }
     }
 }

@@ -27,149 +27,148 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
  * @author maclean
- * @cdk.module test-group
  *
  */
-public class PartitionTest extends CDKTestCase {
+class PartitionTest extends CDKTestCase {
 
     @Test
-    public void emptyConstructor() {
+    void emptyConstructor() {
         Partition p = new Partition();
-        Assert.assertEquals(0, p.size());
+        Assertions.assertEquals(0, p.size());
     }
 
     @Test
-    public void copyConstructor() {
+    void copyConstructor() {
         Partition p = new Partition();
         p.addCell(0, 1);
         p.addCell(2, 3);
         Partition q = new Partition(p);
-        Assert.assertEquals(p, q);
+        Assertions.assertEquals(p, q);
     }
 
     @Test
-    public void cellDataConstructor() {
+    void cellDataConstructor() {
         int[][] cellData = new int[][]{{0, 1}, {2, 3, 4}, {5, 6}};
         Partition p = new Partition(cellData);
-        Assert.assertEquals(cellData.length, p.size());
-        Assert.assertEquals(7, p.numberOfElements());
+        Assertions.assertEquals(cellData.length, p.size());
+        Assertions.assertEquals(7, p.numberOfElements());
     }
 
     @Test
-    public void unitStaticConstructor() {
+    void unitStaticConstructor() {
         int size = 5;
         Partition p = Partition.unit(size);
-        Assert.assertEquals(1, p.size());
-        Assert.assertEquals(size, p.getCell(0).size());
+        Assertions.assertEquals(1, p.size());
+        Assertions.assertEquals(size, p.getCell(0).size());
     }
 
     @Test
-    public void sizeTest() {
+    void sizeTest() {
         Partition p = new Partition();
         p.addCell(0, 1);
         p.addCell(2, 3);
-        Assert.assertEquals(2, p.size());
-        Assert.assertEquals(2, p.getCell(0).size());
-        Assert.assertEquals(2, p.getCell(1).size());
+        Assertions.assertEquals(2, p.size());
+        Assertions.assertEquals(2, p.getCell(0).size());
+        Assertions.assertEquals(2, p.getCell(1).size());
     }
 
     @Test
-    public void numberOfElementsTest() {
+    void numberOfElementsTest() {
         Partition p = new Partition();
         p.addCell(0, 1);
         p.addCell(2, 3);
-        Assert.assertEquals(4, p.numberOfElements());
+        Assertions.assertEquals(4, p.numberOfElements());
     }
 
     @Test
-    public void isDiscreteTest() {
+    void isDiscreteTest() {
         int size = 5;
         Partition p = new Partition();
         for (int i = 0; i < size; i++) {
             p.addSingletonCell(i);
         }
-        Assert.assertTrue(p.isDiscrete());
+        Assertions.assertTrue(p.isDiscrete());
     }
 
     @Test
-    public void toPermutationTest() {
+    void toPermutationTest() {
         int size = 5;
         Partition partition = new Partition();
         for (int i = 0; i < size; i++) {
             partition.addSingletonCell(i);
         }
         Permutation permutation = partition.toPermutation();
-        Assert.assertEquals(size, permutation.size());
+        Assertions.assertEquals(size, permutation.size());
         for (int i = 0; i < size; i++) {
-            Assert.assertEquals(i, permutation.get(i));
+            Assertions.assertEquals(i, permutation.get(i));
         }
     }
 
     @Test
-    public void inOrderTest() {
+    void inOrderTest() {
         int[][] cellData = new int[][]{{0, 1}, {2, 3, 4}, {5, 6}};
         Partition p = new Partition(cellData);
-        Assert.assertTrue(p.inOrder());
+        Assertions.assertTrue(p.inOrder());
     }
 
     @Test
-    public void getFirstInCellTest() {
+    void getFirstInCellTest() {
         int[][] cellData = new int[][]{{0, 1}, {2, 3, 4}, {5, 6}};
         Partition p = new Partition(cellData);
         for (int i = 0; i < cellData.length; i++) {
-            Assert.assertEquals(cellData[i][0], p.getFirstInCell(i));
+            Assertions.assertEquals(cellData[i][0], p.getFirstInCell(i));
         }
     }
 
     @Test
-    public void getCellTest() {
+    void getCellTest() {
         int[][] cellData = new int[][]{{0, 1}, {2, 3, 4}, {5, 6}};
         Partition p = new Partition(cellData);
         for (int i = 0; i < cellData.length; i++) {
             Integer[] cell = p.getCell(i).toArray(new Integer[]{});
-            Assert.assertEquals(cellData[i].length, cell.length);
+            Assertions.assertEquals(cellData[i].length, cell.length);
             for (int j = 0; j < cell.length; j++) {
-                Assert.assertEquals(cellData[i][j], (int) cell[j]);
+                Assertions.assertEquals(cellData[i][j], (int) cell[j]);
             }
         }
     }
 
     @Test
-    public void splitBeforeTest() {
+    void splitBeforeTest() {
         int[][] cellData = new int[][]{{0, 1}, {2, 3, 4}, {5, 6}};
         Partition p = new Partition(cellData);
         int cellIndex = 1;
         int splitElement = 3;
         Partition q = p.splitBefore(cellIndex, splitElement);
-        Assert.assertEquals(p.numberOfElements(), q.numberOfElements());
-        Assert.assertEquals(p.size() + 1, q.size());
+        Assertions.assertEquals(p.numberOfElements(), q.numberOfElements());
+        Assertions.assertEquals(p.size() + 1, q.size());
         SortedSet<Integer> cell = q.getCell(cellIndex);
-        Assert.assertTrue(cell.size() == 1);
-        Assert.assertEquals(splitElement, (int) cell.first());
+        Assertions.assertTrue(cell.size() == 1);
+        Assertions.assertEquals(splitElement, (int) cell.first());
     }
 
     @Test
-    public void splitAfterTest() {
+    void splitAfterTest() {
         int[][] cellData = new int[][]{{0, 1}, {2, 3, 4}, {5, 6}};
         Partition p = new Partition(cellData);
         int cellIndex = 1;
         int splitElement = 3;
         Partition q = p.splitAfter(cellIndex, splitElement);
-        Assert.assertEquals(p.numberOfElements(), q.numberOfElements());
-        Assert.assertEquals(p.size() + 1, q.size());
+        Assertions.assertEquals(p.numberOfElements(), q.numberOfElements());
+        Assertions.assertEquals(p.size() + 1, q.size());
         SortedSet<Integer> cell = q.getCell(cellIndex + 1);
-        Assert.assertTrue(cell.size() == 1);
-        Assert.assertEquals(splitElement, (int) cell.first());
+        Assertions.assertTrue(cell.size() == 1);
+        Assertions.assertEquals(splitElement, (int) cell.first());
     }
 
     @Test
-    public void setAsPermutationTest() {
+    void setAsPermutationTest() {
         int partitionSize = 5;
         int permutationSize = 3;
         Partition partition = new Partition();
@@ -178,141 +177,141 @@ public class PartitionTest extends CDKTestCase {
         }
         Permutation permutation = partition.setAsPermutation(permutationSize);
         for (int i = 0; i < permutationSize; i++) {
-            Assert.assertEquals(i, permutation.get(i));
+            Assertions.assertEquals(i, permutation.get(i));
         }
     }
 
     @Test
-    public void isDiscreteCellTest() {
+    void isDiscreteCellTest() {
         int[][] cellData = new int[][]{{0}, {1}, {2}, {3}, {4}, {5}};
         Partition p = new Partition(cellData);
         for (int i = 0; i < p.size(); i++) {
-            Assert.assertTrue(p.isDiscreteCell(i));
+            Assertions.assertTrue(p.isDiscreteCell(i));
         }
     }
 
     @Test
-    public void getIndexOfFirstNonDiscreteCellTest() {
+    void getIndexOfFirstNonDiscreteCellTest() {
         int[][] cellData = new int[][]{{0}, {1}, {2, 3, 4}, {5, 6}};
         Partition p = new Partition(cellData);
-        Assert.assertEquals(2, p.getIndexOfFirstNonDiscreteCell());
+        Assertions.assertEquals(2, p.getIndexOfFirstNonDiscreteCell());
     }
 
     @Test
-    public void addSingletonCellTest() {
+    void addSingletonCellTest() {
         Partition p = new Partition();
         p.addSingletonCell(0);
-        Assert.assertEquals(1, p.size());
-        Assert.assertEquals(1, p.numberOfElements());
+        Assertions.assertEquals(1, p.size());
+        Assertions.assertEquals(1, p.numberOfElements());
     }
 
     @Test
-    public void removeCellTest() {
+    void removeCellTest() {
         int size = 5;
         Partition p = Partition.unit(size);
         p.removeCell(0);
-        Assert.assertEquals(0, p.size());
+        Assertions.assertEquals(0, p.size());
     }
 
     @Test
-    public void addCell_VarArgsTest() {
+    void addCell_VarArgsTest() {
         Partition p = new Partition();
         p.addCell(0, 1, 2);
-        Assert.assertEquals(1, p.size());
-        Assert.assertEquals(3, p.numberOfElements());
+        Assertions.assertEquals(1, p.size());
+        Assertions.assertEquals(3, p.numberOfElements());
     }
 
     @Test
-    public void addCell_CollectionTest() {
+    void addCell_CollectionTest() {
         Partition p = new Partition();
-        List<Integer> cell = new ArrayList<Integer>();
+        List<Integer> cell = new ArrayList<>();
         cell.add(0);
         cell.add(1);
         cell.add(2);
         p.addCell(cell);
-        Assert.assertEquals(1, p.size());
-        Assert.assertEquals(3, p.numberOfElements());
+        Assertions.assertEquals(1, p.size());
+        Assertions.assertEquals(3, p.numberOfElements());
     }
 
     @Test
-    public void addToCellTest() {
+    void addToCellTest() {
         Partition p = new Partition();
         p.addToCell(0, 0);
-        Assert.assertEquals(1, p.size());
-        Assert.assertEquals(1, p.numberOfElements());
+        Assertions.assertEquals(1, p.size());
+        Assertions.assertEquals(1, p.numberOfElements());
         p.addToCell(0, 1);
-        Assert.assertEquals(1, p.size());
-        Assert.assertEquals(2, p.numberOfElements());
+        Assertions.assertEquals(1, p.size());
+        Assertions.assertEquals(2, p.numberOfElements());
     }
 
     @Test
-    public void insertCellTest() {
+    void insertCellTest() {
         int[][] cellData = new int[][]{{0}, {2}, {3}};
         Partition p = new Partition(cellData);
-        SortedSet<Integer> cell = new TreeSet<Integer>();
+        SortedSet<Integer> cell = new TreeSet<>();
         cell.add(1);
         p.insertCell(1, cell);
-        Assert.assertTrue(p.isDiscrete());
+        Assertions.assertTrue(p.isDiscrete());
     }
 
     @Test
-    public void copyBlockTest() {
+    void copyBlockTest() {
         int[][] cellData = new int[][]{{0}, {1}, {2}};
         Partition p = new Partition(cellData);
         int cellIndex = 1;
         SortedSet<Integer> copyCell = p.copyBlock(cellIndex);
         SortedSet<Integer> refCell = p.getCell(cellIndex);
-        Assert.assertTrue(copyCell != refCell);
+        Assertions.assertTrue(copyCell != refCell);
     }
 
     @Test
-    public void fromStringTest() {
+    void fromStringTest() {
         Partition p = Partition.fromString("[0,1|2,3]");
-        Assert.assertEquals(2, p.size());
-        Assert.assertEquals(4, p.numberOfElements());
+        Assertions.assertEquals(2, p.size());
+        Assertions.assertEquals(4, p.numberOfElements());
     }
 
     @Test
-    public void fromStringTest2() {
+    void fromStringTest2() {
         Partition p = Partition.fromString("[0|1,2,3]");
-        Assert.assertEquals(2, p.size());
-        Assert.assertEquals(4, p.numberOfElements());
+        Assertions.assertEquals(2, p.size());
+        Assertions.assertEquals(4, p.numberOfElements());
     }
 
     @Test
-    public void equalsTest_null() {
+    void equalsTest_null() {
         Partition p = new Partition(new int[][]{{0}, {1}});
-        Assert.assertNotSame(p, null);
+        Assertions.assertNotSame(p, null);
     }
 
     @Test
-    public void equalsTest_different() {
+    void equalsTest_different() {
         Partition p = new Partition(new int[][]{{0}, {1}});
         Partition o = new Partition(new int[][]{{1}, {0}});
-        Assert.assertNotSame(p, o);
+        Assertions.assertNotSame(p, o);
     }
 
     @Test
-    public void equalsTest() {
+    void equalsTest() {
         Partition p = new Partition(new int[][]{{0}, {1}});
         Partition o = new Partition(new int[][]{{0}, {1}});
-        Assert.assertEquals(p, o);
+        Assertions.assertEquals(p, o);
     }
 
     @Test
-    public void orderTest() {
+    void orderTest() {
         Partition p = new Partition(new int[][]{{1, 3}, {0, 2}});
         p.order();
         SortedSet<Integer> cell0 = p.getCell(0);
         SortedSet<Integer> cell1 = p.getCell(1);
-        Assert.assertTrue(cell0.first() < cell1.first());
-        Assert.assertTrue(cell0.last() < cell1.last());
+        Assertions.assertTrue(cell0.first() < cell1.first());
+        Assertions.assertTrue(cell0.last() < cell1.last());
     }
 
     @Test
-    public void inSameCellTest() {
+    void inSameCellTest() {
         Partition p = new Partition(new int[][]{{0, 2}, {1, 3}});
-        Assert.assertTrue(p.inSameCell(1, 3));
+        Assertions.assertTrue(p.inSameCell(1, 3));
     }
 
 }

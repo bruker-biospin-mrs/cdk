@@ -19,9 +19,9 @@
 package org.openscience.cdk.templates;
 
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -42,16 +42,15 @@ import java.io.IOException;
  * This class contains methods for generating simple organic molecules.
  *
  * @cdk.keyword templates
- * @cdk.githash
  * @deprecated Old CDK class primarily for testing, for CDK Tests please use TestMoleculeFactory in cdk-data (testjar).
  */
 @Deprecated
 public class MoleculeFactory {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(MoleculeFactory.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(MoleculeFactory.class);
 
     public static IAtomContainer makeAlphaPinene() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
         mol.addAtom(new Atom("C")); // 3
@@ -89,7 +88,7 @@ public class MoleculeFactory {
      * @cdk.created 2003-08-15
      */
     public static IAtomContainer makeAlkane(int chainLength) {
-        IAtomContainer currentChain = new AtomContainer();
+        IAtomContainer currentChain = DefaultChemObjectBuilder.getInstance().newAtomContainer();
 
         //Add the initial atom
         currentChain.addAtom(new Atom("C"));
@@ -104,7 +103,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeEthylCyclohexane() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
         mol.addAtom(new Atom("C")); // 3
@@ -131,7 +130,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C6H10/c1-2-4-6-5-3-1/h1-2H,3-6H2
      */
     public static IAtomContainer makeCyclohexene() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
         mol.addAtom(new Atom("C")); // 3
@@ -154,7 +153,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C6H12/c1-2-4-6-5-3-1/h1-6H2
      */
     public static IAtomContainer makeCyclohexane() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
         mol.addAtom(new Atom("C")); // 3
@@ -177,7 +176,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C5H10/c1-2-4-5-3-1/h1-5H2
      */
     public static IAtomContainer makeCyclopentane() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
         mol.addAtom(new Atom("C")); // 3
@@ -198,7 +197,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C4H8/c1-2-4-3-1/h1-4H2
      */
     public static IAtomContainer makeCyclobutane() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
         mol.addAtom(new Atom("C")); // 3
@@ -217,7 +216,7 @@ public class MoleculeFactory {
          * @cdk.inchi InChI=1/C4H4/c1-2-4-3-1/h1-4H
      */
     public static IAtomContainer makeCyclobutadiene() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
         mol.addAtom(new Atom("C")); // 3
@@ -231,7 +230,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makePropylCycloPropane() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -254,7 +253,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C12H10/c1-3-7-11(8-4-1)12-9-5-2-6-10-12/h1-10H
      */
     public static IAtomContainer makeBiphenyl() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -286,7 +285,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makePhenylEthylBenzene() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -322,7 +321,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makePhenylAmine() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -344,7 +343,7 @@ public class MoleculeFactory {
 
     /* build a molecule from 4 condensed triangles */
     public static IAtomContainer make4x3CondensedRings() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
         mol.addAtom(new Atom("C")); // 3
@@ -366,7 +365,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeSpiroRings() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -393,7 +392,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeBicycloRings() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -416,7 +415,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeFusedRings() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -444,7 +443,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeMethylDecaline() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -474,7 +473,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeEthylPropylPhenantren() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -521,7 +520,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeSteran() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -571,7 +570,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C10H8/c1-2-5-9-7-4-8-10(9)6-3-1/h1-8H
      */
     public static IAtomContainer makeAzulene() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -604,7 +603,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C8H7N/c1-2-4-8-7(3-1)5-6-9-8/h1-6,9H
      */
     public static IAtomContainer makeIndole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -635,7 +634,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C4H5N/c1-2-4-5-3-1/h1-5H
      */
     public static IAtomContainer makePyrrole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -657,7 +656,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C4H4N/c1-2-4-5-3-1/h1-4H/q-1
      */
     public static IAtomContainer makePyrroleAnion() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom nitrogenAnion = new Atom("N");
         nitrogenAnion.setFormalCharge(-1);
         mol.addAtom(new Atom("C")); // 0
@@ -681,7 +680,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C3H4N2/c1-2-5-3-4-1/h1-3H,(H,4,5)/f/h4H
      */
     public static IAtomContainer makeImidazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -703,7 +702,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C3H4N2/c1-2-4-5-3-1/h1-3H,(H,4,5)/f/h4H
      */
     public static IAtomContainer makePyrazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("N")); // 2
@@ -725,7 +724,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C3H4N2/c1-2-4-5-3-1/h1-3H,(H,4,5)/f/h4H
      */
     public static IAtomContainer make124Triazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("N")); // 2
@@ -747,7 +746,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C2H3N3/c1-2-4-5-3-1/h1-2H,(H,3,4,5)/f/h5H
      */
     public static IAtomContainer make123Triazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("N")); // 2
@@ -769,7 +768,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/CH2N4/c1-2-4-5-3-1/h1H,(H,2,3,4,5)/f/h4H
      */
     public static IAtomContainer makeTetrazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("N")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("N")); // 2
@@ -791,7 +790,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C3H3NO/c1-2-5-3-4-1/h1-3H
      */
     public static IAtomContainer makeOxazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("O")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -813,7 +812,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C3H3NO/c1-2-4-5-3-1/h1-3H
      */
     public static IAtomContainer makeIsoxazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("O")); // 1
         mol.addAtom(new Atom("N")); // 2
@@ -835,7 +834,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C3H3NS/c1-2-4-5-3-1/h1-3H
      */
     public static IAtomContainer makeIsothiazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("S")); // 1
         mol.addAtom(new Atom("N")); // 2
@@ -857,7 +856,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C2H2N2S/c1-3-4-2-5-1/h1-2H
      */
     public static IAtomContainer makeThiadiazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("S")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -879,7 +878,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C2H2N2O/c1-3-4-2-5-1/h1-2H
      */
     public static IAtomContainer makeOxadiazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("O")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -901,7 +900,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C3H3NO/c1-2-4-5-3-1/h1-3H
      */
     public static IAtomContainer makePyridine() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -925,7 +924,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C5H5NO/c7-6-4-2-1-3-5-6/h1-5H
      */
     public static IAtomContainer makePyridineOxide() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.getAtom(1).setFormalCharge(1);
@@ -953,7 +952,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C4H4N2/c1-2-5-4-6-3-1/h1-4H
      */
     public static IAtomContainer makePyrimidine() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -977,7 +976,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C4H4N2/c1-2-4-6-5-3-1/h1-4H
      */
     public static IAtomContainer makePyridazine() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("N")); // 2
@@ -1001,7 +1000,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C4H4N2/c1-2-4-6-5-3-1/h1-4H
      */
     public static IAtomContainer makeTriazine() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -1025,7 +1024,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C3H3NS/c1-2-5-3-4-1/h1-3H
      */
     public static IAtomContainer makeThiazole() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("N")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -1042,7 +1041,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeSingleRing() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -1070,7 +1069,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeDiamantane() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -1109,7 +1108,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeBranchedAliphatic() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -1153,7 +1152,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeBenzene() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("C")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -1171,7 +1170,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeQuinone() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("O")); // 0
         mol.addAtom(new Atom("C")); // 1
         mol.addAtom(new Atom("C")); // 2
@@ -1193,7 +1192,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makePiperidine() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("N"));
         mol.addAtom(new Atom("C"));
         mol.addAtom(new Atom("C"));
@@ -1216,7 +1215,7 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer makeTetrahydropyran() {
-        IAtomContainer mol = new AtomContainer();
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         mol.addAtom(new Atom("O"));
         mol.addAtom(new Atom("C"));
         mol.addAtom(new Atom("C"));
@@ -1236,15 +1235,13 @@ public class MoleculeFactory {
     }
 
     public static IAtomContainer loadMolecule(String inFile) {
-        MDLReader mr = null;
-        ChemFile chemFile = null;
-        IChemSequence chemSequence = null;
-        IChemModel chemModel = null;
-        IAtomContainerSet setOfMolecules = null;
+        ChemFile chemFile;
+        IChemSequence chemSequence;
+        IChemModel chemModel;
+        IAtomContainerSet setOfMolecules;
         IAtomContainer molecule = null;
-        try {
-            FileInputStream fis = new FileInputStream(inFile);
-            mr = new MDLReader(fis);
+        try (FileInputStream fis = new FileInputStream(inFile);
+             MDLReader mr = new MDLReader(fis)) {
             chemFile = (ChemFile) mr.read((ChemObject) new ChemFile());
             mr.close();
             chemSequence = chemFile.getChemSequence(0);
@@ -1267,7 +1264,7 @@ public class MoleculeFactory {
      * @cdk.inchi InChI=1/C5H5N5/c6-4-3-5(9-1-7-3)10-2-8-4/h1-2H,(H3,6,7,8,9,10)/f/h7H,6H2
      */
     public static IAtomContainer makeAdenine() {
-        IAtomContainer mol = new AtomContainer(); // Adenine
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer(); // Adenine
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         a1.setPoint2d(new Point2d(21.0223, -17.2946));
         mol.addAtom(a1);

@@ -28,9 +28,8 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IStereoElement;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import static org.openscience.cdk.interfaces.ITetrahedralChirality.Stereo;
 
 /**
  * Extended Cis/Trans double bond configuration. This stereo element is
@@ -93,11 +92,81 @@ public final class ExtendedCisTrans
     }
 
     /**
+     * Locate the central double-bond in a chain of cumulated double bonds.
+     *
+     * <pre>
+     * A = C = C = B
+     *       ^
+     * A = C = C = C = C = B
+     *           ^
+     * </pre>
+     *
+     * @param mol molecule
+     * @param atom at atom from either end of the cumulated chains
+     * @return the central bond, or null if not found
+     */
+    public static IBond findCentralBond(IAtomContainer mol, IAtom atom) {
+        List<IBond> bonds = new ArrayList<>();
+        IAtom prevAtom = atom;
+        IBond prevBond = null;
+        boolean found;
+        do {
+            found = false;
+            for (IBond bond : mol.getConnectedBondsList(prevAtom)) {
+                if (prevBond == bond)
+                    continue;
+                if (bond.getOrder() == IBond.Order.DOUBLE) {
+                    bonds.add(bond);
+                    found = true;
+                    prevBond = bond;
+                    prevAtom = bond.getOther(prevAtom);
+                    break;
+                }
+            }
+        } while (found);
+        int nbonds = bonds.size();
+        if ((nbonds&0x1) == 0)
+            return null; // is even => false
+        return bonds.get(nbonds/2);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected IStereoElement<IBond, IBond> create(IBond focus, List<IBond> carriers,
                                                   int cfg) {
         return new ExtendedCisTrans(focus, carriers.toArray(new IBond[2]), cfg);
+    }
+
+    @Override
+    public boolean contains(IAtom atom) {
+        if (super.contains(atom))
+            return true;
+
+        // walk along the cumulated bonds to check if the atom is one of those
+        // 'a2 <= a1 <= a=b => b1 => b2'
+        IAtomContainer container = getFocus().getContainer();
+        if (container == null)
+            return false;
+        IBond focus = getFocus();
+
+        IAtom a = focus.getBegin();
+        IAtom b = focus.getEnd();
+        IAtom aPrev = a, bPrev = b;
+        IAtom aNext, bNext;
+        aNext = getOtherAtom(container, a, b);
+        bNext = getOtherAtom(container, b, a);
+        while (aNext != null && bNext != null) {
+            if (aNext.equals(atom) || bNext.equals(atom))
+                return true;
+            IAtom tmp = getOtherAtom(container, aNext, aPrev);
+            aPrev = aNext;
+            aNext = tmp;
+            tmp = getOtherAtom(container, bNext, bPrev);
+            bPrev = bNext;
+            bNext = tmp;
+        }
+        return false;
     }
 }

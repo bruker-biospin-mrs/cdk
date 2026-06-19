@@ -23,7 +23,6 @@
 package org.openscience.cdk.smsd.algorithm.single;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -37,6 +36,7 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IBond.Order;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtom;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
 import org.openscience.cdk.smsd.tools.BondEnergies;
@@ -44,8 +44,6 @@ import org.openscience.cdk.smsd.tools.BondEnergies;
 /**
  * This class handles single atom mapping.
  * Either query and/or target molecule with single atom is mapped by this class.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
  *             access to internal implementation details. SMSD has been deprecated from the CDK with a newer, more recent
@@ -75,8 +73,8 @@ public class SingleMapping {
     protected List<Map<IAtom, IAtom>> getOverLaps(IAtomContainer source, IAtomContainer target, boolean removeHydrogen)
             throws CDKException {
 
-        mappings = new ArrayList<Map<IAtom, IAtom>>();
-        connectedBondOrder = new TreeMap<Integer, Double>();
+        mappings = new ArrayList<>();
+        connectedBondOrder = new TreeMap<>();
         this.source = source;
         this.target = target;
 
@@ -101,8 +99,8 @@ public class SingleMapping {
      */
     protected List<Map<IAtom, IAtom>> getOverLaps(IQueryAtomContainer source, IAtomContainer target,
             boolean removeHydrogen) throws CDKException {
-        mappings = new ArrayList<Map<IAtom, IAtom>>();
-        connectedBondOrder = new TreeMap<Integer, Double>();
+        mappings = new ArrayList<>();
+        connectedBondOrder = new TreeMap<>();
         this.source = source;
         this.target = target;
 
@@ -122,9 +120,9 @@ public class SingleMapping {
         BondEnergies be = BondEnergies.getInstance();
         for (IAtom sourceAtom : source.atoms()) {
             IQueryAtom smartAtom = (IQueryAtom) sourceAtom;
-            if ((removeHydrogen && !smartAtom.getSymbol().equals("H")) || (!removeHydrogen)) {
+            if ((removeHydrogen && smartAtom.getAtomicNumber() != IElement.H) || (!removeHydrogen)) {
                 for (IAtom targetAtom : target.atoms()) {
-                    Map<IAtom, IAtom> mapAtoms = new HashMap<IAtom, IAtom>();
+                    Map<IAtom, IAtom> mapAtoms = new HashMap<>();
                     if (smartAtom.matches(targetAtom)) {
                         mapAtoms.put(sourceAtom, targetAtom);
                         List<IBond> bonds = target.getConnectedBondsList(targetAtom);
@@ -151,10 +149,10 @@ public class SingleMapping {
         int counter = 0;
         BondEnergies be = BondEnergies.getInstance();
         for (IAtom sourceAtom : source.atoms()) {
-            if ((removeHydrogen && !sourceAtom.getSymbol().equals("H")) || (!removeHydrogen)) {
+            if ((removeHydrogen && sourceAtom.getAtomicNumber() != IElement.H) || (!removeHydrogen)) {
                 for (IAtom targetAtom : target.atoms()) {
-                    Map<IAtom, IAtom> mapAtoms = new HashMap<IAtom, IAtom>();
-                    if (sourceAtom.getSymbol().equalsIgnoreCase(targetAtom.getSymbol())) {
+                    Map<IAtom, IAtom> mapAtoms = new HashMap<>();
+                    if (sourceAtom.getAtomicNumber().equals(targetAtom.getAtomicNumber())) {
                         mapAtoms.put(sourceAtom, targetAtom);
                         List<IBond> bonds = target.getConnectedBondsList(targetAtom);
 
@@ -180,11 +178,11 @@ public class SingleMapping {
         int counter = 0;
         BondEnergies be = BondEnergies.getInstance();
         for (IAtom targetAtom : target.atoms()) {
-            if ((removeHydrogen && !targetAtom.getSymbol().equals("H")) || (!removeHydrogen)) {
+            if ((removeHydrogen && targetAtom.getAtomicNumber() != IElement.H) || (!removeHydrogen)) {
                 for (IAtom sourceAtoms : source.atoms()) {
-                    Map<IAtom, IAtom> mapAtoms = new HashMap<IAtom, IAtom>();
+                    Map<IAtom, IAtom> mapAtoms = new HashMap<>();
 
-                    if (targetAtom.getSymbol().equalsIgnoreCase(sourceAtoms.getSymbol())) {
+                    if (targetAtom.getAtomicNumber().equals(sourceAtoms.getAtomicNumber())) {
                         mapAtoms.put(sourceAtoms, targetAtom);
                         List<IBond> bonds = source.getConnectedBondsList(sourceAtoms);
 
@@ -207,7 +205,7 @@ public class SingleMapping {
     }
 
     private void postFilter() {
-        List<Map<IAtom, IAtom>> sortedMap = new ArrayList<Map<IAtom, IAtom>>();
+        List<Map<IAtom, IAtom>> sortedMap = new ArrayList<>();
         connectedBondOrder = sortByValue(connectedBondOrder);
         for (Integer key : connectedBondOrder.keySet()) {
             Map<IAtom, IAtom> mapToBeMoved = mappings.get(key);
@@ -217,15 +215,15 @@ public class SingleMapping {
     }
 
     private <K, V extends Comparable<V>> Map<K, V> sortByValue(Map<K, V> map) {
-        List<Map.Entry<K, V>> list = new LinkedList<Map.Entry<K, V>>(map.entrySet());
-        Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
+        List<Map.Entry<K, V>> list = new LinkedList<>(map.entrySet());
+        list.sort(new Comparator<Map.Entry<K, V>>() {
 
             @Override
             public int compare(Map.Entry<K, V> object1, Map.Entry<K, V> object2) {
                 return object1.getValue().compareTo(object2.getValue());
             }
         });
-        Map<K, V> result = new LinkedHashMap<K, V>();
+        Map<K, V> result = new LinkedHashMap<>();
         for (Map.Entry<K, V> entry : list) {
             result.put(entry.getKey(), entry.getValue());
         }

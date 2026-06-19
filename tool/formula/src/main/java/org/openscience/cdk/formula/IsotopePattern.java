@@ -10,12 +10,10 @@ import java.util.List;
  *
  * @author Miguel Rojas Cherto
  *
- * @cdk.module formula
- * @cdk.githash
  */
 public class IsotopePattern {
 
-    private List<IsotopeContainer> isotopeCList = new ArrayList<IsotopeContainer>();
+    private final List<IsotopeContainer> isotopeCList = new ArrayList<>();
 
     private int                    monoIsotopePosition;
 

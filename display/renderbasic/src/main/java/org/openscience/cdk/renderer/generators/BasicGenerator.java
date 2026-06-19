@@ -33,19 +33,17 @@ import org.openscience.cdk.renderer.elements.IRenderingElement;
  * {@link BasicBondGenerator}.
  *
  * @author maclean
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public class BasicGenerator implements IGenerator<IAtomContainer> {
 
     /** Holder for various parameters, such as background color */
-    private BasicSceneGenerator sceneGenerator;
+    private final BasicSceneGenerator sceneGenerator;
 
     /** Generates elements for each atom in a container */
-    private BasicAtomGenerator  atomGenerator;
+    private final BasicAtomGenerator  atomGenerator;
 
     /** Generates elements for each bond in a container */
-    private BasicBondGenerator  bondGenerator;
+    private final BasicBondGenerator  bondGenerator;
 
     /**
      * Make a basic generator that creates elements for atoms and bonds.
@@ -69,7 +67,7 @@ public class BasicGenerator implements IGenerator<IAtomContainer> {
     /** {@inheritDoc} */
     @Override
     public List<IGeneratorParameter<?>> getParameters() {
-        ArrayList<IGeneratorParameter<?>> list = new ArrayList<IGeneratorParameter<?>>();
+        ArrayList<IGeneratorParameter<?>> list = new ArrayList<>();
         list.addAll(this.atomGenerator.getParameters());
         list.addAll(this.bondGenerator.getParameters());
         list.addAll(this.sceneGenerator.getParameters());

@@ -21,13 +21,12 @@ package org.openscience.cdk.qsar.descriptors.molecular;
 import java.io.InputStream;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.ChemFile;
 import org.openscience.cdk.ChemObject;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.ISimpleChemObjectReader;
 import org.openscience.cdk.io.MDLV2000Reader;
@@ -39,23 +38,22 @@ import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class PetitjeanShapeIndexDescriptorTest extends MolecularDescriptorTest {
+class PetitjeanShapeIndexDescriptorTest extends MolecularDescriptorTest {
 
-    public PetitjeanShapeIndexDescriptorTest() {}
+    PetitjeanShapeIndexDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(PetitjeanShapeIndexDescriptor.class);
     }
 
     @Test
-    public void testPetitjeanShapeIndexDescriptor() throws ClassNotFoundException, CDKException, Exception {
+    void testPetitjeanShapeIndexDescriptor() throws Exception {
         // first molecule is nbutane, second is naphthalene
-        String filename = "data/mdl/petitejean.sdf";
-        InputStream ins = this.getClass().getClassLoader().getResourceAsStream(filename);
+        String filename = "petitejean.sdf";
+        InputStream ins = this.getClass().getResourceAsStream(filename);
         ISimpleChemObjectReader reader = new MDLV2000Reader(ins);
         ChemFile content = (ChemFile) reader.read((ChemObject) new ChemFile());
         List cList = ChemFileManipulator.getAllAtomContainers(content);
@@ -63,24 +61,24 @@ public class PetitjeanShapeIndexDescriptorTest extends MolecularDescriptorTest {
 
         DescriptorValue result = descriptor.calculate(ac);
         DoubleArrayResult dar = (DoubleArrayResult) result.getValue();
-        Assert.assertEquals(0.5, dar.get(0), 0.00001);
-        Assert.assertEquals(0.606477, dar.get(1), 0.000001);
+        Assertions.assertEquals(0.5, dar.get(0), 0.00001);
+        Assertions.assertEquals(0.606477, dar.get(1), 0.000001);
 
         ac = (IAtomContainer) cList.get(1);
         result = descriptor.calculate(ac);
         dar = (DoubleArrayResult) result.getValue();
-        Assert.assertEquals(0.666666, dar.get(0), 0.000001);
-        Assert.assertEquals(0.845452, dar.get(1), 0.000001);
+        Assertions.assertEquals(0.666666, dar.get(0), 0.000001);
+        Assertions.assertEquals(0.845452, dar.get(1), 0.000001);
 
     }
 
     @Test
-    public void testPetiteJeanShapeNo3D() throws Exception {
+    void testPetiteJeanShapeNo3D() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer atomContainer = sp.parseSmiles("CCCOCCC(O)=O");
         DescriptorValue result = descriptor.calculate(atomContainer);
         DoubleArrayResult dar = (DoubleArrayResult) result.getValue();
-        Assert.assertTrue(Double.isNaN(dar.get(1)));
+        Assertions.assertTrue(Double.isNaN(dar.get(1)));
 
     }
 }

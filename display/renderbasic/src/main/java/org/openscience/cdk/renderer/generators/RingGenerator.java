@@ -19,7 +19,7 @@
  */
 package org.openscience.cdk.renderer.generators;
 
-import static org.openscience.cdk.CDKConstants.ISAROMATIC;
+import static org.openscience.cdk.interfaces.IChemObject.AROMATIC;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -43,8 +43,6 @@ import org.openscience.cdk.renderer.generators.parameter.AbstractGeneratorParame
  * Generates just the aromatic indicators for rings : circles, or light-gray
  * inner bonds, depending on the value of CDKStyleAromaticity.
  *
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public class RingGenerator extends BasicBondGenerator {
 
@@ -62,7 +60,7 @@ public class RingGenerator extends BasicBondGenerator {
         }
     }
 
-    private IGeneratorParameter<Boolean> showAromaticity = new ShowAromaticity();
+    private final IGeneratorParameter<Boolean> showAromaticity = new ShowAromaticity();
 
     /**
      * Depicts aromaticity of rings in the original CDK style.
@@ -78,7 +76,7 @@ public class RingGenerator extends BasicBondGenerator {
     }
 
     /** If true, the aromatic ring is indicated by light gray inner bonds */
-    private IGeneratorParameter<Boolean> cdkStyleAromaticity = new CDKStyleAromaticity();
+    private final IGeneratorParameter<Boolean> cdkStyleAromaticity = new CDKStyleAromaticity();
 
     /**
      * The maximum ring size for which an aromatic ring should be drawn.
@@ -97,7 +95,7 @@ public class RingGenerator extends BasicBondGenerator {
         }
     }
 
-    private IGeneratorParameter<Integer> maxDrawableAromaticRing = new MaxDrawableAromaticRing();
+    private final IGeneratorParameter<Integer> maxDrawableAromaticRing = new MaxDrawableAromaticRing();
 
     /**
      * The proportion of a ring bounds to use to draw the ring.
@@ -112,19 +110,19 @@ public class RingGenerator extends BasicBondGenerator {
         }
     }
 
-    private IGeneratorParameter<Double> ringProportion = new RingProportion();
+    private final IGeneratorParameter<Double> ringProportion = new RingProportion();
 
     /**
      * The rings that have already been painted - that is, a ring element
      * has been generated for it.
      */
-    private Set<IRing>                  painted_rings;
+    private final Set<IRing>                  painted_rings;
 
     /**
      * Make a generator for ring elements.
      */
     public RingGenerator() {
-        this.painted_rings = new HashSet<IRing>();
+        this.painted_rings = new HashSet<>();
     }
 
     /** {@inheritDoc} */
@@ -166,7 +164,7 @@ public class RingGenerator extends BasicBondGenerator {
     private boolean ringIsAromatic(IRing ring) {
         boolean isAromatic = true;
         for (IAtom atom : ring.atoms()) {
-            if (!atom.getFlag(ISAROMATIC)) {
+            if (!atom.getFlag(AROMATIC)) {
                 isAromatic = false;
                 break;
             }
@@ -174,7 +172,7 @@ public class RingGenerator extends BasicBondGenerator {
         if (!isAromatic) {
             isAromatic = true;
             for (IBond b : ring.bonds()) {
-                if (!b.getFlag(ISAROMATIC)) {
+                if (!b.getFlag(AROMATIC)) {
                     return false;
                 }
             }
@@ -191,7 +189,7 @@ public class RingGenerator extends BasicBondGenerator {
         // Allocate ArrayList with sufficient space for everything.
         // Note that the number should ideally be the same as the number of entries
         // that we add here, though this is *only* an efficiency consideration.
-        List<IGeneratorParameter<?>> pars = new ArrayList<IGeneratorParameter<?>>(superPars.size() + 3);
+        List<IGeneratorParameter<?>> pars = new ArrayList<>(superPars.size() + 3);
 
         pars.addAll(superPars);
         pars.add(cdkStyleAromaticity);

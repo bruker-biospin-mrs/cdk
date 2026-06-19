@@ -31,15 +31,13 @@ import org.openscience.cdk.interfaces.IAtomContainer;
  * specific stereo elements.
  *
  * @author John May
- * @cdk.module hash
- * @cdk.githash
  */
 public interface StereoEncoderFactory {
 
     /**
      * Empty factory for when stereo encoding is not required
      */
-    public static StereoEncoderFactory EMPTY = new StereoEncoderFactory() {
+    StereoEncoderFactory EMPTY = new StereoEncoderFactory() {
 
                                                  @Override
                                                  public StereoEncoder create(IAtomContainer container, int[][] graph) {
@@ -54,6 +52,6 @@ public interface StereoEncoderFactory {
      * @param graph     adjacency list representation of the container
      * @return a new stereo encoder
      */
-    public StereoEncoder create(IAtomContainer container, int[][] graph);
+    StereoEncoder create(IAtomContainer container, int[][] graph);
 
 }

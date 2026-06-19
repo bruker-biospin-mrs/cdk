@@ -24,13 +24,12 @@
 
 package org.openscience.cdk.hash.stereo;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,17 +37,19 @@ import static org.mockito.Mockito.when;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class MultiStereoEncoderTest {
+class MultiStereoEncoderTest {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testConstruction_Empty() {
-        new MultiStereoEncoder(Collections.<StereoEncoder> emptyList());
+    @Test
+    void testConstruction_Empty() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    new MultiStereoEncoder(Collections.emptyList());
+                                });
     }
 
     @Test
-    public void testEncode() throws Exception {
+    void testEncode() throws Exception {
 
         StereoEncoder a = mock(StereoEncoder.class);
         StereoEncoder b = mock(StereoEncoder.class);
@@ -62,10 +63,10 @@ public class MultiStereoEncoderTest {
         when(b.encode(current, next)).thenReturn(true);
 
         // configured once
-        assertTrue(encoder.encode(current, next));
+        Assertions.assertTrue(encoder.encode(current, next));
 
         // not configured again
-        assertFalse(encoder.encode(current, next));
+        Assertions.assertFalse(encoder.encode(current, next));
 
         verify(a, times(1)).encode(current, next);
         verify(b, times(1)).encode(current, next);
@@ -73,7 +74,7 @@ public class MultiStereoEncoderTest {
     }
 
     @Test
-    public void testReset() throws Exception {
+    void testReset() throws Exception {
         StereoEncoder a = mock(StereoEncoder.class);
         StereoEncoder b = mock(StereoEncoder.class);
 
@@ -86,17 +87,17 @@ public class MultiStereoEncoderTest {
         when(b.encode(current, next)).thenReturn(true);
 
         // configured once
-        assertTrue(encoder.encode(current, next));
+        Assertions.assertTrue(encoder.encode(current, next));
 
         // not configured again
-        assertFalse(encoder.encode(current, next));
+        Assertions.assertFalse(encoder.encode(current, next));
 
         verify(a, times(1)).encode(current, next);
         verify(b, times(1)).encode(current, next);
 
         encoder.reset();
 
-        assertTrue(encoder.encode(current, next));
+        Assertions.assertTrue(encoder.encode(current, next));
 
         verify(a, times(2)).encode(current, next);
         verify(b, times(2)).encode(current, next);

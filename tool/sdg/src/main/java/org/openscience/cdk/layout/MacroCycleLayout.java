@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.openscience.cdk.CDKConstants.ISPLACED;
+import static org.openscience.cdk.interfaces.IChemObject.PLACED;
 
 /**
  * A class for helping layout macrocycles.
@@ -50,12 +50,9 @@ import static org.openscience.cdk.CDKConstants.ISPLACED;
 final class MacroCycleLayout {
 
     // Macrocycle templates
-    private static IdentityTemplateLibrary TEMPLATES            = IdentityTemplateLibrary.loadFromResource("macro.smi");
+    private static final IdentityTemplateLibrary TEMPLATES            = IdentityTemplateLibrary.loadFromResource("macro.smi");
 
-    // Hint for placing substituents
-    public static  String                  MACROCYCLE_ATOM_HINT = "layout.macrocycle.atom.hint";
-
-    // (counter)clockwise
+        // (counter)clockwise
     private static final int CW  = -1;
     private static final int CCW = +1;
 
@@ -96,10 +93,10 @@ final class MacroCycleLayout {
 
         for (int i = 0; i < macrocycle.getAtomCount(); i++) {
             macrocycle.getAtom(i).setPoint2d(best[(bestOffset + i) % macrocycle.getAtomCount()]);
-            macrocycle.getAtom(i).setFlag(ISPLACED, true);
-            macrocycle.getAtom(i).setProperty(MACROCYCLE_ATOM_HINT, true);
+            macrocycle.getAtom(i).setFlag(PLACED, true);
+            macrocycle.getAtom(i).setProperty(AtomPlacer.MACROCYCLE_ATOM_HINT, true);
         }
-        macrocycle.setFlag(ISPLACED, true);
+        macrocycle.setFlag(PLACED, true);
 
         return true;
     }
@@ -347,7 +344,7 @@ final class MacroCycleLayout {
         public int compareTo(MacroScore o) {
             if (o == null)
                 return -1;
-            int cmp = 0;
+            int cmp;
             cmp = -Integer.compare(this.nRingClick, o.nRingClick);
             if (cmp != 0)
                 return cmp;

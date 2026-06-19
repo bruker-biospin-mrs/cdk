@@ -26,13 +26,11 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.geometry.CrystalGeometryTools;
 import org.openscience.cdk.interfaces.IAtom;
@@ -42,15 +40,12 @@ import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IMolecularFormula;
 import org.openscience.cdk.io.formats.IResourceFormat;
 import org.openscience.cdk.io.formats.ShelXFormat;
-import org.openscience.cdk.tools.FormatStringBuffer;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
 /**
  * <p>Serializes a MoleculeSet or a Molecule object to ShelX code.
  * The output can be read with Platon.
  *
- * @cdk.module  extra
- * @cdk.githash
  * @cdk.iooptions
  *
  * @author Egon Willighagen
@@ -92,7 +87,7 @@ public class ShelXWriter extends DefaultChemObjectWriter {
     }
 
     @Override
-    public void setWriter(Writer out) throws CDKException {
+    public void setWriter(Writer out) {
         if (out instanceof BufferedWriter) {
             writer = (BufferedWriter) out;
         } else {
@@ -101,7 +96,7 @@ public class ShelXWriter extends DefaultChemObjectWriter {
     }
 
     @Override
-    public void setWriter(OutputStream output) throws CDKException {
+    public void setWriter(OutputStream output) {
         setWriter(new OutputStreamWriter(output));
     }
 
@@ -116,8 +111,8 @@ public class ShelXWriter extends DefaultChemObjectWriter {
     @Override
     public boolean accepts(Class<? extends IChemObject> classObject) {
         Class<?>[] interfaces = classObject.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            if (ICrystal.class.equals(interfaces[i])) return true;
+        for (Class<?> anInterface : interfaces) {
+            if (ICrystal.class.equals(anInterface)) return true;
         }
         return false;
     }
@@ -134,14 +129,14 @@ public class ShelXWriter extends DefaultChemObjectWriter {
         } else {
             throw new CDKException("Only Crystal objects can be read.");
         }
-    };
+    }
 
     // Private procedures
 
     private void writeCrystal(ICrystal crystal) {
 
         Object title = crystal.getTitle();
-        if (title != null && title.toString().trim().length() > 0) {
+        if (title != null && !title.toString().trim().isEmpty()) {
             writeln("TITL " + title.toString().trim());
         } else {
             writeln("TITL Produced with CDK (http://cdk.sf.net/)");
@@ -155,7 +150,7 @@ public class ShelXWriter extends DefaultChemObjectWriter {
         double alpha = Math.toDegrees(b.angle(c));
         double beta = Math.toDegrees(a.angle(c));
         double gamma = Math.toDegrees(a.angle(b));
-        FormatStringBuffer format = new FormatStringBuffer("%7.5lf");
+        FormatStringBuilder format = new FormatStringBuilder("%7.5lf");
         write("CELL " + format.reset("%7.5f").format(1.54184).toString() + "   ");
         write(format.reset("%8.5f").format(alength) + "  ");
         write(format.reset("%8.5f").format(blength) + "  ");
@@ -175,17 +170,15 @@ public class ShelXWriter extends DefaultChemObjectWriter {
             writeln("SYMM  1/2-X   ,    -Y   , 1/2+Z");
         }
         //        MFAnalyser mfa = new MFAnalyser(crystal);
-        String elemNames = "";
-        String elemCounts = "";
+        StringBuilder elemNames = new StringBuilder();
+        StringBuilder elemCounts = new StringBuilder();
         IMolecularFormula formula = MolecularFormulaManipulator.getMolecularFormula(crystal);
         List<IElement> asortedElements = MolecularFormulaManipulator.elements(formula);
-        Iterator<IElement> elements = asortedElements.iterator();
-        while (elements.hasNext()) {
-            IElement element = elements.next();
+        for (IElement element : asortedElements) {
             String symbol = element.getSymbol();
-            elemNames += symbol + "    ".substring(symbol.length());
+            elemNames.append(symbol).append("    ".substring(symbol.length()));
             String countS = Integer.valueOf(MolecularFormulaManipulator.getElementCount(formula, element)).toString();
-            elemCounts += countS + "    ".substring(countS.length());
+            elemCounts.append(countS).append("    ".substring(countS.length()));
         }
         writeln("SFAC  " + elemNames);
         writeln("UNIT  " + elemCounts);
@@ -201,7 +194,7 @@ public class ShelXWriter extends DefaultChemObjectWriter {
                 write(" ");
             }
             write("     ");
-            String elemID = null;
+            String elemID = "?"; // avoid null for undef element here
             for (int elemidx = 0; elemidx < asortedElements.size(); elemidx++) {
                 IElement elem = asortedElements.get(elemidx);
                 if (elem.getSymbol().equals(symbol)) {
@@ -222,7 +215,7 @@ public class ShelXWriter extends DefaultChemObjectWriter {
         try {
             writer.write(s);
         } catch (IOException e) {
-            System.err.println("CMLWriter IOException while printing \"" + s + "\":" + e.toString());
+            System.err.println("CMLWriter IOException while printing \"" + s + "\":" + e);
         }
     }
 
@@ -231,7 +224,7 @@ public class ShelXWriter extends DefaultChemObjectWriter {
             writer.write(s);
             writer.write('\n');
         } catch (IOException e) {
-            System.err.println("CMLWriter IOException while printing \"" + s + "\":" + e.toString());
+            System.err.println("CMLWriter IOException while printing \"" + s + "\":" + e);
         }
     }
 

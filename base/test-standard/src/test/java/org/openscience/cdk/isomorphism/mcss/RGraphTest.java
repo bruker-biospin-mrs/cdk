@@ -18,19 +18,18 @@
  */
 package org.openscience.cdk.isomorphism.mcss;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 
 /**
- * @cdk.module test-standard
  */
-public class RGraphTest extends CDKTestCase {
+class RGraphTest extends CDKTestCase {
 
     @Test
-    public void testRGraph() {
+    void testRGraph() {
         RGraph graph = new RGraph();
-        Assert.assertNotNull(graph);
+        Assertions.assertNotNull(graph);
     }
 
 }

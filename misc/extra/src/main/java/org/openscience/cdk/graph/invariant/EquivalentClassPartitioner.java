@@ -21,13 +21,14 @@ package org.openscience.cdk.graph.invariant;
 
 import java.util.List;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.NoSuchAtomException;
 import org.openscience.cdk.graph.PathTools;
 import org.openscience.cdk.graph.matrix.ConnectionMatrix;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
@@ -35,13 +36,11 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * An algorithm for topological symmetry. This algorithm derived from the
  * algorithm {@cdk.cite Hu94}.
  *
- * @cdk.githash
  *
  * @author Junfeng Hao
  * @author Luis F. de Figueiredo
  * @cdk.created 2003-09-24
  * @cdk.dictref blue-obelisk:perceiveGraphSymmetry
- * @cdk.module extra
  */
 public class EquivalentClassPartitioner {
 
@@ -52,8 +51,8 @@ public class EquivalentClassPartitioner {
     private int[][]             apspMatrix;
     private int                 layerNumber;
     private int                 nodeNumber;
-    private static double       LOST   = 0.000000000001;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(EquivalentClassPartitioner.class);
+    private static final double       LOST   = 0.000000000001;
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(EquivalentClassPartitioner.class);
 
     /**
      * Constructor for the TopologicalEquivalentClass object.
@@ -79,7 +78,7 @@ public class EquivalentClassPartitioner {
                 // correct adjacency matrix to consider aromatic bonds as such
                 if (adjaMatrix[i][j] > 0) {
                     IBond bond = atomContainer.getBond(atomContainer.getAtom(i), atomContainer.getAtom(j));
-                    boolean isArom = bond.getFlag(CDKConstants.ISAROMATIC);
+                    boolean isArom = bond.getFlag(IChemObject.AROMATIC);
                     adjaMatrix[i][j] = (isArom) ? 1.5 : adjaMatrix[i][j];
                     adjaMatrix[j][i] = adjaMatrix[i][j];
                 }
@@ -99,7 +98,7 @@ public class EquivalentClassPartitioner {
      * @return an array contains the automorphism partition of the molecule
      */
     public int[] getTopoEquivClassbyHuXu(IAtomContainer atomContainer) throws NoSuchAtomException {
-        double nodeSequence[] = prepareNode(atomContainer);
+        double[] nodeSequence = prepareNode(atomContainer);
         nodeMatrix = buildNodeMatrix(nodeSequence);
         bondMatrix = buildBondMatrix();
         weight = buildWeightMatrix(nodeMatrix, bondMatrix);
@@ -115,7 +114,7 @@ public class EquivalentClassPartitioner {
      * @return an array of node identifier
      */
     public double[] prepareNode(IAtomContainer atomContainer) {
-        double nodeSequence[] = new double[atomContainer.getAtomCount()];
+        double[] nodeSequence = new double[atomContainer.getAtomCount()];
         int i = 0;
         for (IAtom atom : atomContainer.atoms()) {
             String symbol = atom.getSymbol();
@@ -162,8 +161,8 @@ public class EquivalentClassPartitioner {
                     logger.debug("in case of a new node, please " + "report this bug to cdk-devel@lists.sf.net.");
                 }
             } else if (bonds.size() == 2) {
-                IBond bond0 = (IBond) bonds.get(0);
-                IBond bond1 = (IBond) bonds.get(1);
+                IBond bond0 = bonds.get(0);
+                IBond bond1 = bonds.get(1);
                 IBond.Order order0 = bond0.getOrder();
                 IBond.Order order1 = bond1.getOrder();
                 if (symbol.equals("C")) {
@@ -179,7 +178,7 @@ public class EquivalentClassPartitioner {
                         nodeSequence[i] = 9;// -C#
                     // case 3 would not allow to reach this statement as there
                     // is no aromatic bond order
-                    if (bond0.getFlag(CDKConstants.ISAROMATIC) && bond1.getFlag(CDKConstants.ISAROMATIC))
+                    if (bond0.getFlag(IChemObject.AROMATIC) && bond1.getFlag(IChemObject.AROMATIC))
                         nodeSequence[i] = 11;// ArCH
                 } else if (symbol.equals("N")) {
                     if (order0 == IBond.Order.SINGLE && order1 == IBond.Order.SINGLE)
@@ -197,21 +196,21 @@ public class EquivalentClassPartitioner {
                         nodeSequence[i] = 29;// -N# with charge=+1
                     // case 3 would not allow to reach this statement as there
                     // is no aromatic bond order
-                    if (bond0.getFlag(CDKConstants.ISAROMATIC) && bond1.getFlag(CDKConstants.ISAROMATIC))
+                    if (bond0.getFlag(IChemObject.AROMATIC) && bond1.getFlag(IChemObject.AROMATIC))
                         nodeSequence[i] = 30;// ArN
                     // there is no way to distinguish between ArNH and ArN as
                     // bonds to protons are not considered
                 } else if (symbol.equals("O")) {
                     if (order0 == IBond.Order.SINGLE && order1 == IBond.Order.SINGLE)
                         nodeSequence[i] = 15;// -O-
-                    else if (bond0.getFlag(CDKConstants.ISAROMATIC) && bond1.getFlag(CDKConstants.ISAROMATIC))
+                    else if (bond0.getFlag(IChemObject.AROMATIC) && bond1.getFlag(IChemObject.AROMATIC))
                         nodeSequence[i] = 17;// ArO
                 } else if (symbol.equals("S")) {
                     if (order0 == IBond.Order.SINGLE && order1 == IBond.Order.SINGLE)
                         nodeSequence[i] = 32;// -S-
                     else if (order0 == IBond.Order.DOUBLE && order1 == IBond.Order.DOUBLE)
                         nodeSequence[i] = 35;// =S=
-                    else if (bond0.getFlag(CDKConstants.ISAROMATIC) && bond1.getFlag(CDKConstants.ISAROMATIC))
+                    else if (bond0.getFlag(IChemObject.AROMATIC) && bond1.getFlag(IChemObject.AROMATIC))
                         nodeSequence[i] = 37;// ArS
                 } else if (symbol.equals("P")) {
                     if (order0 == IBond.Order.SINGLE && order1 == IBond.Order.SINGLE) nodeSequence[i] = 39;// -PH-
@@ -219,9 +218,9 @@ public class EquivalentClassPartitioner {
                     logger.debug("in case of a new node, " + "please report this bug to cdk-devel@lists.sf.net.");
                 }
             } else if (bonds.size() == 3) {
-                IBond bond0 = (IBond) bonds.get(0);
-                IBond bond1 = (IBond) bonds.get(1);
-                IBond bond2 = (IBond) bonds.get(2);
+                IBond bond0 = bonds.get(0);
+                IBond bond1 = bonds.get(1);
+                IBond bond2 = bonds.get(2);
                 IBond.Order order0 = bond0.getOrder();
                 IBond.Order order1 = bond1.getOrder();
                 IBond.Order order2 = bond2.getOrder();
@@ -234,13 +233,13 @@ public class EquivalentClassPartitioner {
                     // case 2 would not allow to reach this statement because
                     // there is always a double bond (pi system) around an
                     // aromatic atom
-                    if ((bond0.getFlag(CDKConstants.ISAROMATIC) || bond1.getFlag(CDKConstants.ISAROMATIC) || bond2
-                            .getFlag(CDKConstants.ISAROMATIC))
+                    if ((bond0.getFlag(IChemObject.AROMATIC) || bond1.getFlag(IChemObject.AROMATIC) || bond2
+                            .getFlag(IChemObject.AROMATIC))
                             && (order0 == IBond.Order.SINGLE || order1 == IBond.Order.SINGLE || bond2.getOrder() == IBond.Order.SINGLE))
                         nodeSequence[i] = 12;// ArC-
                     // case 3 would not allow to reach this statement
-                    if (bond0.getFlag(CDKConstants.ISAROMATIC) && bond1.getFlag(CDKConstants.ISAROMATIC)
-                            && bond2.getFlag(CDKConstants.ISAROMATIC)) nodeSequence[i] = 13;// ArC
+                    if (bond0.getFlag(IChemObject.AROMATIC) && bond1.getFlag(IChemObject.AROMATIC)
+                            && bond2.getFlag(IChemObject.AROMATIC)) nodeSequence[i] = 13;// ArC
                 } else if (symbol.equals("N")) {
                     if (order0 == IBond.Order.SINGLE && order1 == IBond.Order.SINGLE && order2 == IBond.Order.SINGLE)
                         nodeSequence[i] = 21;// >N-
@@ -256,13 +255,13 @@ public class EquivalentClassPartitioner {
                     logger.debug("in case of a new node, " + "please report this bug to cdk-devel@lists.sf.net.");
                 }
             } else if (bonds.size() == 4) {
-                if (atom.getSymbol().equals("C"))
+                if (atom.getAtomicNumber() == IElement.C)
                     nodeSequence[i] = 7;// >C<
-                else if (atom.getSymbol().equals("N"))
+                else if (atom.getAtomicNumber() == IElement.N)
                     nodeSequence[i] = 24;// >N(=)-
-                else if (atom.getSymbol().equals("S"))
+                else if (atom.getAtomicNumber() == IElement.S)
                     nodeSequence[i] = 36;// >S(=)=
-                else if (atom.getSymbol().equals("P"))
+                else if (atom.getAtomicNumber() == IElement.P)
                     nodeSequence[i] = 41;// =P<-
                 else {
                     logger.debug("in case of a new node, " + "please report this bug to cdk-devel@lists.sf.net.");
@@ -358,7 +357,7 @@ public class EquivalentClassPartitioner {
         for (int i = 0; i < nodeNumber; i++) {
             weight[i + 1] = nodeMatrix[i][0];
             for (int j = 0; j < layerNumber; j++) {
-                weight[i + 1] += nodeMatrix[i][j + 1] * bondMatrix[i][j] * Math.pow(10.0, (double) -(j + 1));
+                weight[i + 1] += nodeMatrix[i][j + 1] * bondMatrix[i][j] * Math.pow(10.0, -(j + 1));
             }
         }
         weight[0] = 0.0;
@@ -373,7 +372,7 @@ public class EquivalentClassPartitioner {
      */
     public int checkDiffNumber(double[] weight) {
         // Count the number of different weight
-        double category[] = new double[weight.length];
+        double[] category = new double[weight.length];
         int i, j;
         int count = 1;
         double t;
@@ -399,8 +398,8 @@ public class EquivalentClassPartitioner {
      * @return an array contains the automorphism partition
      */
     public int[] getEquivalentClass(double[] weight) {
-        double category[] = new double[weight.length];
-        int equivalentClass[] = new int[weight.length];
+        double[] category = new double[weight.length];
+        int[] equivalentClass = new int[weight.length];
         int i, j;
         int count = 1;
         double t;
@@ -444,7 +443,7 @@ public class EquivalentClassPartitioner {
      */
     public int[] findTopoEquivClass(double[] weight) {
         int trialCount, i;
-        int equivalentClass[] = new int[weight.length];
+        int[] equivalentClass = new int[weight.length];
         int count = checkDiffNumber(weight);
         trialCount = count;
         if (count == nodeNumber) {

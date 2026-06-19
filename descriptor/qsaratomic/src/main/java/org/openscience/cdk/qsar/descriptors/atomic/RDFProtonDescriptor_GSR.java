@@ -20,13 +20,11 @@
 package org.openscience.cdk.qsar.descriptors.atomic;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.charges.GasteigerMarsiliPartialCharges;
 import org.openscience.cdk.exception.CDKException;
@@ -35,8 +33,10 @@ import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.qsar.AbstractAtomicDescriptor;
 import org.openscience.cdk.qsar.DescriptorSpecification;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -68,8 +68,6 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
  *
  * @author      Federico
  * @cdk.created 2006-12-11
- * @cdk.module  qsaratomic
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:rdfProtonCalculatedValues
  * @cdk.bug     1632419
  */
@@ -160,7 +158,7 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
     public DescriptorValue calculate(IAtom atom, IAtomContainer atomContainer, IRingSet precalculatedringset) {
         IAtomContainer varAtomContainer;
         try {
-            varAtomContainer = (IAtomContainer) atomContainer.clone();
+            varAtomContainer = atomContainer.clone();
         } catch (CloneNotSupportedException e) {
             return getDummyDescriptorValue(e);
         }
@@ -169,7 +167,7 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
         IAtom clonedAtom = varAtomContainer.getAtom(atomPosition);
 
         DoubleArrayResult rdfProtonCalculatedValues = new DoubleArrayResult(gsr_desc_length);
-        if (!atom.getSymbol().equals("H")) {
+        if (atom.getAtomicNumber() != IElement.H) {
             return getDummyDescriptorValue(new CDKException("Invalid atom specified"));
         }
 
@@ -208,12 +206,10 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
         IRing ring;
         IRingSet ringsWithThisBond;
         // SET ISINRING FLAGS FOR BONDS
-        Iterator<IBond> bondsInContainer = varAtomContainer.bonds().iterator();
-        while (bondsInContainer.hasNext()) {
-            IBond bond = bondsInContainer.next();
+        for (IBond bond : varAtomContainer.bonds()) {
             ringsWithThisBond = varRingSet.getRings(bond);
             if (ringsWithThisBond.getAtomContainerCount() > 0) {
-                bond.setFlag(CDKConstants.ISINRING, true);
+                bond.setFlag(IChemObject.IN_RING, true);
             }
         }
 
@@ -223,7 +219,7 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
         for (int w = 0; w < varAtomContainer.getAtomCount(); w++) {
             ringsWithThisAtom = varRingSet.getRings(varAtomContainer.getAtom(w));
             if (ringsWithThisAtom.getAtomContainerCount() > 0) {
-                varAtomContainer.getAtom(w).setFlag(CDKConstants.ISINRING, true);
+                varAtomContainer.getAtom(w).setFlag(IChemObject.IN_RING, true);
             }
         }
 
@@ -242,11 +238,11 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
         List<IAtom> atomsInSeventhSphere;
 
         // SOME LISTS ARE CREATED FOR STORING OF INTERESTING ATOMS AND BONDS DURING DETECTION
-        ArrayList<Integer> singles = new ArrayList<Integer>(); // list of any bond not rotatable
-        ArrayList<Integer> doubles = new ArrayList<Integer>(); // list with only double bonds
-        ArrayList<Integer> atoms = new ArrayList<Integer>(); // list with all the atoms in spheres
+        ArrayList<Integer> singles = new ArrayList<>(); // list of any bond not rotatable
+        ArrayList<Integer> doubles = new ArrayList<>(); // list with only double bonds
+        ArrayList<Integer> atoms = new ArrayList<>(); // list with all the atoms in spheres
         //atoms.add( Integer.valueOf( mol.indexOf(neighboors[0]) ) );
-        ArrayList<Integer> bondsInCycloex = new ArrayList<Integer>(); // list for bonds in cycloexane-like rings
+        ArrayList<Integer> bondsInCycloex = new ArrayList<>(); // list for bonds in cycloexane-like rings
 
         // 2', 3', 4', 5', 6', and 7' bonds up to the target are detected:
         IBond secondBond; // (remember that first bond is proton bond)
@@ -286,7 +282,7 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
 
                             // if the bond is in a cyclohexane-like ring (a ring with 5 or more atoms, not aromatic)
                             // the boolean "theBondIsInA6MemberedRing" is set to true
-                            if (!thirdBond.getFlag(CDKConstants.ISAROMATIC)) {
+                            if (!thirdBond.getFlag(IChemObject.AROMATIC)) {
                                 if (!curAtomThird.equals(neighbour0)) {
                                     rsAtom = varRingSet.getRings(thirdBond);
                                     for (int f = 0; f < rsAtom.getAtomContainerCount(); f++) {
@@ -379,7 +375,7 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
         //Variables
         double[] values; // for storage of results of other methods
         double sum;
-        double smooth = -20;
+        double smooth;
         double partial;
         int position;
         double limitInf;
@@ -393,7 +389,7 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
         Vector3d bA = new Vector3d();
         Vector3d bB = new Vector3d();
         Point3d middlePoint = new Point3d();
-        double angle = 0;
+        double angle;
 
         if (singles.size() > 0) {
             double dist0;
@@ -401,17 +397,17 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
             IAtom singleBondAtom0;
             IAtom singleBondAtom1;
             position = 0;
-            IBond theSingleBond = null;
+            IBond theSingleBond;
             limitInf = 0;
             limitSup = Math.PI / 2;
             smooth = -1.15;
             for (int c = 0; c < gsr_desc_length; c++) {
             	double ghs = limitSup * ((double)c / gsr_desc_length);
                 sum = 0;
-                for (int sing = 0; sing < singles.size(); sing++) {
+                for (Integer single : singles) {
                     angle = 0;
                     partial = 0;
-                    Integer thisSingleBond = singles.get(sing);
+                    Integer thisSingleBond = single;
                     position = thisSingleBond;
                     theSingleBond = mol.getBond(position);
                     middlePoint = theSingleBond.get3DCenter();
@@ -459,20 +455,20 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
         if (detected != null) {
             if (detected.contains(bond)) counter += 1;
         }
-        if (atom0.getFlag(CDKConstants.ISINRING)) {
-            if (atom1.getFlag(CDKConstants.ISINRING)) {
+        if (atom0.getFlag(IChemObject.IN_RING)) {
+            if (atom1.getFlag(IChemObject.IN_RING)) {
                 counter += 1;
             } else {
-                if (atom1.getSymbol().equals("H"))
+                if (atom1.getAtomicNumber() == IElement.H)
                     counter += 1;
                 else
                     counter += 0;
             }
         }
-        if (atom0.getSymbol().equals("N") && atom1.getSymbol().equals("C")) {
+        if (atom0.getAtomicNumber() == IElement.N && atom1.getAtomicNumber() == IElement.C) {
             if (getIfACarbonIsDoubleBondedToAnOxygen(mol, atom1)) counter += 1;
         }
-        if (atom0.getSymbol().equals("C") && atom1.getSymbol().equals("N")) {
+        if (atom0.getAtomicNumber() == IElement.C && atom1.getAtomicNumber() == IElement.N) {
             if (getIfACarbonIsDoubleBondedToAnOxygen(mol, atom0)) counter += 1;
         }
         if (counter > 0) isBondNotRotatable = true;
@@ -484,9 +480,8 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
         List<IAtom> neighToCarbon = mol.getConnectedAtomsList(carbonAtom);
         IBond tmpBond;
         int counter = 0;
-        for (int nei = 0; nei < neighToCarbon.size(); nei++) {
-            IAtom neighbour = neighToCarbon.get(nei);
-            if (neighbour.getSymbol().equals("O")) {
+        for (IAtom neighbour : neighToCarbon) {
+            if (neighbour.getAtomicNumber() == IElement.O) {
                 tmpBond = mol.getBond(neighbour, carbonAtom);
                 if (tmpBond.getOrder() == IBond.Order.DOUBLE) counter += 1;
             }
@@ -511,19 +506,19 @@ public class RDFProtonDescriptor_GSR extends AbstractAtomicDescriptor implements
     private void checkAndStore(int bondToStore, IBond.Order bondOrder, ArrayList<Integer> singleVec,
             ArrayList<Integer> doubleVec, ArrayList<Integer> cycloexVec, int a1, ArrayList<Integer> atomVec,
             int sphere, boolean isBondInCycloex) {
-        if (!atomVec.contains(Integer.valueOf(a1))) {
+        if (!atomVec.contains(a1)) {
             if (sphere < 6) atomVec.add(a1);
         }
-        if (!cycloexVec.contains(Integer.valueOf(bondToStore))) {
+        if (!cycloexVec.contains(bondToStore)) {
             if (isBondInCycloex) {
                 cycloexVec.add(bondToStore);
             }
         }
         if (bondOrder == IBond.Order.DOUBLE) {
-            if (!doubleVec.contains(Integer.valueOf(bondToStore))) doubleVec.add(bondToStore);
+            if (!doubleVec.contains(bondToStore)) doubleVec.add(bondToStore);
         }
         if (bondOrder == IBond.Order.SINGLE) {
-            if (!singleVec.contains(Integer.valueOf(bondToStore))) singleVec.add(bondToStore);
+            if (!singleVec.contains(bondToStore)) singleVec.add(bondToStore);
         }
     }
 

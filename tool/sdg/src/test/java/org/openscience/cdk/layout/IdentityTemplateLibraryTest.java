@@ -24,11 +24,12 @@
 
 package org.openscience.cdk.layout;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.silent.Atom;
-import org.openscience.cdk.silent.AtomContainer;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 import javax.vecmath.Point2d;
 import java.io.ByteArrayOutputStream;
@@ -38,14 +39,12 @@ import java.util.Map;
 import static java.util.AbstractMap.SimpleEntry;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.number.IsCloseTo.closeTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-public class IdentityTemplateLibraryTest {
+class IdentityTemplateLibraryTest {
 
     @Test
-    public void decodeCoordinates() throws Exception {
+    void decodeCoordinates() throws Exception {
         Point2d[] points = IdentityTemplateLibrary.decodeCoordinates("12.5, 5.5, 4, 2");
         assertThat(points.length, is(2));
         assertThat(points[0].x, closeTo(12.5, 0.01));
@@ -55,7 +54,7 @@ public class IdentityTemplateLibraryTest {
     }
 
     @Test
-    public void encodeCoordinates() throws Exception {
+    void encodeCoordinates() throws Exception {
         Point2d[] points = new Point2d[]{new Point2d(12.5f, 5.5f), new Point2d(4f, 2f)};
         String str = IdentityTemplateLibrary.encodeCoordinates(points);
         assertThat(str, is("|(12.5,5.5,;4.0,2.0,)|"));
@@ -63,16 +62,16 @@ public class IdentityTemplateLibraryTest {
     }
 
     @Test
-    public void encodeEntry() {
+    void encodeEntry() {
         String smiles = "CO";
         Point2d[] points = new Point2d[]{new Point2d(12.5f, 5.5f), new Point2d(4f, 2f)};
-        String encoded = IdentityTemplateLibrary.encodeEntry(new SimpleEntry<String, Point2d[]>(smiles, points));
+        String encoded = IdentityTemplateLibrary.encodeEntry(new SimpleEntry<>(smiles, points));
         Map.Entry<String, Point2d[]> entry = IdentityTemplateLibrary.decodeEntry(encoded);
         assertThat(encoded, is("CO |(12.5,5.5,;4.0,2.0,)|"));
     }
 
     @Test
-    public void decodeEntry() {
+    void decodeEntry() {
         String encode = "CO 12.500, 5.500, 4.000, 2.000";
         Map.Entry<String, Point2d[]> entry = IdentityTemplateLibrary.decodeEntry(encode);
         assertThat(entry.getKey(), is("CO"));
@@ -80,8 +79,8 @@ public class IdentityTemplateLibraryTest {
     }
 
     @Test
-    public void assignEthanolNoEntry() {
-        IAtomContainer container = new AtomContainer();
+    void assignEthanolNoEntry() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(new Atom("O"));
         container.addAtom(new Atom("C"));
         container.addAtom(new Atom("C"));
@@ -91,12 +90,12 @@ public class IdentityTemplateLibraryTest {
         container.addBond(0, 1, IBond.Order.SINGLE);
         container.addBond(1, 2, IBond.Order.SINGLE);
 
-        assertFalse(IdentityTemplateLibrary.empty().assignLayout(container));
+        Assertions.assertFalse(IdentityTemplateLibrary.empty().assignLayout(container));
     }
 
     @Test
-    public void assignEthanol() {
-        IAtomContainer container = new AtomContainer();
+    void assignEthanol() {
+        IAtomContainer container = SilentChemObjectBuilder.getInstance().newAtomContainer();
         container.addAtom(new Atom("O"));
         container.addAtom(new Atom("C"));
         container.addAtom(new Atom("C"));
@@ -108,7 +107,7 @@ public class IdentityTemplateLibraryTest {
 
         IdentityTemplateLibrary lib = IdentityTemplateLibrary.empty();
         lib.add(IdentityTemplateLibrary.decodeEntry("OCC 4, 5, 2, 3, 0, 1"));
-        assertTrue(lib.assignLayout(container));
+        Assertions.assertTrue(lib.assignLayout(container));
         assertThat(container.getAtom(0).getPoint2d().x, closeTo(4, 0.01));
         assertThat(container.getAtom(0).getPoint2d().y, closeTo(5, 0.01));
         assertThat(container.getAtom(1).getPoint2d().x, closeTo(2, 0.01));
@@ -118,7 +117,7 @@ public class IdentityTemplateLibraryTest {
     }
 
     @Test
-    public void store() throws IOException {
+    void store() throws IOException {
         IdentityTemplateLibrary lib = IdentityTemplateLibrary.empty();
         lib.add(IdentityTemplateLibrary.decodeEntry("[C][C][O] 0, 1, 2, 3, 4, 5"));
         lib.add(IdentityTemplateLibrary.decodeEntry("[C][C] 0, 1, 2, 3"));

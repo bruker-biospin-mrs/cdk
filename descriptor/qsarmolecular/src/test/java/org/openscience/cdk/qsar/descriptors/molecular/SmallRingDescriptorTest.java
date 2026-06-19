@@ -38,8 +38,10 @@ import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.openscience.cdk.AtomContainer;
+import org.junit.jupiter.api.BeforeEach;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.io.MDLV2000Writer;
 import org.openscience.cdk.qsar.DescriptorValue;
@@ -47,29 +49,25 @@ import org.openscience.cdk.qsar.result.IntegerArrayResult;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test for small rings descriptor.
- *
- * @cdk.module test-qsarmolecular
  */
+class SmallRingDescriptorTest extends MolecularDescriptorTest {
 
-public class SmallRingDescriptorTest extends MolecularDescriptorTest {
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(SmallRingDescriptorTest.class);
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(SmallRingDescriptorTest.class);
+    SmallRingDescriptorTest() {}
 
-    public SmallRingDescriptorTest() {}
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(SmallRingDescriptor.class);
     }
 
     @Test
-    public void testDescriptors() throws Exception {
-        logger.info("CircularFingerprinter test: loading source materials");
+    void testDescriptors() throws Exception {
+        logger.info("SmallRingDescriptor test: loading source materials");
 
         String fnzip = "data/cdd/aromring_validation.zip";
         logger.info("Loading source content: " + fnzip);
@@ -82,17 +80,18 @@ public class SmallRingDescriptorTest extends MolecularDescriptorTest {
 
     // included to shutdown the warning messages for not having tests for trivial methods
     @Test
-    public void nop() throws Exception {}
+    void nop() throws Exception {}
 
     // run through the cases
     private void validate(InputStream in) throws Exception {
         ZipInputStream zip = new ZipInputStream(in);
 
         // stream the contents form the zipfile: these are all short
-        HashMap<String, byte[]> content = new HashMap<String, byte[]>();
+        HashMap<String, byte[]> content = new HashMap<>();
         while (true) {
             ZipEntry ze = zip.getNextEntry();
-            if (ze == null) break;
+            if (ze == null)
+                break;
             String fn = ze.getName();
             ByteArrayOutputStream buff = new ByteArrayOutputStream();
             while (true) {
@@ -110,9 +109,10 @@ public class SmallRingDescriptorTest extends MolecularDescriptorTest {
             while (basefn.length() < 6)
                 basefn = "0" + basefn;
             byte[] molBytes = content.get(basefn + ".mol");
-            if (molBytes == null) break;
+            if (molBytes == null)
+                break;
 
-            AtomContainer mol = new AtomContainer();
+            IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
             MDLV2000Reader mdl = new MDLV2000Reader(new ByteArrayInputStream(molBytes));
             mdl.read(mol);
             mdl.close();
@@ -161,10 +161,9 @@ public class SmallRingDescriptorTest extends MolecularDescriptorTest {
                 MDLV2000Writer wtr = new MDLV2000Writer(str);
                 wtr.write(mol);
                 wtr.close();
-                error += "\nMolecule:\n" + str.toString();
+                error += "\nMolecule:\n" + str;
                 throw new CDKException(error);
             }
         }
     }
-
 }

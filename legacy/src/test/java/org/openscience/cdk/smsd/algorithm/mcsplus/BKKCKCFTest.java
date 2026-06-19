@@ -23,40 +23,38 @@
 
 package org.openscience.cdk.smsd.algorithm.mcsplus;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.util.ArrayList;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
- * @cdk.module test-smsd
  * @author Asad
  */
-public class BKKCKCFTest {
+class BKKCKCFTest {
 
     public BKKCKCFTest() {}
 
-    @BeforeClass
-    public static void setUpClass() throws Exception {}
+    @BeforeAll
+    static void setUpClass() throws Exception {}
 
-    @AfterClass
-    public static void tearDownClass() throws Exception {}
+    @AfterAll
+    static void tearDownClass() throws Exception {}
 
-    @Before
-    public void setUp() {}
+    @BeforeEach
+    void setUp() {}
 
-    @After
-    public void tearDown() {}
+    @AfterEach
+    void tearDown() {}
 
     @Test
-    public void testSomeMethod() {
+    void testSomeMethod() {
         // TODO review the generated test code and remove the default call to fail.
-        assertNotNull(new BKKCKCF(new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Integer>()));
+        Assertions.assertNotNull(new BKKCKCF(new ArrayList<>(), new ArrayList<>(), new ArrayList<>()));
     }
 
 }

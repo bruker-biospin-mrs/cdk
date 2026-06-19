@@ -21,8 +21,6 @@ package org.openscience.cdk.io.formats;
 import org.openscience.cdk.tools.DataFeatures;
 
 /**
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class ZMatrixFormat extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 
@@ -74,7 +72,7 @@ public class ZMatrixFormat extends SimpleChemFormatMatcher implements IChemForma
     /** {@inheritDoc} */
     @Override
     public boolean matches(int lineNumber, String line) {
-        if (lineNumber == 4 && line.indexOf("Z Matrix") != -1) {
+        if (lineNumber == 4 && line.contains("Z Matrix")) {
             return true;
         }
         return false;

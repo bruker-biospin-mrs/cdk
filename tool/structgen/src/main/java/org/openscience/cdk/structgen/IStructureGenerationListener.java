@@ -25,11 +25,9 @@ package org.openscience.cdk.structgen;
 import java.util.List;
 
 /**
- * @cdk.module structgen
- * @cdk.githash
  */
 public interface IStructureGenerationListener {
 
-    public void stateChanged(List list) throws Exception;
+    void stateChanged(List list) throws Exception;
 
 }

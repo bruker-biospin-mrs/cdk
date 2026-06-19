@@ -18,9 +18,9 @@
  */
 package org.openscience.cdk.aromaticity;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IRing;
@@ -29,23 +29,22 @@ import org.openscience.cdk.ringsearch.AllRingsFinder;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
- * @cdk.module test-standard
  */
-public class AromaticityCalculatorTest extends CDKTestCase {
+class AromaticityCalculatorTest extends CDKTestCase {
 
-    public AromaticityCalculatorTest() {
+    AromaticityCalculatorTest() {
         super();
     }
 
     @Test
-    public void testIsAromatic_IRing_IAtomContainer() throws Exception {
+    void testIsAromatic_IRing_IAtomContainer() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
 
         IAtomContainer mol = sp.parseSmiles("c1ccncc1");
         IRingSet rs = (new AllRingsFinder()).findAllRings(mol);
 
-        Assert.assertEquals(1, rs.getAtomContainerCount());
-        Assert.assertTrue(AromaticityCalculator.isAromatic((IRing) rs.getAtomContainer(0), mol));
+        Assertions.assertEquals(1, rs.getAtomContainerCount());
+        Assertions.assertTrue(AromaticityCalculator.isAromatic((IRing) rs.getAtomContainer(0), mol));
     }
 
 }

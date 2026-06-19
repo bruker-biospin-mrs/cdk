@@ -19,39 +19,30 @@
  */
 package org.openscience.cdk.protein.data;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractPDBMonomerTest;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractPDBMonomerTest;
 import org.openscience.cdk.interfaces.IPDBMonomer;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the PDBMonomer class.
  *
- * @cdk.module test-data
  *
  * @see PDBPolymer
  */
-public class PDBMonomerTest extends AbstractPDBMonomerTest {
+class PDBMonomerTest extends AbstractPDBMonomerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new PDBMonomer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(PDBMonomer::new);
     }
 
     @Test
-    public void testPDBMonomer() {
+    void testPDBMonomer() {
         IPDBMonomer monomer = new PDBMonomer();
-        Assert.assertNotNull(monomer);
-        Assert.assertEquals(monomer.getICode(), null);
+        Assertions.assertNotNull(monomer);
+        Assertions.assertEquals(monomer.getICode(), null);
     }
 
 }

@@ -19,35 +19,26 @@
  */
 package org.openscience.cdk.debug;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractPolymerTest;
-import org.openscience.cdk.interfaces.IChemObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractPolymerTest;
 import org.openscience.cdk.interfaces.IPolymer;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link DebugPolymer}.
  *
- * @cdk.module test-datadebug
  */
-public class DebugPolymerTest extends AbstractPolymerTest {
+class DebugPolymerTest extends AbstractPolymerTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new DebugPolymer();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(DebugPolymer::new);
     }
 
     @Test
-    public void testDebugPolymer() {
+    void testDebugPolymer() {
         IPolymer polymer = new DebugPolymer();
-        Assert.assertTrue(polymer instanceof DebugPolymer);
+        Assertions.assertTrue(polymer instanceof DebugPolymer);
     }
 }

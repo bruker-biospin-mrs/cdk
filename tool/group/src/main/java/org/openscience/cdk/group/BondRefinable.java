@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 
@@ -39,7 +38,6 @@ import org.openscience.cdk.interfaces.IBond;
  * Wraps an atom container to provide information on the bond connectivity.
  * 
  * @author maclean
- * @cdk.module group
  *
  */
 class BondRefinable implements Refinable {
@@ -55,7 +53,7 @@ class BondRefinable implements Refinable {
     /**
      * Specialised option to allow generating automorphisms that ignore the bond order.
      */
-    private boolean ignoreBondOrders;
+    private final boolean ignoreBondOrders;
     
     public BondRefinable(IAtomContainer atomContainer) {
         this(atomContainer, false);
@@ -107,7 +105,7 @@ class BondRefinable implements Refinable {
      */
     public Partition getInitialPartition() {
         int bondCount = atomContainer.getBondCount();
-        Map<String, SortedSet<Integer>> cellMap = new HashMap<String, SortedSet<Integer>>();
+        Map<String, SortedSet<Integer>> cellMap = new HashMap<>();
 
         // make mini-'descriptors' for bonds like "C=O" or "C#N" etc
         for (int bondIndex = 0; bondIndex < bondCount; bondIndex++) {
@@ -119,7 +117,7 @@ class BondRefinable implements Refinable {
                 // doesn't matter what it is, so long as it's constant
                 boS = "1";
             } else {
-                boolean isArom = bond.getFlag(CDKConstants.ISAROMATIC);
+                boolean isArom = bond.isAromatic();
                 int orderNumber = (isArom) ? 5 : bond.getOrder().numeric();
                 boS = String.valueOf(orderNumber);
             }
@@ -133,14 +131,14 @@ class BondRefinable implements Refinable {
             if (cellMap.containsKey(bondString)) {
                 cell = cellMap.get(bondString);
             } else {
-                cell = new TreeSet<Integer>();
+                cell = new TreeSet<>();
                 cellMap.put(bondString, cell);
             }
             cell.add(bondIndex);
         }
 
         // sorting is necessary to get cells in order
-        List<String> bondStrings = new ArrayList<String>(cellMap.keySet());
+        List<String> bondStrings = new ArrayList<>(cellMap.keySet());
         Collections.sort(bondStrings);
 
         // the partition of the bonds by these 'descriptors'
@@ -156,8 +154,8 @@ class BondRefinable implements Refinable {
     private void setupConnectionTable(IAtomContainer atomContainer) {
         int bondCount = atomContainer.getBondCount();
         // unfortunately, we have to sort the bonds
-        List<IBond> bonds = new ArrayList<IBond>();
-        Map<String, IBond> bondMap = new HashMap<String, IBond>();
+        List<IBond> bonds = new ArrayList<>();
+        Map<String, IBond> bondMap = new HashMap<>();
         for (int bondIndexI = 0; bondIndexI < bondCount; bondIndexI++) {
             IBond bond = atomContainer.getBond(bondIndexI);
             bonds.add(bond);
@@ -168,7 +166,7 @@ class BondRefinable implements Refinable {
                 // doesn't matter what it is, so long as it's constant
                 boS = "1";
             } else {
-                boolean isArom = bond.getFlag(CDKConstants.ISAROMATIC);
+                boolean isArom = bond.isAromatic();
                 int orderNumber = (isArom) ? 5 : bond.getOrder().numeric();
                 boS = String.valueOf(orderNumber);
             }
@@ -181,7 +179,7 @@ class BondRefinable implements Refinable {
             bondMap.put(bondString, bond);
         }
 
-        List<String> keys = new ArrayList<String>(bondMap.keySet());
+        List<String> keys = new ArrayList<>(bondMap.keySet());
         Collections.sort(keys);
         for (String key : keys) {
             bonds.add(bondMap.get(key));
@@ -190,7 +188,7 @@ class BondRefinable implements Refinable {
         connectionTable = new int[bondCount][];
         for (int bondIndexI = 0; bondIndexI < bondCount; bondIndexI++) {
             IBond bondI = bonds.get(bondIndexI);
-            List<Integer> connectedBondIndices = new ArrayList<Integer>();
+            List<Integer> connectedBondIndices = new ArrayList<>();
             for (int bondIndexJ = 0; bondIndexJ < bondCount; bondIndexJ++) {
                 if (bondIndexI == bondIndexJ) continue;
                 IBond bondJ = bonds.get(bondIndexJ);

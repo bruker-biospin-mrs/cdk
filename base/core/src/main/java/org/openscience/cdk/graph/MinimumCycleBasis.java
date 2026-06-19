@@ -23,7 +23,8 @@
  */
 package org.openscience.cdk.graph;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Objects;
+
 import static org.openscience.cdk.graph.InitialCycles.Cycle;
 
 /**
@@ -56,8 +57,6 @@ import static org.openscience.cdk.graph.InitialCycles.Cycle;
  * cycle space.
  *
  * @author John May
- * @cdk.module core
- * @cdk.githash
  * @cdk.keyword sssr
  * @cdk.keyword smallest set of smallest rings
  * @cdk.keyword mcb
@@ -85,7 +84,7 @@ public final class MinimumCycleBasis {
      * @see GraphUtil#subgraph(int[][], int[])
      */
     public MinimumCycleBasis(final int[][] graph) {
-        this(new InitialCycles(checkNotNull(graph, "No graph provided")));
+        this(new InitialCycles(Objects.requireNonNull(graph, "No graph provided")));
     }
 
     /**
@@ -111,7 +110,7 @@ public final class MinimumCycleBasis {
      */
     MinimumCycleBasis(final InitialCycles initial, boolean connected) {
 
-        checkNotNull(initial, "No InitialCycles provided");
+        Objects.requireNonNull(initial, "No InitialCycles provided");
 
         this.graph = initial.graph();
         this.basis = new GreedyBasis(initial.numberOfCycles(), initial.numberOfEdges());

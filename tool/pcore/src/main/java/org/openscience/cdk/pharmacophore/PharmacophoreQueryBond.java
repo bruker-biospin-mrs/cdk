@@ -27,8 +27,6 @@ import org.openscience.cdk.BondRef;
  * Represents a pharmacophore query distance constraint.
  *
  * @author Rajarshi Guha
- * @cdk.module pcore
- * @cdk.githash
  * @cdk.keyword pharmacophore
  * @cdk.keyword 3D isomorphism
  * @see org.openscience.cdk.pharmacophore.PharmacophoreQueryAtom
@@ -122,7 +120,7 @@ public class PharmacophoreQueryBond extends Bond implements IQueryBond {
      */
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("DC::" + getAtom(0) + "::" + getAtom(1) + "::[" + getLower() + " - " + getUpper() + "] ");
         return sb.toString();
     }

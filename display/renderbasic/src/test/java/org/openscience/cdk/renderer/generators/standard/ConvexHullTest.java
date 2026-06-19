@@ -24,7 +24,7 @@
 
 package org.openscience.cdk.renderer.generators.standard;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
@@ -39,12 +39,12 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.number.IsCloseTo.closeTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-public class ConvexHullTest {
+class ConvexHullTest {
 
     @Test
-    public void ofOvalShape() throws Exception {
+    void ofOvalShape() throws Exception {
         RoundRectangle2D oval = new RoundRectangle2D.Double(-5, -5, 10, 10, 5, 5);
         ConvexHull hull = ConvexHull.ofShape(oval);
         Rectangle2D bounds = hull.outline().getBounds2D();
@@ -55,7 +55,7 @@ public class ConvexHullTest {
     }
 
     @Test
-    public void ofTriangle() throws Exception {
+    void ofTriangle() throws Exception {
         Path2D path = new Path2D.Double();
         path.moveTo(-5, 0);
         path.lineTo(0, 10);
@@ -70,11 +70,11 @@ public class ConvexHullTest {
     }
 
     @Test
-    public void ofRectangles() throws Exception {
+    void ofRectangles() throws Exception {
         Rectangle2D rect1 = new Rectangle2D.Double(-10, -10, 5, 5);
         Rectangle2D rect2 = new Rectangle2D.Double(15, 16, 20, 25);
         Rectangle2D rect3 = new Rectangle2D.Double(-15, 6, 2, 5);
-        ConvexHull hull = ConvexHull.ofShapes(Arrays.<Shape> asList(rect1, rect2, rect3));
+        ConvexHull hull = ConvexHull.ofShapes(Arrays.asList(rect1, rect2, rect3));
         Rectangle2D bounds = hull.outline().getBounds2D();
         assertThat(bounds.getMinX(), closeTo(-15, 0.01));
         assertThat(bounds.getMinY(), closeTo(-10, 0.01));
@@ -83,11 +83,11 @@ public class ConvexHullTest {
     }
 
     @Test
-    public void transformDoesNotModifyOriginal() throws Exception {
+    void transformDoesNotModifyOriginal() throws Exception {
         Rectangle2D rect1 = new Rectangle2D.Double(-10, -10, 5, 5);
         Rectangle2D rect2 = new Rectangle2D.Double(15, 16, 20, 25);
         Rectangle2D rect3 = new Rectangle2D.Double(-15, 6, 2, 5);
-        ConvexHull hull = ConvexHull.ofShapes(Arrays.<Shape> asList(rect1, rect2, rect3));
+        ConvexHull hull = ConvexHull.ofShapes(Arrays.asList(rect1, rect2, rect3));
 
         ConvexHull transformedHull = hull.transform(AffineTransform.getTranslateInstance(10, 15));
 
@@ -101,8 +101,8 @@ public class ConvexHullTest {
     }
 
     @Test
-    public void testShapeOf() throws Exception {
-        List<Point2D> points = Arrays.<Point2D> asList(new Point2D.Double(-5d, -5d), new Point2D.Double(-5d, 5d),
+    void testShapeOf() throws Exception {
+        List<Point2D> points = Arrays.asList(new Point2D.Double(-5d, -5d), new Point2D.Double(-5d, 5d),
                 new Point2D.Double(5d, 5d), new Point2D.Double(5d, -5d));
         Rectangle2D bounds = ConvexHull.shapeOf(points).getBounds2D();
         assertThat(bounds.getMinX(), closeTo(-5, 0.01));
@@ -112,12 +112,12 @@ public class ConvexHullTest {
     }
 
     @Test
-    public void emptyShapeDoesBreak() throws Exception {
-        Shape shape = ConvexHull.shapeOf(Collections.<Point2D> emptyList());
+    void emptyShapeDoesBreak() throws Exception {
+        Shape shape = ConvexHull.shapeOf(Collections.emptyList());
     }
 
     @Test
-    public void testPointsOf() throws Exception {
+    void testPointsOf() throws Exception {
         Rectangle2D rect = new Rectangle2D.Double(-5, -5, 10, 10);
         List<Point2D> points = ConvexHull.pointsOf(rect);
         assertThat(points.size(), is(4));
@@ -132,7 +132,7 @@ public class ConvexHullTest {
     }
 
     @Test
-    public void intersectionOfRect() throws Exception {
+    void intersectionOfRect() throws Exception {
         Rectangle2D rect = new Rectangle2D.Double(-5, -5, 10, 10);
         ConvexHull hull = ConvexHull.ofShape(rect);
         Point2D intersect = hull.intersect(new Point2D.Double(0, 0), new Point2D.Double(10, 0));

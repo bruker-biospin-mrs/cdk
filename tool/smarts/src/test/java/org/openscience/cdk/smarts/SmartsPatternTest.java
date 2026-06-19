@@ -24,47 +24,47 @@
 
 package org.openscience.cdk.smarts;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.isomorphism.Mappings;
 import org.openscience.cdk.isomorphism.Pattern;
-import org.openscience.cdk.isomorphism.VentoFoggia;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
+import java.util.Arrays;
+
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author John May
  */
-public class SmartsPatternTest {
+class SmartsPatternTest {
 
-    IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
+    private final IChemObjectBuilder bldr = SilentChemObjectBuilder.getInstance();
 
     @Test
-    public void isotopes() throws Exception {
+    void isotopes() throws Exception {
         // FIXME SMARTS Grammar needs fixing/replacing [12] is not considered valid
 
-        assertFalse(SmartsPattern.create("[12*]", bldr).matches(smi("C")));
-        assertFalse(SmartsPattern.create("[12*]", bldr).matches(smi("[CH4]")));
-        assertTrue(SmartsPattern.create("[12*]", bldr).matches(smi("[12CH4]")));
-        assertFalse(SmartsPattern.create("[12*]", bldr).matches(smi("[13CH4]")));
+        Assertions.assertFalse(SmartsPattern.create("[12*]", bldr).matches(smi("C")));
+        Assertions.assertFalse(SmartsPattern.create("[12*]", bldr).matches(smi("[CH4]")));
+        Assertions.assertTrue(SmartsPattern.create("[12*]", bldr).matches(smi("[12CH4]")));
+        Assertions.assertFalse(SmartsPattern.create("[12*]", bldr).matches(smi("[13CH4]")));
 
-        assertFalse(SmartsPattern.create("[13*]", bldr).matches(smi("C")));
-        assertFalse(SmartsPattern.create("[13*]", bldr).matches(smi("[CH4]")));
-        assertFalse(SmartsPattern.create("[13*]", bldr).matches(smi("[12CH4]")));
-        assertTrue(SmartsPattern.create("[13*]", bldr).matches(smi("[13CH4]")));
+        Assertions.assertFalse(SmartsPattern.create("[13*]", bldr).matches(smi("C")));
+        Assertions.assertFalse(SmartsPattern.create("[13*]", bldr).matches(smi("[CH4]")));
+        Assertions.assertFalse(SmartsPattern.create("[13*]", bldr).matches(smi("[12CH4]")));
+        Assertions.assertTrue(SmartsPattern.create("[13*]", bldr).matches(smi("[13CH4]")));
 
-        assertTrue(SmartsPattern.create("[0*]", bldr).matches(smi("C")));
-        assertTrue(SmartsPattern.create("[0*]", bldr).matches(smi("[CH4]")));
-        assertFalse(SmartsPattern.create("[0*]", bldr).matches(smi("[12CH4]")));
-        assertFalse(SmartsPattern.create("[0*]", bldr).matches(smi("[13CH4]")));
+        Assertions.assertTrue(SmartsPattern.create("[0*]", bldr).matches(smi("C")));
+        Assertions.assertTrue(SmartsPattern.create("[0*]", bldr).matches(smi("[CH4]")));
+        Assertions.assertFalse(SmartsPattern.create("[0*]", bldr).matches(smi("[12CH4]")));
+        Assertions.assertFalse(SmartsPattern.create("[0*]", bldr).matches(smi("[13CH4]")));
 
 //      Not possible with current grammar
 //        assertFalse(SmartsPattern.create("[!0*]", bldr).matches(smi("C")));
@@ -74,53 +74,56 @@ public class SmartsPatternTest {
     }
 
     @Test
-    public void components() throws Exception {
-        assertTrue(SmartsPattern.create("(O).(O)", bldr).matches(smi("O.O")));
-        assertFalse(SmartsPattern.create("(O).(O)", bldr).matches(smi("OO")));
+    void components() throws Exception {
+        Assertions.assertTrue(SmartsPattern.create("(O).(O)", bldr).matches(smi("O.O")));
+        Assertions.assertFalse(SmartsPattern.create("(O).(O)", bldr).matches(smi("OO")));
     }
 
     @Test
-    public void stereochemistry() throws Exception {
-        assertTrue(SmartsPattern.create("C[C@H](O)CC", bldr).matches(smi("C[C@H](O)CC")));
-        assertFalse(SmartsPattern.create("C[C@H](O)CC", bldr).matches(smi("C[C@@H](O)CC")));
-        assertFalse(SmartsPattern.create("C[C@H](O)CC", bldr).matches(smi("CC(O)CC")));
+    void stereochemistry() throws Exception {
+        Assertions.assertTrue(SmartsPattern.create("C[C@H](O)CC", bldr).matches(smi("C[C@H](O)CC")));
+        Assertions.assertFalse(SmartsPattern.create("C[C@H](O)CC", bldr).matches(smi("C[C@@H](O)CC")));
+        Assertions.assertFalse(SmartsPattern.create("C[C@H](O)CC", bldr).matches(smi("CC(O)CC")));
     }
 
     @Test
-    public void smartsMatchingReaction() throws Exception {
-        assertTrue(SmartsPattern.create("CC", bldr).matches(rsmi("CC>>")));
-        assertTrue(SmartsPattern.create("CC", bldr).matches(rsmi(">>CC")));
-        assertTrue(SmartsPattern.create("CC", bldr).matches(rsmi(">CC>")));
-        assertFalse(SmartsPattern.create("CO", bldr).matches(rsmi(">>CC")));
+    void smartsMatchingReaction() throws Exception {
+        Assertions.assertTrue(SmartsPattern.create("CC", bldr).matches(rsmi("CC>>")));
+        Assertions.assertTrue(SmartsPattern.create("CC", bldr).matches(rsmi(">>CC")));
+        Assertions.assertTrue(SmartsPattern.create("CC", bldr).matches(rsmi(">CC>")));
+        Assertions.assertFalse(SmartsPattern.create("CO", bldr).matches(rsmi(">>CC")));
     }
 
     @Test
-    public void reactionSmartsMatchingReaction() throws Exception {
-        assertTrue(SmartsPattern.create("CC>>", bldr).matches(rsmi("CC>>")));
-        assertFalse(SmartsPattern.create("CC>>", bldr).matches(rsmi(">>CC")));
-        assertFalse(SmartsPattern.create("CC>>", bldr).matches(rsmi(">CC>")));
+    void reactionSmartsMatchingReaction() throws Exception {
+        Assertions.assertTrue(SmartsPattern.create("CC>>", bldr).matches(rsmi("CC>>")));
+        Assertions.assertFalse(SmartsPattern.create("CC>>", bldr).matches(rsmi(">>CC")));
+        Assertions.assertFalse(SmartsPattern.create("CC>>", bldr).matches(rsmi(">CC>")));
     }
 
     @Test
-    public void reactionGrouping() throws Exception {
-        assertTrue(SmartsPattern.create("[Na+].[OH-]>>", bldr).matches(rsmi("[Na+].[OH-]>>")));
-        assertTrue(SmartsPattern.create("[Na+].[OH-]>>", bldr).matches(rsmi("[Na+].[OH-]>> |f:0.1|")));
-        assertTrue(SmartsPattern.create("([Na+].[OH-])>>", bldr).matches(rsmi("[Na+].[OH-]>> |f:0.1|")));
+    void reactionGrouping() throws Exception {
+        Assertions.assertTrue(SmartsPattern.create("[Na+].[OH-]>>", bldr).matches(rsmi("[Na+].[OH-]>>")));
+        Assertions.assertTrue(SmartsPattern.create("[Na+].[OH-]>>", bldr).matches(rsmi("[Na+].[OH-]>> |f:0.1|")));
+        Assertions.assertTrue(SmartsPattern.create("([Na+].[OH-])>>", bldr).matches(rsmi("[Na+].[OH-]>> |f:0.1|")));
         // this one can't match because we don't know if NaOH is one component from the input smiles
-        assertFalse(SmartsPattern.create("([Na+].[OH-])>>", bldr).matches(rsmi("[Na+].[OH-]>>")));
+        Assertions.assertFalse(SmartsPattern.create("([Na+].[OH-])>>", bldr).matches(rsmi("[Na+].[OH-]>>")));
     }
 
-    @Test public void noMaps() throws Exception {
+    @Test
+    void noMaps() throws Exception {
         assertThat(SmartsPattern.create("C>>C", null).matchAll(rsmi("CC>>CC")).count(),
                    is(4));
     }
 
-    @Test public void noMapsInQueryMapsInTargetIgnored() throws Exception {
+    @Test
+    void noMapsInQueryMapsInTargetIgnored() throws Exception {
         assertThat(SmartsPattern.create("C>>C", null).matchAll(rsmi("[C:7][C:8]>>[C:7][C:8]")).count(),
                    is(4));
     }
 
-    @Test public void unpairedMapIsQueryIsIgnored() throws Exception {
+    @Test
+    void unpairedMapIsQueryIsIgnored() throws Exception {
         assertThat(SmartsPattern.create("[C:1]>>C", null).matchAll(rsmi("[CH3:7][CH3:8]>>[CH3:7][CH3:8]")).count(),
                    is(4));
         assertThat(SmartsPattern.create("C>>[C:1]", null).matchAll(rsmi("[CH3:7][CH3:8]>>[CH3:7][CH3:8]")).count(),
@@ -128,56 +131,60 @@ public class SmartsPatternTest {
     }
 
     @Test
-    public void noMapsInTarget() throws Exception {
+    void noMapsInTarget() throws Exception {
         assertThat(SmartsPattern.create("[C:1]>>[C:1]", null).matchAll(rsmi("C>>C")).count(),
                    is(0));
     }
 
-    @Ignore("Not supported yet")
-    public void optionalMapping() throws Exception {
+    @Disabled("Not supported yet")
+    void optionalMapping() throws Exception {
         assertThat(SmartsPattern.create("[C:?1]>>[C:?1]", null).matchAll(rsmi("[CH3:7][CH3:8]>>[CH3:7][CH3:8]")).count(),
                    is(2));
         assertThat(SmartsPattern.create("[C:?1]>>[C:?1]", null).matchAll(rsmi("CC>>CC")).count(),
                    is(4));
     }
     @Test
-    public void mappedMatch() throws Exception {
+    void mappedMatch() throws Exception {
         assertThat(SmartsPattern.create("[C:1]>>[C:1]", null).matchAll(rsmi("[CH3:7][CH3:8]>>[CH3:7][CH3:8]")).count(),
                    is(2));
     }
 
     @Test
-    public void mismatchedQueryMapsIgnored() throws Exception {
+    void mismatchedQueryMapsIgnored() throws Exception {
         assertThat(SmartsPattern.create("[C:1]>>[C:2]", null).matchAll(rsmi("[CH3:7][CH3:8]>>[CH3:7][CH3:8]")).count(),
                    is(4));
     }
 
     // map :1 in query binds only to :7 in target
-    @Test public void atomMapsWithOrLogic1() throws Exception {
+    @Test
+    void atomMapsWithOrLogic1() throws Exception {
         assertThat(SmartsPattern.create("[C:1][C:1]>>[C:1]", null).matchAll(rsmi("[CH3:7][CH3:7]>>[CH3:7][CH3:7]")).count(),
                    is(4));
     }
 
     // map :1 in query binds to :7 or :8 in target
-    @Test public void atomMapsWithOrLogic2() throws Exception {
+    @Test
+    void atomMapsWithOrLogic2() throws Exception {
         assertThat(SmartsPattern.create("[C:1][C:1]>>[C:1]", null).matchAll(rsmi("[CH3:7][CH3:8]>>[CH3:7][CH3:8]")).count(),
                    is(4));
     }
 
     // map :1 in query binds only to :7 in target
-    @Test public void atomMapsWithOrLogic3() throws Exception {
+    @Test
+    void atomMapsWithOrLogic3() throws Exception {
         assertThat(SmartsPattern.create("[C:1][C:1]>>[C:1]", null).matchAll(rsmi("[CH3:7][CH3:7]>>[CH3:7][CH3:8]")).count(),
                    is(2));
     }
 
-    @Test public void CCBondForming() throws Exception {
+    @Test
+    void CCBondForming() throws Exception {
         assertThat(SmartsPattern.create("([C:1]).([C:2])>>[C:1][C:2]", null)
                                 .matchAll(rsmi("[C-:13]#[N:14].[K+].[CH:3]1=[CH:4][C:5](=[CH:11][CH:12]=[C:2]1[CH2:1]Br)[C:6](=[O:10])[CH:7]2[CH2:8][CH2:9]2>>[CH:3]1=[CH:4][C:5](=[CH:11][CH:12]=[C:2]1[CH2:1][C:13]#[N:14])[C:6](=[O:10])[CH:7]2[CH2:8][CH2:9]2 |f:0.1|")).count(),
                    is(2));
     }
 
     @Test
-    public void matchProductStereo() throws Exception {
+    void matchProductStereo() throws Exception {
         assertThat(SmartsPattern.create(">>C[C@H](CC)[C@H](CC)O")
                                 .matchAll(rsmi(">>C[C@H](CC)[C@H](CC)O"))
                                 .countUnique(),
@@ -185,25 +192,25 @@ public class SmartsPatternTest {
     }
 
     @Test
-    public void stereo_ring_closures() throws Exception {
+    void stereo_ring_closures() throws Exception {
         Pattern ptrn = SmartsPattern.create("[C@@]1(O[C@@]([C@@]([C@]([C@]1(C)O)(C)O)(O)C)(O)C)(O)C");
-        assertTrue(ptrn.matches(smi("[C@@]1(O[C@@]([C@@]([C@]([C@]1(C)O)(C)O)(O)C)(O)C)(O)C")));
+        Assertions.assertTrue(ptrn.matches(smi("[C@@]1(O[C@@]([C@@]([C@]([C@]1(C)O)(C)O)(O)C)(O)C)(O)C")));
     }
 
     @Test
-    public void hasIsotope() throws Exception {
+    void hasIsotope() throws Exception {
         Pattern ptrn = SmartsPattern.create("[!0]");
-        assertFalse(ptrn.matches(smi("C")));
-        assertTrue(ptrn.matches(smi("[12C]")));
-        assertTrue(ptrn.matches(smi("[13C]")));
+        Assertions.assertFalse(ptrn.matches(smi("C")));
+        Assertions.assertTrue(ptrn.matches(smi("[12C]")));
+        Assertions.assertTrue(ptrn.matches(smi("[13C]")));
     }
 
     @Test
-    public void hIsotope() throws Exception {
+    void hIsotope() throws Exception {
         Pattern ptrn = SmartsPattern.create("[2#1,3#1]");
-        assertFalse(ptrn.matches(smi("[H][H]")));
-        assertTrue(ptrn.matches(smi("[2H]")));
-        assertTrue(ptrn.matches(smi("[3H]")));
+        Assertions.assertFalse(ptrn.matches(smi("[H][H]")));
+        Assertions.assertTrue(ptrn.matches(smi("[2H]")));
+        Assertions.assertTrue(ptrn.matches(smi("[3H]")));
     }
 
     /**
@@ -211,9 +218,9 @@ public class SmartsPatternTest {
      * @cdk.bug 1358
      */
     @Test
-    public void bug1358() throws Exception {
+    void bug1358() throws Exception {
         Pattern ptrn = SmartsPattern.create("[$([*@](~*)(~*)(*)*),$([*@H](*)(*)*),$([*@](~*)(*)*)]");
-        assertFalse(ptrn.matches(smi("N#CN/C(=N/CCSCC=1N=CNC1C)NC")));
+        Assertions.assertFalse(ptrn.matches(smi("N#CN/C(=N/CCSCC=1N=CNC1C)NC")));
     }
 
     private void assertMatch(String sma, String smiles, int numHits, int uniqNumHits) throws Exception {
@@ -224,7 +231,7 @@ public class SmartsPatternTest {
     }
 
     @Test
-    public void recursiveGeometric_trans() throws Exception {
+    void recursiveGeometric_trans() throws Exception {
         assertMatch("[$(*/C=C/*)]", "C/C=C/C", 2, 2);
         assertMatch("[$(*/C=C/*)]", "F/C=C/Cl", 2, 2);
         assertMatch("[$(*/C=C/*)]", "CC=CC", 0, 0);
@@ -234,7 +241,7 @@ public class SmartsPatternTest {
     }
 
     @Test
-    public void recursiveGeometric_cis() throws Exception {
+    void recursiveGeometric_cis() throws Exception {
         assertMatch("[$(C(/*)=C/*)]", "C/C=C/C", 0, 0);
         assertMatch("[$(C(/*)=C/*)]", "F/C=C/Cl", 0, 0);
         assertMatch("[$(C(/*)=C/*)]", "CC=CC", 0, 0);
@@ -244,10 +251,193 @@ public class SmartsPatternTest {
     }
 
     @Test
-    public void recursiveTetrahedral() throws Exception {
+    void recursiveTetrahedral() throws Exception {
         assertMatch("[$([C@](C)(CC)(N)O)]", "C[C@@](N)(CC)O", 1, 1);
         assertMatch("[$([C@](C)(CC)(N)O)]", "C[C@](N)(CC)O", 0, 0);
         assertMatch("[$([C@](C)(CC)(N)O)]", "CC(N)(CC)O", 0, 0);
+    }
+
+    @Test
+    void testPrep() throws Exception {
+        IAtomContainer query = SilentChemObjectBuilder.getInstance().newAtomContainer();
+        Assertions.assertTrue(Smarts.parse(query, "*"));
+        Assertions.assertEquals(SmartsPattern.getRequiredPrep(query), 0);
+
+        query.removeAllElements();
+        Assertions.assertTrue(Smarts.parse(query, "a"));
+        Assertions.assertEquals(SmartsPattern.getRequiredPrep(query),
+                                SmartsPattern.AROM_REQUIRED);
+
+        query.removeAllElements();
+        Assertions.assertTrue(Smarts.parse(query, "*@*"));
+        Assertions.assertEquals(SmartsPattern.getRequiredPrep(query),
+                                SmartsPattern.RING_REQUIRED);
+
+        query.removeAllElements();
+        Assertions.assertTrue(Smarts.parse(query, "*!@*"));
+        Assertions.assertEquals(SmartsPattern.getRequiredPrep(query),
+                                SmartsPattern.RING_REQUIRED);
+
+        query.removeAllElements();
+        Assertions.assertTrue(Smarts.parse(query, "Cl"));
+        Assertions.assertEquals(SmartsPattern.getRequiredPrep(query),
+                                0);
+    }
+
+    @Test
+    void testOctahedralMatching() throws Exception {
+        // octahedral vs octahedral
+        // U
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH1](Cl)(Cl)(Cl)(Cl)N", 8, 1);
+        assertMatch("N[Co@OH2](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH1](Cl)(Cl)(Cl)(Cl)N", 8, 1);
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH2](Cl)(Cl)(Cl)(Cl)N", 8, 1);
+        // Z
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH4](Cl)(Cl)(Cl)(Cl)N", 8, 1);
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH14](Cl)(Cl)(Cl)(Cl)N", 8, 1);
+        // 4
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH4](Cl)(Cl)(Cl)(Cl)N", 8, 1);
+        assertMatch("N[Co@OH10](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH8](Cl)(Cl)(Cl)(Cl)N", 8, 1);
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH3](Cl)(Cl)(Cl)(Cl)N", 0, 0);
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH5](Cl)(Cl)(Cl)(Cl)N", 0, 0);
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH6](Cl)(Cl)(Cl)(Cl)N", 0, 0);
+        // ... and all the rest ...
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH29](Cl)(Cl)(Cl)(Cl)N", 0, 0);
+        assertMatch("N[Co@OH1](Cl)(Cl)(Cl)(Cl)N",
+                    "N[Co@OH30](Cl)(Cl)(Cl)(Cl)N", 0, 0);
+    }
+
+    @Test
+    void testDegenerateOctahedralMatching() throws Exception {
+        // trans-N-Co-N (match)
+        assertMatch("N[Co@OH1]N",
+                    "N[Co@OH1](Cl)(Cl)(Cl)(Cl)N", 2, 1);
+        assertMatch("N[Co@OH1]N",
+                    "N[Co@OH1]N", 2, 1);
+        assertMatch("N[Co@OH1]N",
+                    "N[Co@OH3]N", 0, 0);
+        // trans-N-Co-Cl (no match)
+        assertMatch("N[Co@OH1]Cl",
+                    "N[Co@OH1](Cl)(Cl)(Cl)(Cl)N", 0, 0);
+        // trans-Cl-Co-Cl
+        assertMatch("Cl[Co@OH1]Cl",
+                    "N[Co@OH1](Cl)(Cl)(Cl)(Cl)N", 4, 2);
+        // cis-N-Co-Cl
+        assertMatch("N[Co@OH3]Cl",
+                    "N[Co@OH1](Cl)(Cl)(Cl)(Cl)N", 8, 8);
+    }
+
+    @Test
+    void testOcVsTbpy() throws Exception {
+        // trans-N-Co-N (match)
+        assertMatch("N[Co@OH1]N",
+                    "N[Co@TB1](Cl)(Cl)(Cl)N", 2, 1);
+        assertMatch("N[Co@TB1]N",
+                    "N[Co@OH1]N", 2, 1);
+        assertMatch("N[Co@TB1]N",
+                    "N[Co@OH1](Cl)(Cl)(Cl)(Cl)N", 2, 1);
+        assertMatch("N[Co@TB1]N",
+                    "N[Co@SP3](Cl)(Cl)N", 2, 1);
+        assertMatch("N[Co@TB1](Cl)N",
+                    "N[Co@SP3](Cl)(Cl)N", 4, 2);
+        assertMatch("N[Co@TB1](Cl)N",
+                    "N[Co@OH1](Cl)(Cl)(Cl)(Cl)N", 8, 4);
+    }
+
+    @Test
+    void testSpVsOC() throws Exception {
+        assertMatch("N[Co@SP3](Cl)(Cl)N",
+                    "N[Co@SP3](Cl)(Cl)N", 4, 1);
+        assertMatch("N[Co@SP3](Cl)(Cl)N",
+                    "N[Co@OH1](Cl)(Cl)(Cl)(Cl)N", 8, 2);
+    }
+
+    // also implicit H! Cl[Pt@SP1H](F)Br
+    // C[Pt@SP2]([H])(F)Cl vs C[Pt@SP3](F)(Cl)[H] etc
+
+    @Test
+    void testSpVsSp() throws Exception {
+        assertMatch("C[Pt@SP2]([H])(F)Cl",
+                    "C[Pt@SP2]([H])(F)Cl", 1, 1);
+        assertMatch("C[Pt@SP2]([H])(F)Cl",
+                    "C[Pt@SP3](F)(Cl)[H]", 1, 1);
+        assertMatch("C[Pt@SP2]([H])(F)Cl",
+                    "*[Pt@OH8](C)([H])(F)(Cl)*", 1, 1);
+        assertMatch("C[Pt@SP2]([H])(F)Cl",
+                    "*[Pt@OH1](C)(F)([H])(Cl)*", 1, 1);
+        assertMatch("C[Pt@SP3](F)(Cl)[H]",
+                    "*[Pt@OH8](C)([H])(F)(Cl)*", 1, 1);
+        assertMatch("C[Pt@SP3](F)(Cl)[H]",
+                    "*[Pt@OH1](C)(F)([H])(Cl)*", 1, 1);
+    }
+
+
+    @Test
+    void testSpVsOh() throws Exception {
+        assertMatch("C1CCCO1[Cr@SP1](I)(O1CCCC1)",
+                    "I[Cr@OH8](Cl)(Cl)(N)(O1CCCC1)O1CCCC1", 4, 1);
+
+    }
+
+    @Test
+    void testInsaturationOnTriple() throws Exception {
+        assertMatch("[Ci]~[Ci]O", "C#CO", 1, 1);
+        assertMatch("[Ci2]~[Ci2]O", "C#CO", 1, 1);
+    }
+
+    @Test
+    void testVariableAttachment() throws Exception {
+        assertMatch("N1CCCCC1.*Cl |m:6:0.1.2.3.4.5|", "ClN1CCCCC1", 2, 1);
+        assertMatch("N1CCCCC1.*Cl |m:6:0.1.2.3.4.5|", "N1C(Cl)CCCC1", 2, 1);
+        assertMatch("N1CCCCC1.*Cl |m:6:0.1.2.3.4.5|", "N1CC(Cl)CCC1", 2, 1);
+        assertMatch("N1CCCCC1.*Cl |m:6:0.1.2.3.4.5|", "N1CCC(Cl)CC1", 2, 1);
+        assertMatch("N1CCCCC1.*Cl |m:6:0.1.2.3.4.5|", "N1CCCC(Cl)C1", 2, 1);
+        assertMatch("N1CCCCC1.*Cl |m:6:0.1.2.3.4.5|", "N1CCCCC1Cl", 2, 1);
+    }
+
+    @Test
+    void testNestedVariableAttachment() throws Exception {
+        // query=(chloro-pyrid-2-yl)-indole
+        assertMatch("n1ccc2c1cccc2.*c1ncccc1.*Cl |m:9:0.1.2.3.4.5.6.7.8,16:10.11.12.13.14.15|",
+                    "Cn1c(-c2ccc(Cl)cn2)c(C2CCCC2)c2ccc(C(=O)NC3(C(=O)Nc4ccc(/C=C/C(=O)O)cc4)CCCC3)cc21 CHEMBL2181621", 1, 1);
+        assertMatch("n1ccc2c1cccc2.*c1ncccc1.*Cl |m:9:0.1.2.3.4.5.6.7.8,16:10.11.12.13.14.15|",
+                    "O=C(O)/C=C/c1cn(-c2ncc(C(F)(F)F)cc2Cl)c2ccccc12 CHEMBL1431337", 1, 1);
+        assertMatch("n1ccc2c1cccc2.*c1ncccc1.*Cl |m:9:0.1.2.3.4.5.6.7.8,16:10.11.12.13.14.15|",
+                    "Clc1c(-c2c(-c3ccccc3)[nH]c3ccccc23)nc2ccccc2c1-c1ccccc1 CHEMBL4545966", 1, 1);
+        // pyrid-2-yl should not match pyrid-3-yl...
+        assertMatch("n1ccc2c1cccc2.*c1ncccc1.*Cl |m:9:0.1.2.3.4.5.6.7.8,16:10.11.12.13.14.15|",
+                    "Cn1c(-c2ccc(Cl)nc2)c(C2CCCC2)c2ccc(C(=O)NC3(C(=O)Nc4ccc(/C=C/C(=O)O)cc4)CCCC3)cc21 3-pyridine", 0, 0);
+        // ...but with a doubled-ended (e.g. (chloro-pyridyl)-indole) attachment it should!
+        assertMatch("n1ccc2c1cccc2.**.c1ncccc1.*Cl |m:9:0.1.2.3.4.5.6.7.8,10:11.12.13.14.15.16,17:11.12.13.14.15.16|",
+                    "Cn1c(-c2ccc(Cl)nc2)c(C2CCCC2)c2ccc(C(=O)NC3(C(=O)Nc4ccc(/C=C/C(=O)O)cc4)CCCC3)cc21 3-pyridine", 2, 1);
+    }
+
+    @Test
+    void testNestedVariableAttachmentRing() throws Exception {
+        assertMatch("c1ccccc1CCCC* |m:10:0.1.2.3.4|",
+                    "c1cccc2c1CCCC2", 4, 1);
+    }
+
+    @Test
+    void testNestedVariableAttachmentOverlapping() throws Exception {
+        assertMatch("**.**.n1ccccc1.n1ccccc1 |m:0:5.6.7.8.9,1:11.12.13.14.15,2:5.6.8.7.9,3:11.12.13.14.15|",
+                    "n1c2c3ccc1.n1c-2c-3ccc1", 8, 1);
+    }
+
+    @Test
+    void testNestedVariableAttachmentStereo() throws Exception {
+        assertMatch("N1CCCCC1.*[C@H](O)C |m:6:0.1.2.3.4.5|", "N1CCCCC1[C@H](O)C", 2, 1);
+        assertMatch("N1CCCCC1.*[C@H](O)C |m:6:0.1.2.3.4.5|", "N1CCCCC1[C@@H](O)C",0, 0);
     }
 
     IAtomContainer smi(String smi) throws Exception {

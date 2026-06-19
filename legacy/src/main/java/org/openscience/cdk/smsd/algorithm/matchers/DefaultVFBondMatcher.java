@@ -46,17 +46,15 @@
  */
 package org.openscience.cdk.smsd.algorithm.matchers;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.isomorphism.matchers.IQueryBond;
 import org.openscience.cdk.smsd.algorithm.vflib.builder.TargetProperties;
 
 /**
  * Checks if a bond is matching between query and target molecules.
- * @cdk.module smsd
- * @cdk.githash
  * @author Syed Asad Rahman &lt;asad@ebi.ac.uk&gt;
  * @deprecated This class is part of SMSD and either duplicates functionality elsewhere in the CDK or provides public
  *             access to internal implementation details. SMSD has been deprecated from the CDK with a newer, more recent
@@ -137,10 +135,10 @@ public class DefaultVFBondMatcher implements VFBondMatcher {
     private boolean isBondTypeMatch(IBond targetBond) {
         int reactantBondType = queryBond.getOrder().numeric();
         int productBondType = targetBond.getOrder().numeric();
-        if ((queryBond.getFlag(CDKConstants.ISAROMATIC) == targetBond.getFlag(CDKConstants.ISAROMATIC))
+        if ((queryBond.getFlag(IChemObject.AROMATIC) == targetBond.getFlag(IChemObject.AROMATIC))
                 && (reactantBondType == productBondType)) {
             return true;
-        } else if (queryBond.getFlag(CDKConstants.ISAROMATIC) && targetBond.getFlag(CDKConstants.ISAROMATIC)) {
+        } else if (queryBond.getFlag(IChemObject.AROMATIC) && targetBond.getFlag(IChemObject.AROMATIC)) {
             return true;
         }
         return false;
@@ -155,7 +153,7 @@ public class DefaultVFBondMatcher implements VFBondMatcher {
     }
 
     private int getValency(IAtom atom) {
-        return (atom.getValency() == null) ? 0 : atom.getValency().intValue();
+        return (atom.getValency() == null) ? 0 : atom.getValency();
     }
 
     private int getUnsaturation(IAtomContainer container, IBond bond) {

@@ -42,14 +42,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *   </tr>
  * </table>
  *
- * @cdk.module  formula
  * @author      miguelrojasch
  * @cdk.created 2007-11-20
- * @cdk.githash
  */
 public class ChargeRule implements IRule {
 
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(ChargeRule.class);
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(ChargeRule.class);
 
     private double              charge = 0.0;
 

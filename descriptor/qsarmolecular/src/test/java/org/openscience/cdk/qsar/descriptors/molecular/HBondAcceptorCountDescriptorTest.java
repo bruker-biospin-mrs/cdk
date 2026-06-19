@@ -21,9 +21,9 @@ package org.openscience.cdk.qsar.descriptors.molecular;
 import javax.vecmath.Point3d;
 
 import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
@@ -37,27 +37,26 @@ import org.openscience.cdk.smiles.SmilesParser;
 /**
  * TestSuite that runs all QSAR tests.
  *
- * @cdk.module test-qsarmolecular
  */
 
-public class HBondAcceptorCountDescriptorTest extends MolecularDescriptorTest {
+class HBondAcceptorCountDescriptorTest extends MolecularDescriptorTest {
 
-    public HBondAcceptorCountDescriptorTest() {}
+    HBondAcceptorCountDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(HBondAcceptorCountDescriptor.class);
     }
 
     @Test
-    public void testHBondAcceptorCountDescriptor() throws ClassNotFoundException, CDKException, java.lang.Exception {
-        Object[] params = {new Boolean(true)};
+    void testHBondAcceptorCountDescriptor() throws java.lang.Exception {
+        Object[] params = {Boolean.TRUE};
         descriptor.setParameters(params);
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         // original molecule O=N(=O)c1cccc2cn[nH]c12 - correct kekulisation will give
         // the same result. this test though should depend on kekulisation working
         IAtomContainer mol = sp.parseSmiles("O=N(=O)C1=C2NN=CC2=CC=C1");
-        Assert.assertEquals(1, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
+        Assertions.assertEquals(1, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
     }
 
     /**
@@ -65,7 +64,7 @@ public class HBondAcceptorCountDescriptorTest extends MolecularDescriptorTest {
      * @cdk.inchi InChI=1S/C2H3N3/c1-3-2-5-4-1/h1-2H,(H,3,4,5)
      */
     @Test
-    public void testCID9257() throws CDKException {
+    void testCID9257() throws CDKException {
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         IAtom a1 = builder.newInstance(IAtom.class, "N");
@@ -117,21 +116,32 @@ public class HBondAcceptorCountDescriptorTest extends MolecularDescriptorTest {
         IBond b8 = builder.newInstance(IBond.class, a5, a8, IBond.Order.SINGLE);
         mol.addBond(b8);
 
-        Object[] params = {new Boolean(true)};
+        Object[] params = {Boolean.TRUE};
         descriptor.setParameters(params);
-        Assert.assertEquals(2, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
+        Assertions.assertEquals(2, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
     }
 
     /**
      * @see <a href="https://github.com/cdk/cdk/issues/495">Issue 495</a>
      */
     @Test
-    public void exocyclicOxygenInAromaticRing() throws InvalidSmilesException {
+    void exocyclicOxygenInAromaticRing() throws InvalidSmilesException {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer m = sp.parseSmiles("Cn1c2nc([nH]c2c(=O)n(c1=O)C)C1CCCC1");
 
         HBondAcceptorCountDescriptor hbond_acceptor_desc = new HBondAcceptorCountDescriptor();
         int actual = ((IntegerResult)hbond_acceptor_desc.calculate(m).getValue()).intValue();
-        Assert.assertThat(actual, CoreMatchers.is(3));
+        org.hamcrest.MatcherAssert.assertThat(actual, CoreMatchers.is(3));
+    }
+
+    @Test
+    void testPhenol() throws CDKException {
+        Object[] params = {Boolean.TRUE};
+        descriptor.setParameters(params);
+        SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        // original molecule O=N(=O)c1cccc2cn[nH]c12 - correct kekulisation will give
+        // the same result. this test though should depend on kekulisation working
+        IAtomContainer mol = sp.parseSmiles("Oc1ccccc1");
+        Assertions.assertEquals(1, ((IntegerResult) descriptor.calculate(mol).getValue()).intValue());
     }
 }

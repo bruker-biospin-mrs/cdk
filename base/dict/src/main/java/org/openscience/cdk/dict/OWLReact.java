@@ -44,13 +44,11 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * @author Miguel Rojas &lt;miguelrojasch@users.sf.net&gt;
  * @cdk.created  2008-01-01
  * @cdk.keyword  dictionary
- * @cdk.module   dict
- * @cdk.githash
  */
 public class OWLReact extends Dictionary {
 
-    private static String rdfNS  = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-    private static String rdfsNS = "http://www.w3.org/2000/01/rdf-schema#";
+    private static final String rdfNS  = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    private static final String rdfsNS = "http://www.w3.org/2000/01/rdf-schema#";
 
     /**
      * Constructor of the OWLReact object.
@@ -167,7 +165,7 @@ public class OWLReact extends Dictionary {
                     dataType = paramSubt2.get(k).getAttributeValue("dataType");
                     dataType = dataType.substring(dataType.indexOf(':') + 1, dataType.length());
                 }
-                List<String> pp = new ArrayList<String>();
+                List<String> pp = new ArrayList<>();
                 pp.add(paramClass);
                 pp.add(needsToSet);
                 pp.add(dataType);

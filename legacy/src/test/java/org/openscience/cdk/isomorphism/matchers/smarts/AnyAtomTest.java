@@ -24,15 +24,14 @@
 
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.silent.Atom;
 
-import static org.junit.Assert.assertTrue;
-
-public class AnyAtomTest {
+class AnyAtomTest {
 
     @Test
-    public void matchHydrogen() throws Exception {
-        assertTrue(new AnyAtom(null).matches(new Atom("H")));
+    void matchHydrogen() throws Exception {
+        Assertions.assertTrue(new AnyAtom(null).matches(new Atom("H")));
     }
 }

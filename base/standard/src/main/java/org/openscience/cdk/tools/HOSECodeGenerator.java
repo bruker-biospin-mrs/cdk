@@ -26,21 +26,24 @@ package org.openscience.cdk.tools;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.config.IsotopeFactory;
+import org.openscience.cdk.config.Isotopes;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.graph.invariant.CanonicalLabeler;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
 import org.openscience.cdk.interfaces.IIsotope;
-import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.smiles.InvPair;
 
@@ -50,28 +53,26 @@ import org.openscience.cdk.smiles.InvPair;
  * for this method to work properly.
  *
  * @author     steinbeck
- * @cdk.githash
  * @cdk.keyword    HOSE code, spherical atom search
  * @cdk.created    2002-05-10
- * @cdk.module     standard
  */
 public class HOSECodeGenerator implements java.io.Serializable {
 
-    private static ILoggingTool logger               = LoggingToolFactory.createLoggingTool(HOSECodeGenerator.class);
+    private static final ILoggingTool logger               = LoggingToolFactory.createLoggingTool(HOSECodeGenerator.class);
 
     private static final long   serialVersionUID     = -4353471818831864513L;
 
     /**
      *  Container for the nodes in a sphere.
      */
-    protected List<TreeNode>    sphereNodes          = null;
-    protected List<IAtom>       sphereNodesWithAtoms = null;
+    protected List<TreeNode>    sphereNodes;
+    private final List<IAtom>       sphereNodesWithAtoms;
 
     /**
      *  Container for the node in the next sphere Assembled in a recursive method
      *  and then passed to the next recursion to become "sphereNodes".
      */
-    protected List<TreeNode>    nextSphereNodes      = null;
+    private List<TreeNode>    nextSphereNodes;
     /**
      *  Counter for the sphere in which we currently work.
      */
@@ -79,19 +80,19 @@ public class HOSECodeGenerator implements java.io.Serializable {
     /**
      *  How many spheres are we supposed inspect.
      */
-    protected int               maxSphere            = 0;
+    private int               maxSphere            = 0;
 
     /**
      *  Here we store the spheres that we assemble, in order to parse them into a
      *  code later.
      */
     protected List<TreeNode>[]  spheres              = null;
-    protected List<IAtom>[]     spheresWithAtoms     = null;
+    private List<IAtom>[]     spheresWithAtoms     = null;
 
     /**
      *  The HOSECode string that we assemble
      */
-    protected StringBuffer      HOSECode             = null;
+    protected StringBuffer      HOSECode;
 
     /**
      *  The molecular structure on which we work
@@ -102,49 +103,81 @@ public class HOSECodeGenerator implements java.io.Serializable {
      *  Delimiters used to separate spheres in the output string. Bremser uses the
      *  sequence"(//)" for the first four spheres.
      */
-    protected String[]          sphereDelimiters     = {"(", "/", "/", ")", "/", "/", "/", "/", "/", "/", "/", "/"};
+    private final String[]          sphereDelimiters     = {"(", "/", "/", ")", "/", "/", "/", "/", "/", "/", "/", "/"};
     /**
      *  The bond symbols used for bond orders "single", "double", "triple" and
      *  "aromatic"
      */
-    protected String            bondSymbols[]        = {"", "", "=", "%", "*"};
+    protected String[] bondSymbols = {"", "", "=", "%", "*"};
 
     protected String            centerCode           = null;
 
-    public TreeNode             rootNode             = null;
-
     boolean                     debug                = false;
 
-    private IAtomContainer      acold                = null;
+    private final IAtomContainer      acold                = null;
     private IRingSet            soar                 = null;
 
     /**
-     *  The rank order for the given element symbols.
+     *  The ranks for the given element and other symbols.
      */
-
-    static final String[]       rankedSymbols        = {"C", "O", "N", "S", "P", "Si", "B", "F", "Cl", "Br", ";", "I",
-            "#", "&", ","                            };
+    private static final long RING_RANK = 1100l;
+    private Map<String, Long> rankedSymbols = Stream.of(new Object[][] {
+    	{"C",9000l},{"O",8900l},{"N",8800l},{"S",8700l},{"P",8600l},{"Si",8500l},{"B",8400l},{"F",8300l},
+    	{"Cl",8200l},{"Br",8100l},{";",8000l},{"I",7900l},{"#",1200l},{"&",RING_RANK},{",",1000l}
+    }).collect(Collectors.toMap(data -> (String) data[0], data -> (Long) data[1]));
 
     /**
-     *  The ranking values to be used for the symbols above.
-     */
-    static final int[]          symbolRankings       = {9000, 8900, 8800, 8700, 8600, 8500, 8400, 8300, 8200, 8100,
-            8000, 7900, 1200, 1100, 1000             };
-
-    /**
-     *  The bond rankings to be used for the four bond order possibilities.
+     * The bond rankings to be used for the four bond order possibilities.
      */
 
-    static final int[]          bondRankings         = {0, 0, 200000, 300000, 100000};
+    private static final int[] bondRankings = {0, 0, 200000, 300000, 100000};
+
+    /** Configure with no special treatment (default). */
+    private static final int DEFAULT_MODE = 0;
+
+    /** Ignored parent ordering be considered when sorting spheres (legacy mode)
+     *  for compatibility with existing ML/AI models. */
+    public static final int LEGACY_MODE  = 1;
+
+    private final int flags;
 
     /**
-     *  Constructor for the HOSECodeGenerator.
+     * Constructor for the HOSECodeGenerator.
+     *
+     * <b>Important!</b>
+     * A critical bug was discovered in
+     * the implementation (see <a href="https://github.com/cdk/cdk/pull/828">PR
+     * 828</a>) which gave the wrong nesting in "some" cases. Fixing this
+     * behaviour invalidates any ML/AI models trained on the incorrect values.
+     * If you have a model built with the old algorithm that can not be
+     * retrained set {@code legacyMode=true}.
+     *
+     * @param flags (default: false)
+     * @see <a href="https://github.com/cdk/cdk/pull/828">PR 828</a>
+     */
+    public HOSECodeGenerator(int flags) {
+        this.flags = flags;
+        sphereNodes = new ArrayList<>();
+        sphereNodesWithAtoms = new ArrayList<>();
+        nextSphereNodes = new ArrayList<>();
+        HOSECode = new StringBuffer();
+    }
+
+    /**
+     * Constructor for the HOSECodeGenerator.
+     *
+     * <b>Important!</b>
+     * A critical bug was discovered in
+     * the implementation (see <a href="https://github.com/cdk/cdk/pull/828">PR
+     * 828</a>) which gave the wrong nesting in "some" cases. Fixing this
+     * behaviour invalidates any ML/AI models trained on the incorrect values.
+     * If you have a model built with the old algorithm that can not be
+     * retrained set {@code new HOSECodeGenerator(HOSECodeGenerator.LEGACY_MODE)}.
+     *
+     * @see <a href="https://github.com/cdk/cdk/pull/828">PR 828</a>
      */
     public HOSECodeGenerator() {
-        sphereNodes = new ArrayList<TreeNode>();
-        sphereNodesWithAtoms = new ArrayList<IAtom>();
-        nextSphereNodes = new ArrayList<TreeNode>();
-        HOSECode = new StringBuffer();
+        this(DEFAULT_MODE);
     }
 
     private IsotopeFactory isotopeFac = null;
@@ -178,10 +211,9 @@ public class HOSECodeGenerator implements java.io.Serializable {
         spheres = new List[noOfSpheres + 1];
         spheresWithAtoms = new List[noOfSpheres + 1];
         for (int i = 0; i < ac.getAtomCount(); i++) {
-            ac.getAtom(i).setFlag(CDKConstants.VISITED, false);
+            ac.getAtom(i).setFlag(IChemObject.VISITED, false);
         }
-        root.setFlag(CDKConstants.VISITED, true);
-        rootNode = new TreeNode(root.getSymbol(), null, root, (double) 0, atomContainer.getConnectedBondsCount(root), 0);
+        root.setFlag(IChemObject.VISITED, true);
         /*
          * All we need to observe is how the ranking of substituents in the
          * subsequent spheres of the root nodes influences the ranking of the
@@ -245,10 +277,9 @@ public class HOSECodeGenerator implements java.io.Serializable {
         maxSphere = noOfSpheres;
         spheres = new List[noOfSpheres + 1];
         for (int i = 0; i < ac.getAtomCount(); i++) {
-            ac.getAtom(i).setFlag(CDKConstants.VISITED, false);
+            ac.getAtom(i).setFlag(IChemObject.VISITED, false);
         }
-        root.setFlag(CDKConstants.VISITED, true);
-        rootNode = new TreeNode(root.getSymbol(), null, root, (double) 0, atomContainer.getConnectedBondsCount(root), 0);
+        root.setFlag(IChemObject.VISITED, true);
         /*
          * All we need to observe is how the ranking of substituents in the
          * subsequent spheres of the root nodes influences the ranking of the
@@ -265,7 +296,7 @@ public class HOSECodeGenerator implements java.io.Serializable {
     }
 
     private void createCenterCode(IAtom root, IAtomContainer ac, boolean ringsize) {
-        int partnerCount = 0;
+        int partnerCount;
         partnerCount = atomContainer.getConnectedBondsCount(root)
                 + (root.getImplicitHydrogenCount() == CDKConstants.UNSET ? 0 : root.getImplicitHydrogenCount());
         centerCode = root.getSymbol() + "-" + partnerCount + createChargeCode(root)
@@ -277,18 +308,18 @@ public class HOSECodeGenerator implements java.io.Serializable {
             soar = Cycles.sssr(ac).toRingSet();
         }
         boolean[] bool = new boolean[1000];
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < soar.getRings(root).getAtomContainerCount(); i++) {
-            if (((IRing) soar.getRings(root).getAtomContainer(i)).getAtomCount() < bool.length)
-                bool[((IRing) soar.getRings(root).getAtomContainer(i)).getAtomCount()] = true;
+            if (soar.getRings(root).getAtomContainer(i).getAtomCount() < bool.length)
+                bool[soar.getRings(root).getAtomContainer(i).getAtomCount()] = true;
         }
         for (int i = 0; i < bool.length; i++) {
-            if (bool[i]) sb.append(i + "");
+            if (bool[i]) sb.append(i);
         }
         if (sb.toString().isEmpty())
             return "";
         else
-            return "-" + sb.toString();
+            return "-" + sb;
     }
 
     private String createChargeCode(IAtom atom) {
@@ -325,39 +356,40 @@ public class HOSECodeGenerator implements java.io.Serializable {
      */
     private void breadthFirstSearch(IAtom root, boolean addTreeNode) throws CDKException {
         sphere = 0;
-        TreeNode tempNode = null;
+        TreeNode tempNode;
         List<IAtom> conAtoms = atomContainer.getConnectedAtomsList(root);
         IAtom atom;
-        IBond bond = null;
+        IBond bond;
         sphereNodes.clear();
         sphereNodesWithAtoms.clear();
-        for (int i = 0; i < conAtoms.size(); i++) {
+        for (IAtom conAtom : conAtoms) {
             try {
-                atom = conAtoms.get(i);
+                atom = conAtom;
                 if (atom.getSymbol().equals("H")) continue;
                 bond = atomContainer.getBond(root, atom);
                 /*
                  * In the first sphere the atoms are labeled with their own atom
                  * atom as source
                  */
-                if (bond.getFlag(CDKConstants.ISAROMATIC)) {
-                    tempNode = new TreeNode(atom.getSymbol(), new TreeNode(root.getSymbol(), null, root, (double) 0, 0,
-                            (long) 0), atom, 4, atomContainer.getConnectedBondsCount(atom), 0);
+                if (bond.getFlag(IChemObject.AROMATIC)) {
+                    tempNode = new TreeNode(atom.getSymbol(), new TreeNode(root.getSymbol(), null, root, 0, 0,
+                                                                           0), atom, 4, atomContainer.getConnectedBondsCount(atom), 0);
                 } else {
-                    tempNode = new TreeNode(atom.getSymbol(), new TreeNode(root.getSymbol(), null, root, (double) 0, 0,
-                            (long) 0), atom, bond.getOrder().numeric(), atomContainer.getConnectedBondsCount(atom), 0);
+                    tempNode = new TreeNode(atom.getSymbol(), new TreeNode(root.getSymbol(), null, root, 0, 0,
+                                                                           0), atom, bond.getOrder()
+                                                                                         .numeric(), atomContainer.getConnectedBondsCount(atom), 0);
                 }
 
                 sphereNodes.add(tempNode);
                 if (!addTreeNode) sphereNodesWithAtoms.add(atom);
 
                 //		        rootNode.childs.addElement(tempNode);
-                atom.setFlag(CDKConstants.VISITED, true);
+                atom.setFlag(IChemObject.VISITED, true);
             } catch (Exception exc) {
                 throw new CDKException("Error in HOSECodeGenerator->breadthFirstSearch.", exc);
             }
         }
-        Collections.sort(sphereNodes, new TreeNodeComparator());
+        sphereNodes.sort(new TreeNodeComparator());
         nextSphere(sphereNodes);
     }
 
@@ -376,15 +408,15 @@ public class HOSECodeGenerator implements java.io.Serializable {
         /*
          * From here we start assembling the next sphere
          */
-        IAtom node = null;
-        IAtom toNode = null;
-        List<IAtom> conAtoms = null;
-        TreeNode treeNode = null;
-        nextSphereNodes = new ArrayList<TreeNode>();
-        IBond bond = null;
-        for (int i = 0; i < sphereNodes.size(); i++) {
-            treeNode = (TreeNode) sphereNodes.get(i);
-            if (!("&;#:,".indexOf(treeNode.symbol) >= 0)) {
+        IAtom node;
+        IAtom toNode;
+        List<IAtom> conAtoms;
+        TreeNode treeNode;
+        nextSphereNodes = new ArrayList<>();
+        IBond bond;
+        for (TreeNode sphereNode : sphereNodes) {
+            treeNode = sphereNode;
+            if (!("&;#:,".contains(treeNode.symbol))) {
                 node = treeNode.atom;
                 if (node.getSymbol().equals("H")) continue;
 
@@ -392,23 +424,23 @@ public class HOSECodeGenerator implements java.io.Serializable {
                 if (conAtoms.size() == 1) {
                     nextSphereNodes.add(new TreeNode(",", treeNode, null, 0, 0, treeNode.score));
                 } else {
-                    for (int j = 0; j < conAtoms.size(); j++) {
-                        toNode = conAtoms.get(j);
+                    for (IAtom conAtom : conAtoms) {
+                        toNode = conAtom;
                         if (!toNode.equals(treeNode.source.atom)) {
                             bond = atomContainer.getBond(node, toNode);
-                            if (bond.getFlag(CDKConstants.ISAROMATIC)) {
+                            if (bond.getFlag(IChemObject.AROMATIC)) {
                                 nextSphereNodes.add(new TreeNode(toNode.getSymbol(), treeNode, toNode, 4, atomContainer
                                         .getConnectedBondsCount(toNode), treeNode.score));
                             } else {
                                 nextSphereNodes.add(new TreeNode(toNode.getSymbol(), treeNode, toNode, bond.getOrder()
-                                        .numeric(), atomContainer.getConnectedBondsCount(toNode), treeNode.score));
+                                                                                                           .numeric(), atomContainer.getConnectedBondsCount(toNode), treeNode.score));
                             }
                         }
                     }
                 }
             }
         }
-        Collections.sort(nextSphereNodes, new TreeNodeComparator());
+        nextSphereNodes.sort(new TreeNodeComparator());
         if (sphere < maxSphere) {
             sphere++;
             nextSphere(nextSphereNodes);
@@ -418,7 +450,7 @@ public class HOSECodeGenerator implements java.io.Serializable {
     public String makeBremserCompliant(String code) {
         int sepIndex = code.indexOf(';');
         if (sepIndex >= 0) {
-            code = code.substring(sepIndex + 1, code.length());
+            code = code.substring(sepIndex + 1);
         }
         return code;
     }
@@ -430,54 +462,50 @@ public class HOSECodeGenerator implements java.io.Serializable {
      *@exception  org.openscience.cdk.exception.CDKException  Thrown if something goes wrong
      */
     private void createCode() throws CDKException {
-        List<TreeNode> sphereNodes = null;
-        TreeNode tn = null;
         for (int f = 0; f < atomContainer.getAtomCount(); f++) {
-            atomContainer.getAtom(f).setFlag(CDKConstants.VISITED, false);
+            atomContainer.getAtom(f).setFlag(IChemObject.VISITED, false);
         }
-
         for (int f = 0; f < maxSphere; f++) {
-            sphereNodes = spheres[maxSphere - f];
-            for (int g = 0; g < sphereNodes.size(); g++) {
-                tn = sphereNodes.get(g);
+            for (TreeNode tn : spheres[maxSphere - f]) {
                 if (tn.source != null) {
                     tn.source.ranking += tn.degree;
                 }
-
             }
         }
 
-        for (int f = 0; f < maxSphere; f++) {
-            sphereNodes = spheres[f];
-            calculateNodeScores(sphereNodes);
-            sortNodesByScore(sphereNodes);
-        }
-
-        for (int f = 0; f < maxSphere; f++) {
-            sphereNodes = spheres[f];
-            for (int g = 0; g < sphereNodes.size(); g++) {
-                tn = (TreeNode) sphereNodes.get(g);
-                tn.score += tn.ranking;
-            }
-            sortNodesByScore(sphereNodes);
-        }
-        for (int f = 0; f < maxSphere; f++) {
-            sphereNodes = spheres[f];
-            for (int g = 0; g < sphereNodes.size(); g++) {
-                tn = (TreeNode) sphereNodes.get(g);
-                String localscore = tn.score + "";
-                while (localscore.length() < 6) {
-                    localscore = "0" + localscore;
+        if ((flags&LEGACY_MODE) != 0) {
+            for (int f = 0; f < maxSphere; f++)
+                calculateNodeScores(spheres[f]);
+            for (int f = 0; f < maxSphere; f++)
+                for (TreeNode tn : spheres[f])
+                    tn.score += tn.ranking;
+            for (int f = 0; f < maxSphere; f++) {
+                for (TreeNode tn : spheres[f]) {
+                    StringBuilder localscore = new StringBuilder(tn.score + "");
+                    while (localscore.length() < 6) {
+                        localscore.insert(0, "0");
+                    }
+                    tn.stringscore = tn.source.stringscore + "" + localscore;
                 }
-                tn.stringscore = tn.source.stringscore + "" + localscore;
+                sortNodesByScore(spheres[f]);
             }
-            sortNodesByScore(sphereNodes);
         }
+        else {
+            for (int f = 0; f < maxSphere; f++) {
+                calculateNodeScores(spheres[f]);
+                for (TreeNode tn : spheres[f])
+                    tn.score += tn.ranking;
+                sortNodesByScore(spheres[f]);
+            }
+        }
+        for (int i = 0; i < atomContainer.getAtomCount(); i++) {
+            atomContainer.getAtom(i).setFlag(IChemObject.VISITED, false);
+        }
+        
         HOSECode.append(centerCode);
         for (int f = 0; f < maxSphere; f++) {
             sphere = f + 1;
-            sphereNodes = spheres[f];
-            String s = getSphereCode(sphereNodes);
+            String s = getSphereCode(spheres[f]);
             HOSECode.append(s);
         }
     }
@@ -493,17 +521,17 @@ public class HOSECodeGenerator implements java.io.Serializable {
         if (sphereNodes == null || sphereNodes.size() < 1) {
             return sphereDelimiters[sphere - 1];
         }
-        TreeNode treeNode = null;
-        StringBuffer code = new StringBuffer();
+        TreeNode treeNode;
+        StringBuilder code = new StringBuilder();
         /*
          * append the tree node code to the HOSECode in their now determined
          * order, using commas to separate nodes from different branches
          */
         IAtom branch = sphereNodes.get(0).source.atom;
-        StringBuffer tempCode = null;
-        for (int i = 0; i < sphereNodes.size(); i++) {
-            treeNode = sphereNodes.get(i);
-            tempCode = new StringBuffer();
+        StringBuilder tempCode;
+        for (TreeNode sphereNode : sphereNodes) {
+            treeNode = sphereNode;
+            tempCode = new StringBuilder();
             if (!treeNode.source.stopper && !treeNode.source.atom.equals(branch)) {
                 branch = treeNode.source.atom;
                 code.append(',');
@@ -515,16 +543,16 @@ public class HOSECodeGenerator implements java.io.Serializable {
                 } else {
                     throw new CDKException("Unknown bond type");
                 }
-                if (treeNode.atom != null && !treeNode.atom.getFlag(CDKConstants.VISITED)) {
+                if (treeNode.atom != null && !treeNode.atom.getFlag(IChemObject.VISITED)) {
                     tempCode.append(getElementSymbol(treeNode.symbol));
-                } else if (treeNode.atom != null && treeNode.atom.getFlag(CDKConstants.VISITED)) {
+                } else if (treeNode.atom != null && treeNode.atom.getFlag(IChemObject.VISITED)) {
                     tempCode.append('&');
                     treeNode.stopper = true;
                 }
-                code.append(tempCode + createChargeCode(treeNode.atom));
+                code.append(tempCode).append(createChargeCode(treeNode.atom));
                 treeNode.hSymbol = tempCode.toString();
             }
-            if (treeNode.atom != null) treeNode.atom.setFlag(CDKConstants.VISITED, true);
+            if (treeNode.atom != null) treeNode.atom.setFlag(IChemObject.VISITED, true);
             if (treeNode.source.stopper) treeNode.stopper = true;
         }
         code.append(sphereDelimiters[sphere - 1]);
@@ -538,15 +566,12 @@ public class HOSECodeGenerator implements java.io.Serializable {
      *@param  symbol  The element symbol for which the rank is to be determined
      *@return         The element rank
      */
-    private double getElementRank(String symbol) {
-        for (int f = 0; f < rankedSymbols.length; f++) {
-            if (rankedSymbols[f].equals(symbol)) {
-                return symbolRankings[f];
-            }
-        }
+    private long getElementRank(String symbol) {
+        if(rankedSymbols.containsKey(symbol))
+        	return rankedSymbols.get(symbol);
         IIsotope isotope = isotopeFac.getMajorIsotope(symbol);
         if (isotope.getMassNumber() != null) {
-            return ((double) 800000 - isotope.getMassNumber());
+            return ((long) 800000 - isotope.getMassNumber());
         }
         return 800000;
     }
@@ -574,7 +599,7 @@ public class HOSECodeGenerator implements java.io.Serializable {
         return sym;
     }
 
-    /**
+	/**
      *  Determines the ranking score for each node, allowing for a sorting of nodes
      *  within one sphere.
      *
@@ -582,15 +607,24 @@ public class HOSECodeGenerator implements java.io.Serializable {
      *@exception  org.openscience.cdk.exception.CDKException  Thrown if something goes wrong.
      */
     private void calculateNodeScores(List<TreeNode> sphereNodes) throws CDKException {
-        TreeNode treeNode = null;
-        for (int i = 0; i < sphereNodes.size(); i++) {
-            treeNode = (TreeNode) sphereNodes.get(i);
-            treeNode.score += getElementRank(treeNode.symbol);
+        TreeNode treeNode;
+        List<TreeNode> visitedTreeNodes=new ArrayList<>();
+        for (TreeNode sphereNode : sphereNodes) {
+            treeNode = sphereNode;
+            if ((flags&LEGACY_MODE) == 0 && treeNode.atom != null && treeNode.atom.getFlag(IChemObject.VISITED)) {
+            	treeNode.score += RING_RANK;
+            }else {
+            	treeNode.score += getElementRank(treeNode.symbol);
+            }
             if (treeNode.bondType <= 4) {
                 treeNode.score += bondRankings[(int) treeNode.bondType];
             } else {
                 throw new CDKException("Unknown bond type encountered in HOSECodeGenerator");
             }
+            if (treeNode.atom != null) visitedTreeNodes.add(treeNode);
+        }
+        for(TreeNode treeNode2 : visitedTreeNodes) {
+        	treeNode2.atom.setFlag(IChemObject.VISITED, true);
         }
     }
 
@@ -601,29 +635,21 @@ public class HOSECodeGenerator implements java.io.Serializable {
      *@param  sphereNodes  A vector with sphere nodes to be sorted.
      */
     private void sortNodesByScore(List<TreeNode> sphereNodes) {
-        TreeNode obj;
-        boolean changed;
-        if (sphereNodes.size() == 0) return;
-        /*
-         * Now we sort by score
-         */
-        do {
-            changed = false;
-            for (int i = 0; i < sphereNodes.size() - 1; i++) {
-                if (((TreeNode) sphereNodes.get(i + 1)).stringscore
-                        .compareTo(((TreeNode) sphereNodes.get(i)).stringscore) > 0) {
-                    obj = sphereNodes.get(i + 1);
-                    sphereNodes.remove(i + 1);
-                    sphereNodes.add(i, obj);
-                    changed = true;
-                }
-            }
-        } while (changed);
+
+        if ((flags&LEGACY_MODE) != 0) {
+            sphereNodes.sort((a, b) -> b.stringscore.compareTo(a.stringscore));
+        } else {
+            sphereNodes.sort((a, b) -> {
+                // compare the parent node (source) first then the child string score
+                int cmp = Integer.compare(b.source.sortOrder, a.source.sortOrder);
+                if (cmp != 0) return cmp;
+                return Long.compare(b.score, a.score);
+            });
+        }
+
         /* Having sorted a sphere, we label the nodes with their sort order */
-        TreeNode temp = null;
         for (int i = 0; i < sphereNodes.size(); i++) {
-            temp = ((TreeNode) sphereNodes.get(i));
-            temp.sortOrder = sphereNodes.size() - i;
+            sphereNodes.get(i).sortOrder = sphereNodes.size() - i;
         }
     }
 
@@ -663,7 +689,7 @@ public class HOSECodeGenerator implements java.io.Serializable {
             IAtom atom = node.getAtom();
             if (atom == null) return Long.MIN_VALUE;
             // cast can be removed in master
-            Long label = (Long) atom.getProperty(InvPair.CANONICAL_LABEL);
+            Long label = atom.getProperty(InvPair.CANONICAL_LABEL);
             if (label == null) return Long.MIN_VALUE;
             return label;
         }
@@ -686,8 +712,8 @@ public class HOSECodeGenerator implements java.io.Serializable {
         int            degree;
         long           score;
         int            ranking;
-        int            sortOrder   = 1;
-        List<TreeNode> childs      = null;
+        int            sortOrder;
+        List<TreeNode> childs;
         String         hSymbol     = null;
         boolean        stopper     = false;
         String         stringscore = "";
@@ -712,7 +738,7 @@ public class HOSECodeGenerator implements java.io.Serializable {
             this.bondType = bondType;
             ranking = 0;
             sortOrder = 1;
-            childs = new ArrayList<TreeNode>();
+            childs = new ArrayList<>();
         }
 
         public IAtom getAtom() {
@@ -728,19 +754,14 @@ public class HOSECodeGenerator implements java.io.Serializable {
          */
         @Override
         public boolean equals(Object o) {
-            try {
-                if (this.atom.equals(((TreeNode) o).atom)) {
-                    return true;
-                }
-            } catch (Exception exc) {
-                /*
-                 * we do nothing here because anything that could seriously
-                 * happen here is the we got something which is not a TreeNode
-                 * and then got a class cast exception. Thus we can just wait
-                 * until the end of the method returns a "false"
-                 */
-            }
-            return false;
+            if (!(o instanceof TreeNode))
+                return false;
+            return this.atom.equals(((TreeNode) o).atom);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(atom);
         }
 
         @Override
@@ -761,9 +782,9 @@ public class HOSECodeGenerator implements java.io.Serializable {
 
     public List<IAtom> getNodesInSphere(int sphereNumber) {
         sphereNodes = spheres[sphereNumber - 1];
-        List<IAtom> atoms = new ArrayList<IAtom>();
-        for (int g = 0; g < sphereNodes.size(); g++) {
-            atoms.add(((TreeNode) sphereNodes.get(g)).atom);
+        List<IAtom> atoms = new ArrayList<>();
+        for (TreeNode sphereNode : sphereNodes) {
+            atoms.add(sphereNode.atom);
         }
         return (atoms);
     }

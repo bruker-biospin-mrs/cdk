@@ -64,7 +64,6 @@ import static org.openscience.cdk.stereo.Stereocenters.Type.Tetracoordinate;
  * interpreted.
  * 
  * @author John May
- * @cdk.githash
  * @see <a href="http://en.wikipedia.org/wiki/Fischer_projection">Fischer 
  *      projection (Wikipedia)</a>
  */
@@ -127,7 +126,7 @@ final class FischerRecognition {
             return Collections.emptyList();
 
         // build atom index and only recognize 2D depictions
-        Map<IAtom,Integer> atomToIndex = new HashMap<IAtom, Integer>();
+        Map<IAtom,Integer> atomToIndex = new HashMap<>();
         for (IAtom atom : container.atoms()) {
             if (atom.getPoint2d() == null)
                 return Collections.emptyList();
@@ -136,7 +135,7 @@ final class FischerRecognition {
         
         RingSearch ringSearch = new RingSearch(container, graph);
         
-        final List<IStereoElement> elements = new ArrayList<IStereoElement>(5);
+        final List<IStereoElement> elements = new ArrayList<>(5);
 
         for (int v = 0; v < container.getAtomCount(); v++) {
 
@@ -299,7 +298,7 @@ final class FischerRecognition {
     private static boolean isPlanarSigmaBond(IBond bond) {
         return bond != null &&
                 IBond.Order.SINGLE.equals(bond.getOrder()) &&
-                IBond.Stereo.NONE.equals(bond.getStereo());
+                IBond.Display.Solid == bond.getDisplay();
     }
 
     /**

@@ -30,8 +30,6 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
 /**
  * Captures query bond types defined in the CTFile.
  *
- * @cdk.module  isomorphism
- * @cdk.githash
  * @deprecated Use {@link Expr.Type#SINGLE_OR_AROMATIC} etc.
  */
 @Deprecated
@@ -53,7 +51,7 @@ public class CTFileQueryBond extends QueryBond implements IQueryBond {
     /**
      * The type of this bond.
      */
-    protected Type type = (Type) CDKConstants.UNSET;
+    protected Type type = null;
 
     /**
      * Getter for bond type

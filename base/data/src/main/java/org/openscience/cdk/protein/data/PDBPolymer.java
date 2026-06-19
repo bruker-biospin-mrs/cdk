@@ -38,8 +38,6 @@ import org.openscience.cdk.interfaces.IStrand;
  * regular PDB mix of protein or protein complexes, ligands, water molecules
  * and other species.
  *
- * @cdk.module  data
- * @cdk.githash
  *
  * @author      Egon Willighagen
  * @cdk.created 2006-04-19
@@ -49,16 +47,16 @@ public class PDBPolymer extends BioPolymer implements Cloneable, IPDBPolymer {
 
     private static final long serialVersionUID = 4173552834313952358L;
 
-    List<String>              sequentialListOfMonomers;
-    List<IPDBStructure>       secondaryStructures;
+    final List<String>              sequentialListOfMonomers;
+    final List<IPDBStructure>       secondaryStructures;
 
     /**
      * Constructs a new Polymer to store the {@link IMonomer}s.
      */
     public PDBPolymer() {
         super();
-        sequentialListOfMonomers = new ArrayList<String>();
-        secondaryStructures = new ArrayList<IPDBStructure>();
+        sequentialListOfMonomers = new ArrayList<>();
+        secondaryStructures = new ArrayList<>();
     }
 
     @Override
@@ -69,7 +67,7 @@ public class PDBPolymer extends BioPolymer implements Cloneable, IPDBPolymer {
     @Override
     public Collection<IPDBStructure> getStructures() {
         //		don't return the original
-        return new ArrayList<IPDBStructure>(secondaryStructures);
+        return new ArrayList<>(secondaryStructures);
     }
 
     /**
@@ -118,7 +116,7 @@ public class PDBPolymer extends BioPolymer implements Cloneable, IPDBPolymer {
      */
     public Collection<String> getMonomerNamesInSequentialOrder() {
         // don't return the original
-        return new ArrayList<String>(sequentialListOfMonomers);
+        return new ArrayList<>(sequentialListOfMonomers);
     }
 
     /**

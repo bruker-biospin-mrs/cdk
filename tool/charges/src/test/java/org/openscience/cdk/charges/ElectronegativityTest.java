@@ -18,10 +18,10 @@
  */
 package org.openscience.cdk.charges;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -32,40 +32,39 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 /**
 * TestSuite that runs all tests.
 *
-* @cdk.module test-charges
 */
-public class ElectronegativityTest extends CDKTestCase {
+class ElectronegativityTest extends CDKTestCase {
 
-    private IChemObjectBuilder      builder = SilentChemObjectBuilder.getInstance();
-    private LonePairElectronChecker lpcheck = new LonePairElectronChecker();
+    private final IChemObjectBuilder      builder = SilentChemObjectBuilder.getInstance();
+    private final LonePairElectronChecker lpcheck = new LonePairElectronChecker();
 
     /**
      * Constructor of the ElectronegativityTest.
      */
-    public ElectronegativityTest() {
+    ElectronegativityTest() {
         super();
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testElectronegativity() {
+    void testElectronegativity() {
 
-        Assert.assertNotNull(new Electronegativity());
+        Assertions.assertNotNull(new Electronegativity());
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      */
     @Test
-    public void testElectronegativity_Int_Int() {
+    void testElectronegativity_Int_Int() {
 
-        Assert.assertNotNull(new Electronegativity(6, 50));
+        Assertions.assertNotNull(new Electronegativity(6, 50));
     }
 
     /**
@@ -73,11 +72,11 @@ public class ElectronegativityTest extends CDKTestCase {
      *
      *  @cdk.inchi InChI=1/CH3F/c1-2/h1H3
      *
-     * @return    The test suite
+     *
      * @throws Exception
      */
     @Test
-    public void testCalculateSigmaElectronegativity_IAtomContainer_IAtom() throws Exception {
+    void testCalculateSigmaElectronegativity_IAtomContainer_IAtom() throws Exception {
         double[] testResult = {11.308338, 8.7184094, 7.5289848, 7.5289848, 7.5289848};
         Electronegativity pe = new Electronegativity();
 
@@ -91,7 +90,7 @@ public class ElectronegativityTest extends CDKTestCase {
         lpcheck.saturate(molecule);
 
         for (int i = 0; i < molecule.getAtomCount(); i++)
-            Assert.assertEquals(testResult[i], pe.calculateSigmaElectronegativity(molecule, molecule.getAtom(i)), 0.001);
+            Assertions.assertEquals(testResult[i], pe.calculateSigmaElectronegativity(molecule, molecule.getAtom(i)), 0.001);
 
     }
 
@@ -100,11 +99,11 @@ public class ElectronegativityTest extends CDKTestCase {
      *
      *  @cdk.inchi InChI=1/CH3F/c1-2/h1H3
      *
-     * @return    The test suite
+     *
      * @throws Exception
      */
     @Test
-    public void testCalculateSigmaElectronegativity_IAtomContainer_IAtom_Int_Int() throws Exception {
+    void testCalculateSigmaElectronegativity_IAtomContainer_IAtom_Int_Int() throws Exception {
         double[] testResult = {11.308338, 8.7184094, 7.5289848, 7.5289848, 7.5289848};
         Electronegativity pe = new Electronegativity();
 
@@ -118,8 +117,7 @@ public class ElectronegativityTest extends CDKTestCase {
         lpcheck.saturate(molecule);
 
         for (int i = 0; i < molecule.getAtomCount(); i++) {
-            Assert.assertEquals(testResult[i],
-                    pe.calculateSigmaElectronegativity(molecule, molecule.getAtom(i), 6, 50), 0.001);
+            Assertions.assertEquals(testResult[i], pe.calculateSigmaElectronegativity(molecule, molecule.getAtom(i), 6, 50), 0.001);
 
         }
     }
@@ -127,56 +125,56 @@ public class ElectronegativityTest extends CDKTestCase {
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      * @throws Exception
      */
     @Test
-    public void testGetMaxIterations() throws Exception {
+    void testGetMaxIterations() throws Exception {
 
         Electronegativity pe = new Electronegativity();
-        Assert.assertSame(6, pe.getMaxIterations());
+        Assertions.assertSame(6, pe.getMaxIterations());
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      * @throws Exception
      */
     @Test
-    public void testGetMaxResonStruc() throws Exception {
+    void testGetMaxResonStruc() throws Exception {
 
         Electronegativity pe = new Electronegativity();
-        Assert.assertSame(50, pe.getMaxResonStruc());
+        Assertions.assertSame(50, pe.getMaxResonStruc());
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      * @throws Exception
      */
     @Test
-    public void testSetMaxIterations_Int() throws Exception {
+    void testSetMaxIterations_Int() throws Exception {
 
         Electronegativity pe = new Electronegativity();
         int maxIter = 10;
         pe.setMaxIterations(maxIter);
-        Assert.assertSame(maxIter, pe.getMaxIterations());
+        Assertions.assertSame(maxIter, pe.getMaxIterations());
     }
 
     /**
      * A unit test suite for JUnit.
      *
-     * @return    The test suite
+     *
      * @throws Exception
      */
     @Test
-    public void testSetMaxResonStruc_Int() throws Exception {
+    void testSetMaxResonStruc_Int() throws Exception {
 
         Electronegativity pe = new Electronegativity();
         int maxRes = 10;
         pe.setMaxResonStruc(maxRes);
-        Assert.assertSame(maxRes, pe.getMaxResonStruc());
+        Assertions.assertSame(maxRes, pe.getMaxResonStruc());
     }
 }

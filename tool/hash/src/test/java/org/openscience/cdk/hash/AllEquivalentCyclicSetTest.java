@@ -24,10 +24,11 @@
 
 package org.openscience.cdk.hash;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -36,18 +37,16 @@ import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class AllEquivalentCyclicSetTest {
+class AllEquivalentCyclicSetTest {
 
     @Test
-    public void testFind() throws Exception {
+    void testFind() throws Exception {
         IAtomContainer dummy = mock(IAtomContainer.class);
         int[][] g = new int[][]{{1, 5, 6}, {0, 2}, {1, 3}, {2, 4, 7}, {3, 5}, {0, 4}, {0}, {3}};
 
@@ -59,17 +58,17 @@ public class AllEquivalentCyclicSetTest {
 
         assertThat(set.size(), is(6));
         // the first size vertex are all in a cycle
-        assertTrue(set.contains(0));
-        assertTrue(set.contains(1));
-        assertTrue(set.contains(2));
-        assertTrue(set.contains(3));
-        assertTrue(set.contains(4));
-        assertTrue(set.contains(5));
+        Assertions.assertTrue(set.contains(0));
+        Assertions.assertTrue(set.contains(1));
+        Assertions.assertTrue(set.contains(2));
+        Assertions.assertTrue(set.contains(3));
+        Assertions.assertTrue(set.contains(4));
+        Assertions.assertTrue(set.contains(5));
 
     }
 
     @Test
-    public void testFind_Distinct() throws Exception {
+    void testFind_Distinct() throws Exception {
         IAtomContainer dummy = mock(IAtomContainer.class);
         int[][] g = new int[][]{{1, 5, 6}, {0, 2}, {1, 3}, {2, 4, 7}, {3, 5}, {0, 4}, {0}, {3}};
 
@@ -90,7 +89,7 @@ public class AllEquivalentCyclicSetTest {
      * finder does not tell them apart but that this more complex finder does.
      */
     @Test
-    public void testScenario() throws Exception {
+    void testScenario() throws Exception {
 
         IAtomContainer cid138898 = cid138898();
         IAtomContainer cid241107 = cid241107();
@@ -113,7 +112,7 @@ public class AllEquivalentCyclicSetTest {
      * @cdk.inchi InChI=1S/C10H16S4/c1-7-5-8(2)13-10(4,14-8)6-9(3,11-7)12-7/h5-6H2,1-4H3
      */
     private IAtomContainer cid241107() {
-        IAtomContainer m = new AtomContainer(14, 16, 0, 0);
+        IAtomContainer m = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom[] as = new IAtom[]{new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"), new Atom("S"),
                 new Atom("C"), new Atom("S"), new Atom("C"), new Atom("C"), new Atom("S"), new Atom("S"),
                 new Atom("C"), new Atom("C"), new Atom("C"),};
@@ -133,7 +132,7 @@ public class AllEquivalentCyclicSetTest {
      * @cdk.inchi InChI=1S/C10H16S4/c1-7-5-8(2)13-9(3,11-7)6-10(4,12-7)14-8/h5-6H2,1-4H3
      */
     private IAtomContainer cid138898() {
-        IAtomContainer m = new AtomContainer(14, 16, 0, 0);
+        IAtomContainer m = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom[] as = new IAtom[]{new Atom("C"), new Atom("C"), new Atom("C"), new Atom("C"), new Atom("S"),
                 new Atom("C"), new Atom("S"), new Atom("C"), new Atom("C"), new Atom("S"), new Atom("S"),
                 new Atom("C"), new Atom("C"), new Atom("C"),};

@@ -65,26 +65,29 @@ import java.util.Map;
  * @cdk.created 2008-07-23
  * @cdk.keyword fingerprint
  * @cdk.keyword similarity
- * @cdk.module  fingerprint
- * @cdk.githash
  */
 public class MACCSFingerprinter extends AbstractFingerprinter implements IFingerprinter {
 
-    private static ILoggingTool logger          = LoggingToolFactory.createLoggingTool(MACCSFingerprinter.class);
+    private static final ILoggingTool logger          = LoggingToolFactory.createLoggingTool(MACCSFingerprinter.class);
 
     private static final String KEY_DEFINITIONS = "data/maccs.txt";
 
-    private volatile MaccsKey[] keys            = null;
+    private final MaccsKey[] keys;
 
-    public MACCSFingerprinter() {}
+    public MACCSFingerprinter() {
+        try {
+            keys = readKeyDef(null);
+        } catch (IOException | CDKException e) {
+            logger.debug(e);
+            throw new IllegalStateException("Could not initialize the MACCS keys", e);
+        }
+    }
 
     public MACCSFingerprinter(IChemObjectBuilder builder) {
         try {
             keys = readKeyDef(builder);
-        } catch (IOException e) {
-            logger.debug(e);
-        } catch (CDKException e) {
-            logger.debug(e);
+        } catch (IOException | CDKException e) {
+            throw new IllegalStateException("Could not initialize the MACCS keys", e);
         }
     }
 
@@ -92,7 +95,6 @@ public class MACCSFingerprinter extends AbstractFingerprinter implements IFinger
     @Override
     public IBitFingerprint getBitFingerprint(IAtomContainer container) throws CDKException {
 
-        MaccsKey[] keys = keys(container.getBuilder());
         BitSet fp = new BitSet(keys.length);
 
         // init SMARTS invariants (connectivity, degree, etc)
@@ -235,7 +237,7 @@ public class MACCSFingerprinter extends AbstractFingerprinter implements IFinger
     }
 
     private MaccsKey[] readKeyDef(final IChemObjectBuilder builder) throws IOException, CDKException {
-        List<MaccsKey> keys = new ArrayList<MaccsKey>(166);
+        List<MaccsKey> keys = new ArrayList<>(166);
         BufferedReader reader = new BufferedReader(new InputStreamReader(getClass()
                 .getResourceAsStream(KEY_DEFINITIONS)));
 
@@ -254,9 +256,9 @@ public class MACCSFingerprinter extends AbstractFingerprinter implements IFinger
 
     private class MaccsKey {
 
-        private String  smarts;
-        private int     count;
-        private Pattern pattern;
+        private final String  smarts;
+        private final int     count;
+        private final Pattern pattern;
 
         private MaccsKey(String smarts, Pattern pattern, int count) {
             this.smarts = smarts;
@@ -277,31 +279,6 @@ public class MACCSFingerprinter extends AbstractFingerprinter implements IFinger
     @Override
     public ICountFingerprint getCountFingerprint(IAtomContainer container) throws CDKException {
         throw new UnsupportedOperationException();
-    }
-
-    private final Object lock = new Object();
-
-    /**
-     * Access MACCS keys definitions.
-     *
-     * @return array of MACCS keys.
-     * @throws CDKException maccs keys could not be loaded
-     */
-    private MaccsKey[] keys(final IChemObjectBuilder builder) throws CDKException {
-        MaccsKey[] result = keys;
-        if (result == null) {
-            synchronized (lock) {
-                result = keys;
-                if (result == null) {
-                    try {
-                        keys = result = readKeyDef(builder);
-                    } catch (IOException e) {
-                        throw new CDKException("could not read MACCS definitions", e);
-                    }
-                }
-            }
-        }
-        return result;
     }
 
     /**

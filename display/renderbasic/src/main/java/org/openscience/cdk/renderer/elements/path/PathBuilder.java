@@ -41,13 +41,11 @@ import org.openscience.cdk.renderer.elements.GeneralPath;
  * </pre>
  *
  * @author Arvid
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public class PathBuilder {
 
     /** The path that is being built */
-    private List<PathElement> elements;
+    private final List<PathElement> elements;
 
     /** The color of the path */
     private Color             color;
@@ -65,7 +63,7 @@ public class PathBuilder {
      * @param color the color of the path
      */
     public PathBuilder(Color color) {
-        elements = new ArrayList<PathElement>();
+        elements = new ArrayList<>();
         this.color = color;
     }
 

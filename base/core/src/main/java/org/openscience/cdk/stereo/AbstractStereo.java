@@ -32,19 +32,33 @@ import org.openscience.cdk.interfaces.IStereoElement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 abstract class AbstractStereo<F extends IChemObject, C extends IChemObject>
     implements IStereoElement<F, C> {
 
     private int     value;
-    private F       focus;
-    private List<C> carriers;
+    private final F       focus;
+    private final List<C> carriers;
     private IChemObjectBuilder builder;
 
     protected static int numCarriers(int cfg) {
         return ((cfg >>> 12) & 0xf);
+    }
+
+    /**
+     * Hook for subclasses to process carriers before they are stored, e.g., to enforce a constraint.
+     * The default implementation returns the carriers as-is.
+     *
+     * @param focus the focus
+     * @param carriers the carriers
+     * @return the processed carriers
+     */
+    protected C[] processCarriers(F focus, C[] carriers) {
+        return carriers;
     }
 
     AbstractStereo(F focus, C[] carriers, int value) {
@@ -54,14 +68,16 @@ abstract class AbstractStereo<F extends IChemObject, C extends IChemObject>
             throw new NullPointerException("Carriers of the configuration can not be null!");
         if (carriers.length != numCarriers(value))
             throw new IllegalArgumentException("Unexpected number of stereo carriers! expected " + ((value >>> 12) & 0xf) + " was " + carriers.length);
+        carriers = processCarriers(focus, carriers);
         for (C carrier : carriers) {
             if (carrier == null)
                 throw new NullPointerException("A carrier was undefined!");
         }
         this.value    = value;
         this.focus    = focus;
-        this.carriers = new ArrayList<>();
-        Collections.addAll(this.carriers, carriers);
+        List<C> tmp = new ArrayList<>();
+        Collections.addAll(tmp, carriers);
+        this.carriers = Collections.unmodifiableList(tmp);
     }
 
     /**
@@ -101,7 +117,7 @@ abstract class AbstractStereo<F extends IChemObject, C extends IChemObject>
      */
     @Override
     public int getConfig() {
-        return value;
+        return value & 0xffff;
     }
 
     /**
@@ -110,6 +126,21 @@ abstract class AbstractStereo<F extends IChemObject, C extends IChemObject>
     @Override
     public void setConfigOrder(int cfg) {
         value = getConfigClass() | cfg;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int getGroupInfo() {
+        return value & IStereoElement.GRP_MASK;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setGroupInfo(int grp) {
+        value &= ~IStereoElement.GRP_MASK; // clear existing hit bits
+        value |= (grp & IStereoElement.GRP_MASK); // set the new value ensure low bits aren't overwritten
     }
 
     /**
@@ -164,7 +195,70 @@ abstract class AbstractStereo<F extends IChemObject, C extends IChemObject>
         // no change, return self
         if (newfocus == focus && newcarriers == carriers)
             return this;
-        return create(newfocus, newcarriers, value);
+        IStereoElement<F, C> se = create(newfocus, newcarriers, value);
+        se.setGroupInfo(getGroupInfo());
+        return se;
+    }
+
+    private IStereoElement<F, C> updateCarriers(List<C> carriers) {
+        IStereoElement<F, C> se = create(focus, carriers, value);
+        se.setGroupInfo(getGroupInfo());
+        return se;
+    }
+
+    @Override
+    public IStereoElement<F, C> updateCarriers(C remove, Iterable<C> adds) {
+        Iterator<C> repIter = adds.iterator();
+        List<C> carriers = getCarriers();
+        List<C> newCarriers = new ArrayList<>();
+        for (C carrier : carriers) {
+            if (remove.equals(carrier) && repIter.hasNext())
+                newCarriers.add(repIter.next());
+            else
+                newCarriers.add(carrier);
+        }
+        return updateCarriers(newCarriers);
+    }
+
+    @Override
+    public IStereoElement<F, C> updateCarriers(Set<C> remove, C rep) {
+        List<C> carriers = getCarriers();
+        List<C> newCarriers = new ArrayList<>();
+        for (C carrier : carriers) {
+            if (remove.contains(carrier))
+                newCarriers.add(rep);
+            else
+                newCarriers.add(carrier);
+        }
+        return updateCarriers(newCarriers);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final IStereoElement<F, C> mapStrict(Map<IChemObject, IChemObject> chemobjs) {
+        if (chemobjs == null)
+            throw new NullPointerException("chemobj map was not provided!");
+        F newfocus = (F) chemobjs.get(focus);
+        if (newfocus == null)
+            return null;
+        List<C> newcarriers = carriers;
+        for (int i = 0; i < newcarriers.size(); i++) {
+            C newcarrier = (C) chemobjs.get(newcarriers.get(i));
+            if (newcarrier != null) {
+                // make a copy if this is the first change
+                if (newcarriers == carriers)
+                    newcarriers = new ArrayList<>(carriers);
+                newcarriers.set(i, newcarrier);
+            } else {
+                return null;
+            }
+        }
+        // no change, return self
+        if (newfocus == focus && newcarriers == carriers)
+            return this;
+        IStereoElement<F, C> se = create(newfocus, newcarriers, value);
+        se.setGroupInfo(getGroupInfo());
+        return se;
     }
 
     protected abstract IStereoElement<F,C> create(F focus, List<C> carriers, int cfg);

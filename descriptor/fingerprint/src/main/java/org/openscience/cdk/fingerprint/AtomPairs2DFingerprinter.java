@@ -11,7 +11,6 @@
 
 package org.openscience.cdk.fingerprint;
 
-import org.openscience.cdk.config.Elements;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.AllPairsShortestPaths;
 import org.openscience.cdk.interfaces.IAtom;
@@ -34,8 +33,6 @@ import java.util.Map;
  * @cdk.created 2018-02-05
  * @cdk.keyword fingerprint
  * @cdk.keyword similarity
- * @cdk.module fingerprint
- * @cdk.githash
  * @see org.openscience.cdk.fingerprint.Fingerprinter
  */
 public class AtomPairs2DFingerprinter extends AbstractFingerprinter implements IFingerprinter {
@@ -160,8 +157,11 @@ public class AtomPairs2DFingerprinter extends AbstractFingerprinter implements I
         BitSet fp = new BitSet(pathToBit.size());
         List<String> paths = new ArrayList<>();
         calculate(paths, container);
-        for (String path : paths)
+        for (String path : paths) {
+        	if (!pathToBit.containsKey(path))
+        		continue;
             fp.set(pathToBit.get(path));
+        }
         return new BitSetFingerprint(fp);
     }
 

@@ -19,44 +19,36 @@
  */
 package org.openscience.cdk.silent;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.openscience.cdk.interfaces.AbstractChemObjectTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.interfaces.AbstractChemObjectTest;
 import org.openscience.cdk.interfaces.IChemObject;
-import org.openscience.cdk.interfaces.ITestObjectBuilder;
 
 /**
  * Checks the functionality of the {@link ChemObject}.
  *
- * @cdk.module test-silent
  */
-public class ChemObjectTest extends AbstractChemObjectTest {
+class ChemObjectTest extends AbstractChemObjectTest {
 
-    @BeforeClass
-    public static void setUp() {
-        setTestObjectBuilder(new ITestObjectBuilder() {
-
-            @Override
-            public IChemObject newTestObject() {
-                return new ChemObject();
-            }
-        });
+    @BeforeAll
+    static void setUp() {
+        setTestObjectBuilder(ChemObject::new);
     }
 
     @Test
-    public void testChemObject() {
+    void testChemObject() {
         IChemObject chemObject = new ChemObject();
-        Assert.assertNotNull(chemObject);
+        Assertions.assertNotNull(chemObject);
         String value = chemObject.getProperty("hello");
-        Assert.assertNull(value);
+        Assertions.assertNull(value);
     }
 
     @Test
-    public void testChemObject_IChemObject() {
+    void testChemObject_IChemObject() {
         IChemObject chemObject1 = new ChemObject();
         IChemObject chemObject = new ChemObject(chemObject1);
-        Assert.assertNotNull(chemObject);
+        Assertions.assertNotNull(chemObject);
     }
 
     // Overwrite default methods: no notifications are expected!
@@ -134,20 +126,20 @@ public class ChemObjectTest extends AbstractChemObjectTest {
     }
 
     @Test
-    public void compare() {
+    void compare() {
         ChemObject co1 = new ChemObject();
         ChemObject co2 = new ChemObject();
-        co1.setID(new String("a1"));
-        co2.setID(new String("a1"));
-        Assert.assertTrue(co1.compare(co2));
+        co1.setID("a1");
+        co2.setID("a1");
+        Assertions.assertTrue(co1.compare(co2));
     }
 
     @Test
-    public void compareDifferent() {
+    void compareDifferent() {
         ChemObject co1 = new ChemObject();
         ChemObject co2 = new ChemObject();
-        co1.setID(new String("a1"));
-        co2.setID(new String("a2"));
-        Assert.assertFalse(co1.compare(co2));
+        co1.setID("a1");
+        co2.setID("a2");
+        Assertions.assertFalse(co1.compare(co2));
     }
 }

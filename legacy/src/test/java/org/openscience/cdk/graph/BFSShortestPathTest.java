@@ -21,28 +21,27 @@ package org.openscience.cdk.graph;
 import java.util.List;
 
 import org._3pq.jgrapht.graph.SimpleGraph;
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKTestCase;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.templates.TestMoleculeFactory;
 
 /**
- * @cdk.module test-standard
  */
-public class BFSShortestPathTest extends CDKTestCase {
+class BFSShortestPathTest extends CDKTestCase {
 
-    public BFSShortestPathTest() {
+    BFSShortestPathTest() {
         super();
     }
 
     @Test
-    public void testFindPathBetween_Graph_Object_Object() {
+    void testFindPathBetween_Graph_Object_Object() {
         IAtomContainer apinene = TestMoleculeFactory.makeAlphaPinene();
         SimpleGraph graph = MoleculeGraphs.getMoleculeGraph(apinene);
         Object startVertex = graph.vertexSet().toArray()[0];
         Object endVertex = graph.vertexSet().toArray()[5];
         List list = BFSShortestPath.findPathBetween(graph, startVertex, endVertex);
-        Assert.assertTrue(list.size() > 0);
+        Assertions.assertTrue(list.size() > 0);
     }
 }

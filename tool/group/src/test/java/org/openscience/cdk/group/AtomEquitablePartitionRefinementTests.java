@@ -22,8 +22,8 @@
  */
 package org.openscience.cdk.group;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 import org.openscience.cdk.silent.SilentChemObjectBuilder;
@@ -34,26 +34,26 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
  * @author maclean
  *
  */
-public class AtomEquitablePartitionRefinementTests {
+class AtomEquitablePartitionRefinementTests {
     
-    public static IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
+    private static final IChemObjectBuilder builder = SilentChemObjectBuilder.getInstance();
     
     @Test
-    public void cube2eneWithoutBonds() {
+    void cube2eneWithoutBonds() {
         AtomRefinable ar = make(cubene(), true);
         EquitablePartitionRefiner refiner = new EquitablePartitionRefiner(ar);
         Partition finer = refiner.refine(Partition.unit(8));
         Partition expected = Partition.unit(8);
-        Assert.assertEquals(expected, finer);
+        Assertions.assertEquals(expected, finer);
     }
     
     @Test
-    public void cube2eneWithBonds() {
+    void cube2eneWithBonds() {
         AtomRefinable ar = make(cubene(), false);
         EquitablePartitionRefiner refiner = new EquitablePartitionRefiner(ar);
         Partition finer = refiner.refine(Partition.unit(8));
         Partition expected = Partition.fromString("0,2,5,7|1,3,4,6");
-        Assert.assertEquals(expected, finer);
+        Assertions.assertEquals(expected, finer);
     }
     
     private IAtomContainer cubene() {

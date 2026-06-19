@@ -30,15 +30,13 @@ package org.openscience.cdk.dict;
  *
  * @author      Egon Willighagen
  * @cdk.created 2003-08-24
- * @cdk.module  standard
- * @cdk.githash
  */
 public class DictRef implements java.io.Serializable, Cloneable {
 
     private static final long serialVersionUID = -3691244168587563625L;
 
-    String                    type;
-    String                    reference;
+    final String                    type;
+    final String                    reference;
 
     public DictRef(String type, String dictRef) {
         this.type = type;

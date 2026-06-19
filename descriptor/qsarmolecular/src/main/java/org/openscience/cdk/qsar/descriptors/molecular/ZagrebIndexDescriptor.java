@@ -19,6 +19,7 @@
 package org.openscience.cdk.qsar.descriptors.molecular;
 
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.qsar.AbstractMolecularDescriptor;
@@ -35,8 +36,6 @@ import java.util.List;
  *
  * @author      mfe4
  * @cdk.created 2004-11-03
- * @cdk.module  qsarmolecular
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:zagrebIndex
  *
  * @cdk.keyword Zagreb index
@@ -102,11 +101,11 @@ public class ZagrebIndexDescriptor extends AbstractMolecularDescriptor implement
     public DescriptorValue calculate(IAtomContainer atomContainer) {
         double zagreb = 0;
         for (IAtom atom : atomContainer.atoms()) {
-            if (atom.getSymbol().equals("H")) continue;
+            if (atom.getAtomicNumber() == IElement.H) continue;
             int atomDegree = 0;
             List<IAtom> neighbours = atomContainer.getConnectedAtomsList(atom);
             for (IAtom neighbour : neighbours) {
-                if (!neighbour.getSymbol().equals("H")) {
+                if (neighbour.getAtomicNumber() != IElement.H) {
                     atomDegree += 1;
                 }
             }

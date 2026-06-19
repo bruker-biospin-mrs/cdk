@@ -24,10 +24,9 @@
 
 package org.openscience.cdk.hash;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
-import org.openscience.cdk.hash.AtomEncoder;
-import org.openscience.cdk.hash.ConjugatedAtomEncoder;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
@@ -44,32 +43,37 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
  * @author John May
- * @cdk.module test-hash
  */
-public class ConjugatedAtomEncoderTest {
+class ConjugatedAtomEncoderTest {
 
-    @Test(expected = NullPointerException.class)
-    public void testConstruction_Null() {
-        new ConjugatedAtomEncoder(null);
+    @Test
+    void testConstruction_Null() {
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {
+                                    new ConjugatedAtomEncoder(null);
+                                });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testConstruction_Empty() {
-        new ConjugatedAtomEncoder(Collections.<AtomEncoder> emptyList());
+    @Test
+    void testConstruction_Empty() {
+        Assertions.assertThrows(IllegalArgumentException.class,
+                                () -> {
+                                    new ConjugatedAtomEncoder(Collections.emptyList());
+                                });
     }
 
     /**
      * ensure we can modify the order after we have constructed the conjunction
      */
     @Test
-    public void testConstruction_Modification() {
+    void testConstruction_Modification() {
         AtomEncoder a = mock(AtomEncoder.class);
         AtomEncoder b = mock(AtomEncoder.class);
         AtomEncoder c = mock(AtomEncoder.class);
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
 
-        List<AtomEncoder> encoders = new ArrayList<AtomEncoder>();
+        List<AtomEncoder> encoders = new ArrayList<>();
         encoders.add(a);
         encoders.add(b);
         encoders.add(c);
@@ -86,18 +90,24 @@ public class ConjugatedAtomEncoderTest {
         verifyNoMoreInteractions(a, b, c, atom, container);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testCreate_Null() {
-        ConjugatedAtomEncoder.create(null, new AtomEncoder[0]);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testCreate_Null2() {
-        ConjugatedAtomEncoder.create(mock(AtomEncoder.class), null);
+    @Test
+    void testCreate_Null() {
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {
+                                    ConjugatedAtomEncoder.create(null, new AtomEncoder[0]);
+                                });
     }
 
     @Test
-    public void testEncode_Single() throws Exception {
+    void testCreate_Null2() {
+        Assertions.assertThrows(NullPointerException.class,
+                                () -> {
+                                    ConjugatedAtomEncoder.create(mock(AtomEncoder.class), null);
+                                });
+    }
+
+    @Test
+    void testEncode_Single() throws Exception {
         AtomEncoder a = mock(AtomEncoder.class);
         IAtom atom = mock(IAtom.class);
         IAtomContainer container = mock(IAtomContainer.class);
@@ -111,7 +121,7 @@ public class ConjugatedAtomEncoderTest {
     }
 
     @Test
-    public void testEncode() throws Exception {
+    void testEncode() throws Exception {
         AtomEncoder a = mock(AtomEncoder.class);
         AtomEncoder b = mock(AtomEncoder.class);
         AtomEncoder c = mock(AtomEncoder.class);

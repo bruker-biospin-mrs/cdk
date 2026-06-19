@@ -41,14 +41,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * <p>The CDO only takes care about atoms, bonds and molecules.
  *
- * @cdk.module io
- * @cdk.githash
  *
  * @author Egon Willighagen &lt;egonw@sci.kun.nl&gt;
 */
 public class EventCMLHandler extends CMLHandler {
 
-    private IChemObjectBuilder           builder;
+    private final IChemObjectBuilder           builder;
     private IAtomContainer               currentMolecule;
     private IAtom                        currentAtom;
 
@@ -59,12 +57,12 @@ public class EventCMLHandler extends CMLHandler {
     private int                          bond_a1;
     private int                          bond_a2;
     private IBond.Order                  bond_order;
-    private IBond.Stereo                 bond_stereo;
+    private IBond.Display bond_display;
     private String                       bond_id;
 
-    protected static ILoggingTool        logger        = LoggingToolFactory.createLoggingTool(EventCMLHandler.class);
+    protected static final ILoggingTool        logger        = LoggingToolFactory.createLoggingTool(EventCMLHandler.class);
 
-    private DefaultEventChemObjectReader eventReader;
+    private final DefaultEventChemObjectReader eventReader;
 
     /**
     * Constructs an iterating-abled CDO. After reading one molecule it
@@ -122,14 +120,14 @@ public class EventCMLHandler extends CMLHandler {
         logger.debug("START:" + objectType);
         if (objectType.equals("Molecule")) {
             currentMolecule = builder.newInstance(IAtomContainer.class);
-            atomEnumeration = new Hashtable<String, Integer>();
+            atomEnumeration = new Hashtable<>();
         } else if (objectType.equals("Atom")) {
             currentAtom = builder.newInstance(IAtom.class, "H");
             logger.debug("Atom # " + numberOfAtoms);
             numberOfAtoms++;
         } else if (objectType.equals("Bond")) {
             bond_id = null;
-            bond_stereo = (IBond.Stereo) CDKConstants.UNSET;
+            bond_display = null;
         }
     }
 
@@ -153,8 +151,8 @@ public class EventCMLHandler extends CMLHandler {
                 IAtom a2 = currentMolecule.getAtom(bond_a2);
                 IBond b = builder.newInstance(IBond.class, a1, a2, bond_order);
                 if (bond_id != null) b.setID(bond_id);
-                if (bond_stereo != CDKConstants.UNSET) {
-                    b.setStereo(bond_stereo);
+                if (bond_display != CDKConstants.UNSET) {
+                    b.setDisplay(bond_display);
                 }
                 currentMolecule.addBond(b);
             }
@@ -287,9 +285,9 @@ public class EventCMLHandler extends CMLHandler {
                 }
             } else if (propertyType.equals("stereo")) {
                 if (propertyValue.equals("H")) {
-                    bond_stereo = IBond.Stereo.DOWN;
+                    bond_display = IBond.Display.WedgedHashBegin;
                 } else if (propertyValue.equals("W")) {
-                    bond_stereo = IBond.Stereo.UP;
+                    bond_display = IBond.Display.WedgeBegin;
                 }
             }
         }

@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,31 +106,27 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  *
  * @author      Rajarshi Guha
  * @cdk.created 2006-08-23
- * @cdk.module  qsarprotein
- * @cdk.githash
  * @cdk.dictref qsar-descriptors:taeAminoAcid
  * @see         IBioPolymer
  */
 public class TaeAminoAcidDescriptor extends AbstractMolecularDescriptor implements IMolecularDescriptor {
 
-    private static ILoggingTool          logger    = LoggingToolFactory.createLoggingTool(TaeAminoAcidDescriptor.class);
-    private        Map<String, Double[]> taeParams = new HashMap<String, Double[]>();
-    private        int                   ndesc     = 147;
+    private static final ILoggingTool          logger    = LoggingToolFactory.createLoggingTool(TaeAminoAcidDescriptor.class);
+    private        Map<String, Double[]> taeParams = new HashMap<>();
+    private final int                   ndesc     = 147;
 
-    private Map<String, String> nametrans = new HashMap<String, String>();
+    private final Map<String, String> nametrans = new HashMap<>();
 
     private List<IMonomer> getMonomers(IBioPolymer iBioPolymer) {
-        List<IMonomer> monomList = new ArrayList<IMonomer>();
+        List<IMonomer> monomList = new ArrayList<>();
 
         Map<String, IStrand> strands = iBioPolymer.getStrands();
         Set<String> strandKeys = strands.keySet();
-        for (Iterator<String> iterator = strandKeys.iterator(); iterator.hasNext(); ) {
-            String key = iterator.next();
+        for (String key : strandKeys) {
             IStrand aStrand = strands.get(key);
             Map<String, IMonomer> tmp = aStrand.getMonomers();
             Set<String> keys = tmp.keySet();
-            for (Iterator<String> iterator1 = keys.iterator(); iterator1.hasNext(); ) {
-                String o1 = iterator1.next();
+            for (String o1 : keys) {
                 monomList.add(tmp.get(o1));
             }
         }
@@ -149,7 +144,9 @@ public class TaeAminoAcidDescriptor extends AbstractMolecularDescriptor implemen
         }
         try {
             BufferedReader breader = new BufferedReader(new InputStreamReader(ins));
-            breader.readLine(); // throw away the header
+            String header = breader.readLine(); // throw away the header
+            if (header == null)
+                throw new IllegalStateException("Expected a header");
             for (int i = 0; i < 60; i++) {
                 String line = breader.readLine();
                 String[] components = line.split(",");
@@ -159,16 +156,13 @@ public class TaeAminoAcidDescriptor extends AbstractMolecularDescriptor implemen
 
                 Double[] data = new Double[ndesc];
                 for (int j = 1; j < components.length; j++)
-                    data[j - 1] = new Double(components[j]);
+                    data[j - 1] = Double.valueOf(components[j]);
 
                 taeParams.put(key, data);
             }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            taeParams = null;
-            return;
-        } catch (CDKException e) {
-            e.printStackTrace();
+        } catch (IOException | CDKException ioe) {
+            LoggingToolFactory.createLoggingTool(TaeAminoAcidDescriptor.class)
+                              .warn("Unexpected Error:", ioe);
             taeParams = null;
             return;
         }
@@ -293,20 +287,18 @@ public class TaeAminoAcidDescriptor extends AbstractMolecularDescriptor implemen
 
         List<IMonomer> monomers = getMonomers(peptide);
 
-        for (Iterator<IMonomer> iterator = monomers.iterator(); iterator.hasNext();) {
-            IMonomer monomer = iterator.next();
-
+        for (IMonomer monomer : monomers) {
             String o = monomer.getMonomerName();
 
             if (o.length() == 0) continue;
 
             String olc = String.valueOf(o.toLowerCase().charAt(0));
-            String tlc = (String) nametrans.get(olc);
+            String tlc = nametrans.get(olc);
 
             logger.debug("Converted " + olc + " to " + tlc);
 
             // get the params for this AA
-            Double[] params = (Double[]) taeParams.get(tlc);
+            Double[] params = taeParams.get(tlc);
 
             for (int i = 0; i < ndesc; i++)
                 desc[i] += params[i];

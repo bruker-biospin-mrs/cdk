@@ -18,7 +18,6 @@
  */
 package org.openscience.cdk.isomorphism.matchers.smarts;
 
-import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
 
@@ -28,8 +27,6 @@ import org.openscience.cdk.interfaces.IChemObjectBuilder;
  * Daylight spec indicates that if match a single bond
  * using '-', it should be an aliphatic single bond
  *
- * @cdk.module  smarts
- * @cdk.githash
  * @cdk.keyword SMARTS
  */
 @Deprecated

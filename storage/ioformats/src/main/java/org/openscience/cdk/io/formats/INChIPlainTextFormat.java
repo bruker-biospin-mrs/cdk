@@ -21,8 +21,6 @@ package org.openscience.cdk.io.formats;
 import org.openscience.cdk.tools.DataFeatures;
 
 /**
- * @cdk.module ioformats
- * @cdk.githash
  */
 public class INChIPlainTextFormat extends SimpleChemFormatMatcher implements IChemFormatMatcher {
 
@@ -74,10 +72,7 @@ public class INChIPlainTextFormat extends SimpleChemFormatMatcher implements ICh
     /** {@inheritDoc} */
     @Override
     public boolean matches(int lineNumber, String line) {
-        if (line.startsWith("INChI=")) {
-            return true;
-        }
-        return false;
+        return line.startsWith("InChI=");
     }
 
     /** {@inheritDoc} */

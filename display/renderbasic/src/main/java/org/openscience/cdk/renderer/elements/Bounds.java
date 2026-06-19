@@ -38,8 +38,6 @@ import java.util.Deque;
  * min/max bounds of all bounding boxes are utilised.
  *
  * @author John May
- * @cdk.module renderbasic
- * @cdk.githash
  */
 public final class Bounds implements IRenderingElement {
 
@@ -179,6 +177,10 @@ public final class Bounds implements IRenderingElement {
                     stack.add(child);
             } else if (element instanceof MarkedElement) {
                 stack.add(((MarkedElement)element).element());
+            } else if (element instanceof RectangleElement) {
+                RectangleElement rect = (RectangleElement) element;
+                add(rect.xCoord, rect.yCoord);
+                add(rect.xCoord + rect.width, rect.yCoord + rect.height);
             } else {
                 // ignored from bounds calculation, we don't really
                 // care but log we skipped it
@@ -203,7 +205,7 @@ public final class Bounds implements IRenderingElement {
      *
      * @return the width of the bounding box
      */
-    public final double width() {
+    public double width() {
         return maxX - minX;
     }
 
@@ -212,7 +214,7 @@ public final class Bounds implements IRenderingElement {
      *
      * @return the height of the bounding box
      */
-    public final double height() {
+    public double height() {
         return maxY - minY;
     }
 
@@ -221,7 +223,7 @@ public final class Bounds implements IRenderingElement {
      *
      * @return bounds are empty (true) or not (false)
      */
-    public final boolean isEmpty() {
+    public boolean isEmpty() {
         return minX > maxX || minY > maxY;
     }
 

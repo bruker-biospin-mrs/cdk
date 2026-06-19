@@ -29,6 +29,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -44,8 +45,6 @@ import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 /**
  * Iterating PubChem PCCompound ASN reader.
  *
- * @cdk.module io
- * @cdk.githash
  * @cdk.iooptions
  *
  * @see org.openscience.cdk.io.PCCompoundASNReader
@@ -59,8 +58,8 @@ import org.openscience.cdk.tools.manipulator.ChemFileManipulator;
 public class IteratingPCCompoundASNReader extends DefaultIteratingChemObjectReader<IAtomContainer> {
 
     private BufferedReader      input;
-    private static ILoggingTool logger = LoggingToolFactory.createLoggingTool(IteratingPCCompoundASNReader.class);
-    private IChemObjectBuilder  builder;
+    private static final ILoggingTool logger = LoggingToolFactory.createLoggingTool(IteratingPCCompoundASNReader.class);
+    private final IChemObjectBuilder  builder;
 
     private boolean             nextAvailableIsKnown;
     private boolean             hasNext;
@@ -105,13 +104,13 @@ public class IteratingPCCompoundASNReader extends DefaultIteratingChemObjectRead
                 boolean endMoleculeFound = false;
                 boolean startMoleculeFound = false;
 
-                StringBuffer buffer = new StringBuffer();
+                StringBuilder buffer = new StringBuilder();
                 while (!startMoleculeFound && currentLine != null) {
                     int depthDiff = countBrackets(currentLine);
                     depth += depthDiff;
                     if (depthDiff > 0 && depth == 3) {
                         String command = getCommand(currentLine);
-                        if (command.equals("compound")) {
+                        if (Objects.equals(command, "compound")) {
                             startMoleculeFound = true;
                             buffer.append("PC-Compound ::= {\n");
                         }
@@ -133,14 +132,13 @@ public class IteratingPCCompoundASNReader extends DefaultIteratingChemObjectRead
                 if (startMoleculeFound && endMoleculeFound) {
                     hasNext = true;
                     PCCompoundASNReader asnReader = new PCCompoundASNReader(new StringReader(buffer.toString()));
-                    IChemFile cFile = (IChemFile) asnReader.read(builder.newInstance(IChemFile.class));
+                    IChemFile cFile = asnReader.read(builder.newInstance(IChemFile.class));
                     asnReader.close();
                     nextMolecule = ChemFileManipulator.getAllAtomContainers(cFile).get(0);
                 }
             } catch (IOException | IllegalArgumentException | CDKException exception) {
                 logger.error("Error while reading next molecule: ", exception.getMessage());
                 logger.debug(exception);
-                exception.printStackTrace();
                 hasNext = false;
             }
             if (!hasNext) nextMolecule = null;
@@ -166,7 +164,7 @@ public class IteratingPCCompoundASNReader extends DefaultIteratingChemObjectRead
     @Override
     public IAtomContainer next() {
         if (!nextAvailableIsKnown) {
-            hasNext();
+            hasNext = hasNext();
         }
         nextAvailableIsKnown = false;
         if (!hasNext) {
@@ -186,7 +184,7 @@ public class IteratingPCCompoundASNReader extends DefaultIteratingChemObjectRead
     }
 
     private String getCommand(String line) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         int i = 0;
         boolean foundBracket = false;
         while (i < line.length() && !foundBracket) {

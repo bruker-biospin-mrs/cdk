@@ -18,11 +18,10 @@
  */
 package org.openscience.cdk.qsar.descriptors.molecular;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.DefaultChemObjectBuilder;
-import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -33,44 +32,43 @@ import org.openscience.cdk.smiles.SmilesParser;
 /**
  * TestSuite that runs a test for the AtomCountDescriptor.
  *
- * @cdk.module test-qsarmolecular
  */
-public class WeightDescriptorTest extends MolecularDescriptorTest {
+class WeightDescriptorTest extends MolecularDescriptorTest {
 
-    public WeightDescriptorTest() {}
+    WeightDescriptorTest() {}
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         setDescriptor(WeightDescriptor.class);
     }
 
     @Test
-    public void testWeightDescriptor() throws Exception {
+    void testWeightDescriptor() throws Exception {
         Object[] params = {"*"};
         descriptor.setParameters(params);
         SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         IAtomContainer mol = smilesParser.parseSmiles("CCC");
-        Assert.assertEquals(44.095, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.001);
+        Assertions.assertEquals(44.095, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.001);
     }
 
     /**
      * @cdk.bug 2185475
      */
     @Test
-    public void testNoHydrogens() throws Exception {
+    void testNoHydrogens() throws Exception {
         Object[] params = {"*"};
         descriptor.setParameters(params);
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         mol.addAtom(builder.newInstance(IAtom.class, "C"));
-        Assert.assertEquals(12.0107, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.0001);
+        Assertions.assertEquals(12.0107, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.0001);
     }
 
     /**
      * @cdk.bug 2185475
      */
     @Test
-    public void testExplicitHydrogens() throws Exception {
+    void testExplicitHydrogens() throws Exception {
         Object[] params = {"*"};
         descriptor.setParameters(params);
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
@@ -84,21 +82,21 @@ public class WeightDescriptorTest extends MolecularDescriptorTest {
         mol.addBond(0, 2, Order.SINGLE);
         mol.addBond(0, 3, Order.SINGLE);
         mol.addBond(0, 4, Order.SINGLE);
-        Assert.assertEquals(16.042, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.001);
+        Assertions.assertEquals(16.042, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.001);
     }
 
     /**
      * @cdk.bug 2185475
      */
     @Test
-    public void testImplicitHydrogens() throws Exception {
+    void testImplicitHydrogens() throws Exception {
         Object[] params = {"*"};
         descriptor.setParameters(params);
         IChemObjectBuilder builder = DefaultChemObjectBuilder.getInstance();
         IAtomContainer mol = builder.newInstance(IAtomContainer.class);
         mol.addAtom(builder.newInstance(IAtom.class, "C"));
         mol.getAtom(0).setImplicitHydrogenCount(4);
-        Assert.assertEquals(16.042, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.001);
+        Assertions.assertEquals(16.042, ((DoubleResult) descriptor.calculate(mol).getValue()).doubleValue(), 0.001);
     }
 
 }

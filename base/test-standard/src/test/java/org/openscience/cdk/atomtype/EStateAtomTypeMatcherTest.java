@@ -18,15 +18,13 @@
  */
 package org.openscience.cdk.atomtype;
 
-import java.util.Iterator;
-
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.CDKTestCase;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.interfaces.IAtom;
@@ -39,25 +37,24 @@ import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
 
 /**
- * @cdk.module test-standard
  */
-public class EStateAtomTypeMatcherTest extends CDKTestCase {
+class EStateAtomTypeMatcherTest extends CDKTestCase {
 
-    static EStateAtomTypeMatcher matcher;
-    IAtomContainer               mol = null;
+    private static EStateAtomTypeMatcher matcher;
+    private IAtomContainer               mol = null;
 
-    @BeforeClass
-    public static void setUp() {
+    @BeforeAll
+    static void setUp() {
         matcher = new EStateAtomTypeMatcher();
     }
 
-    public EStateAtomTypeMatcherTest() {
+    EStateAtomTypeMatcherTest() {
         super();
     }
 
     @Test
-    public void testEStateAtomTypeMatcher() {
-        Assert.assertNotNull(matcher);
+    void testEStateAtomTypeMatcher() {
+        Assertions.assertNotNull(matcher);
     }
 
     IRingSet getRings() {
@@ -76,8 +73,8 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
     }
 
     @Test
-    public void testFindMatchingAtomType_IAtomContainer() throws Exception {
-        IAtomContainer mol = new AtomContainer();
+    void testFindMatchingAtomType_IAtomContainer() throws Exception {
+        IAtomContainer mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom atom = new Atom("C");
         final IAtomType.Hybridization thisHybridization = IAtomType.Hybridization.SP3;
         atom.setHybridization(thisHybridization);
@@ -87,14 +84,14 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         IAtomType[] types = matcher.findMatchingAtomTypes(mol);
         for (int i = 0; i < types.length; i++) {
             IAtomType type = matcher.findMatchingAtomType(mol, mol.getAtom(i));
-            Assert.assertEquals(type.getAtomTypeName(), types[i].getAtomTypeName());
+            Assertions.assertEquals(type.getAtomTypeName(), types[i].getAtomTypeName());
         }
     }
 
     @Test
-    public void testSP3Atoms() {
+    void testSP3Atoms() {
         //Testing with CC(C)(C)CC
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "C");
@@ -175,20 +172,20 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         mol.addBond(b19);
 
         matcher.setRingSet(getRings());
-        Assert.assertTrue(testAtom("SsCH3", a1));
-        Assert.assertTrue(testAtom("SssssC", a2));
-        Assert.assertTrue(testAtom("SsCH3", a3));
-        Assert.assertTrue(testAtom("SsCH3", a4));
-        Assert.assertTrue(testAtom("SssCH2", a5));
-        Assert.assertTrue(testAtom("SsCH3", a6));
-        Assert.assertTrue(testAtom("SsH", a7));
-        Assert.assertTrue(testAtom("SsH", a8));
+        Assertions.assertTrue(testAtom("SsCH3", a1));
+        Assertions.assertTrue(testAtom("SssssC", a2));
+        Assertions.assertTrue(testAtom("SsCH3", a3));
+        Assertions.assertTrue(testAtom("SsCH3", a4));
+        Assertions.assertTrue(testAtom("SssCH2", a5));
+        Assertions.assertTrue(testAtom("SsCH3", a6));
+        Assertions.assertTrue(testAtom("SsH", a7));
+        Assertions.assertTrue(testAtom("SsH", a8));
     }
 
     @Test
-    public void testSP2Atoms() {
+    void testSP2Atoms() {
         //Test with C=CC=N
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "C");
@@ -225,17 +222,17 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         mol.addBond(b8);
 
         matcher.setRingSet(getRings());
-        Assert.assertTrue(testAtom("SdCH2", a1));
-        Assert.assertTrue(testAtom("SdsCH", a2));
-        Assert.assertTrue(testAtom("SdsCH", a3));
-        Assert.assertTrue(testAtom("SdNH", a4));
-        Assert.assertTrue(testAtom("SsH", a9));
+        Assertions.assertTrue(testAtom("SdCH2", a1));
+        Assertions.assertTrue(testAtom("SdsCH", a2));
+        Assertions.assertTrue(testAtom("SdsCH", a3));
+        Assertions.assertTrue(testAtom("SdNH", a4));
+        Assertions.assertTrue(testAtom("SsH", a9));
     }
 
     @Test
-    public void testSPAtoms() {
+    void testSPAtoms() {
         //Testing with  C#CCC#N
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "C");
@@ -268,34 +265,34 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         mol.addBond(b7);
 
         matcher.setRingSet(getRings());
-        Assert.assertTrue(testAtom("StCH", a1));
-        Assert.assertTrue(testAtom("StsC", a2));
-        Assert.assertTrue(testAtom("SssCH2", a3));
-        Assert.assertTrue(testAtom("StsC", a4));
-        Assert.assertTrue(testAtom("StN", a5));
+        Assertions.assertTrue(testAtom("StCH", a1));
+        Assertions.assertTrue(testAtom("StsC", a2));
+        Assertions.assertTrue(testAtom("SssCH2", a3));
+        Assertions.assertTrue(testAtom("StsC", a4));
+        Assertions.assertTrue(testAtom("StN", a5));
     }
 
     @Test
-    public void testAromaticAtoms() {
+    void testAromaticAtoms() {
         //Testing with C1=CN=CC=C1C
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a1.setFlag(CDKConstants.ISAROMATIC, true);
+        a1.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a2.setFlag(CDKConstants.ISAROMATIC, true);
+        a2.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a2);
         IAtom a3 = mol.getBuilder().newInstance(IAtom.class, "N");
-        a3.setFlag(CDKConstants.ISAROMATIC, true);
+        a3.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a3);
         IAtom a4 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a4.setFlag(CDKConstants.ISAROMATIC, true);
+        a4.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a4);
         IAtom a5 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a5.setFlag(CDKConstants.ISAROMATIC, true);
+        a5.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a5);
         IAtom a6 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a6.setFlag(CDKConstants.ISAROMATIC, true);
+        a6.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a6);
         IAtom a7 = mol.getBuilder().newInstance(IAtom.class, "C");
         mol.addAtom(a7);
@@ -343,17 +340,17 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         mol.addBond(b14);
 
         matcher.setRingSet(getRings());
-        Assert.assertTrue(testAtom("SaaCH", a1));
-        Assert.assertTrue(testAtom("SaaCH", a2));
-        Assert.assertTrue(testAtom("SaaN", a3));
-        Assert.assertTrue(testAtom("SaaCH", a4));
-        Assert.assertTrue(testAtom("SaaCH", a5));
-        Assert.assertTrue(testAtom("SsaaC", a6));
-        Assert.assertTrue(testAtom("SsCH3", a7));
+        Assertions.assertTrue(testAtom("SaaCH", a1));
+        Assertions.assertTrue(testAtom("SaaCH", a2));
+        Assertions.assertTrue(testAtom("SaaN", a3));
+        Assertions.assertTrue(testAtom("SaaCH", a4));
+        Assertions.assertTrue(testAtom("SaaCH", a5));
+        Assertions.assertTrue(testAtom("SsaaC", a6));
+        Assertions.assertTrue(testAtom("SsCH3", a7));
     }
 
     @Test
-    public void testBenzeneFromSmiles() throws Exception {
+    void testBenzeneFromSmiles() throws Exception {
         SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
         mol = sp.parseSmiles("C1=CC=CC=C1");
         AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms(mol);
@@ -361,48 +358,46 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         AtomContainerManipulator.convertImplicitToExplicitHydrogens(mol);
 
         matcher.setRingSet(getRings());
-        Iterator<IAtom> atoms = mol.atoms().iterator();
-        while (atoms.hasNext()) {
-            IAtom atom = atoms.next();
-            if (atom.getSymbol().equals("C")) {
-                Assert.assertTrue(testAtom("SaaCH", atom));
+        for (IAtom atom : mol.atoms()) {
+            if (atom.getAtomicNumber() == IElement.C) {
+                Assertions.assertTrue(testAtom("SaaCH", atom));
             }
         }
     }
 
     @Test
-    public void testNaphthalene() {
+    void testNaphthalene() {
         //Testing with C1=CC2C=CC=CC=2C=C1
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a1.setFlag(CDKConstants.ISAROMATIC, true);
+        a1.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a2.setFlag(CDKConstants.ISAROMATIC, true);
+        a2.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a2);
         IAtom a3 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a3.setFlag(CDKConstants.ISAROMATIC, true);
+        a3.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a3);
         IAtom a4 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a4.setFlag(CDKConstants.ISAROMATIC, true);
+        a4.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a4);
         IAtom a5 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a5.setFlag(CDKConstants.ISAROMATIC, true);
+        a5.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a5);
         IAtom a6 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a6.setFlag(CDKConstants.ISAROMATIC, true);
+        a6.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a6);
         IAtom a7 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a7.setFlag(CDKConstants.ISAROMATIC, true);
+        a7.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a7);
         IAtom a8 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a8.setFlag(CDKConstants.ISAROMATIC, true);
+        a8.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a8);
         IAtom a9 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a9.setFlag(CDKConstants.ISAROMATIC, true);
+        a9.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a9);
         IAtom a10 = mol.getBuilder().newInstance(IAtom.class, "C");
-        a10.setFlag(CDKConstants.ISAROMATIC, true);
+        a10.setFlag(IChemObject.AROMATIC, true);
         mol.addAtom(a10);
         IAtom a11 = mol.getBuilder().newInstance(IAtom.class, "H");
         mol.addAtom(a11);
@@ -460,22 +455,22 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         mol.addBond(b19);
 
         matcher.setRingSet(getRings());
-        Assert.assertTrue(testAtom("SaaCH", a1));
-        Assert.assertTrue(testAtom("SaaCH", a2));
-        Assert.assertTrue(testAtom("SaaaC", a3));
-        Assert.assertTrue(testAtom("SaaCH", a4));
-        Assert.assertTrue(testAtom("SaaCH", a5));
-        Assert.assertTrue(testAtom("SaaCH", a6));
-        Assert.assertTrue(testAtom("SaaCH", a7));
-        Assert.assertTrue(testAtom("SaaaC", a8));
-        Assert.assertTrue(testAtom("SaaCH", a9));
-        Assert.assertTrue(testAtom("SaaCH", a10));
+        Assertions.assertTrue(testAtom("SaaCH", a1));
+        Assertions.assertTrue(testAtom("SaaCH", a2));
+        Assertions.assertTrue(testAtom("SaaaC", a3));
+        Assertions.assertTrue(testAtom("SaaCH", a4));
+        Assertions.assertTrue(testAtom("SaaCH", a5));
+        Assertions.assertTrue(testAtom("SaaCH", a6));
+        Assertions.assertTrue(testAtom("SaaCH", a7));
+        Assertions.assertTrue(testAtom("SaaaC", a8));
+        Assertions.assertTrue(testAtom("SaaCH", a9));
+        Assertions.assertTrue(testAtom("SaaCH", a10));
     }
 
     @Test
-    public void testChargedAtoms() {
+    void testChargedAtoms() {
         //Testing with C[N+]
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "C");
         mol.addAtom(a1);
         IAtom a2 = mol.getBuilder().newInstance(IAtom.class, "N");
@@ -509,14 +504,14 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         mol.addBond(b7);
 
         matcher.setRingSet(getRings());
-        Assert.assertTrue(testAtom("SsCH3", a1));
-        Assert.assertTrue(testAtom("SsNpH3", a2));
+        Assertions.assertTrue(testAtom("SsCH3", a1));
+        Assertions.assertTrue(testAtom("SsNpH3", a2));
     }
 
     @Test
-    public void testNaCl() {
+    void testNaCl() {
         //Testing with [Na+].[Cl-]
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         IAtom a1 = mol.getBuilder().newInstance(IAtom.class, "Na");
         a1.setFormalCharge(+1);
         mol.addAtom(a1);
@@ -525,11 +520,11 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         mol.addAtom(a2);
 
         matcher.setRingSet(getRings());
-        Assert.assertTrue(testAtom("SNap", a1));
-        Assert.assertTrue(testAtom("SClm", a2));
+        Assertions.assertTrue(testAtom("SNap", a1));
+        Assertions.assertTrue(testAtom("SClm", a2));
 
         //Testing with different presentation - [Na]Cl
-        mol = new AtomContainer();
+        mol = DefaultChemObjectBuilder.getInstance().newAtomContainer();
         a1 = mol.getBuilder().newInstance(IAtom.class, "Na");
         mol.addAtom(a1);
         a2 = mol.getBuilder().newInstance(IAtom.class, "Cl");
@@ -538,8 +533,8 @@ public class EStateAtomTypeMatcherTest extends CDKTestCase {
         mol.addBond(b1);
 
         matcher.setRingSet(getRings());
-        Assert.assertTrue(testAtom("SsNa", a1));
-        Assert.assertTrue(testAtom("SsCl", a2));
+        Assertions.assertTrue(testAtom("SsNa", a1));
+        Assertions.assertTrue(testAtom("SsCl", a2));
     }
 
 }

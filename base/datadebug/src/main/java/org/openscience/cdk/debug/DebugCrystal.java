@@ -43,14 +43,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author     egonw
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugCrystal extends Crystal implements ICrystal {
 
     private static final long serialVersionUID = -1749989529794094087L;
 
-    static ILoggingTool       logger           = LoggingToolFactory.createLoggingTool(DebugCrystal.class);
+    static final ILoggingTool       logger           = LoggingToolFactory.createLoggingTool(DebugCrystal.class);
 
     public DebugCrystal() {
         super();

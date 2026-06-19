@@ -23,58 +23,50 @@
  */
 package org.openscience.cdk.tools;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.openscience.cdk.CDKConstants;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openscience.cdk.Ring;
 import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.CDKTestCase;
-import org.openscience.cdk.tools.DeAromatizationTool;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.test.CDKTestCase;
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
-
-import java.util.Iterator;
 
 /**
  * Tests the DeAromatizationTool.
  *
- * @cdk.module test-extra
  */
-public class DeAromatizationToolTest extends CDKTestCase {
+class DeAromatizationToolTest extends CDKTestCase {
 
-    public DeAromatizationToolTest() {
+    DeAromatizationToolTest() {
         super();
     }
 
     @Test
-    public void testBezene() {
+    void testBezene() {
         Ring benzene = new Ring(6, "C");
-        Iterator<IBond> bonds = benzene.bonds().iterator();
-        while (bonds.hasNext())
-            bonds.next().setFlag(CDKConstants.ISAROMATIC, true);
+        for (IBond iBond : benzene.bonds()) iBond.setFlag(IChemObject.AROMATIC, true);
         boolean success = DeAromatizationTool.deAromatize(benzene);
-        Assert.assertTrue(success);
+        Assertions.assertTrue(success);
         double bondOrderSum = AtomContainerManipulator.getSingleBondEquivalentSum(benzene);
-        Assert.assertEquals(9.0, bondOrderSum, 0.00001);
+        Assertions.assertEquals(9.0, bondOrderSum, 0.00001);
     }
 
     @Test
-    public void testPyridine() {
+    void testPyridine() {
         Ring pyridine = new Ring(6, "C");
         pyridine.getAtom(0).setSymbol("N");
-        Iterator<IBond> bonds = pyridine.bonds().iterator();
-        while (bonds.hasNext())
-            bonds.next().setFlag(CDKConstants.ISAROMATIC, true);
+        for (IBond iBond : pyridine.bonds()) iBond.setFlag(IChemObject.AROMATIC, true);
         boolean success = DeAromatizationTool.deAromatize(pyridine);
-        Assert.assertTrue(success);
+        Assertions.assertTrue(success);
         double bondOrderSum = AtomContainerManipulator.getSingleBondEquivalentSum(pyridine);
-        Assert.assertEquals(9.0, bondOrderSum, 0.00001);
+        Assertions.assertEquals(9.0, bondOrderSum, 0.00001);
     }
 
     @Test
-    public void testDeAromatize_IRing() {
+    void testDeAromatize_IRing() {
         Ring butadiene = new Ring(4, "C");
         boolean success = DeAromatizationTool.deAromatize(butadiene);
-        Assert.assertFalse(success);
+        Assertions.assertFalse(success);
     }
 
 }

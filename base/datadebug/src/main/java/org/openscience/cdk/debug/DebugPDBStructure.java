@@ -26,14 +26,12 @@ import org.openscience.cdk.tools.LoggingToolFactory;
  * Debugging data class.
  *
  * @author     Miguel Rojas
- * @cdk.module datadebug
- * @cdk.githash
  */
 public class DebugPDBStructure extends PDBStructure {
 
     private static final long serialVersionUID = 1934748703085969097L;
 
-    ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugAtomContainer.class);
+    final ILoggingTool              logger           = LoggingToolFactory.createLoggingTool(DebugAtomContainer.class);
 
     /** {@inheritDoc} */
     @Override

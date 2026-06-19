@@ -35,6 +35,8 @@ import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IAtomType;
 import org.openscience.cdk.interfaces.IAtomType.Hybridization;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IChemObject;
+import org.openscience.cdk.interfaces.IElement;
 import org.openscience.cdk.interfaces.IRing;
 import org.openscience.cdk.interfaces.IRingSet;
 import org.openscience.cdk.ringsearch.AllRingsFinder;
@@ -43,7 +45,6 @@ import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.cdk.tools.manipulator.RingManipulator;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -56,8 +57,6 @@ import java.util.List;
  * is interrupted, the boolean is reset to false.
  *
  * @author Todd Martin
- * @cdk.module smiles
- * @cdk.githash
  * @cdk.keyword bond order
  *
  * @cdk.bug 1895805
@@ -69,8 +68,8 @@ import java.util.List;
 @Deprecated
 public class DeduceBondSystemTool {
 
-    private AllRingsFinder      allRingsFinder;
-    private static ILoggingTool logger      = LoggingToolFactory.createLoggingTool(DeduceBondSystemTool.class);
+    private final AllRingsFinder      allRingsFinder;
+    private static final ILoggingTool logger      = LoggingToolFactory.createLoggingTool(DeduceBondSystemTool.class);
 
     private List<Integer[]>     listOfRings = null;
 
@@ -142,7 +141,7 @@ public class DeduceBondSystemTool {
 
         if (ringSet == null) throw new CDKException("failure in AllRingsFinder.findAllRings");
 
-        List<List<List<String>>> MasterList = new ArrayList<List<List<String>>>();
+        List<List<List<String>>> MasterList = new ArrayList<>();
 
         //this.counter=0;// counter which keeps track of all current possibilities for placing double bonds
 
@@ -224,11 +223,11 @@ public class DeduceBondSystemTool {
         for (int i = 0; i < atomContainer.getAtomCount(); i++) {
             IAtom ai = atomContainer.getAtom(i);
 
-            if (ai.getSymbol().equals("N") && (ai.getFormalCharge() == null || ai.getFormalCharge() == 0)) {
+            if (ai.getAtomicNumber() == IElement.N && (ai.getFormalCharge() == null || ai.getFormalCharge() == 0)) {
                 if (inRingSet(ai, ringSet)) {
                     List<IAtom> ca = atomContainer.getConnectedAtomsList(ai);
                     for (IAtom caj : ca) {
-                        if (caj.getSymbol().equals("O")
+                        if (caj.getAtomicNumber() == IElement.O
                                 && atomContainer.getBond(ai, caj).getOrder() == IBond.Order.DOUBLE) {
                             ai.setFormalCharge(1);
                             caj.setFormalCharge(-1);
@@ -237,7 +236,7 @@ public class DeduceBondSystemTool {
                     }// end for (int j=0;j<ca.size();j++)
 
                 } // end if (inRingSet(ai,ringSet)) {
-            } // end if (ai.getSymbol().equals("N") && ai.getFormalCharge()==0)
+            } // end if (ai.getAtomicNumber() == IElement.N && ai.getFormalCharge()==0)
 
         } // end for (int i=0;i<atomContainer.getAtomCount();i++)
 
@@ -276,17 +275,17 @@ public class DeduceBondSystemTool {
             //logger.debug(num[j]);
         }
 
-        List<String> al1 = new ArrayList<String>();
-        List<String> al2 = new ArrayList<String>();
-        List<String> al3 = new ArrayList<String>();
-        List<String> al4 = new ArrayList<String>();
-        List<String> al5 = new ArrayList<String>();
+        List<String> al1 = new ArrayList<>();
+        List<String> al2 = new ArrayList<>();
+        List<String> al3 = new ArrayList<>();
+        List<String> al4 = new ArrayList<>();
+        List<String> al5 = new ArrayList<>();
 
-        List<String> al6 = new ArrayList<String>();
-        List<String> al7 = new ArrayList<String>();
-        List<String> al8 = new ArrayList<String>();
-        List<String> al9 = new ArrayList<String>();
-        List<String> al10 = new ArrayList<String>();
+        List<String> al6 = new ArrayList<>();
+        List<String> al7 = new ArrayList<>();
+        List<String> al8 = new ArrayList<>();
+        List<String> al9 = new ArrayList<>();
+        List<String> al10 = new ArrayList<>();
 
         al1.add(num[1] + "-" + num[2]);
         al1.add(num[3] + "-" + num[4]);
@@ -309,7 +308,7 @@ public class DeduceBondSystemTool {
         al9.add(num[3] + "-" + num[4]);
         al10.add(num[4] + "-" + num[0]);
 
-        List<List<String>> mal = new ArrayList<List<String>>();
+        List<List<String>> mal = new ArrayList<>();
 
         mal.add(al1);
         mal.add(al2);
@@ -344,8 +343,8 @@ public class DeduceBondSystemTool {
             num[j] = m.indexOf(r.getAtom(j));
         }
 
-        List<String> al1 = new ArrayList<String>();
-        List<String> al2 = new ArrayList<String>();
+        List<String> al1 = new ArrayList<>();
+        List<String> al2 = new ArrayList<>();
 
         al1.add(num[0] + "-" + num[1]);
         al1.add(num[2] + "-" + num[3]);
@@ -355,24 +354,24 @@ public class DeduceBondSystemTool {
         al2.add(num[3] + "-" + num[4]);
         al2.add(num[5] + "-" + num[0]);
 
-        List<String> al3 = new ArrayList<String>();
-        List<String> al4 = new ArrayList<String>();
-        List<String> al5 = new ArrayList<String>();
-        List<String> al6 = new ArrayList<String>();
-        List<String> al7 = new ArrayList<String>();
-        List<String> al8 = new ArrayList<String>();
-        List<String> al9 = new ArrayList<String>();
-        List<String> al10 = new ArrayList<String>();
-        List<String> al11 = new ArrayList<String>();
+        List<String> al3 = new ArrayList<>();
+        List<String> al4 = new ArrayList<>();
+        List<String> al5 = new ArrayList<>();
+        List<String> al6 = new ArrayList<>();
+        List<String> al7 = new ArrayList<>();
+        List<String> al8 = new ArrayList<>();
+        List<String> al9 = new ArrayList<>();
+        List<String> al10 = new ArrayList<>();
+        List<String> al11 = new ArrayList<>();
 
-        List<String> al12 = new ArrayList<String>();
-        List<String> al13 = new ArrayList<String>();
-        List<String> al14 = new ArrayList<String>();
-        List<String> al15 = new ArrayList<String>();
-        List<String> al16 = new ArrayList<String>();
-        List<String> al17 = new ArrayList<String>();
+        List<String> al12 = new ArrayList<>();
+        List<String> al13 = new ArrayList<>();
+        List<String> al14 = new ArrayList<>();
+        List<String> al15 = new ArrayList<>();
+        List<String> al16 = new ArrayList<>();
+        List<String> al17 = new ArrayList<>();
 
-        List<String> al18 = new ArrayList<String>();
+        List<String> al18 = new ArrayList<>();
 
         al3.add(num[0] + "-" + num[1]);
         al3.add(num[2] + "-" + num[3]);
@@ -408,7 +407,7 @@ public class DeduceBondSystemTool {
         al16.add(num[4] + "-" + num[5]);
         al17.add(num[5] + "-" + num[0]);
 
-        List<List<String>> mal = new ArrayList<List<String>>();
+        List<List<String>> mal = new ArrayList<>();
 
         mal.add(al1);
         mal.add(al2);
@@ -448,11 +447,11 @@ public class DeduceBondSystemTool {
             num[j] = m.indexOf(r.getAtom(j));
         }
 
-        List<String> al1 = new ArrayList<String>();
-        List<String> al2 = new ArrayList<String>();
-        List<String> al3 = new ArrayList<String>();
-        List<String> al4 = new ArrayList<String>();
-        List<String> al5 = new ArrayList<String>();
+        List<String> al1 = new ArrayList<>();
+        List<String> al2 = new ArrayList<>();
+        List<String> al3 = new ArrayList<>();
+        List<String> al4 = new ArrayList<>();
+        List<String> al5 = new ArrayList<>();
 
         al1.add(num[0] + "-" + num[1]);
         al1.add(num[2] + "-" + num[3]);
@@ -474,7 +473,7 @@ public class DeduceBondSystemTool {
         al5.add(num[4] + "-" + num[5]);
         al5.add(num[6] + "-" + num[0]);
 
-        List<List<String>> mal = new ArrayList<List<String>>();
+        List<List<String>> mal = new ArrayList<>();
 
         mal.add(al1);
         mal.add(al2);
@@ -503,7 +502,7 @@ public class DeduceBondSystemTool {
             if (inRingSet(atom, ringSet)) {
                 //logger.debug("in ring set");
 
-                if (atom.getSymbol().equals("N")) {
+                if (atom.getAtomicNumber() == IElement.N) {
                     if (atom.getFormalCharge() == 0) {
                         //						logger.debug(mol.getBondOrderSum(a));
                         if (atomContainer.getBondOrderSum(atom) == 4) {
@@ -531,7 +530,7 @@ public class DeduceBondSystemTool {
                             count++;
                         }
                     }
-                } else if (atom.getSymbol().equals("S")) {
+                } else if (atom.getAtomicNumber() == IElement.S) {
                     if (atomContainer.getBondOrderSum(atom) > 2) {
                         count++;
                     }
@@ -582,7 +581,7 @@ public class DeduceBondSystemTool {
 
                 IAtomContainer mnew = null;
                 try {
-                    mnew = (IAtomContainer) atomContainer.clone();
+                    mnew = atomContainer.clone();
                 } catch (Exception e) {
                     logger.error("Failed to clone atomContainer: ", e.getMessage());
                     logger.debug(e);
@@ -634,9 +633,7 @@ public class DeduceBondSystemTool {
     private boolean isStructureOK(IAtomContainer atomContainer) {
         try {
             CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(atomContainer.getBuilder());
-            Iterator<IAtom> atoms = atomContainer.atoms().iterator();
-            while (atoms.hasNext()) {
-                IAtom atom = atoms.next();
+            for (IAtom atom : atomContainer.atoms()) {
                 IAtomType matched = matcher.findMatchingAtomType(atomContainer, atom);
                 if (matched == null || matched.getAtomTypeName().equals("X")) return false;
             }
@@ -646,11 +643,11 @@ public class DeduceBondSystemTool {
 
             // clear aromaticity flags
             for (int i = 0; i <= atomContainer.getAtomCount() - 1; i++) {
-                atomContainer.getAtom(i).setFlag(CDKConstants.ISAROMATIC, false);
+                atomContainer.getAtom(i).setFlag(IChemObject.AROMATIC, false);
             }
             for (int i = 0; i <= ringSet.getAtomContainerCount() - 1; i++) {
                 IRing r = (IRing) ringSet.getAtomContainer(i);
-                r.setFlag(CDKConstants.ISAROMATIC, false);
+                r.setFlag(IChemObject.AROMATIC, false);
             }
             // now, detect aromaticity from cratch, and mark rings as aromatic too (if ...)
             Aromaticity.cdkLegacy().apply(atomContainer);
@@ -679,7 +676,7 @@ public class DeduceBondSystemTool {
                         }
                     }
 
-                    if (!ring.getFlag(CDKConstants.ISAROMATIC)) {
+                    if (!ring.getFlag(IChemObject.AROMATIC)) {
                         //						logger.debug(counter+"\t"+"ring not aromatic"+"\t"+r.getAtomCount());
                         return false;
                     }
@@ -734,7 +731,7 @@ public class DeduceBondSystemTool {
                         i--; // go back
                         continue iloop;
                         //                        NonSP2Count++;
-                        //                        if (r.getAtom(j).getSymbol().equals("C")) {
+                        //                        if (r.getAtom(j).getAtomicNumber() == IElement.C) {
                         //                            rs.removeAtomContainer(i);
                         //                            i--; // go back
                         //                            continue iloop;
@@ -784,7 +781,7 @@ public class DeduceBondSystemTool {
                 if (r.getAtom(j).getHybridization() == CDKConstants.UNSET
                         || r.getAtom(j).getHybridization() != Hybridization.SP2) {
                     NonSP2Count++;
-                    if (r.getAtom(j).getSymbol().equals("C")) {
+                    if (r.getAtom(j).getAtomicNumber() == IElement.C) {
                         Check[i] = false;
                         continue iloop;
                     }
@@ -808,7 +805,7 @@ public class DeduceBondSystemTool {
      * @param ringSet  The IRingSet to store
      */
     private void storeRingSystem(IAtomContainer mol, IRingSet ringSet) {
-        listOfRings = new ArrayList<Integer[]>(); // this is a list of int arrays
+        listOfRings = new ArrayList<>(); // this is a list of int arrays
         for (int r = 0; r < ringSet.getAtomContainerCount(); ++r) {
             IRing ring = (IRing) ringSet.getAtomContainer(r);
             Integer[] bondNumbers = new Integer[ring.getBondCount()];
@@ -830,9 +827,11 @@ public class DeduceBondSystemTool {
             IRing ring = mol.getBuilder().newInstance(IRing.class, bondNumbers.length);
             for (int bondNumber : bondNumbers) {
                 IBond bond = mol.getBond(bondNumber);
-                ring.addBond(bond);
                 if (!ring.contains(bond.getBegin())) ring.addAtom(bond.getBegin());
                 if (!ring.contains(bond.getEnd())) ring.addAtom(bond.getEnd());
+            }
+            for (int bondNumber : bondNumbers) {
+                ring.addBond(mol.getBond(bondNumber));
             }
             ringSet.addAtomContainer(ring);
         }
