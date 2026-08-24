@@ -7,7 +7,7 @@
     <parent>
         <artifactId>cdk-tool</artifactId>
         <groupId>org.openscience.cdk</groupId>
-        <version>2.12-BBIO</version>
+        <version>2.12.1-BBIO-SNAPSHOT</version>
     </parent>
 
     <artifactId>cdk-tautomer</artifactId>
